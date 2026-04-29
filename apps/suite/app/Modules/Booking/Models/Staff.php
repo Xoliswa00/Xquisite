@@ -3,6 +3,9 @@
 namespace App\Modules\Booking\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\HasTenant;
+use App\Models\Traits\Auditable;
+
 
 class Staff extends Model
 {
