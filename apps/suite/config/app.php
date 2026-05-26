@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Base domain used for tenant subdomains (e.g. {slug}.xquisite.co.za)
+    'domain' => env('APP_DOMAIN', 'xquisite.co.za'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

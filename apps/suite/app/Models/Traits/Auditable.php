@@ -2,10 +2,11 @@
 
 namespace App\Models\Traits;
 
+use App\Services\AuditService;
+
 trait Auditable
 {
-    //
-      public static function bootAuditable()
+    public static function bootAuditable(): void
     {
         static::created(function ($model) {
             AuditService::log(

@@ -2,16 +2,11 @@
 
 namespace App\Services\Tenant;
 
+use Illuminate\Support\Facades\Auth;
+
 class TenantContext
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
-    {
-        //
-    }
-       protected static ?int $tenantId = null;
+    protected static ?int $tenantId = null;
 
     public static function set(int $tenantId): void
     {
@@ -20,7 +15,20 @@ class TenantContext
 
     public static function get(): ?int
     {
-        return self::$tenantId ?? Auth::user()?->tenant_id;
+        if (self::$tenantId !== null) {
+            return self::$tenantId;
+        }
+
+        try {
+            return Auth::user()?->tenant_id;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    public static function clear(): void
+    {
+        self::$tenantId = null;
     }
 
     public static function hasTenant(): bool

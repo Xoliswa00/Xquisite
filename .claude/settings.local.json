@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\x.masuku\\\\Documents\\\\EX\\\\Xquisite\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\x.masuku\\\\Documents\\\\EX\\\\Xquisite\\\\apps\\\\suite\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(Head -30)",
+      "Bash(php artisan *)",
+      "PowerShell(node --version 2>&1)",
+      "PowerShell(npm --version 2>&1)",
+      "PowerShell(composer --version 2>&1)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\x.masuku\\\\Documents\\\\EX\\\\Xquisite\\\\apps\\\\suite\" -Directory)",
+      "Bash(Select-Object Name)"
+    ]
+  }
+}

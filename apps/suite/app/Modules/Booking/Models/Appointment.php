@@ -5,6 +5,7 @@ namespace App\Modules\Booking\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\HasTenant;
 use App\Models\Traits\Auditable;
+use App\Modules\POS\Models\Sale;
 
 
 class Appointment extends Model
@@ -41,5 +42,36 @@ class Appointment extends Model
     public function service()
     {
         return $this->belongsTo(Service::class);
+    }
+
+    public function sale()
+    {
+        return $this->hasOne(Sale::class);
+    }
+
+    public function reminders()
+    {
+        return $this->hasMany(AppointmentReminder::class);
+    }
+
+    public function scopeToday($query)
+    {
+        return $query->whereDate('scheduled_at', today());
+    }
+
+    public function scopeUpcoming($query)
+    {
+        return $query->where('scheduled_at', '>=', now())->orderBy('scheduled_at');
+    }
+
+    public function getStatusColorAttribute(): string
+    {
+        return match($this->status) {
+            'confirmed'  => 'emerald',
+            'completed'  => 'blue',
+            'cancelled'  => 'red',
+            'no_show'    => 'gray',
+            default      => 'yellow', // pending
+        };
     }
 }

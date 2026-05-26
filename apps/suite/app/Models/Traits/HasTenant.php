@@ -2,9 +2,12 @@
 
 namespace App\Models\Traits;
 
+use Illuminate\Database\Eloquent\Builder;
+use App\Services\Tenant\TenantContext;
+
 trait HasTenant
 {
-protected static function bootHasTenant()
+    protected static function bootHasTenant(): void
     {
         static::creating(function ($model) {
             if (!$model->tenant_id) {
@@ -19,4 +22,5 @@ protected static function bootHasTenant()
                 $builder->where($builder->getModel()->getTable() . '.tenant_id', $tenantId);
             }
         });
-    }}
+    }
+}
