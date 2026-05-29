@@ -152,6 +152,75 @@ class BillingBridge
         return null;
     }
 
+    // ── Lease subscriptions ────────────────────────────────────────
+
+    /**
+     * Create a monthly billing subscription for an active lease.
+     * Returns billing subscription_id on success, null on failure (not queued — leases are long-lived).
+     */
+    public function createLeaseSubscription(
+        string $renterName,
+        string $renterEmail,
+        ?string $renterPhone,
+        string $propertyName,
+        string $unitNumber,
+        float $monthlyRent,
+        string $startDate
+    ): ?int {
+        if (!$this->apiKey) {
+            return null;
+        }
+
+        try {
+            $response = Http::timeout(10)
+                ->withHeaders(['X-Internal-Key' => $this->apiKey])
+                ->post("{$this->baseUrl}/api/internal/lease-subscriptions", [
+                    'renter_name'   => $renterName,
+                    'renter_email'  => $renterEmail,
+                    'renter_phone'  => $renterPhone,
+                    'property_name' => $propertyName,
+                    'unit_number'   => $unitNumber,
+                    'monthly_rent'  => $monthlyRent,
+                    'start_date'    => $startDate,
+                ]);
+
+            if ($response->successful()) {
+                return $response->json('subscription_id');
+            }
+
+            Log::warning('BillingBridge: lease subscription failed', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::warning('BillingBridge: lease subscription HTTP error', ['message' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
+    public function cancelLeaseSubscription(int $billingSubscriptionId): bool
+    {
+        if (!$this->apiKey) {
+            return false;
+        }
+
+        try {
+            $response = Http::timeout(10)
+                ->withHeaders(['X-Internal-Key' => $this->apiKey])
+                ->post("{$this->baseUrl}/api/internal/lease-subscriptions/cancel", [
+                    'subscription_id' => $billingSubscriptionId,
+                ]);
+
+            return $response->successful();
+
+        } catch (\Throwable $e) {
+            Log::warning('BillingBridge: lease cancel error', ['message' => $e->getMessage()]);
+            return false;
+        }
+    }
+
     // ── Private helpers ────────────────────────────────────────────
 
     private function enqueue(string $type, int $tenantId, string $moduleKey, array $payload, string $error): void

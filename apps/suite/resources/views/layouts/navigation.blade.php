@@ -18,6 +18,7 @@
                     <a href="{{ route('dashboard') }}" class="hover:text-white {{ request()->routeIs('dashboard') ? 'text-white' : '' }}">Dashboard</a>
                     <a href="{{ route('appointments.index') }}" class="hover:text-white {{ request()->routeIs('appointments.index') || request()->routeIs('appointments.show') || request()->routeIs('appointments.create') || request()->routeIs('appointments.edit') ? 'text-white' : '' }}">Bookings</a>
                     <a href="{{ route('appointments.calendar') }}" class="hover:text-white {{ request()->routeIs('appointments.calendar') ? 'text-white' : '' }}">Calendar</a>
+                    <a href="{{ route('properties.index') }}" class="hover:text-white {{ request()->routeIs('properties.*') || request()->routeIs('renters.*') || request()->routeIs('leases.*') || request()->routeIs('rent-payments.*') || request()->routeIs('maintenance.*') ? 'text-white' : '' }}">Property</a>
                     <a href="{{ route('customers.index') }}" class="hover:text-white {{ request()->routeIs('customers.*') ? 'text-white' : '' }}">Customers</a>
                     <a href="{{ route('staff.index') }}" class="hover:text-white {{ request()->routeIs('staff.*') ? 'text-white' : '' }}">Staff</a>
                     <a href="{{ route('services.index') }}" class="hover:text-white {{ request()->routeIs('services.*') ? 'text-white' : '' }}">Services</a>

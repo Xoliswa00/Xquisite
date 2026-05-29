@@ -59,4 +59,12 @@ return [
         'routes'      => [],
     ],
 
+    'property_management' => [
+        'name'        => 'Property Management',
+        'description' => 'Manage rental properties, units, leases, rent payments, and maintenance requests. Includes renter self-service portal.',
+        'icon'        => 'building',
+        'price'       => 349.00,
+        'routes'      => ['properties.*', 'units.*', 'renters.*', 'leases.*', 'rent.*', 'maintenance.*'],
+    ],
+
 ];

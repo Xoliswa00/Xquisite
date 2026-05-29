@@ -23,6 +23,14 @@ use App\Http\Controllers\Admin\SyncQueueController;
 use App\Http\Controllers\Booking\PublicBookingController;
 use App\Http\Controllers\Booking\CustomerAuthController;
 use App\Http\Controllers\Booking\CustomerPortalController;
+use App\Http\Controllers\Property\PropertyController;
+use App\Http\Controllers\Property\UnitController;
+use App\Http\Controllers\Property\RenterController;
+use App\Http\Controllers\Property\LeaseController;
+use App\Http\Controllers\Property\RentPaymentController;
+use App\Http\Controllers\Property\MaintenanceController;
+use App\Http\Controllers\Property\RenterAuthController;
+use App\Http\Controllers\Property\RenterPortalController;
 use App\Http\Controllers\Settings\ModuleController;
 use Illuminate\Support\Facades\Route;
 
@@ -89,10 +97,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('module:ecommerce');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status')->middleware('module:ecommerce');
 
-    // Module-gated route groups
-    Route::middleware('module:booking')->group(function () {
-        // Booking routes already defined above — middleware applied at group level
-        // (resource routes are defined outside; gate them by wrapping in this group if needed later)
+    // Property management module
+    Route::middleware('module:property_management')->group(function () {
+        Route::resource('properties', PropertyController::class);
+        Route::resource('properties.units', UnitController::class);
+        Route::resource('renters', RenterController::class);
+        Route::post('renters/{renter}/invite', [RenterController::class, 'invite'])->name('renters.invite');
+        Route::resource('leases', LeaseController::class)->except(['destroy']);
+        Route::post('leases/{lease}/terminate', [LeaseController::class, 'terminate'])->name('leases.terminate');
+        Route::get('rent-payments', [RentPaymentController::class, 'index'])->name('rent-payments.index');
+        Route::get('rent-payments/{rentPayment}', [RentPaymentController::class, 'show'])->name('rent-payments.show');
+        Route::patch('rent-payments/{rentPayment}/record', [RentPaymentController::class, 'record'])->name('rent-payments.record');
+        Route::post('rent-payments/generate', [RentPaymentController::class, 'generateMonthly'])->name('rent-payments.generate');
+        Route::post('rent-payments/flag-overdue', [RentPaymentController::class, 'flagOverdue'])->name('rent-payments.flag-overdue');
+        Route::resource('maintenance', MaintenanceController::class);
+        Route::patch('maintenance/{maintenance}/status', [MaintenanceController::class, 'updateStatus'])->name('maintenance.status');
     });
 
     // Admin — tenant management (only platform owner should access this; gate by role later)
@@ -153,6 +172,20 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
     // Customer portal (auth checked inside controller)
     Route::get('/my-bookings',                [CustomerPortalController::class, 'myBookings'])->name('my-bookings');
     Route::patch('/appointments/{appointment}/cancel', [CustomerPortalController::class, 'cancel'])->name('cancel');
+});
+
+// ─── Renter portal (/rent/{slug}) ────────────────────────────────────────────
+Route::prefix('rent/{slug}')->name('rent.')->group(function () {
+    Route::get('/login',            [RenterAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',           [RenterAuthController::class, 'login'])->name('login.post');
+    Route::post('/logout',          [RenterAuthController::class, 'logout'])->name('logout');
+
+    // Portal pages (auth checked inside controller)
+    Route::get('/',                 [RenterPortalController::class, 'portal'])->name('portal');
+    Route::get('/lease',            [RenterPortalController::class, 'lease'])->name('lease');
+    Route::get('/payments',         [RenterPortalController::class, 'payments'])->name('payments');
+    Route::get('/maintenance',      [RenterPortalController::class, 'maintenance'])->name('maintenance');
+    Route::post('/maintenance',     [RenterPortalController::class, 'submitMaintenance'])->name('maintenance.submit');
 });
 
 // Public storefront (no auth)
