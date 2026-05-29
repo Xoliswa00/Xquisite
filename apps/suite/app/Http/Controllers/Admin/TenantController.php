@@ -119,7 +119,11 @@ class TenantController extends Controller
             // Cancel billing subscription if one exists
             $tenantModule = $tenant->tenantModules()->where('module', $moduleKey)->first();
             if ($tenantModule?->billing_subscription_id) {
-                $billing->cancelModuleSubscription($tenantModule->billing_subscription_id);
+                $billing->cancelModuleSubscription(
+                    $tenantModule->billing_subscription_id,
+                    $tenant->id,
+                    $moduleKey
+                );
             }
 
             $tenant->deactivateModule($moduleKey);
