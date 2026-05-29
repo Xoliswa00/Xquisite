@@ -24,7 +24,11 @@ class PublicBookingController extends Controller
     public function index(string $slug)
     {
         $tenant   = $this->resolveTenant($slug);
-        $services = Service::where('is_active', true)->orderBy('name')->get();
+        // Only show services that have at least one active staff member assigned
+        $services = Service::where('is_active', true)
+            ->whereHas('staff', fn ($q) => $q->where('is_active', true))
+            ->orderBy('name')
+            ->get();
 
         return view('booking.index', compact('tenant', 'services', 'slug'));
     }

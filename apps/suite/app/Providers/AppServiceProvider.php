@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Modules\Booking\Models\Appointment;
-use App\Modules\Booking\Observers\AppointmentObserver;
+use App\Observers\AppointmentObserver;
 
 class AppServiceProvider extends ServiceProvider
 {

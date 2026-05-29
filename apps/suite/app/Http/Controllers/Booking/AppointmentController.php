@@ -55,7 +55,7 @@ class AppointmentController extends Controller
     {
         $data = $request->validate([
             'customer_id'      => 'required|exists:customers,id',
-            'staff_id'         => 'required|exists:staff,id',
+            'staff_id'         => 'nullable|exists:staff,id',
             'service_id'       => 'required|exists:services,id',
             'scheduled_at'     => 'required|date|after:now',
             'duration_minutes' => 'required|integer|min:5|max:480',
@@ -63,12 +63,15 @@ class AppointmentController extends Controller
             'notes'            => 'nullable|string|max:1000',
         ]);
 
-        $staff  = Staff::findOrFail($data['staff_id']);
-        $start  = Carbon::parse($data['scheduled_at']);
-        $error  = $availability->check($staff, $start, (int) $data['duration_minutes']);
+        // Only run availability check if a staff member was selected
+        if ($data['staff_id']) {
+            $staff = Staff::findOrFail($data['staff_id']);
+            $start = Carbon::parse($data['scheduled_at']);
+            $error = $availability->check($staff, $start, (int) $data['duration_minutes']);
 
-        if ($error) {
-            return back()->withInput()->withErrors(['scheduled_at' => $error]);
+            if ($error) {
+                return back()->withInput()->withErrors(['scheduled_at' => $error]);
+            }
         }
 
         $appointment = Appointment::create($data);
@@ -163,6 +166,37 @@ class AppointmentController extends Controller
 
         return redirect()->route('appointments.show', $appointment)
             ->with('success', "{$staff->name} assigned. Appointment confirmed.");
+    }
+
+    public function calendar(?string $date = null)
+    {
+        $week  = $date ? Carbon::parse($date)->startOfWeek() : Carbon::now()->startOfWeek();
+        $days  = collect(range(0, 6))->map(fn ($i) => $week->copy()->addDays($i));
+        $prev  = $week->copy()->subWeek()->toDateString();
+        $next  = $week->copy()->addWeek()->toDateString();
+
+        // Load all appointments for the week
+        $appointments = Appointment::with(['customer', 'staff', 'service'])
+            ->whereBetween('scheduled_at', [$week, $week->copy()->endOfWeek()])
+            ->whereNotIn('status', ['cancelled', 'no_show'])
+            ->orderBy('scheduled_at')
+            ->get()
+            ->groupBy(fn ($a) => $a->scheduled_at->format('Y-m-d'));
+
+        // Hours to display (7am – 8pm)
+        $hours = collect(range(7, 20))->map(fn ($h) => str_pad($h, 2, '0', STR_PAD_LEFT) . ':00');
+
+        $staff     = Staff::where('is_active', true)->orderBy('name')->get();
+        $unassigned = Appointment::whereNull('staff_id')
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->where('scheduled_at', '>=', now())
+            ->with(['customer', 'service'])
+            ->orderBy('scheduled_at')
+            ->count();
+
+        return view('appointments.calendar', compact(
+            'days', 'appointments', 'hours', 'week', 'prev', 'next', 'staff', 'unassigned'
+        ));
     }
 
     public function destroy(Appointment $appointment)

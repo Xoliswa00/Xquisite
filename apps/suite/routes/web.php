@@ -39,6 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('module:booking')->group(function () {
         Route::resource('appointments', AppointmentController::class);
         Route::post('appointments/{appointment}/assign', [\App\Http\Controllers\Booking\AppointmentController::class, 'assign'])->name('appointments.assign');
+        Route::get('calendar/{date?}', [\App\Http\Controllers\Booking\AppointmentController::class, 'calendar'])->name('appointments.calendar');
         Route::resource('customers', CustomerController::class);
         Route::resource('services', ServiceController::class)->except(['show']);
         Route::resource('staff', StaffController::class);

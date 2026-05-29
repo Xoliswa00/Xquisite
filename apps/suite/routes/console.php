@@ -9,5 +9,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Retry pending billing sync items every 5 minutes.
-// Safe to run even when billing is down — items stay queued.
 Schedule::command('billing:sync-queue')->everyFiveMinutes()->withoutOverlapping();
+
+// Send appointment reminder emails every 15 minutes.
+// Reminders are created by AppointmentObserver 24h and 1h before each appointment.
+Schedule::command('booking:send-reminders')->everyFifteenMinutes()->withoutOverlapping();

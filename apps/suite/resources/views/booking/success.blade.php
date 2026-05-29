@@ -23,8 +23,12 @@
                 <p class="font-semibold text-slate-900 mt-0.5">{{ $appointment->service->name }}</p>
             </div>
             <div>
-                <p class="text-slate-400 text-xs uppercase font-semibold">With</p>
-                <p class="font-semibold text-slate-900 mt-0.5">{{ $appointment->staff->name }}</p>
+                <p class="text-slate-400 text-xs uppercase font-semibold">Staff</p>
+                @if($appointment->isUnassigned())
+                    <p class="text-slate-400 text-sm mt-0.5 italic">Assigned on confirmation</p>
+                @else
+                    <p class="font-semibold text-slate-900 mt-0.5">{{ $appointment->staff->name }}</p>
+                @endif
             </div>
             <div>
                 <p class="text-slate-400 text-xs uppercase font-semibold">Date</p>
