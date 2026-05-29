@@ -8,6 +8,8 @@ use App\Modules\Booking\Models\Appointment;
 use App\Modules\Booking\Models\Customer;
 use App\Modules\Booking\Models\Staff;
 use App\Modules\Booking\Models\Service;
+use App\Services\Booking\AvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -45,7 +47,7 @@ class AppointmentController extends Controller
         return view('appointments.create', compact('customers', 'staff', 'services'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, AvailabilityService $availability)
     {
         $data = $request->validate([
             'customer_id'      => 'required|exists:customers,id',
@@ -57,9 +59,16 @@ class AppointmentController extends Controller
             'notes'            => 'nullable|string|max:1000',
         ]);
 
+        $staff  = Staff::findOrFail($data['staff_id']);
+        $start  = Carbon::parse($data['scheduled_at']);
+        $error  = $availability->check($staff, $start, (int) $data['duration_minutes']);
+
+        if ($error) {
+            return back()->withInput()->withErrors(['scheduled_at' => $error]);
+        }
+
         $appointment = Appointment::create($data);
 
-        // Send confirmation email if the customer has an email and appointment is confirmed
         if (in_array($data['status'], ['confirmed', 'pending'])) {
             $appointment->load(['customer', 'staff', 'service']);
             if ($appointment->customer->email) {
@@ -88,7 +97,7 @@ class AppointmentController extends Controller
         return view('appointments.edit', compact('appointment', 'customers', 'staff', 'services'));
     }
 
-    public function update(Request $request, Appointment $appointment)
+    public function update(Request $request, Appointment $appointment, AvailabilityService $availability)
     {
         $data = $request->validate([
             'customer_id'      => 'required|exists:customers,id',
@@ -99,6 +108,21 @@ class AppointmentController extends Controller
             'status'           => 'required|in:pending,confirmed,completed,cancelled,no_show',
             'notes'            => 'nullable|string|max:1000',
         ]);
+
+        // Only run availability check when slot or staff actually changed
+        $slotChanged  = $appointment->scheduled_at->toDateTimeString() !== Carbon::parse($data['scheduled_at'])->toDateTimeString();
+        $staffChanged  = $appointment->staff_id !== (int) $data['staff_id'];
+        $durationChanged = $appointment->duration_minutes !== (int) $data['duration_minutes'];
+
+        if ($slotChanged || $staffChanged || $durationChanged) {
+            $staff = Staff::findOrFail($data['staff_id']);
+            $start = Carbon::parse($data['scheduled_at']);
+            $error = $availability->check($staff, $start, (int) $data['duration_minutes'], $appointment->id);
+
+            if ($error) {
+                return back()->withInput()->withErrors(['scheduled_at' => $error]);
+            }
+        }
 
         $appointment->update($data);
 

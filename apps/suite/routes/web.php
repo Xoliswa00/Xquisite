@@ -32,11 +32,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Booking module
-    Route::resource('appointments', AppointmentController::class);
-    Route::resource('customers', CustomerController::class);
-    Route::resource('services', ServiceController::class)->except(['show']);
-    Route::resource('staff', StaffController::class);
+    // Booking module — gated behind module:booking
+    Route::middleware('module:booking')->group(function () {
+        Route::resource('appointments', AppointmentController::class);
+        Route::resource('customers', CustomerController::class);
+        Route::resource('services', ServiceController::class)->except(['show']);
+        Route::resource('staff', StaffController::class);
+        Route::get('staff/{staff}/schedule', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'edit'])->name('staff.schedule');
+        Route::put('staff/{staff}/schedule', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'update'])->name('staff.schedule.update');
+        Route::post('staff/{staff}/blocks', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'storeBlock'])->name('staff.blocks.store');
+        Route::delete('staff/{staff}/blocks/{block}', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'destroyBlock'])->name('staff.blocks.destroy');
+    });
 
     // POS module
     Route::get('/pos', [PosController::class, 'terminal'])->name('pos.terminal');

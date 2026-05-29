@@ -57,7 +57,11 @@ class StaffController extends Controller
 
     public function show(Staff $staff)
     {
-        $staff->load(['services', 'schedules', 'blocks']);
+        $staff->load([
+            'services',
+            'schedules',
+            'blocks' => fn ($q) => $q->where('ends_at', '>', now())->orderBy('starts_at'),
+        ]);
 
         $recentAppointments = $staff->appointments()
             ->with(['customer', 'service'])

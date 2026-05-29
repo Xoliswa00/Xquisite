@@ -28,10 +28,58 @@
                 @else
                     <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
                 @endif
+                <a href="{{ route('staff.schedule', $staff) }}"
+                   class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Schedule</a>
                 <a href="{{ route('staff.edit', $staff) }}"
                    class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Edit</a>
             </div>
         </div>
+
+        <!-- Working hours summary -->
+        @php
+            $days = [0=>'Sun',1=>'Mon',2=>'Tue',3=>'Wed',4=>'Thu',5=>'Fri',6=>'Sat'];
+            $activeSchedules = $staff->schedules->where('is_active', true)->keyBy('day_of_week');
+        @endphp
+        @if($staff->schedules->count())
+        <div class="bg-slate-800 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-medium text-slate-300">Working Hours</h3>
+                <a href="{{ route('staff.schedule', $staff) }}" class="text-xs text-indigo-400 hover:text-indigo-300">Edit →</a>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+                @foreach($days as $num => $label)
+                    @if($activeSchedules->has($num))
+                        @php $s = $activeSchedules[$num]; @endphp
+                        <div class="bg-slate-700 rounded-lg px-3 py-2 text-center">
+                            <p class="text-xs font-semibold text-slate-300">{{ $label }}</p>
+                            <p class="text-xs text-emerald-400 mt-0.5">{{ substr($s->start_time,0,5) }}–{{ substr($s->end_time,0,5) }}</p>
+                        </div>
+                    @else
+                        <div class="bg-slate-900/40 rounded-lg px-3 py-2 text-center opacity-40">
+                            <p class="text-xs font-semibold text-slate-500">{{ $label }}</p>
+                            <p class="text-xs text-slate-600 mt-0.5">Off</p>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        <!-- Active blocks -->
+        @php $upcomingBlocks = $staff->blocks->filter(fn($b) => $b->ends_at > now()); @endphp
+        @if($upcomingBlocks->count())
+        <div class="bg-yellow-900/20 border border-yellow-800/50 rounded-xl p-4">
+            <h3 class="text-sm font-medium text-yellow-400 mb-2">Upcoming Blocked Time</h3>
+            <div class="space-y-1">
+                @foreach($upcomingBlocks as $block)
+                    <p class="text-xs text-slate-300">
+                        {{ $block->starts_at->format('d M Y H:i') }} → {{ $block->ends_at->format('d M Y H:i') }}
+                        @if($block->reason) <span class="text-slate-400">— {{ $block->reason }}</span> @endif
+                    </p>
+                @endforeach
+            </div>
+        </div>
+        @endif
 
         <!-- Recent appointments -->
         <div class="bg-slate-800 rounded-xl overflow-hidden">
