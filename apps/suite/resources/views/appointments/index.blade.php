@@ -16,6 +16,7 @@
                     @foreach(['pending','confirmed','completed','cancelled','no_show'] as $s)
                         <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
                     @endforeach
+                    <option value="unassigned" @selected(request('status') === 'unassigned')>Unassigned Staff</option>
                 </select>
                 <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Filter</button>
                 @if(request()->hasAny(['search','date','status']))
@@ -55,7 +56,15 @@
                                 </a>
                             </td>
                             <td class="px-4 py-3 text-slate-300">{{ $appt->service->name }}</td>
-                            <td class="px-4 py-3 text-slate-300">{{ $appt->staff->name }}</td>
+                            <td class="px-4 py-3">
+                                @if($appt->staff_id)
+                                    <span class="text-slate-300">{{ $appt->staff->name }}</span>
+                                @else
+                                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-900/40 text-orange-400 border border-orange-800">
+                                        Unassigned
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-slate-400">{{ $appt->duration_minutes }}m</td>
                             <td class="px-4 py-3">
                                 @php $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','cancelled'=>'red','no_show'=>'slate']; $c = $colors[$appt->status] ?? 'slate'; @endphp

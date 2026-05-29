@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Booking;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Booking\Models\Appointment;
-use App\Modules\Booking\Models\Customer;
 use App\Modules\Booking\Models\Service;
-use App\Modules\Booking\Models\Staff;
 use App\Models\Tenant;
 use App\Services\Booking\AvailabilityService;
 use App\Services\Tenant\TenantContext;
@@ -31,34 +29,28 @@ class PublicBookingController extends Controller
         return view('booking.index', compact('tenant', 'services', 'slug'));
     }
 
-    /** Step 2 — pick a date + staff for a service */
+    /** Step 2 — pick a date + time for a service (no staff selection) */
     public function service(string $slug, Service $service)
     {
         $tenant = $this->resolveTenant($slug);
-        $staff  = Staff::where('is_active', true)
-            ->whereHas('services', fn ($q) => $q->where('services.id', $service->id))
-            ->orderBy('name')
-            ->get();
 
-        return view('booking.service', compact('tenant', 'service', 'staff', 'slug'));
+        return view('booking.service', compact('tenant', 'service', 'slug'));
     }
 
-    /** AJAX — return available slots for a staff + date + service */
+    /** AJAX — return available slots for a service + date (checks all staff) */
     public function slots(string $slug, Request $request, AvailabilityService $availability)
     {
         $this->resolveTenant($slug);
 
         $request->validate([
-            'staff_id'   => 'required|exists:staff,id',
             'service_id' => 'required|exists:services,id',
             'date'       => 'required|date|after_or_equal:today',
         ]);
 
-        $staff   = Staff::findOrFail($request->staff_id);
         $service = Service::findOrFail($request->service_id);
         $date    = Carbon::parse($request->date);
 
-        $slots = $availability->availableSlots($staff, $date, $service->duration_minutes);
+        $slots = $availability->availableSlotsForService($service, $date);
 
         return response()->json([
             'slots' => $slots->map(fn ($s) => [
@@ -68,61 +60,63 @@ class PublicBookingController extends Controller
         ]);
     }
 
-    /** Step 3 — review & confirm (shown after slot selection) */
+    /** Step 3 — review & confirm */
     public function confirm(string $slug, Request $request)
     {
-        $tenant  = $this->resolveTenant($slug);
+        $tenant = $this->resolveTenant($slug);
         $request->validate([
             'service_id'   => 'required|exists:services,id',
-            'staff_id'     => 'required|exists:staff,id',
             'scheduled_at' => 'required|date|after:now',
         ]);
 
         $service = Service::findOrFail($request->service_id);
-        $staff   = Staff::findOrFail($request->staff_id);
         $slot    = Carbon::parse($request->scheduled_at);
 
-        // Store pending booking in session so confirm POST can use it
-        session(['pending_booking' => $request->only('service_id', 'staff_id', 'scheduled_at')]);
+        session(['pending_booking' => $request->only('service_id', 'scheduled_at')]);
 
         $customer = auth('customer')->user();
 
-        return view('booking.confirm', compact('tenant', 'service', 'staff', 'slot', 'slug', 'customer'));
+        return view('booking.confirm', compact('tenant', 'service', 'slot', 'slug', 'customer'));
     }
 
-    /** Step 4 — create the appointment */
+    /** Step 4 — create the appointment (staff unassigned — admin assigns later) */
     public function store(string $slug, Request $request, AvailabilityService $availability)
     {
-        $tenant = $this->resolveTenant($slug);
-
+        $tenant  = $this->resolveTenant($slug);
         $pending = session('pending_booking');
+
         if (!$pending) {
-            return redirect()->route('book.index', $slug)->withErrors(['error' => 'Session expired. Please start again.']);
+            return redirect()->route('book.index', $slug)
+                ->withErrors(['error' => 'Session expired. Please start again.']);
         }
 
         $customer = auth('customer')->user();
         if (!$customer) {
-            return redirect()->route('book.login', $slug)->with('info', 'Please log in or create an account to complete your booking.');
+            return redirect()->route('book.login', $slug)
+                ->with('info', 'Please log in or create an account to complete your booking.');
         }
 
-        $service  = Service::findOrFail($pending['service_id']);
-        $staff    = Staff::findOrFail($pending['staff_id']);
-        $start    = Carbon::parse($pending['scheduled_at']);
+        $service = Service::findOrFail($pending['service_id']);
+        $start   = Carbon::parse($pending['scheduled_at']);
 
-        $error = $availability->check($staff, $start, $service->duration_minutes);
-        if ($error) {
+        // Verify at least one staff member is still available at this slot
+        $slots = $availability->availableSlotsForService($service, $start->copy()->startOfDay());
+        $stillAvailable = $slots->contains(fn ($s) => $s->format('Y-m-d H:i') === $start->format('Y-m-d H:i'));
+
+        if (!$stillAvailable) {
             session()->forget('pending_booking');
-            return redirect()->route('book.service', [$slug, $service])->withErrors(['slot' => $error]);
+            return redirect()->route('book.service', [$slug, $service])
+                ->withErrors(['slot' => 'That time slot is no longer available. Please choose another.']);
         }
 
         $appointment = Appointment::create([
             'tenant_id'        => $tenant->id,
             'customer_id'      => $customer->id,
-            'staff_id'         => $staff->id,
+            'staff_id'         => null,   // assigned by admin at confirmation
             'service_id'       => $service->id,
             'scheduled_at'     => $start,
             'duration_minutes' => $service->duration_minutes,
-            'status'           => 'confirmed',
+            'status'           => 'pending',
             'notes'            => $request->input('notes'),
         ]);
 
@@ -135,9 +129,8 @@ class PublicBookingController extends Controller
     public function success(string $slug, Appointment $appointment)
     {
         $tenant = $this->resolveTenant($slug);
-        $appointment->load(['customer', 'staff', 'service']);
+        $appointment->load(['customer', 'service']);
 
-        // Ensure this customer owns this appointment
         abort_if(auth('customer')->id() !== $appointment->customer_id, 403);
 
         return view('booking.success', compact('tenant', 'appointment', 'slug'));

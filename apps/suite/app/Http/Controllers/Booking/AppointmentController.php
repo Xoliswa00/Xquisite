@@ -21,7 +21,11 @@ class AppointmentController extends Controller
             ->orderByDesc('scheduled_at');
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            if ($request->status === 'unassigned') {
+                $query->whereNull('staff_id');
+            } else {
+                $query->where('status', $request->status);
+            }
         }
 
         if ($request->filled('date')) {
@@ -101,7 +105,7 @@ class AppointmentController extends Controller
     {
         $data = $request->validate([
             'customer_id'      => 'required|exists:customers,id',
-            'staff_id'         => 'required|exists:staff,id',
+            'staff_id'         => 'nullable|exists:staff,id',
             'service_id'       => 'required|exists:services,id',
             'scheduled_at'     => 'required|date',
             'duration_minutes' => 'required|integer|min:5|max:480',
@@ -109,25 +113,56 @@ class AppointmentController extends Controller
             'notes'            => 'nullable|string|max:1000',
         ]);
 
-        // Only run availability check when slot or staff actually changed
-        $slotChanged  = $appointment->scheduled_at->toDateTimeString() !== Carbon::parse($data['scheduled_at'])->toDateTimeString();
-        $staffChanged  = $appointment->staff_id !== (int) $data['staff_id'];
+        $slotChanged     = $appointment->scheduled_at->toDateTimeString() !== Carbon::parse($data['scheduled_at'])->toDateTimeString();
+        $staffChanged    = $appointment->staff_id !== (int) ($data['staff_id'] ?? 0);
         $durationChanged = $appointment->duration_minutes !== (int) $data['duration_minutes'];
 
-        if ($slotChanged || $staffChanged || $durationChanged) {
+        // Rescheduling clears staff assignment — they must be re-assigned
+        if ($slotChanged || $durationChanged) {
+            $data['staff_id'] = null;
+        }
+
+        // If staff is explicitly assigned (not a reschedule), run availability check
+        if (!$slotChanged && !$durationChanged && $data['staff_id']) {
             $staff = Staff::findOrFail($data['staff_id']);
             $start = Carbon::parse($data['scheduled_at']);
             $error = $availability->check($staff, $start, (int) $data['duration_minutes'], $appointment->id);
 
             if ($error) {
-                return back()->withInput()->withErrors(['scheduled_at' => $error]);
+                return back()->withInput()->withErrors(['staff_id' => $error]);
             }
         }
 
         $appointment->update($data);
 
         return redirect()->route('appointments.show', $appointment)
-            ->with('success', 'Appointment updated.');
+            ->with('success', $slotChanged || $durationChanged
+                ? 'Appointment rescheduled. Staff assignment cleared — please assign a staff member.'
+                : 'Appointment updated.'
+            );
+    }
+
+    /** Admin assigns a staff member to an unassigned appointment */
+    public function assign(Request $request, Appointment $appointment, AvailabilityService $availability)
+    {
+        $data = $request->validate([
+            'staff_id' => 'required|exists:staff,id',
+        ]);
+
+        $staff = Staff::findOrFail($data['staff_id']);
+        $error = $availability->check($staff, $appointment->scheduled_at, $appointment->duration_minutes, $appointment->id);
+
+        if ($error) {
+            return back()->withErrors(['staff_id' => $error]);
+        }
+
+        $appointment->update([
+            'staff_id' => $staff->id,
+            'status'   => $appointment->status === 'pending' ? 'confirmed' : $appointment->status,
+        ]);
+
+        return redirect()->route('appointments.show', $appointment)
+            ->with('success', "{$staff->name} assigned. Appointment confirmed.");
     }
 
     public function destroy(Appointment $appointment)

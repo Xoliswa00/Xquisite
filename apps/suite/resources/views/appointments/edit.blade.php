@@ -30,9 +30,13 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Staff</label>
-                        <select name="staff_id" required
+                        <label class="block text-sm font-medium text-slate-300 mb-1">
+                            Staff
+                            <span class="text-slate-500 font-normal text-xs ml-1">(cleared automatically if you change the date/time)</span>
+                        </label>
+                        <select name="staff_id"
                                 class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            <option value="">— Unassigned —</option>
                             @foreach($staff as $m)
                                 <option value="{{ $m->id }}" @selected(old('staff_id', $appointment->staff_id) == $m->id)>{{ $m->name }}</option>
                             @endforeach

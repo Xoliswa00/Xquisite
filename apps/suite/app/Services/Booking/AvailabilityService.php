@@ -3,6 +3,7 @@
 namespace App\Services\Booking;
 
 use App\Modules\Booking\Models\Appointment;
+use App\Modules\Booking\Models\Service;
 use App\Modules\Booking\Models\Staff;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -138,5 +139,38 @@ class AvailabilityService
         }
 
         return $slots;
+    }
+
+    /**
+     * Generate available slots for a service on a given date.
+     * A slot is available if at least one active staff member can take it.
+     * Used by the public booking portal — client never picks a staff member.
+     *
+     * @return Collection<Carbon>
+     */
+    public function availableSlotsForService(Service $service, Carbon $date): Collection
+    {
+        $staff = Staff::where('is_active', true)
+            ->whereHas('services', fn ($q) => $q->where('services.id', $service->id))
+            ->with(['schedules', 'blocks'])
+            ->get();
+
+        if ($staff->isEmpty()) {
+            return collect();
+        }
+
+        // Union: a slot is offered if at least one staff member is free for it
+        $allSlots = collect();
+        foreach ($staff as $member) {
+            $memberSlots = $this->availableSlots($member, $date, $service->duration_minutes);
+            foreach ($memberSlots as $slot) {
+                $key = $slot->format('Y-m-d H:i');
+                if (!$allSlots->has($key)) {
+                    $allSlots->put($key, $slot);
+                }
+            }
+        }
+
+        return $allSlots->values()->sortBy(fn ($s) => $s->timestamp)->values();
     }
 }

@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('tenant_id')->nullable()->index();
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('staff_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('staff_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
             $table->dateTime('scheduled_at');
             $table->unsignedInteger('duration_minutes');

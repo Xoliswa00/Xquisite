@@ -36,7 +36,12 @@ class Appointment extends Model
 
     public function staff()
     {
-        return $this->belongsTo(Staff::class);
+        return $this->belongsTo(Staff::class)->withDefault(['name' => 'Unassigned']);
+    }
+
+    public function isUnassigned(): bool
+    {
+        return $this->staff_id === null;
     }
 
     public function service()

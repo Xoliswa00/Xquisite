@@ -3,6 +3,44 @@
 
     <div class="max-w-2xl space-y-4">
 
+        <!-- Unassigned staff alert -->
+        @if($appointment->isUnassigned())
+        <div class="bg-orange-900/20 border border-orange-700/50 rounded-xl p-4 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-semibold text-orange-400">No staff member assigned</p>
+                <p class="text-xs text-slate-400 mt-0.5">Assign a staff member to confirm this booking.</p>
+            </div>
+        </div>
+
+        <!-- Assign staff form -->
+        <div class="bg-slate-800 rounded-xl p-5">
+            <p class="text-sm font-medium text-slate-300 mb-3">Assign Staff Member</p>
+            <form method="POST" action="{{ route('appointments.assign', $appointment) }}" class="flex gap-3 flex-wrap">
+                @csrf
+                @if($errors->has('staff_id'))
+                    <p class="w-full text-xs text-red-400">{{ $errors->first('staff_id') }}</p>
+                @endif
+                @php
+                    $assignableStaff = \App\Modules\Booking\Models\Staff::where('is_active', true)
+                        ->whereHas('services', fn($q) => $q->where('services.id', $appointment->service_id))
+                        ->orderBy('name')
+                        ->get();
+                @endphp
+                <select name="staff_id" required
+                        class="bg-slate-700 border-slate-600 text-slate-200 rounded-lg text-sm flex-1">
+                    <option value="">Select staff member…</option>
+                    @foreach($assignableStaff as $member)
+                        <option value="{{ $member->id }}">{{ $member->name }}{{ $member->role ? ' — ' . $member->role : '' }}</option>
+                    @endforeach
+                </select>
+                <button type="submit"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg">
+                    Assign &amp; Confirm
+                </button>
+            </form>
+        </div>
+        @endif
+
         <!-- Detail card -->
         <div class="bg-slate-800 rounded-xl p-6 space-y-4">
             <div class="flex items-center justify-between">
@@ -16,7 +54,7 @@
                            class="text-sm bg-emerald-800/50 hover:bg-emerald-800 text-emerald-400 border border-emerald-700 px-4 py-2 rounded-lg">
                             View Receipt · {{ $appointment->sale->reference }}
                         </a>
-                    @elseif(in_array($appointment->status, ['confirmed', 'pending']))
+                    @elseif(in_array($appointment->status, ['confirmed', 'pending']) && !$appointment->isUnassigned())
                         <a href="{{ route('pos.terminal', ['appointment' => $appointment->id]) }}"
                            class="text-sm bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-medium">
                             Checkout →
@@ -39,8 +77,12 @@
                 </div>
                 <div>
                     <p class="text-slate-400">Staff</p>
-                    <p class="text-white font-medium">{{ $appointment->staff->name }}</p>
-                    <p class="text-slate-400 text-xs">{{ $appointment->staff->role }}</p>
+                    @if($appointment->isUnassigned())
+                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-900/40 text-orange-400 border border-orange-800">Unassigned</span>
+                    @else
+                        <p class="text-white font-medium">{{ $appointment->staff->name }}</p>
+                        <p class="text-slate-400 text-xs">{{ $appointment->staff->role }}</p>
+                    @endif
                 </div>
                 <div>
                     <p class="text-slate-400">Service</p>
@@ -82,7 +124,8 @@
                         </button>
                     @endforeach
                 </form>
-                <p class="text-xs text-slate-600 mt-2">Tip: use the Checkout button above to mark as completed and process payment.</p>
+                <p class="text-xs text-slate-600 mt-2">Tip: use the Checkout button to mark as completed and process payment.</p>
+                <p class="text-xs text-slate-600 mt-1">Rescheduling (via Edit) will clear the staff assignment — you'll need to re-assign.</p>
             </div>
         @else
             <!-- Sale summary if checked out -->
