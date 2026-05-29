@@ -32,6 +32,7 @@ return new class extends Migration
     $table->string('province')->nullable();
     $table->string('postal_code')->nullable();
     $table->string('country')->default('South Africa');
+    $table->text('billing_address')->nullable();
     $table->timestamps();
 
     $table->unique(['company_id', 'email']);

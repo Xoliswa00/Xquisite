@@ -16,11 +16,16 @@ class Subscription extends Model
         'status',
         'start_date',
         'end_date',
+        'frequency',
+        'next_invoice_date',
+        'auto_renew',
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'end_date'   => 'date',
+        'start_date'       => 'date',
+        'end_date'         => 'date',
+        'next_invoice_date' => 'date',
+        'auto_renew'       => 'boolean',
     ];
 
     public function company()

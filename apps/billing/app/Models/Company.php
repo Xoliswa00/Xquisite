@@ -49,12 +49,17 @@ class Company extends Model
 
     public function invitations()
     {
-        return $this->hasMany(Company_invitations::class);
+        return $this->hasMany(CompanyInvitation::class);
     }
 
     public function domains()
     {
-        return $this->hasMany(Company_domains::class);
+        return $this->hasMany(CompanyDomain::class);
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'company_users')->withPivot('role')->withTimestamps();
     }
     public function clients()
     {

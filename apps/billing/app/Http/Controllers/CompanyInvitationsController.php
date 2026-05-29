@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\company_invitations;
+use App\Models\CompanyInvitation;
 use App\Http\Requests\Storecompany_invitationsRequest;
 use App\Http\Requests\Updatecompany_invitationsRequest;
 use App\Models\Company;
@@ -32,7 +32,7 @@ class CompanyInvitationsController extends Controller
             'role' => 'required|in:owner,admin,finance,viewer',
         ]);
 
-        $invitation = company_invitations::create([
+        $invitation = CompanyInvitation::create([
             'company_id' => $company->id,
             'email' => strtolower($validated['email']),
             'role' => $validated['role'],
@@ -54,7 +54,7 @@ class CompanyInvitationsController extends Controller
     }
      public function accept($token)
     {
-        $invitation = company_invitations::where('token', $token)->firstOrFail();
+        $invitation = CompanyInvitation::where('token', $token)->firstOrFail();
 
         if ($invitation->isExpired()) {
             return response()->json(['message' => 'Invitation expired'], 410);

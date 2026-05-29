@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\company_user;
-use App\Http\Requests\Storecompany_userRequest;
-use App\Http\Requests\Updatecompany_userRequest;
+use App\Models\CompanyUser;
 use App\Models\Company;
 use App\Models\User;
 

@@ -6,7 +6,7 @@
                 Edit Company
             </h2>
 
-            <a href="{{ route('companies.show', $company) }}"
+            <a href="{{ route('companies.index') }}"
                 class="text-sm text-gray-600 hover:underline">
                 Cancel
             </a>

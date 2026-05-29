@@ -11,13 +11,14 @@
                 ['route' => 'clients.profile','label' => 'My Profile'],
             ]
             : [
-                ['route' => 'dashboard',       'label' => 'Overview'],
-                ['route' => 'clients.index',   'label' => 'Clients'],
-                ['route' => 'quotes.index',    'label' => 'Quotes'],
-                ['route' => 'invoices.index',  'label' => 'Invoices'],
-                ['route' => 'payments.index',  'label' => 'Payments'],
-                ['route' => 'products.index',  'label' => 'Products'],
-                ['route' => 'reports.index',   'label' => 'Reports'],
+                ['route' => 'dashboard',        'label' => 'Overview'],
+                ['route' => 'clients.index',    'label' => 'Clients'],
+                ['route' => 'quotes.index',     'label' => 'Quotes'],
+                ['route' => 'invoices.index',   'label' => 'Invoices'],
+                ['route' => 'payments.index',   'label' => 'Payments'],
+                ['route' => 'products.index',   'label' => 'Products'],
+                ['route' => 'subscriptions.index', 'label' => 'Subscriptions'],
+                ['route' => 'reports.index',    'label' => 'Reports'],
             ];
     @endphp
 

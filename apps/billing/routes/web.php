@@ -7,6 +7,9 @@ use App\Http\Controllers\SubscriptionsController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\CompanyUserController;
+use App\Http\Controllers\CompanyInvitationsController;
+use App\Http\Controllers\CompanyDomainsController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductItemsController;
 use App\Http\Controllers\ProductPriceController;
@@ -60,9 +63,18 @@ Route::middleware(['auth'])->group(function () {
 
     // Companies
     Route::resource('companies', CompanyController::class);
+    Route::post('companies/{company}/switch', [CompanyController::class, 'switch'])->name('companies.switch');
+    Route::post('companies/{company}/users', [CompanyUserController::class, 'store'])->name('companies.users.store');
+    Route::put('companies/{company}/users/{user}/role', [CompanyUserController::class, 'updateRole'])->name('companies.users.role');
+    Route::delete('companies/{company}/users/{user}', [CompanyUserController::class, 'destroy'])->name('companies.users.destroy');
+    Route::get('companies/{company}/users', [CompanyUserController::class, 'index'])->name('companies.users.index');
+    Route::post('companies/{company}/invitations', [CompanyInvitationsController::class, 'store'])->name('companies.invitations.store');
+    Route::get('invitations/accept/{token}', [CompanyInvitationsController::class, 'accept'])->name('invitations.accept');
+    Route::post('companies/{company}/domains', [CompanyDomainsController::class, 'store'])->name('companies.domains.store');
+    Route::delete('companies/{company}/domains/{companyDomain}', [CompanyDomainsController::class, 'destroy'])->name('companies.domains.destroy');
 
     // Subscriptions
-    Route::resource('subscriptions', SubscriptionsController::class)->only(['index', 'show', 'store', 'destroy']);
+    Route::resource('subscriptions', SubscriptionsController::class);
 
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

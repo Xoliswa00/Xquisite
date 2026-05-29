@@ -25,6 +25,7 @@ class Client extends Model
             'website',
             'tax_number',
             'vat_number',
+            'billing_address',
             'user_id'
     ];
 

@@ -41,11 +41,11 @@ class ClientController extends Controller
         abort_if(!$company, 403, 'No active company.');
 
         $validated = $request->validate([
-            'name'           => 'required|string|max:255',
-            'contact_person' => 'nullable|string|max:255',
-            'email'          => 'required|email|unique:clients,email',
-            'phone'          => 'nullable|string|max:20',
-            'vat_number'     => 'nullable|string|max:50',
+            'name'            => 'required|string|max:255',
+            'contact_person'  => 'nullable|string|max:255',
+            'email'           => 'required|email|unique:clients,email',
+            'phone'           => 'nullable|string|max:20',
+            'vat_number'      => 'nullable|string|max:50',
             'billing_address' => 'nullable|string',
         ]);
 
@@ -148,8 +148,8 @@ class ClientController extends Controller
             'name'            => 'required|string|max:255',
             'contact_person'  => 'nullable|string',
             'phone'           => 'nullable|string',
-            'billing_address' => 'nullable|string',
             'vat_number'      => 'nullable|string',
+            'billing_address' => 'nullable|string',
         ]);
 
         $client->update($validated);

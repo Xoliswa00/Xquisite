@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\company_domains;
-use App\Http\Requests\Storecompany_domainsRequest;
-use App\Http\Requests\Updatecompany_domainsRequest;
+use App\Models\CompanyDomain;
 use App\Models\Company;
 use Illuminate\Http\Request;
 
@@ -26,7 +24,7 @@ class CompanyDomainsController extends Controller
         return response()->json($domain, 201);
     }
 
-    public function destroy(company_domains $companyDomain)
+    public function destroy(CompanyDomain $companyDomain)
     {
         $this->authorize('update', $companyDomain->company);
 

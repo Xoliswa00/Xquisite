@@ -25,8 +25,8 @@ class CompanyPolicy
             return true;
         }
 
-        // Client users belonging to company
-        if ($user->companies->contains($company->id)) {
+        // Member user belonging to company
+        if ($user->companies()->where('companies.id', $company->id)->exists()) {
             return true;
         }
 
