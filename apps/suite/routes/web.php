@@ -20,6 +20,9 @@ use App\Http\Controllers\Ecommerce\OrderController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Admin\SyncQueueController;
+use App\Http\Controllers\Booking\PublicBookingController;
+use App\Http\Controllers\Booking\CustomerAuthController;
+use App\Http\Controllers\Booking\CustomerPortalController;
 use App\Http\Controllers\Settings\ModuleController;
 use Illuminate\Support\Facades\Route;
 
@@ -124,6 +127,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// ─── Public client booking portal (/book/{slug}) ─────────────────────────────
+// No staff auth required — customers create their own accounts here.
+Route::prefix('book/{slug}')->name('book.')->group(function () {
+
+    // Service listing
+    Route::get('/',                           [PublicBookingController::class, 'index'])->name('index');
+    Route::get('/services/{service}',         [PublicBookingController::class, 'service'])->name('service');
+    Route::get('/slots',                      [PublicBookingController::class, 'slots'])->name('slots');
+    Route::get('/confirm',                    [PublicBookingController::class, 'confirm'])->name('confirm');
+    Route::post('/book',                      [PublicBookingController::class, 'store'])->name('store');
+    Route::get('/success/{appointment}',      [PublicBookingController::class, 'success'])->name('success');
+
+    // Customer auth
+    Route::get('/login',                      [CustomerAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',                     [CustomerAuthController::class, 'login'])->name('login.post');
+    Route::get('/register',                   [CustomerAuthController::class, 'showRegister'])->name('register');
+    Route::post('/register',                  [CustomerAuthController::class, 'register'])->name('register.post');
+    Route::post('/logout',                    [CustomerAuthController::class, 'logout'])->name('logout');
+
+    // Customer portal (auth checked inside controller)
+    Route::get('/my-bookings',                [CustomerPortalController::class, 'myBookings'])->name('my-bookings');
+    Route::patch('/appointments/{appointment}/cancel', [CustomerPortalController::class, 'cancel'])->name('cancel');
 });
 
 // Public storefront (no auth)

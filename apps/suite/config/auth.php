@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Booking\Models\Customer;
 
 return [
 
@@ -39,8 +40,12 @@ return [
 
     'guards' => [
         'web' => [
-            'driver' => 'session',
+            'driver'   => 'session',
             'provider' => 'users',
+        ],
+        'customer' => [
+            'driver'   => 'session',
+            'provider' => 'customers',
         ],
     ],
 
@@ -64,7 +69,11 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'model'  => env('AUTH_MODEL', User::class),
+        ],
+        'customers' => [
+            'driver' => 'eloquent',
+            'model'  => Customer::class,
         ],
 
         // 'users' => [

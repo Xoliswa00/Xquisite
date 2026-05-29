@@ -12,10 +12,16 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('tenant_id')->nullable()->index();
             $table->string('name');
-            $table->string('email')->nullable();
+            $table->string('email')->nullable()->unique();
             $table->string('phone')->nullable();
             $table->text('notes')->nullable();
             $table->boolean('is_active')->default(true);
+
+            // Customer portal auth
+            $table->string('password')->nullable();
+            $table->rememberToken();
+            $table->timestamp('email_verified_at')->nullable();
+
             $table->timestamps();
         });
     }
