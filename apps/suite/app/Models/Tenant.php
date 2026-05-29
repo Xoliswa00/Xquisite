@@ -52,16 +52,17 @@ class Tenant extends Model
         return $this->activeModules->contains('module', $module);
     }
 
-    public function activateModule(string $module, ?int $activatedBy = null, ?float $priceOverride = null): TenantModule
+    public function activateModule(string $module, ?int $activatedBy = null, ?float $priceOverride = null, ?int $billingSubscriptionId = null): TenantModule
     {
         return $this->tenantModules()->updateOrCreate(
             ['module' => $module],
             [
-                'is_active'      => true,
-                'price_override' => $priceOverride,
-                'activated_at'   => now(),
-                'activated_by'   => $activatedBy,
-                'deactivated_at' => null,
+                'is_active'               => true,
+                'price_override'          => $priceOverride,
+                'activated_at'            => now(),
+                'activated_by'            => $activatedBy,
+                'deactivated_at'          => null,
+                'billing_subscription_id' => $billingSubscriptionId,
             ]
         );
     }

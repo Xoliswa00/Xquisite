@@ -17,6 +17,7 @@ return new class extends Migration
             $table->timestamp('activated_at')->nullable();
             $table->timestamp('deactivated_at')->nullable();
             $table->foreignId('activated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('billing_subscription_id')->nullable(); // ID from billing app
             $table->timestamps();
 
             $table->unique(['tenant_id', 'module']);

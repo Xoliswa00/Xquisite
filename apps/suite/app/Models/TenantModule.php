@@ -14,6 +14,7 @@ class TenantModule extends Model
         'activated_at',
         'deactivated_at',
         'activated_by',
+        'billing_subscription_id',
     ];
 
     protected $casts = [

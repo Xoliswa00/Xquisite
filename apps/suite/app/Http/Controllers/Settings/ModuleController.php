@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Services\BillingBridge;
 use Illuminate\Http\Request;
 
 class ModuleController extends Controller
@@ -17,19 +18,25 @@ class ModuleController extends Controller
         return view('settings.modules', compact('tenant', 'allModules'));
     }
 
-    public function request(Request $request)
+    public function request(Request $request, BillingBridge $billing)
     {
         $request->validate([
             'module' => 'required|string|in:' . implode(',', array_keys(config('modules'))),
         ]);
 
         $tenant     = auth()->user()->tenant;
-        $moduleName = config("modules.{$request->module}.name");
+        $moduleKey  = $request->module;
+        $moduleName = config("modules.{$moduleKey}.name");
 
-        // In a real billing flow this would create a subscription item.
-        // For now it logs the request — admin will activate from the admin panel.
-        \Log::info("Module request: tenant={$tenant->id} module={$request->module}");
+        // Create billing subscription and activate module immediately
+        $billingSubscriptionId = $billing->createModuleSubscription($tenant, $moduleKey);
 
-        return back()->with('success', "Your request to activate {$moduleName} has been received. Our team will be in touch shortly.");
+        $tenant->activateModule(
+            module:                $moduleKey,
+            activatedBy:           auth()->id(),
+            billingSubscriptionId: $billingSubscriptionId,
+        );
+
+        return back()->with('success', "{$moduleName} has been activated on your account.");
     }
 }

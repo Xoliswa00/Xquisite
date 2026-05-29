@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\TenantModule;
 use App\Models\User;
+use App\Services\BillingBridge;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -82,15 +83,17 @@ class TenantController extends Controller
             'role'      => 'owner',
         ]);
 
+        $billing = app(BillingBridge::class);
         foreach ($request->input('modules', []) as $module) {
-            $tenant->activateModule($module, auth()->id());
+            $billingId = $billing->createModuleSubscription($tenant, $module);
+            $tenant->activateModule($module, auth()->id(), null, $billingId);
         }
 
         return redirect()->route('admin.tenants.show', $tenant)
             ->with('success', "Tenant '{$tenant->name}' created with " . count($request->input('modules', [])) . ' module(s).');
     }
 
-    public function toggleModule(Request $request, Tenant $tenant)
+    public function toggleModule(Request $request, Tenant $tenant, BillingBridge $billing)
     {
         $request->validate([
             'module'         => 'required|string|in:' . implode(',', array_keys(config('modules'))),
@@ -98,18 +101,28 @@ class TenantController extends Controller
             'price_override' => 'nullable|numeric|min:0',
         ]);
 
+        $moduleKey = $request->module;
+        $name      = config("modules.{$moduleKey}.name");
+
         if ($request->boolean('active')) {
+            $billingId = $billing->createModuleSubscription($tenant, $moduleKey);
+
             $tenant->activateModule(
-                $request->module,
-                auth()->id(),
-                $request->filled('price_override') ? (float) $request->price_override : null
+                module:                $moduleKey,
+                activatedBy:           auth()->id(),
+                priceOverride:         $request->filled('price_override') ? (float) $request->price_override : null,
+                billingSubscriptionId: $billingId,
             );
 
-            $name = config("modules.{$request->module}.name");
             return back()->with('success', "{$name} activated for {$tenant->name}.");
         } else {
-            $tenant->deactivateModule($request->module);
-            $name = config("modules.{$request->module}.name");
+            // Cancel billing subscription if one exists
+            $tenantModule = $tenant->tenantModules()->where('module', $moduleKey)->first();
+            if ($tenantModule?->billing_subscription_id) {
+                $billing->cancelModuleSubscription($tenantModule->billing_subscription_id);
+            }
+
+            $tenant->deactivateModule($moduleKey);
             return back()->with('success', "{$name} deactivated for {$tenant->name}.");
         }
     }
