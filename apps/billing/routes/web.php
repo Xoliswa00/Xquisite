@@ -14,6 +14,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductItemsController;
 use App\Http\Controllers\ProductPriceController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\LogController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -75,6 +76,12 @@ Route::middleware(['auth'])->group(function () {
 
     // Subscriptions
     Route::resource('subscriptions', SubscriptionsController::class);
+
+    // Logs
+    Route::get('logs', [LogController::class, 'index'])->name('logs.index');
+    Route::get('logs/audit', [LogController::class, 'audit'])->name('logs.audit');
+    Route::get('logs/{log}', [LogController::class, 'show'])->name('logs.show');
+    Route::patch('logs/{log}/status', [LogController::class, 'updateStatus'])->name('logs.status');
 
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

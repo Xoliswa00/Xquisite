@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ModuleSubscriptionController;
+use App\Http\Controllers\Api\LogBridgeController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -13,4 +14,5 @@ Route::get('/user', function (Request $request) {
 Route::middleware('internal.api')->prefix('internal')->group(function () {
     Route::post('module-subscriptions', [ModuleSubscriptionController::class, 'store']);
     Route::post('module-subscriptions/cancel', [ModuleSubscriptionController::class, 'cancel']);
+    Route::get('logs', [LogBridgeController::class, 'index']);
 });

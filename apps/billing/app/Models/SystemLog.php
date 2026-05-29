@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Modules\Core\Models;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,20 +10,9 @@ class SystemLog extends Model
     protected $table = 'system_logs';
 
     protected $fillable = [
-        'level',
-        'message',
-        'context',
-        'file',
-        'line',
-        'user_id',
-        'request_id',
-        'ip_address',
-        'url',
-        'status',
-        'resolved_by',
-        'resolved_at',
-        'resolution_note',
-        'source',
+        'level', 'message', 'context', 'file', 'line',
+        'user_id', 'request_id', 'ip_address', 'url',
+        'status', 'resolved_by', 'resolved_at', 'resolution_note', 'source',
     ];
 
     protected $casts = [
@@ -31,14 +20,10 @@ class SystemLog extends Model
         'resolved_at' => 'datetime',
     ];
 
-    // ── Relationships ──────────────────────────────────────────────
-
     public function resolvedBy()
     {
-        return $this->belongsTo(\App\Models\User::class, 'resolved_by');
+        return $this->belongsTo(User::class, 'resolved_by');
     }
-
-    // ── Scopes ─────────────────────────────────────────────────────
 
     public function scopeUnresolved(Builder $q): Builder
     {
@@ -55,8 +40,6 @@ class SystemLog extends Model
     {
         return $q->where('status', 'new');
     }
-
-    // ── Helpers ────────────────────────────────────────────────────
 
     public static function unresolvedCriticalCount(): int
     {

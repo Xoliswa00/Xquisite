@@ -4,6 +4,8 @@
         $user = Auth::user();
         $company = optional($user->currentCompany);
         $companyName = $company->name ?? 'Workspace';
+        $logAlertCount = 0;
+        try { $logAlertCount = \App\Models\SystemLog::unresolvedCriticalCount(); } catch (\Throwable) {}
 
         $navItems = $user->isClientUser()
             ? [
@@ -47,6 +49,18 @@
             </div>
 
             <div class="hidden sm:flex items-center space-x-3">
+
+                {{-- Error badge --}}
+                @if($logAlertCount > 0)
+                    <a href="{{ route('logs.index', ['status' => 'new']) }}"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold rounded-lg transition">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        {{ $logAlertCount }} error{{ $logAlertCount > 1 ? 's' : '' }}
+                    </a>
+                @endif
+
                 <a href="{{ route('invoices.create') }}"
                    class="inline-flex items-center px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-indigo-600 transition">
                     + Invoice
@@ -65,6 +79,16 @@
                         </div>
                         <x-dropdown-link href="{{ route('profile.show') }}">Account Settings</x-dropdown-link>
                         <x-dropdown-link href="{{ route('companies.index') }}">Company Settings</x-dropdown-link>
+                        <div class="border-t my-1"></div>
+                        <x-dropdown-link href="{{ route('logs.index') }}">
+                            <span class="flex items-center justify-between w-full">
+                                System Logs
+                                @if($logAlertCount > 0)
+                                    <span class="bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5 font-bold ml-2">{{ $logAlertCount }}</span>
+                                @endif
+                            </span>
+                        </x-dropdown-link>
+                        <x-dropdown-link href="{{ route('logs.audit') }}">Audit Trail</x-dropdown-link>
                         <div class="border-t"></div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

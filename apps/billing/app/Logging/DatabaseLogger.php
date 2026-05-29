@@ -20,23 +20,19 @@ class DatabaseLogger
             protected function write(array $record): void
             {
                 try {
-                    $requestId = app()->bound('request_id') ? app('request_id') : null;
-
                     $id = DB::table('system_logs')->insertGetId([
                         'level'      => $record['level_name'],
                         'message'    => $record['message'],
                         'context'    => json_encode($record['context'] ?? []),
-                        'request_id' => $requestId,
                         'user_id'    => auth()->id(),
                         'ip_address' => request()->ip(),
                         'url'        => request()->fullUrl(),
                         'status'     => 'new',
-                        'source'     => 'suite',
+                        'source'     => 'billing',
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
 
-                    // Alert admin on critical/error levels
                     if (in_array(strtoupper($record['level_name']), self::ALERT_LEVELS)) {
                         $this->alertAdmin($id);
                     }
@@ -54,18 +50,15 @@ class DatabaseLogger
                         return;
                     }
 
-                    $log = \App\Models\Modules\Core\Models\SystemLog::find($logId);
+                    $log = \App\Models\SystemLog::find($logId);
                     if (!$log) {
                         return;
                     }
 
-                    // Use anonymous notifiable so we don't need a User model
                     \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
                         ->notify(new \App\Notifications\CriticalLogAlert($log));
 
-                } catch (\Throwable) {
-                    // Silently fail — notification errors must never break logging
-                }
+                } catch (\Throwable) {}
             }
         });
 

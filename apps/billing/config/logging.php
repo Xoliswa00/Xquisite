@@ -52,6 +52,12 @@ return [
 
     'channels' => [
 
+        'database' => [
+            'driver' => 'custom',
+            'via'    => App\Logging\DatabaseLogger::class,
+            'level'  => env('LOG_LEVEL', 'error'),
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', (string) env('LOG_STACK', 'single')),

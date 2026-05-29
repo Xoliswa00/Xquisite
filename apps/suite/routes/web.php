@@ -18,6 +18,7 @@ use App\Http\Controllers\Ecommerce\CartController;
 use App\Http\Controllers\Ecommerce\CheckoutController;
 use App\Http\Controllers\Ecommerce\OrderController;
 use App\Http\Controllers\Admin\TenantController;
+use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Settings\ModuleController;
 use Illuminate\Support\Facades\Route;
 
@@ -91,6 +92,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/tenants/{tenant}/module', [TenantController::class, 'toggleModule'])->name('tenants.module');
         Route::patch('/tenants/{tenant}/subdomain', [TenantController::class, 'updateSubdomain'])->name('tenants.subdomain');
         Route::delete('/tenants/{tenant}', [TenantController::class, 'destroy'])->name('tenants.destroy');
+
+        // Logs
+        Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
+        Route::get('/logs/audit', [LogController::class, 'audit'])->name('logs.audit');
+        Route::get('/logs/combined', [LogController::class, 'combined'])->name('logs.combined');
+        Route::get('/logs/{log}', [LogController::class, 'show'])->name('logs.show');
+        Route::patch('/logs/{log}/status', [LogController::class, 'updateStatus'])->name('logs.status');
     });
 
     // Settings — self-serve module management

@@ -27,6 +27,15 @@ $table->string('request_id')->nullable();
 $table->string('ip_address')->nullable();
 $table->string('url')->nullable();
 
+// Status tracker
+$table->enum('status', ['new', 'acknowledged', 'in_progress', 'resolved'])->default('new')->index();
+$table->unsignedBigInteger('resolved_by')->nullable();
+$table->timestamp('resolved_at')->nullable();
+$table->text('resolution_note')->nullable();
+
+// Source — 'suite' or 'billing' (for central view)
+$table->string('source')->default('suite')->index();
+
 $table->timestamps();
         });
     }
