@@ -26,75 +26,42 @@ jobs:
           REPO="${{ github.repository }}"
           OWNER="${{ github.repository_owner }}"
           DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
-          API_BASE="https://api.github.com"
+          API="https://api.github.com"
 
-          # Guard: exit cleanly if a protected branch somehow triggers this job
           case "$BRANCH" in
             main|master|dev|staging)
-              echo "Skipping PR creation for protected branch: $BRANCH"
+              echo "Skipping protected branch: $BRANCH"
               exit 0
               ;;
           esac
 
-          # Check for any existing PRs (open OR merged/closed) for this branch
           EXISTING=$(curl -fsSL \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            "$API_BASE/repos/$REPO/pulls?state=all&head=$OWNER:$BRANCH&per_page=1" \
+            "$API/repos/$REPO/pulls?state=all&head=$OWNER:$BRANCH&per_page=1" \
             | jq 'length')
 
           if [ "$EXISTING" != "0" ]; then
-            echo "PR already exists (open or previously merged) for $BRANCH — skipping"
+            echo "PR already exists for $BRANCH — skipping"
             exit 0
           fi
 
-          # Derive a human-readable title from the branch name
-          # feature/my-thing -> My Thing   |   feat/scope/detail -> Scope Detail
           TITLE=$(echo "$BRANCH" \
             | sed 's|^[^/]*/||' \
-            | tr '/-' '  '      \
+            | tr '/-' '  ' \
             | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2); print}')
 
-          # Write the PR body to a temp file
-          cat > /tmp/pr-body.md << 'BODYEOF'
-## Summary
+          BODY="## Summary\n\n_Auto-created draft PR — fill in what this branch does before merging._\n\n## Test plan\n\n- [ ] Tested locally\n- [ ] No regressions in related features\n\nAuto-opened by the auto-pr workflow."
 
-_Auto-created draft PR — fill in what this branch does before merging._
+          jq -n \
+            --arg title "$TITLE" \
+            --arg base  "$DEFAULT_BRANCH" \
+            --arg head  "$BRANCH" \
+            --arg body  "$BODY" \
+            '{title:$title,base:$base,head:$head,body:$body,draft:true}' \
+            > /tmp/pr-payload.json
 
-## Test plan
-
-- [ ] Tested locally
-- [ ] No regressions in related features
-
-Auto-opened by the auto-pr workflow.
-BODYEOF
-
-          # Build the JSON payload via Python to guarantee correct escaping
-          python3 - "$TITLE" "$DEFAULT_BRANCH" "$BRANCH" /tmp/pr-body.md << 'PYEOF'
-import sys, json
-
-title       = sys.argv[1]
-base_branch = sys.argv[2]
-head_branch = sys.argv[3]
-body_file   = sys.argv[4]
-
-with open(body_file) as f:
-    body = f.read()
-
-payload = {
-    "title": title,
-    "base":  base_branch,
-    "head":  head_branch,
-    "body":  body,
-    "draft": True,
-}
-
-with open("/tmp/pr-payload.json", "w") as out:
-    json.dump(payload, out)
-PYEOF
-
-          # Create the draft PR via the REST API
           HTTP_STATUS=$(curl -sS -o /tmp/pr-response.json -w "%{http_code}" \
             -X POST \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
@@ -102,21 +69,17 @@ PYEOF
             -H "X-GitHub-Api-Version: 2022-11-28" \
             -H "Content-Type: application/json" \
             --data @/tmp/pr-payload.json \
-            "$API_BASE/repos/$REPO/pulls")
+            "$API/repos/$REPO/pulls")
 
           if [ "$HTTP_STATUS" = "201" ]; then
-            PR_URL=$(jq -r '.html_url' /tmp/pr-response.json)
-            echo "Draft PR created for $BRANCH: $PR_URL"
+            echo "Draft PR created: $(jq -r '.html_url' /tmp/pr-response.json)"
           else
-            ERROR_MSG=$(jq -r '.message // "unknown error"' /tmp/pr-response.json 2>/dev/null || echo "unknown error")
-            echo "PR creation returned HTTP $HTTP_STATUS: $ERROR_MSG"
-            case "$ERROR_MSG" in
+            ERR=$(jq -r '.message // "unknown"' /tmp/pr-response.json 2>/dev/null || echo "unknown")
+            echo "HTTP $HTTP_STATUS: $ERR"
+            case "$ERR" in
               *"No commits between"*|*"already exists"*|*"pull request already"*)
-                echo "Non-fatal — skipping"
-                exit 0
-                ;;
+                exit 0 ;;
               *)
-                exit 1
-                ;;
+                exit 1 ;;
             esac
           fi

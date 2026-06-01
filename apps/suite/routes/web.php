@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Booking\AppointmentController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Ecommerce\StorefrontController;
 use App\Http\Controllers\Ecommerce\CartController;
 use App\Http\Controllers\Ecommerce\CheckoutController;
 use App\Http\Controllers\Ecommerce\OrderController;
+use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\ModuleRequestController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\LogController;
@@ -143,6 +145,11 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::get('/logs/combined', [LogController::class, 'combined'])->name('logs.combined');
         Route::get('/logs/{log}', [LogController::class, 'show'])->name('logs.show');
         Route::patch('/logs/{log}/status', [LogController::class, 'updateStatus'])->name('logs.status');
+            // Review moderation
+            Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
+            Route::patch('/reviews/{review}/status', [AdminReviewController::class, 'updateStatus'])->name('reviews.status');
+            Route::patch('/reviews/{review}/featured', [AdminReviewController::class, 'toggleFeatured'])->name('reviews.featured');
+
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
             Route::patch('/module-requests/{moduleRequest}/reject', [ModuleRequestController::class, 'reject'])->name('module-requests.reject');
@@ -165,6 +172,10 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::get('/modules', [ModuleController::class, 'index'])->name('modules.index');
         Route::post('/modules/request', [ModuleController::class, 'request'])->name('modules.request');
     });
+
+    // Reviews
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::post('/reviews/dismiss', [ReviewController::class, 'dismiss'])->name('reviews.dismiss');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

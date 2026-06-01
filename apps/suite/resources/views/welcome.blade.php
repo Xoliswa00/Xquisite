@@ -39,18 +39,17 @@
     <section class="max-w-6xl mx-auto px-6 lg:px-8 pt-24 pb-16 text-center">
 
         <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs tracking-wide mb-6">
-            Modular Business Operating System
+            Xquisite Suite &mdash; Modular Business Operating System
         </div>
 
         <h1 class="text-4xl md:text-6xl font-bold leading-tight">
-            Run your business
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
-                end-to-end
-            </span>
+            Run everything.
         </h1>
 
-        <p class="mt-6 text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
-            Supplier management, inventory control, POS, bookings, and e-commerce — unified into one modular platform built for real operations.
+        <p class="mt-4 text-xl text-indigo-300 font-medium">One platform. Every operation.</p>
+
+        <p class="mt-5 text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+            Bookings, POS, inventory, e-commerce, and property management — unified into one modular platform built for South African business.
         </p>
 
         <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
@@ -117,6 +116,52 @@
         </div>
     </section>
 
+    <!-- TESTIMONIALS -->
+    @php $testimonials = \App\Models\Review::public()->limit(6)->get(); @endphp
+    @if ($testimonials->isNotEmpty())
+    <section class="max-w-7xl mx-auto px-6 lg:px-8 pb-24">
+
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold">Businesses running on Xquisite</h2>
+            <p class="text-gray-400 mt-3">Real feedback from real operators.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach ($testimonials as $review)
+            <div class="p-6 rounded-2xl bg-gray-900 border {{ $review->is_featured ? 'border-indigo-500/40' : 'border-gray-800' }}">
+                <div class="flex items-center gap-0.5 mb-3">
+                    @for ($i = 1; $i <= 5; $i++)
+                        <svg class="w-4 h-4 {{ $i <= $review->rating ? 'text-amber-400' : 'text-gray-700' }}"
+                             fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                    @endfor
+                </div>
+
+                @if ($review->title)
+                    <p class="font-semibold text-white text-sm mb-2">{{ $review->title }}</p>
+                @endif
+
+                <p class="text-gray-400 text-sm leading-relaxed line-clamp-4">{{ $review->body }}</p>
+
+                <div class="mt-4 pt-4 border-t border-gray-800 flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full bg-indigo-600/20 flex items-center justify-center text-indigo-400 text-xs font-bold shrink-0">
+                        {{ strtoupper(substr($review->display_name ?? 'B', 0, 1)) }}
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-gray-300">{{ $review->display_name ?? 'Business Owner' }}</p>
+                        @if ($review->business_type)
+                            <p class="text-xs text-gray-500">{{ $review->business_type }}</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+    </section>
+    @endif
+
     <!-- CTA -->
     <section class="border-t border-gray-800">
         <div class="max-w-4xl mx-auto px-6 lg:px-8 py-20 text-center">
@@ -126,8 +171,10 @@
                 <span class="text-indigo-400">Run everything.</span>
             </h2>
 
-            <p class="text-gray-400 mt-4">
-                No complexity. No fragmented tools. One platform for your entire operation.
+            <p class="text-gray-400 mt-3 text-lg">One platform. Every operation.</p>
+
+            <p class="text-gray-500 mt-3 text-sm">
+                Xquisite Technologies (Pty) Ltd &mdash; Built for South African business.
             </p>
 
             <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
@@ -135,7 +182,6 @@
                    class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold">
                     Get Started
                 </a>
-
                 <a href="{{ route('login') }}"
                    class="px-6 py-3 bg-gray-900 border border-gray-800 rounded-xl text-gray-300">
                     Login

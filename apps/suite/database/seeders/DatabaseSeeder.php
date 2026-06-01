@@ -17,7 +17,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(PermissionRoleSeeder::class);
+        $this->call([
+            PermissionRoleSeeder::class,
+            ReviewSeeder::class,
+        ]);
 
         $systemOwner = User::updateOrCreate(
             ['email' => 'admin@example.com'],
