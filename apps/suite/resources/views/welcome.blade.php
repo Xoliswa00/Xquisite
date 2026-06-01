@@ -1,6 +1,6 @@
 <x-guest-layout>
 @php
-    $all     = collect(config('modules'));
+    $all     = \App\Models\PlatformModule::visible()->ordered()->get();
     $active  = $all->where('status', 'active');
     $beta    = $all->where('status', 'beta');
     $soon    = $all->where('status', 'coming_soon');
@@ -182,9 +182,14 @@
                         <span class="ml-2 shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400/80 border border-indigo-500/15">Soon</span>
                     </div>
                     <p class="text-sm text-gray-500 leading-relaxed">{{ $module['description'] }}</p>
-                    <p class="mt-4 text-xs text-gray-600">
-                        Est. <span class="text-gray-500 font-medium">R{{ number_format($module['price'], 0) }}/mo</span>
-                    </p>
+                    <div class="mt-4 flex items-center justify-between">
+                        <p class="text-xs text-gray-600">
+                            Est. <span class="text-gray-500 font-medium">R{{ number_format($module['price'], 0) }}/mo</span>
+                        </p>
+                        @if ($module->launch_date)
+                            <span class="text-[10px] text-indigo-400/70">{{ $module->launch_date->format('M Y') }}</span>
+                        @endif
+                    </div>
                 </div>
                 @endforeach
             </div>
