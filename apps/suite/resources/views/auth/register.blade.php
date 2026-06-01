@@ -28,6 +28,13 @@
             </select>
         </div>
 
+        <div id="industry_other_field" class="hidden">
+            <label for="industry_other" class="block text-sm font-medium text-slate-300 mb-1">Other industry</label>
+            <input id="industry_other" type="text" name="industry_other" value="{{ old('industry_other') }}" placeholder="Please specify your industry"
+                   class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 @error('industry_other') border-red-500 @enderror">
+            @error('industry_other')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
+        </div>
+
         <div class="grid grid-cols-2 gap-3">
             <div>
                 <label for="name" class="block text-sm font-medium text-slate-300 mb-1">Your Name <span class="text-red-400">*</span></label>
@@ -66,6 +73,27 @@
             By creating an account you agree to our <a href="#" class="text-indigo-400 hover:text-indigo-300">Terms of Service</a> and <a href="#" class="text-indigo-400 hover:text-indigo-300">Privacy Policy</a>.
         </p>
     </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const industrySelect = document.getElementById('industry');
+            const otherField = document.getElementById('industry_other_field');
+
+            function toggleOtherField() {
+                if (!industrySelect) {
+                    return;
+                }
+
+                const showOther = industrySelect.value === 'other';
+                otherField.classList.toggle('hidden', !showOther);
+            }
+
+            if (industrySelect && otherField) {
+                industrySelect.addEventListener('change', toggleOtherField);
+                toggleOtherField();
+            }
+        });
+    </script>
 
     <p class="mt-6 text-center text-sm text-slate-400">
         Already have an account? <a href="{{ route('login') }}" class="text-indigo-400 hover:text-indigo-300 font-medium">Sign in</a>

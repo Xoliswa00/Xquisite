@@ -28,6 +28,7 @@ class RegisteredUserController extends Controller
         $request->validate([
             'business_name' => ['required', 'string', 'max:255'],
             'industry'      => ['nullable', 'string', 'max:100'],
+            'industry_other' => ['nullable', 'string', 'max:100', 'required_if:industry,other'],
             'name'          => ['required', 'string', 'max:255'],
             'phone'         => ['nullable', 'string', 'max:30'],
             'email'         => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
@@ -36,12 +37,16 @@ class RegisteredUserController extends Controller
 
         $slug = $this->uniqueSlug($request->business_name);
 
+        $industry = $request->industry === 'other'
+            ? $request->industry_other
+            : $request->industry;
+
         $tenant = Tenant::create([
             'name'          => $request->business_name,
             'slug'          => $slug,
             'email'         => $request->email,
             'phone'         => $request->phone,
-            'industry'      => $request->industry,
+            'industry'      => $industry,
             'plan'          => 'starter',
             'is_active'     => true,
             'trial_ends_at' => now()->addDays(14),
