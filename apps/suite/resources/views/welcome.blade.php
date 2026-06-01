@@ -208,6 +208,50 @@
 
     </section>
 
+    <!-- SERVICES -->
+    @php $publicServices = \App\Models\PlatformService::active()->requestable()->ordered()->get()->groupBy('category'); @endphp
+    @if ($publicServices->isNotEmpty())
+    <section class="max-w-7xl mx-auto px-6 lg:px-8 pb-24" id="services">
+
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold">Services & Add-ons</h2>
+            <p class="text-gray-400 mt-3">Not just software — we help you get up and running.</p>
+        </div>
+
+        @php
+            $catIcons = [
+                'onboarding' => ['label' => 'Getting Started', 'colour' => 'emerald'],
+                'training'   => ['label' => 'Training',        'colour' => 'blue'],
+                'support'    => ['label' => 'Support',         'colour' => 'indigo'],
+                'custom'     => ['label' => 'Custom Work',     'colour' => 'purple'],
+            ];
+        @endphp
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            @foreach ($publicServices->flatten() as $service)
+            <div class="p-6 rounded-2xl bg-gray-900 border border-gray-800 hover:border-gray-700 transition">
+                <p class="text-xs font-medium uppercase tracking-widest mb-3
+                    {{ ($catIcons[$service->category]['colour'] ?? 'gray') === 'emerald' ? 'text-emerald-400' : '' }}
+                    {{ ($catIcons[$service->category]['colour'] ?? 'gray') === 'blue'    ? 'text-blue-400' : '' }}
+                    {{ ($catIcons[$service->category]['colour'] ?? 'gray') === 'indigo'  ? 'text-indigo-400' : '' }}
+                    {{ ($catIcons[$service->category]['colour'] ?? 'gray') === 'purple'  ? 'text-purple-400' : '' }}">
+                    {{ $catIcons[$service->category]['label'] ?? ucfirst($service->category) }}
+                </p>
+                <h3 class="font-semibold text-white mb-2">{{ $service->name }}</h3>
+                <p class="text-sm text-gray-400 leading-relaxed">{{ $service->description }}</p>
+                <p class="mt-4 font-bold text-white">{{ $service->displayPrice() }}</p>
+            </div>
+            @endforeach
+        </div>
+
+        <p class="text-center text-gray-600 text-sm mt-8">
+            All services are requested through your account dashboard after sign-up.
+            <a href="{{ route('register') }}" class="text-indigo-400 hover:text-indigo-300">Get started →</a>
+        </p>
+
+    </section>
+    @endif
+
     <!-- TESTIMONIALS -->
     @php $testimonials = \App\Models\Review::public()->limit(6)->get(); @endphp
     @if ($testimonials->isNotEmpty())
