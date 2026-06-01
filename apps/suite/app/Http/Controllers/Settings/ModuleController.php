@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\PlatformModule;
 use App\Services\BillingBridge;
 use App\Models\ModuleRequest;
 use App\Notifications\ModuleRequestSubmitted;
@@ -19,7 +20,7 @@ class ModuleController extends Controller
             return redirect()->route('dashboard')->with('error', 'Your account is not attached to a tenant.');
         }
 
-        $allModules = config('modules');
+        $allModules = PlatformModule::ordered()->get()->keyBy('key');
         $tenant->load(['tenantModules', 'pendingModuleRequests']);
 
         return view('settings.modules', compact('tenant', 'allModules'));
@@ -27,8 +28,10 @@ class ModuleController extends Controller
 
     public function request(Request $request, BillingBridge $billing)
     {
+        $validKeys = PlatformModule::pluck('key')->implode(',');
+
         $request->validate([
-            'module' => 'required|string|in:' . implode(',', array_keys(config('modules'))),
+            'module' => 'required|string|in:' . $validKeys,
             'type'   => 'nullable|string|in:activation,modification',
             'notes'  => 'nullable|string|max:1000',
         ]);
@@ -39,11 +42,12 @@ class ModuleController extends Controller
             return redirect()->route('dashboard')->with('error', 'Your account is not attached to a tenant.');
         }
 
-        $moduleKey  = $request->module;
-        $moduleName = config("modules.{$moduleKey}.name");
-        $type       = $request->input('type', 'activation');
+        $moduleKey    = $request->module;
+        $platformMod  = PlatformModule::where('key', $moduleKey)->firstOrFail();
+        $moduleName   = $platformMod->name;
+        $type         = $request->input('type', 'activation');
 
-        $requiresReview = $type === 'modification' || ! config("modules.{$moduleKey}.auto_activate", true);
+        $requiresReview = $type === 'modification' || ! $platformMod->auto_activate;
 
         $moduleRequest = ModuleRequest::create([
             'tenant_id'    => $tenant->id,

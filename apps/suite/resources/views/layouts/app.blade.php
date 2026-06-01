@@ -11,12 +11,14 @@
 </head>
 
 <body class="font-sans antialiased bg-slate-950 text-slate-100">
+<x-demo-banner />
 <div class="min-h-screen flex">
 
     <!-- Sidebar -->
     <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col hidden md:flex">
         <div class="px-6 py-5 border-b border-slate-800">
             <span class="text-xl font-bold tracking-wide text-white">Xquisite</span>
+            <p class="text-[10px] text-slate-500 mt-0.5 tracking-wide">One platform. Every operation.</p>
         </div>
 
         <nav class="flex-1 px-3 py-4 space-y-1 text-sm overflow-y-auto">
@@ -231,5 +233,13 @@
         </main>
     </div>
 </div>
+
+<x-whatsapp-button />
+{{-- Review modal: auto-opens on milestone, floating button always present --}}
+@if(isset($reviewThreshold) && $reviewThreshold)
+    <x-review-modal :threshold="$reviewThreshold" :auto-open="true" />
+@else
+    <x-review-modal />
+@endif
 </body>
 </html>
