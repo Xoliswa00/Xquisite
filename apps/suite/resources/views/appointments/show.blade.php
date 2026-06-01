@@ -102,6 +102,57 @@
                     <p class="text-slate-300 text-sm">{{ $appointment->notes }}</p>
                 </div>
             @endif
+
+            {{-- Event Brief --}}
+            @if($appointment->isEventBooking())
+            <div class="pt-3 border-t border-slate-700">
+                <p class="text-xs font-semibold uppercase tracking-widest text-indigo-400 mb-3">Event Brief</p>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    @if($appointment->headcount)
+                    <div>
+                        <p class="text-slate-400 text-xs">Guest Count</p>
+                        <p class="text-white font-medium">{{ $appointment->headcount }} pax</p>
+                    </div>
+                    @endif
+                    @if($appointment->event_type)
+                    <div>
+                        <p class="text-slate-400 text-xs">Event Type</p>
+                        <p class="text-white font-medium">{{ $appointment->event_type }}</p>
+                    </div>
+                    @endif
+                    @if($appointment->venue)
+                    <div class="col-span-2">
+                        <p class="text-slate-400 text-xs">Venue</p>
+                        <p class="text-white">{{ $appointment->venue }}</p>
+                    </div>
+                    @endif
+                    @if($appointment->setup_at)
+                    <div>
+                        <p class="text-slate-400 text-xs">Setup Time</p>
+                        <p class="text-white">{{ $appointment->setup_at->format('d M Y, H:i') }}</p>
+                    </div>
+                    @endif
+                    @if($appointment->breakdown_at)
+                    <div>
+                        <p class="text-slate-400 text-xs">Breakdown</p>
+                        <p class="text-white">{{ $appointment->breakdown_at->format('d M Y, H:i') }}</p>
+                    </div>
+                    @endif
+                    @if($appointment->dietary_notes)
+                    <div class="col-span-2">
+                        <p class="text-slate-400 text-xs">Dietary Requirements</p>
+                        <p class="text-slate-200 text-sm">{{ $appointment->dietary_notes }}</p>
+                    </div>
+                    @endif
+                    @if($appointment->theme_notes)
+                    <div class="col-span-2">
+                        <p class="text-slate-400 text-xs">Theme / Style Notes</p>
+                        <p class="text-slate-200 text-sm">{{ $appointment->theme_notes }}</p>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
         </div>
 
         <!-- Quick status update (hide if checked out) -->

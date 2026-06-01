@@ -23,12 +23,24 @@ class Appointment extends Model
         'status',
         'pos_order_id',
         'notes',
+        'headcount',
+        'venue',
+        'event_type',
+        'dietary_notes',
+        'theme_notes',
+        'setup_at',
+        'breakdown_at',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
+        'setup_at'     => 'datetime',
+        'breakdown_at' => 'datetime',
     ];
 
+    public function isEventBooking(): bool
+    {
+        return ! empty($this->headcount) || ! empty($this->venue) || ! empty($this->event_type);
     public function paymentPlan()
     {
         return $this->morphOne(\App\Models\PaymentPlan::class, 'plannable');

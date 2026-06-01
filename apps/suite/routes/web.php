@@ -105,6 +105,11 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::post('/purchase-orders/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
     Route::post('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
 
+    // Rental orders (decor / event items)
+    Route::resource('rental-orders', \App\Http\Controllers\POS\RentalOrderController::class)->except(['edit','update']);
+    Route::patch('/rental-orders/{rentalOrder}/out',    [\App\Http\Controllers\POS\RentalOrderController::class, 'markOut'])->name('rental-orders.out');
+    Route::patch('/rental-orders/{rentalOrder}/return', [\App\Http\Controllers\POS\RentalOrderController::class, 'returnItem'])->name('rental-orders.return');
+
     // Suppliers
     Route::resource('suppliers', SupplierController::class);
 
