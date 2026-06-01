@@ -12,6 +12,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // Reset demo tenant every 4 hours
+        $schedule->command('demo:reset --force')
+            ->everySixHours()
+            ->withoutOverlapping()
+            ->runInBackground();
+
         // Check instance health every 5 minutes
         $schedule->command('instances:check-health')
             ->everyFiveMinutes()
