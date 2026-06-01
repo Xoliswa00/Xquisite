@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PermissionRoleSeeder::class,
             PlatformModuleSeeder::class,
+            ReviewSeeder::class,
         ]);
 
         $systemOwner = User::updateOrCreate(

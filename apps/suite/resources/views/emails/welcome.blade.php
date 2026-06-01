@@ -117,7 +117,7 @@
                     Questions? Reply to this email or contact support.
                 </p>
                 <p style="margin:0;font-size:12px;color:#cbd5e1;">
-                    © {{ date('Y') }} Xquisite Suite · You're receiving this because you created an account.
+                    © {{ date('Y') }} Xquisite Technologies (Pty) Ltd &mdash; One platform. Every operation.
                 </p>
             </td>
         </tr>

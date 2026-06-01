@@ -1,0 +1,85 @@
+name: Auto-create draft PR
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+      - dev
+      - staging
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create draft PR if none exists
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          BRANCH="${{ github.ref_name }}"
+          REPO="${{ github.repository }}"
+          OWNER="${{ github.repository_owner }}"
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+          API="https://api.github.com"
+
+          case "$BRANCH" in
+            main|master|dev|staging)
+              echo "Skipping protected branch: $BRANCH"
+              exit 0
+              ;;
+          esac
+
+          EXISTING=$(curl -fsSL \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "$API/repos/$REPO/pulls?state=all&head=$OWNER:$BRANCH&per_page=1" \
+            | jq 'length')
+
+          if [ "$EXISTING" != "0" ]; then
+            echo "PR already exists for $BRANCH — skipping"
+            exit 0
+          fi
+
+          TITLE=$(echo "$BRANCH" \
+            | sed 's|^[^/]*/||' \
+            | tr '/-' '  ' \
+            | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2); print}')
+
+          BODY="## Summary\n\n_Auto-created draft PR — fill in what this branch does before merging._\n\n## Test plan\n\n- [ ] Tested locally\n- [ ] No regressions in related features\n\nAuto-opened by the auto-pr workflow."
+
+          jq -n \
+            --arg title "$TITLE" \
+            --arg base  "$DEFAULT_BRANCH" \
+            --arg head  "$BRANCH" \
+            --arg body  "$BODY" \
+            '{title:$title,base:$base,head:$head,body:$body,draft:true}' \
+            > /tmp/pr-payload.json
+
+          HTTP_STATUS=$(curl -sS -o /tmp/pr-response.json -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -H "Content-Type: application/json" \
+            --data @/tmp/pr-payload.json \
+            "$API/repos/$REPO/pulls")
+
+          if [ "$HTTP_STATUS" = "201" ]; then
+            echo "Draft PR created: $(jq -r '.html_url' /tmp/pr-response.json)"
+          else
+            ERR=$(jq -r '.message // "unknown"' /tmp/pr-response.json 2>/dev/null || echo "unknown")
+            echo "HTTP $HTTP_STATUS: $ERR"
+            case "$ERR" in
+              *"No commits between"*|*"already exists"*|*"pull request already"*)
+                exit 0 ;;
+              *)
+                exit 1 ;;
+            esac
+          fi
