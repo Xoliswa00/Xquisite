@@ -4,10 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\PaymentPlan;
 use App\Models\PaymentPlanInstallment;
+use App\Modules\Booking\Models\Customer;
 use Illuminate\Http\Request;
 
 class PaymentPlanController extends Controller
 {
+    public function create()
+    {
+        $customers = Customer::where('is_active', true)->orderBy('name')->get();
+        return view('payment-plans.create', compact('customers'));
+    }
+
     public function index()
     {
         $tenantId = auth()->user()->tenant_id;

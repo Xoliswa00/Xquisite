@@ -8,6 +8,10 @@
                         {{ $overdueCount }} overdue
                     </span>
                 @endif
+                <a href="{{ route('payment-plans.create') }}"
+                   class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg font-medium">
+                    + New Plan
+                </a>
             </div>
         </div>
     </x-slot>
