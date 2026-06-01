@@ -88,6 +88,15 @@
                     {{ $reorderCount > 0 ? 'View alerts →' : 'All stocked up' }}
                 </a>
             </div>
+            @can('manage-tenants')
+                <div class="bg-slate-800 rounded-xl p-5">
+                    <p class="text-xs text-slate-400 uppercase tracking-wide">Pending Module Requests</p>
+                    <p class="text-3xl font-bold text-white mt-1">{{ $pendingModuleRequests }}</p>
+                    <a href="{{ route('admin.module-requests.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block">
+                        Review requests →
+                    </a>
+                </div>
+            @endcan
         </div>
 
         <div class="grid lg:grid-cols-2 gap-6">

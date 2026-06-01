@@ -5,13 +5,13 @@
 
         <!-- Toolbar -->
         <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <form method="GET" class="flex flex-wrap gap-2">
-                <input type="text" name="search" value="{{ request('search') }}"
+            <form id="appointments-filter-form" method="GET" class="flex flex-wrap gap-2">
+                <input id="appointment-search" type="text" name="search" value="{{ request('search') }}"
                        placeholder="Search customer…"
                        class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-48 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                <input type="date" name="date" value="{{ request('date') }}"
+                <input id="appointment-date" type="date" name="date" value="{{ request('date') }}"
                        class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                <select name="status" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <select id="appointment-status" name="status" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                     <option value="">All statuses</option>
                     @foreach(['pending','confirmed','completed','cancelled','no_show'] as $s)
                         <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
@@ -88,4 +88,38 @@
 
         {{ $appointments->links() }}
     </div>
+
+    <script>
+        (() => {
+            const form = document.getElementById('appointments-filter-form');
+            const search = document.getElementById('appointment-search');
+            const date = document.getElementById('appointment-date');
+            const status = document.getElementById('appointment-status');
+            let debounceTimeout;
+
+            if (!form) {
+                return;
+            }
+
+            const submitForm = () => form.submit();
+
+            if (date) {
+                date.addEventListener('change', submitForm);
+            }
+
+            if (status) {
+                status.addEventListener('change', submitForm);
+            }
+
+            if (search) {
+                const submitSearch = () => {
+                    clearTimeout(debounceTimeout);
+                    debounceTimeout = setTimeout(submitForm, 450);
+                };
+
+                search.addEventListener('input', submitSearch);
+                search.addEventListener('change', submitSearch);
+            }
+        })();
+    </script>
 </x-app-layout>

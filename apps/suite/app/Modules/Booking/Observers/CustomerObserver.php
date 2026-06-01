@@ -2,7 +2,7 @@
 
 namespace App\Modules\Booking\Observers;
 
-use App\Models\Customer;
+use App\Modules\Booking\Models\Customer;
 
 class CustomerObserver
 {

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->unsignedBigInteger('tenant_id')->nullable()->after('id');
-            $table->string('role')->default('staff')->after('tenant_id'); // owner, admin, staff
+            $table->string('role')->default('client')->after('tenant_id'); // owner, admin, staff, client
             $table->index('tenant_id');
         });
     }

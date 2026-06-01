@@ -102,6 +102,35 @@
                     @endforeach
                 </div>
             </div>
+
+            @if($tenant->moduleRequests->where('status', 'pending')->isNotEmpty())
+                <div class="bg-slate-800 rounded-2xl border border-slate-700 p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-sm font-semibold text-white">Pending Module Requests</h2>
+                            <p class="text-xs text-slate-400">Review requests for this tenant before approving or rejecting.</p>
+                        </div>
+                        <a href="{{ route('admin.module-requests.index') }}" class="text-xs text-indigo-400 hover:text-white">View all requests</a>
+                    </div>
+
+                    <div class="space-y-3">
+                        @foreach($tenant->moduleRequests->where('status', 'pending') as $request)
+                            <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-slate-200">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div>
+                                        <p class="font-semibold text-white">{{ $request->module_name }}</p>
+                                        <p class="text-xs text-slate-400">{{ ucfirst($request->type) }} requested by {{ $request->user->name }}</p>
+                                    </div>
+                                    <span class="text-xs text-amber-300 uppercase tracking-wide">Pending</span>
+                                </div>
+                                @if($request->notes)
+                                    <p class="mt-3 text-xs text-slate-400">"{{ $request->notes }}"</p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Right: Module Management -->

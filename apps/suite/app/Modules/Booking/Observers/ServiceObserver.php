@@ -2,7 +2,7 @@
 
 namespace App\Modules\Booking\Observers;
 
-use App\Models\Service;
+use App\Modules\Booking\Models\Service;
 
 class ServiceObserver
 {

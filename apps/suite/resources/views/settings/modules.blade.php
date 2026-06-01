@@ -26,9 +26,11 @@
     <div class="grid sm:grid-cols-2 gap-4">
         @foreach($allModules as $key => $module)
             @php
-                $tenantModule = $tenant->tenantModules->firstWhere('module', $key);
-                $isActive = $tenantModule?->is_active ?? false;
-                $price    = $tenantModule?->price_override ?? $module['price'];
+                $tenantModule   = $tenant->tenantModules->firstWhere('module', $key);
+                $isActive       = $tenantModule?->is_active ?? false;
+                $price          = $tenantModule?->price_override ?? $module['price'];
+                $pendingRequest = $tenant->pendingModuleRequests->firstWhere('module', $key);
+                $autoActivate   = config("modules.{$key}.auto_activate", true);
             @endphp
 
             <div class="bg-slate-800 rounded-2xl border {{ $isActive ? 'border-indigo-500/40' : 'border-slate-700' }} p-5">
@@ -54,19 +56,50 @@
                             Active since {{ $tenantModule->activated_at->format('d M Y') }}
                         @endif
                     </div>
-                    <div class="bg-indigo-500/5 border border-indigo-500/20 rounded-lg px-3 py-2 text-xs text-indigo-300">
-                        This module is active. To make changes, contact support.
-                    </div>
+
+                    @if($pendingRequest)
+                        <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-3 text-xs text-amber-300">
+                            A modification request is already pending review.
+                        </div>
+                    @else
+                        <form action="{{ route('settings.modules.request') }}" method="POST" class="space-y-3">
+                            @csrf
+                            <input type="hidden" name="module" value="{{ $key }}">
+                            <input type="hidden" name="type" value="modification">
+
+                            <label class="block text-xs text-slate-400">Tell us what should change</label>
+                            <textarea name="notes" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Example: I need the POS receipt layout updated."></textarea>
+                            @error('notes')
+                                <p class="text-xs text-red-400">{{ $message }}</p>
+                            @enderror
+
+                            <button type="submit"
+                                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors">
+                                Request Modification
+                            </button>
+                        </form>
+                        <p class="text-xs text-slate-500 mt-2">This request will be reviewed manually by our team.</p>
+                    @endif
                 @else
-                    <form action="{{ route('settings.modules.request') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="module" value="{{ $key }}">
-                        <button type="submit"
-                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors">
-                            Request Activation
-                        </button>
-                    </form>
-                    <p class="text-xs text-center text-slate-500 mt-2">Our team will get in touch within 24 hours</p>
+                    @if($pendingRequest)
+                        <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-3 text-xs text-amber-300">
+                            An activation request is already pending review.
+                        </div>
+                    @else
+                        <form action="{{ route('settings.modules.request') }}" method="POST" class="space-y-3">
+                            @csrf
+                            <input type="hidden" name="module" value="{{ $key }}">
+                            <input type="hidden" name="type" value="activation">
+
+                            <button type="submit"
+                                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors">
+                                {{ $autoActivate ? 'Request Activation' : 'Submit Activation Request' }}
+                            </button>
+                        </form>
+                        <p class="text-xs text-center text-slate-500 mt-2">
+                            {{ $autoActivate ? 'This module can activate automatically once requested.' : 'Our team will review this module request before activation.' }}
+                        </p>
+                    @endif
                 @endif
             </div>
         @endforeach

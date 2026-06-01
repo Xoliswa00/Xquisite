@@ -17,6 +17,7 @@ use App\Http\Controllers\Ecommerce\StorefrontController;
 use App\Http\Controllers\Ecommerce\CartController;
 use App\Http\Controllers\Ecommerce\CheckoutController;
 use App\Http\Controllers\Ecommerce\OrderController;
+use App\Http\Controllers\Admin\ModuleRequestController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Admin\SyncQueueController;
@@ -31,6 +32,8 @@ use App\Http\Controllers\Property\RentPaymentController;
 use App\Http\Controllers\Property\MaintenanceController;
 use App\Http\Controllers\Property\RenterAuthController;
 use App\Http\Controllers\Property\RenterPortalController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\Settings\ModuleController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,7 +41,11 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+route::get('/welcome', function () {
+    return view('welcome');
+})->name('welcome');
+
+Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -114,15 +121,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('maintenance/{maintenance}/status', [MaintenanceController::class, 'updateStatus'])->name('maintenance.status');
     });
 
-    // Admin — tenant management (only platform owner should access this; gate by role later)
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::get('/tenants', [TenantController::class, 'index'])->name('tenants.index');
-        Route::get('/tenants/create', [TenantController::class, 'create'])->name('tenants.create');
-        Route::post('/tenants', [TenantController::class, 'store'])->name('tenants.store');
-        Route::get('/tenants/{tenant}', [TenantController::class, 'show'])->name('tenants.show');
-        Route::post('/tenants/{tenant}/module', [TenantController::class, 'toggleModule'])->name('tenants.module');
-        Route::patch('/tenants/{tenant}/subdomain', [TenantController::class, 'updateSubdomain'])->name('tenants.subdomain');
-        Route::delete('/tenants/{tenant}', [TenantController::class, 'destroy'])->name('tenants.destroy');
+        Route::middleware('can:manage-tenants')->group(function () {
+            Route::get('/tenants', [TenantController::class, 'index'])->name('tenants.index');
+            Route::get('/tenants/create', [TenantController::class, 'create'])->name('tenants.create');
+            Route::post('/tenants', [TenantController::class, 'store'])->name('tenants.store');
+            Route::get('/tenants/{tenant}', [TenantController::class, 'show'])->name('tenants.show');
+            Route::post('/tenants/{tenant}/module', [TenantController::class, 'toggleModule'])->name('tenants.module');
+            Route::patch('/tenants/{tenant}/subdomain', [TenantController::class, 'updateSubdomain'])->name('tenants.subdomain');
+            Route::delete('/tenants/{tenant}', [TenantController::class, 'destroy'])->name('tenants.destroy');
 
         // Billing sync queue
         Route::get('/sync-queue', [SyncQueueController::class, 'index'])->name('sync.index');
@@ -136,6 +143,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/logs/combined', [LogController::class, 'combined'])->name('logs.combined');
         Route::get('/logs/{log}', [LogController::class, 'show'])->name('logs.show');
         Route::patch('/logs/{log}/status', [LogController::class, 'updateStatus'])->name('logs.status');
+            Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
+            Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
+            Route::patch('/module-requests/{moduleRequest}/reject', [ModuleRequestController::class, 'reject'])->name('module-requests.reject');
+        });
+
+        // User management (for tenant owners to manage their staff)
+        Route::resource('users', UserManagementController::class);
+        Route::post('/users/{user}/deactivate', [UserManagementController::class, 'deactivate'])->name('users.deactivate');
+        Route::post('/users/{user}/activate', [UserManagementController::class, 'activate'])->name('users.activate');
+        Route::post('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
+    });
+
+    // Instance Monitoring (owner-level admin)
+    Route::middleware('can:manage-tenants')->group(function () {
+        Route::resource('monitoring', MonitoringController::class);
     });
 
     // Settings — self-serve module management

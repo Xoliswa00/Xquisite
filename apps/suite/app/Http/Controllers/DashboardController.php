@@ -7,6 +7,7 @@ use App\Modules\Booking\Models\Customer;
 use App\Modules\Booking\Models\Staff;
 use App\Modules\Booking\Models\Service;
 use App\Modules\POS\Models\Product;
+use App\Models\ModuleRequest;
 
 class DashboardController extends Controller
 {
@@ -20,6 +21,8 @@ class DashboardController extends Controller
             ->where('reorder_level', '>', 0)
             ->whereColumn('stock_quantity', '<=', 'reorder_level')
             ->count();
+
+        $pendingModuleRequests = ModuleRequest::pending()->count();
 
         $recentAppointments = Appointment::with(['customer', 'staff', 'service'])
             ->orderByDesc('scheduled_at')
@@ -47,6 +50,7 @@ class DashboardController extends Controller
             'activeStaff',
             'activeServices',
             'reorderCount',
+            'pendingModuleRequests',
             'recentAppointments',
             'upcomingToday',
             'onboarding',

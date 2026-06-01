@@ -35,7 +35,7 @@ class TenantController extends Controller
 
     public function show(Tenant $tenant)
     {
-        $tenant->load(['users', 'tenantModules']);
+        $tenant->load(['users', 'tenantModules', 'moduleRequests']);
         $allModules = config('modules');
 
         return view('admin.tenants.show', compact('tenant', 'allModules'));

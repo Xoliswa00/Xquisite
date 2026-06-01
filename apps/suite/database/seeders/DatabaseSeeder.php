@@ -3,8 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Seeders\PermissionRoleSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,11 +17,29 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call(PermissionRoleSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        $systemOwner = User::updateOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'System Administrator',
+                'password' => Hash::make('password'),
+                'role' => 'owner',
+                'is_active' => true,
+                'require_password_change' => true,
+            ]
+        );
+        $systemOwner->assignRole('owner');
+
+        $testClient = User::updateOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'password' => Hash::make('password'),
+                'role' => 'client',
+                'is_active' => true,
+            ]
+        );
+        $testClient->syncRoles(['client']);
     }
 }

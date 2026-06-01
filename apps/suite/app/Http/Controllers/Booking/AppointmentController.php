@@ -33,8 +33,11 @@ class AppointmentController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('customer', fn($q) => $q->where('name', 'like', "%{$search}%"));
+            $search = trim(preg_replace('/\s+/', '%', $request->search));
+            $query->whereHas('customer', fn($q) => $q
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+            );
         }
 
         $appointments = $query->paginate(15)->withQueryString();

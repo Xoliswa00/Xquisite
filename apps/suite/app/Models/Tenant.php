@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\ModuleRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
@@ -43,6 +44,16 @@ class Tenant extends Model
     public function activeModules()
     {
         return $this->hasMany(TenantModule::class)->where('is_active', true);
+    }
+
+    public function moduleRequests()
+    {
+        return $this->hasMany(ModuleRequest::class);
+    }
+
+    public function pendingModuleRequests()
+    {
+        return $this->moduleRequests()->where('status', 'pending');
     }
 
     // ── Module helpers ─────────────────────────────────────────

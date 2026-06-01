@@ -2,7 +2,7 @@
 
 namespace App\Modules\Booking\Observers;
 
-use App\Models\Staff;
+use App\Modules\Booking\Models\Staff;
 
 class StaffObserver
 {
