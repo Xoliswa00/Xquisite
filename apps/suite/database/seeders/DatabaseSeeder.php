@@ -26,27 +26,31 @@ class DatabaseSeeder extends Seeder
             ReviewSeeder::class,
         ]);
 
-        $systemOwner = User::updateOrCreate(
-            ['email' => 'admin@example.com'],
-            [
-                'name' => 'System Administrator',
-                'password' => Hash::make('password'),
-                'role' => 'owner',
-                'is_active' => true,
-                'require_password_change' => true,
-            ]
-        );
-        $systemOwner->assignRole('owner');
+        // Example accounts — local and demo environments only.
+        // Never run in production: change these credentials immediately after first deploy.
+        if (app()->isLocal() || app()->environment('demo', 'staging')) {
+            $systemOwner = User::updateOrCreate(
+                ['email' => 'admin@example.com'],
+                [
+                    'name' => 'System Administrator',
+                    'password' => Hash::make('password'),
+                    'role' => 'owner',
+                    'is_active' => true,
+                    'require_password_change' => true,
+                ]
+            );
+            $systemOwner->assignRole('owner');
 
-        $testClient = User::updateOrCreate(
-            ['email' => 'test@example.com'],
-            [
-                'name' => 'Test User',
-                'password' => Hash::make('password'),
-                'role' => 'client',
-                'is_active' => true,
-            ]
-        );
-        $testClient->syncRoles(['client']);
+            $testClient = User::updateOrCreate(
+                ['email' => 'test@example.com'],
+                [
+                    'name' => 'Test User',
+                    'password' => Hash::make('password'),
+                    'role' => 'client',
+                    'is_active' => true,
+                ]
+            );
+            $testClient->syncRoles(['client']);
+        }
     }
 }

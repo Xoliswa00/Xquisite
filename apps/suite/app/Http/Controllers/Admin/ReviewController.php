@@ -12,6 +12,7 @@ class ReviewController extends Controller
     {
         $reviews = Review::with('tenant')
             ->latest()
+            ->limit(200)
             ->get()
             ->groupBy('status');
 
