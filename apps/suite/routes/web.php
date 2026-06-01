@@ -3,7 +3,9 @@
 use App\Http\Controllers\PaymentPlanController;
 use App\Http\Controllers\PublicQuoteController;
 use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\DemoController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Booking\AppointmentController;
@@ -21,6 +23,8 @@ use App\Http\Controllers\Ecommerce\StorefrontController;
 use App\Http\Controllers\Ecommerce\CartController;
 use App\Http\Controllers\Ecommerce\CheckoutController;
 use App\Http\Controllers\Ecommerce\OrderController;
+use App\Http\Controllers\Admin\PlatformServiceController;
+use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\ModuleRequestController;
 use App\Http\Controllers\Admin\TenantController;
@@ -37,6 +41,7 @@ use App\Http\Controllers\Property\RentPaymentController;
 use App\Http\Controllers\Property\MaintenanceController;
 use App\Http\Controllers\Property\RenterAuthController;
 use App\Http\Controllers\Property\RenterPortalController;
+use App\Http\Controllers\Admin\PlatformModuleController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\Settings\ModuleController;
@@ -49,6 +54,8 @@ Route::get('/', function () {
 Route::get('/welcome', function () {
     return view('welcome');
 })->name('welcome');
+
+Route::get('/demo', [DemoController::class, 'login'])->name('demo.login');
 
 Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(function () {
 
@@ -148,6 +155,14 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::get('/logs/combined', [LogController::class, 'combined'])->name('logs.combined');
         Route::get('/logs/{log}', [LogController::class, 'show'])->name('logs.show');
         Route::patch('/logs/{log}/status', [LogController::class, 'updateStatus'])->name('logs.status');
+            // Platform service catalog + order management
+            Route::get('/platform-services', [PlatformServiceController::class, 'index'])->name('platform-services.index');
+            Route::get('/platform-services/create', [PlatformServiceController::class, 'create'])->name('platform-services.create');
+            Route::post('/platform-services', [PlatformServiceController::class, 'store'])->name('platform-services.store');
+            Route::get('/platform-services/{platformService}/edit', [PlatformServiceController::class, 'edit'])->name('platform-services.edit');
+            Route::put('/platform-services/{platformService}', [PlatformServiceController::class, 'update'])->name('platform-services.update');
+            Route::patch('/service-orders/{order}', [PlatformServiceController::class, 'updateOrder'])->name('service-orders.update');
+
             // Review moderation
             Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
             Route::patch('/reviews/{review}/status', [AdminReviewController::class, 'updateStatus'])->name('reviews.status');
@@ -156,6 +171,12 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
             Route::patch('/module-requests/{moduleRequest}/reject', [ModuleRequestController::class, 'reject'])->name('module-requests.reject');
+
+            // Bundle plans
+            Route::resource('plans', PlanController::class)->except(['show']);
+            // Platform module registry
+            Route::resource('platform-modules', PlatformModuleController::class)->except(['show', 'destroy']);
+            Route::patch('platform-modules/{platformModule}/status', [PlatformModuleController::class, 'updateStatus'])->name('platform-modules.status');
         });
 
         // User management (for tenant owners to manage their staff)
@@ -191,6 +212,10 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     // Reviews
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::post('/reviews/dismiss', [ReviewController::class, 'dismiss'])->name('reviews.dismiss');
+
+    // Service requests (customer-facing)
+    Route::get('/settings/services', [ServiceRequestController::class, 'index'])->name('settings.services.index');
+    Route::post('/settings/services', [ServiceRequestController::class, 'store'])->name('settings.services.request');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
