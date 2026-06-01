@@ -32,24 +32,25 @@ jobs:
               | tr '-' ' '           \
               | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2); print}')
 
-            gh pr create \
-              --repo    "$REPO" \
-              --base    dev \
-              --head    "$BRANCH" \
-              --title   "$TITLE" \
-              --body    "$(cat <<'BODY'
+            cat > /tmp/pr-body.md << 'EOF'
 ## Summary
 
-> _Auto-created draft PR — fill in what this branch does before merging._
+_Auto-created draft PR — fill in what this branch does before merging._
 
 ## Test plan
 
 - [ ] Tested locally
 - [ ] No regressions in related features
 
-🤖 Auto-opened by [auto-pr workflow](/.github/workflows/auto-pr.yml)
-BODY
-)" \
+Auto-opened by the auto-pr workflow.
+EOF
+
+            gh pr create \
+              --repo      "$REPO" \
+              --base      dev \
+              --head      "$BRANCH" \
+              --title     "$TITLE" \
+              --body-file /tmp/pr-body.md \
               --draft
             echo "Draft PR created for $BRANCH"
           else
