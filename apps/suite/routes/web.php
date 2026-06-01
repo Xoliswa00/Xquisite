@@ -192,6 +192,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::post('/users/{user}/deactivate', [UserManagementController::class, 'deactivate'])->name('users.deactivate');
         Route::post('/users/{user}/activate', [UserManagementController::class, 'activate'])->name('users.activate');
         Route::post('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
+        Route::patch('/users/{user}/restore', [UserManagementController::class, 'restore'])->name('users.restore')->withTrashed();
     });
 
     // Instance Monitoring (owner-level admin)
@@ -257,16 +258,19 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
 
 // ─── Renter portal (/rent/{slug}) ────────────────────────────────────────────
 Route::prefix('rent/{slug}')->name('rent.')->group(function () {
-    Route::get('/login',            [RenterAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login',           [RenterAuthController::class, 'login'])->name('login.post');
-    Route::post('/logout',          [RenterAuthController::class, 'logout'])->name('logout');
+    // Public auth routes — no guard needed
+    Route::get('/login',        [RenterAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',       [RenterAuthController::class, 'login'])->name('login.post');
+    Route::post('/logout',      [RenterAuthController::class, 'logout'])->name('logout');
 
-    // Portal pages (auth checked inside controller)
-    Route::get('/',                 [RenterPortalController::class, 'portal'])->name('portal');
-    Route::get('/lease',            [RenterPortalController::class, 'lease'])->name('lease');
-    Route::get('/payments',         [RenterPortalController::class, 'payments'])->name('payments');
-    Route::get('/maintenance',      [RenterPortalController::class, 'maintenance'])->name('maintenance');
-    Route::post('/maintenance',     [RenterPortalController::class, 'submitMaintenance'])->name('maintenance.submit');
+    // Protected portal pages — renter guard enforced at route level
+    Route::middleware('auth:renter')->group(function () {
+        Route::get('/',             [RenterPortalController::class, 'portal'])->name('portal');
+        Route::get('/lease',        [RenterPortalController::class, 'lease'])->name('lease');
+        Route::get('/payments',     [RenterPortalController::class, 'payments'])->name('payments');
+        Route::get('/maintenance',  [RenterPortalController::class, 'maintenance'])->name('maintenance');
+        Route::post('/maintenance', [RenterPortalController::class, 'submitMaintenance'])->name('maintenance.submit');
+    });
 });
 
 // Public storefront (no auth)

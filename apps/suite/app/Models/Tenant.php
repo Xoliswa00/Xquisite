@@ -4,10 +4,13 @@ namespace App\Models;
 
 use App\Models\ModuleRequest;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
 class Tenant extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'name',
         'slug',

@@ -217,6 +217,40 @@ class UserManagementController extends Controller
     }
 
     /**
+     * Soft-delete a staff account. Owners cannot be deleted.
+     * All their historical data (sales, appointments) is preserved.
+     */
+    public function destroy(User $user): RedirectResponse
+    {
+        Gate::authorize('manage-staff');
+        $this->ensureOwnersTenant($user);
+
+        abort_if($user->isOwner(), 403, 'Cannot delete an owner account.');
+
+        $user->delete(); // soft delete — data preserved
+
+        return redirect()->route('admin.users.index')
+            ->with('success', "{$user->name}'s account has been deactivated.");
+    }
+
+    /**
+     * Restore a soft-deleted staff account.
+     */
+    public function restore(User $user): RedirectResponse
+    {
+        Gate::authorize('manage-staff');
+
+        $user = User::withTrashed()->where('id', $user->id)
+            ->where('tenant_id', auth()->user()->tenant_id)
+            ->firstOrFail();
+
+        $user->restore();
+
+        return redirect()->route('admin.users.show', $user)
+            ->with('success', "{$user->name}'s account has been restored.");
+    }
+
+    /**
      * Ensure user belongs to owner's tenant.
      */
     private function ensureOwnersTenant(User $user): void

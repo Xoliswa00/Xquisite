@@ -3,6 +3,7 @@
 namespace App\Modules\Booking\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Traits\HasTenant;
 use App\Models\Traits\Auditable;
 use App\Modules\POS\Models\Sale;
@@ -11,7 +12,7 @@ use App\Modules\POS\Models\Sale;
 class Appointment extends Model
 {
     //
-    use HasTenant, Auditable;
+    use HasTenant, Auditable, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',

@@ -7,12 +7,13 @@ use App\Models\Traits\HasTenant;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Notifications\Notifiable;
 
 class Customer extends Model implements AuthenticatableContract
 {
-    use HasTenant, Auditable, Authenticatable, Notifiable;
+    use HasTenant, Auditable, Authenticatable, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',
