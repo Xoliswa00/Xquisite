@@ -59,11 +59,13 @@
                 Start Free Trial
             </a>
 
-            <a href="{{ route('login') }}"
-               class="px-6 py-3 bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl text-gray-300 hover:text-white">
-                View Demo
+            <a href="{{ route('demo.login') }}"
+               class="px-6 py-3 bg-gray-900 border border-gray-700 hover:border-indigo-500/50 rounded-xl text-gray-300 hover:text-white transition flex items-center gap-2 justify-center">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Try Live Demo
             </a>
         </div>
+        <p class="mt-4 text-xs text-gray-600">No signup required &middot; Resets every 6 hours</p>
     </section>
 
     <!-- VALUE PROP STRIP -->
@@ -146,4 +148,6 @@
     </section>
 
 </div>
+
+<x-whatsapp-button />
 </x-guest-layout>

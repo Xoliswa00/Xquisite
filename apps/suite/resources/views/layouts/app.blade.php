@@ -11,6 +11,7 @@
 </head>
 
 <body class="font-sans antialiased bg-slate-950 text-slate-100">
+<x-demo-banner />
 <div class="min-h-screen flex">
 
     <!-- Sidebar -->
@@ -231,5 +232,7 @@
         </main>
     </div>
 </div>
+
+<x-whatsapp-button />
 </body>
 </html>
