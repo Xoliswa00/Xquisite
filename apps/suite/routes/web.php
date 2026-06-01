@@ -76,42 +76,45 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::delete('staff/{staff}/blocks/{block}', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'destroyBlock'])->name('staff.blocks.destroy');
     });
 
-    // POS module
-    Route::get('/pos', [PosController::class, 'terminal'])->name('pos.terminal');
-    Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+    // POS module — gated behind module:pos
+    Route::middleware('module:pos')->group(function () {
+        Route::get('/pos', [PosController::class, 'terminal'])->name('pos.terminal');
+        Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+        Route::post('/pos/layby', [PosController::class, 'layby'])->name('pos.layby');
 
-    Route::prefix('pos/sales')->name('pos.sales.')->group(function () {
-        Route::get('/', [SaleController::class, 'index'])->name('index');
-        Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
-        Route::post('/{sale}/void', [SaleController::class, 'void'])->name('void');
+        Route::prefix('pos/sales')->name('pos.sales.')->group(function () {
+            Route::get('/', [SaleController::class, 'index'])->name('index');
+            Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
+            Route::post('/{sale}/void', [SaleController::class, 'void'])->name('void');
+        });
+
+        // Product management
+        Route::resource('products', ProductController::class)->except(['show']);
+
+        // Stock management
+        Route::get('/stock/take', [StockController::class, 'takePage'])->name('stock.take');
+        Route::post('/stock/take', [StockController::class, 'saveStockTake'])->name('stock.take.save');
+        Route::get('/stock/reorder-alerts', [StockController::class, 'reorderAlerts'])->name('stock.reorder-alerts');
+        Route::post('/products/{product}/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
+        Route::get('/products/{product}/stock/history', [StockController::class, 'history'])->name('stock.history');
+
+        // Purchase orders
+        Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+        Route::get('/purchase-orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+        Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+        Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+        Route::post('/purchase-orders/{purchaseOrder}/send', [PurchaseOrderController::class, 'send'])->name('purchase-orders.send');
+        Route::post('/purchase-orders/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
+        Route::post('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
+
+        // Rental orders (decor / event items)
+        Route::resource('rental-orders', \App\Http\Controllers\POS\RentalOrderController::class)->except(['edit','update']);
+        Route::patch('/rental-orders/{rentalOrder}/out',    [\App\Http\Controllers\POS\RentalOrderController::class, 'markOut'])->name('rental-orders.out');
+        Route::patch('/rental-orders/{rentalOrder}/return', [\App\Http\Controllers\POS\RentalOrderController::class, 'returnItem'])->name('rental-orders.return');
+
+        // Suppliers
+        Route::resource('suppliers', SupplierController::class);
     });
-
-    // Product management
-    Route::resource('products', ProductController::class)->except(['show']);
-
-    // Stock management
-    Route::get('/stock/take', [StockController::class, 'takePage'])->name('stock.take');
-    Route::post('/stock/take', [StockController::class, 'saveStockTake'])->name('stock.take.save');
-    Route::get('/stock/reorder-alerts', [StockController::class, 'reorderAlerts'])->name('stock.reorder-alerts');
-    Route::post('/products/{product}/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
-    Route::get('/products/{product}/stock/history', [StockController::class, 'history'])->name('stock.history');
-
-    // Purchase orders
-    Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
-    Route::get('/purchase-orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
-    Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
-    Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
-    Route::post('/purchase-orders/{purchaseOrder}/send', [PurchaseOrderController::class, 'send'])->name('purchase-orders.send');
-    Route::post('/purchase-orders/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
-    Route::post('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
-
-    // Rental orders (decor / event items)
-    Route::resource('rental-orders', \App\Http\Controllers\POS\RentalOrderController::class)->except(['edit','update']);
-    Route::patch('/rental-orders/{rentalOrder}/out',    [\App\Http\Controllers\POS\RentalOrderController::class, 'markOut'])->name('rental-orders.out');
-    Route::patch('/rental-orders/{rentalOrder}/return', [\App\Http\Controllers\POS\RentalOrderController::class, 'returnItem'])->name('rental-orders.return');
-
-    // Suppliers
-    Route::resource('suppliers', SupplierController::class);
 
     // Analytics
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');

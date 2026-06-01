@@ -105,7 +105,8 @@ class LeaseController extends Controller
 
     public function update(Request $request, Lease $lease)
     {
-        abort_if($lease->status === 'terminated', 403, 'Cannot edit a terminated lease.');
+        // Match the same guard as edit() — only pending leases can be fully edited
+        abort_if($lease->status !== 'pending', 403, 'Only pending leases can be edited. Use Terminate to end an active lease.');
 
         $validated = $request->validate([
             'end_date'       => 'nullable|date|after:start_date',
@@ -116,6 +117,11 @@ class LeaseController extends Controller
         ]);
 
         $lease->update($validated);
+
+        // Keep unit.monthly_rent in sync so revenue stats stay accurate
+        if (isset($validated['monthly_rent'])) {
+            $lease->unit?->update(['monthly_rent' => $validated['monthly_rent']]);
+        }
 
         return redirect()->route('leases.show', $lease)->with('success', 'Lease updated.');
     }
