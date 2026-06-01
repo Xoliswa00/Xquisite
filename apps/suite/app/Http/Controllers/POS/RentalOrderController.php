@@ -33,7 +33,11 @@ class RentalOrderController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'product_id'    => 'required|exists:products,id',
+            'product_id'    => ['required', 'exists:products,id', function ($attr, $value, $fail) {
+                if (! \App\Modules\POS\Models\Product::where('id', $value)->where('is_rentable', true)->exists()) {
+                    $fail('This product is not set up for rental.');
+                }
+            }],
             'customer_id'   => 'nullable|exists:customers,id',
             'appointment_id'=> 'nullable|exists:appointments,id',
             'quantity'      => 'required|integer|min:1',

@@ -21,6 +21,15 @@ class ReviewController extends Controller
         $user   = auth()->user();
         $tenant = $user?->tenant;
 
+        // One pending/approved review per user — prevent spamming
+        $existing = Review::where('user_id', $user?->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->exists();
+
+        if ($existing) {
+            return back()->with('success', 'You have already submitted a review. Thank you!');
+        }
+
         $review = Review::create([
             'user_id'           => $user?->id,
             'tenant_id'         => $tenant?->id,

@@ -91,6 +91,7 @@ class PublicBookingController extends Controller
 
         if (!$pending) {
             return redirect()->route('book.index', $slug)
+                ->withInput()
                 ->withErrors(['error' => 'Session expired. Please start again.']);
         }
 

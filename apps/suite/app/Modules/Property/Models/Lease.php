@@ -61,7 +61,7 @@ class Lease extends Model
     }
 
     /** Generate rent payment records for the current month if not yet created */
-    public function generateCurrentPeriodPayment(): ?RentPayment
+    public function generateCurrentPeriodPayment(): RentPayment
     {
         $period = static::currentPeriod();
 
