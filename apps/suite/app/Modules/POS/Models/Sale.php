@@ -50,6 +50,32 @@ class Sale extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function paymentPlan()
+    {
+        return $this->morphOne(\App\Models\PaymentPlan::class, 'plannable');
+    }
+
+    public function isLayby(): bool
+    {
+        return $this->status === 'layby';
+    }
+
+    public function markLaybyComplete(): void
+    {
+        // Deduct stock for all product items now that layby is fully paid
+        foreach ($this->items as $item) {
+            if ($item->item_type === 'product') {
+                $product = Product::find($item->item_id);
+                $product?->decrementStock($item->quantity, 'layby_complete', [
+                    'sale_id'   => $this->id,
+                    'reference' => $this->reference,
+                ]);
+            }
+        }
+
+        $this->update(['status' => 'paid', 'paid_at' => now()]);
+    }
+
     public static function generateReference(): string
     {
         $last = static::max('id') ?? 0;

@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\PaymentPlanController;
+use App\Http\Controllers\PublicQuoteController;
+use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ServiceRequestController;
@@ -194,6 +197,18 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::post('/modules/request', [ModuleController::class, 'request'])->name('modules.request');
     });
 
+    // Payment plans (layby + event deposits)
+    Route::get('/payment-plans', [PaymentPlanController::class, 'index'])->name('payment-plans.index');
+    Route::post('/payment-plans', [PaymentPlanController::class, 'storePlan'])->name('payment-plans.store');
+    Route::get('/payment-plans/{paymentPlan}', [PaymentPlanController::class, 'show'])->name('payment-plans.show');
+    Route::patch('/payment-plans/{paymentPlan}/cancel', [PaymentPlanController::class, 'cancel'])->name('payment-plans.cancel');
+    Route::post('/payment-plans/installments/{installment}/pay', [PaymentPlanController::class, 'recordPayment'])->name('payment-plans.pay');
+    Route::post('/pos/layby', [\App\Http\Controllers\POS\PosController::class, 'layby'])->name('pos.layby');
+
+    // Quotes
+    Route::resource('quotes', QuoteController::class)->except(['edit', 'update']);
+    Route::post('/quotes/{quote}/send', [QuoteController::class, 'send'])->name('quotes.send');
+
     // Reviews
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::post('/reviews/dismiss', [ReviewController::class, 'dismiss'])->name('reviews.dismiss');
@@ -266,6 +281,14 @@ Route::prefix('shop/{tenantSlug}')->name('shop.')->group(function () {
     Route::post('/payfast/notify', [CheckoutController::class, 'payfastNotify'])->name('payfast.notify')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     Route::get('/payfast/return', [CheckoutController::class, 'payfastReturn'])->name('payfast.return');
     Route::get('/payfast/cancel', [CheckoutController::class, 'payfastCancel'])->name('payfast.cancel');
+});
+
+// ─── Public quote acceptance (no auth) ───────────────────────────────────────
+Route::prefix('q/{quote}')->name('public.quotes.')->group(function () {
+    Route::get('/{token}',           [PublicQuoteController::class, 'show'])->name('show');
+    Route::post('/{token}/accept',   [PublicQuoteController::class, 'accept'])->name('accept');
+    Route::get('/{token}/pay',       [PublicQuoteController::class, 'payDeposit'])->name('pay');
+    Route::post('/{token}/decline',  [PublicQuoteController::class, 'decline'])->name('decline');
 });
 
 require __DIR__.'/auth.php';
