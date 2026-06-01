@@ -117,6 +117,74 @@
         </div>
     </section>
 
+    <!-- PRICING -->
+    <section class="max-w-7xl mx-auto px-6 lg:px-8 pb-24" id="pricing">
+        @php $plans = \App\Models\Plan::active()->ordered()->with('planModules.platformModule')->get(); @endphp
+
+        @if ($plans->isNotEmpty())
+        <div class="text-center mb-14">
+            <h2 class="text-3xl font-bold">Simple, Transparent Pricing</h2>
+            <p class="text-gray-400 mt-3">Bundle and save — or pick individual modules if you only need one thing.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+            @foreach ($plans as $plan)
+            <div class="rounded-2xl border {{ $plan->is_featured ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-gray-900' : 'border-gray-800 bg-gray-900/60' }} overflow-hidden">
+
+                @if ($plan->is_featured)
+                <div class="bg-indigo-600 text-white text-xs font-semibold text-center py-1.5 tracking-wide">
+                    MOST POPULAR
+                </div>
+                @endif
+
+                <div class="p-7">
+                    <h3 class="text-lg font-bold text-white">{{ $plan->name }}</h3>
+                    @if ($plan->tagline)
+                        <p class="text-sm text-gray-400 mt-1">{{ $plan->tagline }}</p>
+                    @endif
+
+                    <div class="mt-5">
+                        <span class="text-4xl font-bold text-white">R{{ number_format($plan->price_monthly, 0) }}</span>
+                        <span class="text-gray-400 text-sm">/month</span>
+                    </div>
+
+                    @if ($plan->price_annual)
+                    <p class="mt-1 text-xs text-emerald-400">
+                        R{{ number_format($plan->price_annual, 0) }}/mo billed annually · save {{ $plan->annualDiscountPercent() }}%
+                    </p>
+                    @endif
+
+                    <a href="{{ route('register') }}"
+                       class="mt-6 block text-center py-2.5 rounded-xl font-semibold text-sm transition
+                              {{ $plan->is_featured
+                                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                                  : 'bg-gray-800 hover:bg-gray-700 text-gray-200' }}">
+                        Get started
+                    </a>
+
+                    <ul class="mt-6 space-y-2.5">
+                        @foreach ($plan->planModules as $pm)
+                        <li class="flex items-center gap-2.5 text-sm text-gray-300">
+                            <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            {{ $pm->platformModule?->name ?? $pm->module_key }}
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
+
+            </div>
+            @endforeach
+        </div>
+
+        <p class="text-center text-gray-600 text-sm mt-8">
+            Need only one module?
+            <a href="{{ route('register') }}" class="text-indigo-400 hover:text-indigo-300">Sign up and activate individually from R99/mo →</a>
+        </p>
+        @endif
+    </section>
+
     <!-- CTA -->
     <section class="border-t border-gray-800">
         <div class="max-w-4xl mx-auto px-6 lg:px-8 py-20 text-center">

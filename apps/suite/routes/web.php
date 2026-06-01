@@ -17,6 +17,7 @@ use App\Http\Controllers\Ecommerce\StorefrontController;
 use App\Http\Controllers\Ecommerce\CartController;
 use App\Http\Controllers\Ecommerce\CheckoutController;
 use App\Http\Controllers\Ecommerce\OrderController;
+use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\ModuleRequestController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\LogController;
@@ -146,6 +147,9 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
             Route::patch('/module-requests/{moduleRequest}/reject', [ModuleRequestController::class, 'reject'])->name('module-requests.reject');
+
+            // Bundle plans
+            Route::resource('plans', PlanController::class)->except(['show']);
         });
 
         // User management (for tenant owners to manage their staff)
