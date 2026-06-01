@@ -29,6 +29,16 @@ class Appointment extends Model
         'scheduled_at' => 'datetime',
     ];
 
+    public function paymentPlan()
+    {
+        return $this->morphOne(\App\Models\PaymentPlan::class, 'plannable');
+    }
+
+    public function isTentative(): bool
+    {
+        return $this->status === 'tentative';
+    }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);
