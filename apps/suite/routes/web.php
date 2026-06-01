@@ -19,6 +19,7 @@ use App\Http\Controllers\Ecommerce\StorefrontController;
 use App\Http\Controllers\Ecommerce\CartController;
 use App\Http\Controllers\Ecommerce\CheckoutController;
 use App\Http\Controllers\Ecommerce\OrderController;
+use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\ModuleRequestController;
 use App\Http\Controllers\Admin\TenantController;
@@ -158,6 +159,8 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
             Route::patch('/module-requests/{moduleRequest}/reject', [ModuleRequestController::class, 'reject'])->name('module-requests.reject');
 
+            // Bundle plans
+            Route::resource('plans', PlanController::class)->except(['show']);
             // Platform module registry
             Route::resource('platform-modules', PlatformModuleController::class)->except(['show', 'destroy']);
             Route::patch('platform-modules/{platformModule}/status', [PlatformModuleController::class, 'updateStatus'])->name('platform-modules.status');
