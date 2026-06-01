@@ -103,6 +103,7 @@ class ServiceController extends Controller
 
         foreach ($bundles as $bundle) {
             ServiceProduct::create([
+                'tenant_id'  => auth()->user()->tenant_id,
                 'service_id' => $service->id,
                 'product_id' => $bundle['product_id'],
                 'quantity'   => (int) $bundle['quantity'],

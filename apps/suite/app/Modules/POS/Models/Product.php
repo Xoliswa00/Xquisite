@@ -3,11 +3,12 @@
 namespace App\Modules\POS\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Traits\HasTenant;
 
 class Product extends Model
 {
-    use HasTenant;
+    use HasTenant, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',

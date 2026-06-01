@@ -35,14 +35,26 @@ class StaffScheduleController extends Controller
 
     public function update(Request $request, Staff $staff)
     {
-        $validated = $request->validate([
-            'days'                  => 'nullable|array',
-            'days.*'                => 'integer|between:0,6',
-            'start_time'            => 'required|array',
-            'start_time.*'          => 'required|date_format:H:i',
-            'end_time'              => 'required|array',
-            'end_time.*'            => 'required|date_format:H:i|after:start_time.*',
+        // Base structural rules
+        $request->validate([
+            'days'         => 'nullable|array',
+            'days.*'       => 'integer|between:0,6',
+            'start_time'   => 'required|array',
+            'start_time.*' => 'required|date_format:H:i',
+            'end_time'     => 'required|array',
+            'end_time.*'   => 'required|date_format:H:i',
         ]);
+
+        // Validate each day's pair individually — wildcard after: can't resolve array keys
+        foreach (array_keys(self::DAYS) as $day) {
+            $start = $request->input("start_time.{$day}");
+            $end   = $request->input("end_time.{$day}");
+            if ($start && $end && $end <= $start) {
+                return back()->withInput()->withErrors([
+                    "end_time.{$day}" => 'End time must be after start time for ' . self::DAYS[$day] . '.',
+                ]);
+            }
+        }
 
         $activeDays = $request->input('days', []);
 
