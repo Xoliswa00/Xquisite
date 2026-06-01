@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;

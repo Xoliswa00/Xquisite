@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
+use App\Mail\RenterPortalInvite;
 use App\Modules\Property\Models\Renter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class RenterController extends Controller
 {
@@ -85,14 +87,13 @@ class RenterController extends Controller
     /** Send portal invite — creates a password and emails login details */
     public function invite(Renter $renter)
     {
-        abort_if(!$renter->email, 422, 'Renter has no email address.');
+        abort_if(! $renter->email, 422, 'Renter has no email address.');
 
-        $password = \Str::random(10);
+        $password = \Illuminate\Support\Str::random(12);
         $renter->update(['password' => Hash::make($password)]);
 
-        // TODO: send email with portal URL + temp password
-        // Mail::to($renter->email)->send(new RenterPortalInvite($renter, $password));
+        Mail::to($renter->email)->queue(new RenterPortalInvite($renter, $password));
 
-        return back()->with('success', "Portal access granted. Temporary password: {$password}");
+        return back()->with('success', "Portal invite sent to {$renter->email}. The renter will receive their login details by email.");
     }
 }
