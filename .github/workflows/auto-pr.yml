@@ -1,0 +1,57 @@
+name: Auto-create draft PR
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - dev
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create draft PR if none exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          REPO="${{ github.repository }}"
+
+          # Check if a PR already exists for this branch
+          EXISTING=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq 'length')
+
+          if [ "$EXISTING" = "0" ]; then
+            # Turn branch name into a readable title
+            # e.g. feature/bundle-pricing -> Bundle Pricing
+            TITLE=$(echo "$BRANCH" \
+              | sed 's|.*/||'        \
+              | tr '-' ' '           \
+              | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2); print}')
+
+            gh pr create \
+              --repo    "$REPO" \
+              --base    dev \
+              --head    "$BRANCH" \
+              --title   "$TITLE" \
+              --body    "$(cat <<'BODY'
+## Summary
+
+> _Auto-created draft PR — fill in what this branch does before merging._
+
+## Test plan
+
+- [ ] Tested locally
+- [ ] No regressions in related features
+
+🤖 Auto-opened by [auto-pr workflow](/.github/workflows/auto-pr.yml)
+BODY
+)" \
+              --draft
+            echo "Draft PR created for $BRANCH"
+          else
+            echo "PR already exists for $BRANCH — skipping"
+          fi
