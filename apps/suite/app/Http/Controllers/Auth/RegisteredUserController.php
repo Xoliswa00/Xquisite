@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Mail\WelcomeEmail;
+use App\Mail\WelcomeNewUserMail;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -62,7 +62,7 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Mail::to($user->email)->queue(new WelcomeEmail($user, $tenant));
+        Mail::to($user->email)->queue(new WelcomeNewUserMail($user));
 
         Auth::login($user);
 

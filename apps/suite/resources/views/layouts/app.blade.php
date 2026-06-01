@@ -11,6 +11,7 @@
 </head>
 
 <body class="font-sans antialiased bg-slate-950 text-slate-100">
+<x-demo-banner />
 <div class="min-h-screen flex">
 
     <!-- Sidebar -->
@@ -233,6 +234,7 @@
     </div>
 </div>
 
+<x-whatsapp-button />
 {{-- Review modal: auto-opens on milestone, floating button always present --}}
 @if(isset($reviewThreshold) && $reviewThreshold)
     <x-review-modal :threshold="$reviewThreshold" :auto-open="true" />

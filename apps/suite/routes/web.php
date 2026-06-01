@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DemoController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
@@ -47,6 +48,8 @@ Route::get('/', function () {
 Route::get('/welcome', function () {
     return view('welcome');
 })->name('welcome');
+
+Route::get('/demo', [DemoController::class, 'login'])->name('demo.login');
 
 Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(function () {
 
