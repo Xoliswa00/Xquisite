@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\POS;
 
 use App\Http\Controllers\Controller;
+use App\Models\PaymentPlan;
 use App\Modules\Booking\Models\Appointment;
 use App\Modules\POS\Models\Product;
 use App\Modules\POS\Models\Sale;
@@ -139,5 +140,90 @@ class PosController extends Controller
 
         return redirect()->route('pos.sales.show', session('last_sale_id'))
             ->with('success', 'Payment processed successfully.');
+    }
+
+    public function layby(Request $request)
+    {
+        $request->validate([
+            'items'                  => 'required|array|min:1',
+            'items.*.type'           => 'required|in:service,product',
+            'items.*.id'             => 'required|integer',
+            'items.*.name'           => 'required|string',
+            'items.*.price'          => 'required|numeric|min:0',
+            'items.*.qty'            => 'required|integer|min:1',
+            'deposit_amount'         => 'required|numeric|min:1',
+            'remaining_installments' => 'required|integer|min:0|max:24',
+            'interval_days'          => 'required|integer|min:7',
+            'deposit_due'            => 'required|date|after_or_equal:today',
+            'cancellation_fee'       => 'nullable|numeric|min:0',
+            'customer_id'            => 'nullable|exists:customers,id',
+            'notes'                  => 'nullable|string|max:500',
+        ]);
+
+        $plan = null;
+
+        DB::transaction(function () use ($request, &$plan) {
+            $items    = $request->items;
+            $subtotal = collect($items)->sum(fn ($i) => $i['price'] * $i['qty']);
+
+            // Create the sale as 'layby' — stock NOT deducted yet
+            $sale = Sale::create([
+                'reference'       => Sale::generateReference(),
+                'customer_id'     => $request->customer_id,
+                'status'          => 'layby',
+                'subtotal'        => $subtotal,
+                'discount_amount' => 0,
+                'tax_amount'      => 0,
+                'total'           => $subtotal,
+                'payment_method'  => 'layby',
+                'notes'           => $request->notes,
+            ]);
+
+            foreach ($items as $item) {
+                SaleItem::create([
+                    'sale_id'    => $sale->id,
+                    'item_type'  => $item['type'],
+                    'item_id'    => $item['id'],
+                    'name'       => $item['name'],
+                    'unit_price' => $item['price'],
+                    'quantity'   => $item['qty'],
+                    'subtotal'   => $item['price'] * $item['qty'],
+                ]);
+            }
+
+            $title = $request->notes
+                ? "Layby – {$request->notes}"
+                : "Layby – " . collect($items)->pluck('name')->implode(', ');
+
+            $plan = PaymentPlan::create([
+                'tenant_id'        => auth()->user()->tenant_id,
+                'customer_id'      => $request->customer_id,
+                'title'            => $title,
+                'total_amount'     => $subtotal,
+                'cancellation_fee' => $request->cancellation_fee ?? 0,
+                'type'             => 'layby',
+                'plannable_type'   => Sale::class,
+                'plannable_id'     => $sale->id,
+            ]);
+
+            $schedule = PaymentPlan::buildSchedule(
+                $subtotal,
+                $request->deposit_amount,
+                $request->remaining_installments,
+                $request->deposit_due,
+                $request->interval_days
+            );
+
+            foreach ($schedule as $row) {
+                $plan->installments()->create($row);
+            }
+
+            // Record the deposit as paid immediately
+            $deposit = $plan->installments->first();
+            $deposit->markPaid('cash');
+        });
+
+        return redirect()->route('payment-plans.show', $plan)
+            ->with('success', 'Layby created and deposit recorded.');
     }
 }

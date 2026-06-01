@@ -41,6 +41,14 @@ class Appointment extends Model
     public function isEventBooking(): bool
     {
         return ! empty($this->headcount) || ! empty($this->venue) || ! empty($this->event_type);
+    public function paymentPlan()
+    {
+        return $this->morphOne(\App\Models\PaymentPlan::class, 'plannable');
+    }
+
+    public function isTentative(): bool
+    {
+        return $this->status === 'tentative';
     }
 
     public function customer()

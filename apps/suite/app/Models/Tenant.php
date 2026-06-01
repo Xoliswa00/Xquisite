@@ -20,11 +20,13 @@ class Tenant extends Model
         'industry',
         'logo_url',
         'is_active',
+        'is_demo',
         'trial_ends_at',
     ];
 
     protected $casts = [
         'is_active'              => 'boolean',
+        'is_demo'                => 'boolean',
         'custom_domain_verified' => 'boolean',
         'trial_ends_at'          => 'datetime',
     ];

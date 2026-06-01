@@ -11,6 +11,7 @@
 </head>
 
 <body class="font-sans antialiased bg-slate-950 text-slate-100">
+<x-demo-banner />
 <div class="min-h-screen flex">
 
     <!-- Sidebar -->
@@ -67,6 +68,16 @@
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('pos.sales.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
                         Sales
+                    </a>
+                    <a href="{{ route('payment-plans.index') }}"
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('payment-plans.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        Laybys & Plans
+                    </a>
+                    <a href="{{ route('quotes.index') }}"
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('quotes.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Quotes
                     </a>
                     <a href="{{ route('products.index') }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('products.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
@@ -156,9 +167,14 @@
             <div class="pt-2 border-t border-slate-800 mt-2">
                 <p class="px-3 text-xs text-slate-600 uppercase tracking-wide mb-1">Settings</p>
                 <a href="{{ route('settings.modules.index') }}"
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('settings.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('settings.modules*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                     My Modules
+                </a>
+                <a href="{{ route('settings.services.index') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('settings.services*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    Services
                 </a>
                 <a href="{{ route('profile.edit') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('profile.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
@@ -238,6 +254,7 @@
     </div>
 </div>
 
+<x-whatsapp-button />
 {{-- Review modal: auto-opens on milestone, floating button always present --}}
 @if(isset($reviewThreshold) && $reviewThreshold)
     <x-review-modal :threshold="$reviewThreshold" :auto-open="true" />
