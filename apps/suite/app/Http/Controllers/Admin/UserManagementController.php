@@ -29,7 +29,11 @@ class UserManagementController extends Controller
     {
         Gate::authorize('manage-staff');
 
-        $query = User::where('tenant_id', auth()->user()->tenant_id);
+        $showTrashed = $request->boolean('trashed');
+
+        $query = $showTrashed
+            ? User::onlyTrashed()->where('tenant_id', auth()->user()->tenant_id)
+            : User::where('tenant_id', auth()->user()->tenant_id);
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -42,9 +46,10 @@ class UserManagementController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->orderBy('role')->orderBy('name')->paginate(15)->withQueryString();
+        $users        = $query->orderBy('role')->orderBy('name')->paginate(15)->withQueryString();
+        $trashedCount = User::onlyTrashed()->where('tenant_id', auth()->user()->tenant_id)->count();
 
-        return view('admin.users.index', compact('users'));
+        return view('admin.users.index', compact('users', 'showTrashed', 'trashedCount'));
     }
 
     /**

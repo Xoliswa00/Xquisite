@@ -30,15 +30,53 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Duration (minutes)</label>
-                        <input type="number" name="duration_minutes" value="{{ old('duration_minutes', $service->duration_minutes) }}" min="5" max="480" required
+                        <input type="number" name="duration_minutes" value="{{ old('duration_minutes', $service->duration_minutes) }}" min="5" max="2880" required
                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <p class="text-xs text-slate-500 mt-0.5">For full-day events use 480+</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Price (R)</label>
-                        <input type="number" name="price" value="{{ old('price', $service->price) }}" min="0" step="0.01" required
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Pricing Type</label>
+                        <select name="pricing_type" id="edit_pricing_type"
+                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            <option value="flat"     {{ old('pricing_type', $service->pricing_type) === 'flat'     ? 'selected' : '' }}>Flat rate</option>
+                            <option value="per_head" {{ old('pricing_type', $service->pricing_type) === 'per_head' ? 'selected' : '' }}>Per person / per head</option>
+                            <option value="per_unit" {{ old('pricing_type', $service->pricing_type) === 'per_unit' ? 'selected' : '' }}>Per unit</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div id="edit-flat-price">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Flat Price (R)</label>
+                        <input type="number" name="price" value="{{ old('price', $service->price) }}" min="0" step="0.01"
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                    <div id="edit-unit-price" style="display:none">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Price Per Person / Unit (R)</label>
+                        <input type="number" name="price_per_unit" value="{{ old('price_per_unit', $service->price_per_unit) }}" min="0" step="0.01"
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                    <div id="edit-unit-label" style="display:none">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Unit Label</label>
+                        <input type="text" name="unit_label" value="{{ old('unit_label', $service->unit_label) }}"
+                               placeholder="per pax / per table"
                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                     </div>
                 </div>
+
+                <script>
+                    (function() {
+                        const sel = document.getElementById('edit_pricing_type');
+                        function toggle() {
+                            const isFlat = sel.value === 'flat';
+                            document.getElementById('edit-flat-price').style.display  = isFlat ? '' : 'none';
+                            document.getElementById('edit-unit-price').style.display  = isFlat ? 'none' : '';
+                            document.getElementById('edit-unit-label').style.display  = isFlat ? 'none' : '';
+                        }
+                        sel.addEventListener('change', toggle);
+                        toggle();
+                    })();
+                </script>
 
                 <div class="flex items-center gap-2">
                     <input type="hidden" name="is_active" value="0">

@@ -70,8 +70,71 @@
 
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Notes</label>
-                    <textarea name="notes" rows="3"
+                    <textarea name="notes" rows="2"
                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{ old('notes', $appointment->notes) }}</textarea>
+                </div>
+
+                {{-- Event Brief --}}
+                <div x-data="{ open: {{ $appointment->isEventBooking() ? 'true' : 'false' }} }">
+                    <button type="button" @click="open = !open"
+                            class="flex items-center gap-2 text-sm text-indigo-400 hover:text-indigo-300 transition">
+                        <svg class="w-4 h-4 transition" :class="open ? 'rotate-90' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                        Event Brief
+                        <span class="text-slate-500 font-normal">(catering, decor & events)</span>
+                    </button>
+
+                    <div x-show="open" x-transition class="mt-4 space-y-4 border-t border-slate-700 pt-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Guest Count</label>
+                                <input type="number" name="headcount" min="1"
+                                       value="{{ old('headcount', $appointment->headcount) }}"
+                                       class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Event Type</label>
+                                <select name="event_type"
+                                        class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                    <option value="">— Select type —</option>
+                                    @foreach(['Wedding','Corporate Function','Birthday','Private Party','Funeral','Product Launch','Year End Function','Other'] as $t)
+                                        <option value="{{ $t }}" @selected(old('event_type', $appointment->event_type) === $t)>{{ $t }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Venue / Location</label>
+                            <input type="text" name="venue"
+                                   value="{{ old('venue', $appointment->venue) }}"
+                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Setup Time</label>
+                                <input type="datetime-local" name="setup_at"
+                                       value="{{ old('setup_at', $appointment->setup_at?->format('Y-m-d\TH:i')) }}"
+                                       class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Breakdown Time</label>
+                                <input type="datetime-local" name="breakdown_at"
+                                       value="{{ old('breakdown_at', $appointment->breakdown_at?->format('Y-m-d\TH:i')) }}"
+                                       class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Dietary Requirements</label>
+                            <textarea name="dietary_notes" rows="2"
+                                      class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none">{{ old('dietary_notes', $appointment->dietary_notes) }}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Theme / Style Notes</label>
+                            <textarea name="theme_notes" rows="2"
+                                      class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none">{{ old('theme_notes', $appointment->theme_notes) }}</textarea>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex items-center gap-3 pt-2">

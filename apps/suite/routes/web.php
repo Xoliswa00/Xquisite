@@ -208,11 +208,11 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
 
     // Payment plans (layby + event deposits)
     Route::get('/payment-plans', [PaymentPlanController::class, 'index'])->name('payment-plans.index');
+    Route::get('/payment-plans/create', [PaymentPlanController::class, 'create'])->name('payment-plans.create');
     Route::post('/payment-plans', [PaymentPlanController::class, 'storePlan'])->name('payment-plans.store');
     Route::get('/payment-plans/{paymentPlan}', [PaymentPlanController::class, 'show'])->name('payment-plans.show');
     Route::patch('/payment-plans/{paymentPlan}/cancel', [PaymentPlanController::class, 'cancel'])->name('payment-plans.cancel');
     Route::post('/payment-plans/installments/{installment}/pay', [PaymentPlanController::class, 'recordPayment'])->name('payment-plans.pay');
-    Route::post('/pos/layby', [\App\Http\Controllers\POS\PosController::class, 'layby'])->name('pos.layby');
 
     // Quotes
     Route::resource('quotes', QuoteController::class)->except(['edit', 'update']);
