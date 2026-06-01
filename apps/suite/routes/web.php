@@ -41,7 +41,7 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-route::get('/welcome', function () {
+Route::get('/welcome', function () {
     return view('welcome');
 })->name('welcome');
 
