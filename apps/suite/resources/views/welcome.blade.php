@@ -49,11 +49,6 @@
             Xquisite Suite &mdash; Modular Business Operating System
         </div>
         <h1 class="text-4xl md:text-6xl font-bold leading-tight">
-            Run your business
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">end-to-end</span>
-        </h1>
-        <p class="mt-6 text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
-            Supplier management, inventory control, POS, bookings, and e-commerce — unified into one modular platform built for real operations.
             Run everything.
         </h1>
 
