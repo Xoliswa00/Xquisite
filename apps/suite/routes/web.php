@@ -19,6 +19,19 @@ use App\Http\Controllers\Ecommerce\CheckoutController;
 use App\Http\Controllers\Ecommerce\OrderController;
 use App\Http\Controllers\Admin\ModuleRequestController;
 use App\Http\Controllers\Admin\TenantController;
+use App\Http\Controllers\Admin\LogController;
+use App\Http\Controllers\Admin\SyncQueueController;
+use App\Http\Controllers\Booking\PublicBookingController;
+use App\Http\Controllers\Booking\CustomerAuthController;
+use App\Http\Controllers\Booking\CustomerPortalController;
+use App\Http\Controllers\Property\PropertyController;
+use App\Http\Controllers\Property\UnitController;
+use App\Http\Controllers\Property\RenterController;
+use App\Http\Controllers\Property\LeaseController;
+use App\Http\Controllers\Property\RentPaymentController;
+use App\Http\Controllers\Property\MaintenanceController;
+use App\Http\Controllers\Property\RenterAuthController;
+use App\Http\Controllers\Property\RenterPortalController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\Settings\ModuleController;
@@ -37,11 +50,19 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Booking module
-    Route::resource('appointments', AppointmentController::class);
-    Route::resource('customers', CustomerController::class);
-    Route::resource('services', ServiceController::class)->except(['show']);
-    Route::resource('staff', StaffController::class);
+    // Booking module — gated behind module:booking
+    Route::middleware('module:booking')->group(function () {
+        Route::resource('appointments', AppointmentController::class);
+        Route::post('appointments/{appointment}/assign', [\App\Http\Controllers\Booking\AppointmentController::class, 'assign'])->name('appointments.assign');
+        Route::get('calendar/{date?}', [\App\Http\Controllers\Booking\AppointmentController::class, 'calendar'])->name('appointments.calendar');
+        Route::resource('customers', CustomerController::class);
+        Route::resource('services', ServiceController::class)->except(['show']);
+        Route::resource('staff', StaffController::class);
+        Route::get('staff/{staff}/schedule', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'edit'])->name('staff.schedule');
+        Route::put('staff/{staff}/schedule', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'update'])->name('staff.schedule.update');
+        Route::post('staff/{staff}/blocks', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'storeBlock'])->name('staff.blocks.store');
+        Route::delete('staff/{staff}/blocks/{block}', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'destroyBlock'])->name('staff.blocks.destroy');
+    });
 
     // POS module
     Route::get('/pos', [PosController::class, 'terminal'])->name('pos.terminal');
@@ -83,10 +104,21 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('module:ecommerce');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status')->middleware('module:ecommerce');
 
-    // Module-gated route groups
-    Route::middleware('module:booking')->group(function () {
-        // Booking routes already defined above — middleware applied at group level
-        // (resource routes are defined outside; gate them by wrapping in this group if needed later)
+    // Property management module
+    Route::middleware('module:property_management')->group(function () {
+        Route::resource('properties', PropertyController::class);
+        Route::resource('properties.units', UnitController::class);
+        Route::resource('renters', RenterController::class);
+        Route::post('renters/{renter}/invite', [RenterController::class, 'invite'])->name('renters.invite');
+        Route::resource('leases', LeaseController::class)->except(['destroy']);
+        Route::post('leases/{lease}/terminate', [LeaseController::class, 'terminate'])->name('leases.terminate');
+        Route::get('rent-payments', [RentPaymentController::class, 'index'])->name('rent-payments.index');
+        Route::get('rent-payments/{rentPayment}', [RentPaymentController::class, 'show'])->name('rent-payments.show');
+        Route::patch('rent-payments/{rentPayment}/record', [RentPaymentController::class, 'record'])->name('rent-payments.record');
+        Route::post('rent-payments/generate', [RentPaymentController::class, 'generateMonthly'])->name('rent-payments.generate');
+        Route::post('rent-payments/flag-overdue', [RentPaymentController::class, 'flagOverdue'])->name('rent-payments.flag-overdue');
+        Route::resource('maintenance', MaintenanceController::class);
+        Route::patch('maintenance/{maintenance}/status', [MaintenanceController::class, 'updateStatus'])->name('maintenance.status');
     });
 
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -98,6 +130,19 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('/tenants/{tenant}/module', [TenantController::class, 'toggleModule'])->name('tenants.module');
             Route::patch('/tenants/{tenant}/subdomain', [TenantController::class, 'updateSubdomain'])->name('tenants.subdomain');
             Route::delete('/tenants/{tenant}', [TenantController::class, 'destroy'])->name('tenants.destroy');
+
+        // Billing sync queue
+        Route::get('/sync-queue', [SyncQueueController::class, 'index'])->name('sync.index');
+        Route::post('/sync-queue/{syncQueue}/retry', [SyncQueueController::class, 'retryOne'])->name('sync.retry');
+        Route::post('/sync-queue/retry-all', [SyncQueueController::class, 'retryAll'])->name('sync.retry-all');
+        Route::patch('/sync-queue/{syncQueue}/dismiss', [SyncQueueController::class, 'dismiss'])->name('sync.dismiss');
+
+        // Logs
+        Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
+        Route::get('/logs/audit', [LogController::class, 'audit'])->name('logs.audit');
+        Route::get('/logs/combined', [LogController::class, 'combined'])->name('logs.combined');
+        Route::get('/logs/{log}', [LogController::class, 'show'])->name('logs.show');
+        Route::patch('/logs/{log}/status', [LogController::class, 'updateStatus'])->name('logs.status');
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
             Route::patch('/module-requests/{moduleRequest}/reject', [ModuleRequestController::class, 'reject'])->name('module-requests.reject');
@@ -125,6 +170,44 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// ─── Public client booking portal (/book/{slug}) ─────────────────────────────
+// No staff auth required — customers create their own accounts here.
+Route::prefix('book/{slug}')->name('book.')->group(function () {
+
+    // Service listing
+    Route::get('/',                           [PublicBookingController::class, 'index'])->name('index');
+    Route::get('/services/{service}',         [PublicBookingController::class, 'service'])->name('service');
+    Route::get('/slots',                      [PublicBookingController::class, 'slots'])->name('slots');
+    Route::get('/confirm',                    [PublicBookingController::class, 'confirm'])->name('confirm');
+    Route::post('/book',                      [PublicBookingController::class, 'store'])->name('store');
+    Route::get('/success/{appointment}',      [PublicBookingController::class, 'success'])->name('success');
+
+    // Customer auth
+    Route::get('/login',                      [CustomerAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',                     [CustomerAuthController::class, 'login'])->name('login.post');
+    Route::get('/register',                   [CustomerAuthController::class, 'showRegister'])->name('register');
+    Route::post('/register',                  [CustomerAuthController::class, 'register'])->name('register.post');
+    Route::post('/logout',                    [CustomerAuthController::class, 'logout'])->name('logout');
+
+    // Customer portal (auth checked inside controller)
+    Route::get('/my-bookings',                [CustomerPortalController::class, 'myBookings'])->name('my-bookings');
+    Route::patch('/appointments/{appointment}/cancel', [CustomerPortalController::class, 'cancel'])->name('cancel');
+});
+
+// ─── Renter portal (/rent/{slug}) ────────────────────────────────────────────
+Route::prefix('rent/{slug}')->name('rent.')->group(function () {
+    Route::get('/login',            [RenterAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',           [RenterAuthController::class, 'login'])->name('login.post');
+    Route::post('/logout',          [RenterAuthController::class, 'logout'])->name('logout');
+
+    // Portal pages (auth checked inside controller)
+    Route::get('/',                 [RenterPortalController::class, 'portal'])->name('portal');
+    Route::get('/lease',            [RenterPortalController::class, 'lease'])->name('lease');
+    Route::get('/payments',         [RenterPortalController::class, 'payments'])->name('payments');
+    Route::get('/maintenance',      [RenterPortalController::class, 'maintenance'])->name('maintenance');
+    Route::post('/maintenance',     [RenterPortalController::class, 'submitMaintenance'])->name('maintenance.submit');
 });
 
 // Public storefront (no auth)
