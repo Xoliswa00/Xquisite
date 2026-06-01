@@ -62,8 +62,15 @@ class AppointmentController extends Controller
             'service_id'       => 'required|exists:services,id',
             'scheduled_at'     => 'required|date|after:now',
             'duration_minutes' => 'required|integer|min:5|max:480',
-            'status'           => 'required|in:pending,confirmed,completed,cancelled,no_show',
+            'status'           => 'required|in:pending,confirmed,completed,cancelled,no_show,tentative',
             'notes'            => 'nullable|string|max:1000',
+            'headcount'        => 'nullable|integer|min:1',
+            'venue'            => 'nullable|string|max:255',
+            'event_type'       => 'nullable|string|max:50',
+            'dietary_notes'    => 'nullable|string|max:1000',
+            'theme_notes'      => 'nullable|string|max:1000',
+            'setup_at'         => 'nullable|date',
+            'breakdown_at'     => 'nullable|date',
         ]);
 
         // Only run availability check if a staff member was selected
@@ -115,8 +122,15 @@ class AppointmentController extends Controller
             'service_id'       => 'required|exists:services,id',
             'scheduled_at'     => 'required|date',
             'duration_minutes' => 'required|integer|min:5|max:480',
-            'status'           => 'required|in:pending,confirmed,completed,cancelled,no_show',
+            'status'           => 'required|in:pending,confirmed,completed,cancelled,no_show,tentative',
             'notes'            => 'nullable|string|max:1000',
+            'headcount'        => 'nullable|integer|min:1',
+            'venue'            => 'nullable|string|max:255',
+            'event_type'       => 'nullable|string|max:50',
+            'dietary_notes'    => 'nullable|string|max:1000',
+            'theme_notes'      => 'nullable|string|max:1000',
+            'setup_at'         => 'nullable|date',
+            'breakdown_at'     => 'nullable|date',
         ]);
 
         $slotChanged     = $appointment->scheduled_at->toDateTimeString() !== Carbon::parse($data['scheduled_at'])->toDateTimeString();

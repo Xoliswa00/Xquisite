@@ -23,17 +23,54 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Duration (minutes) <span class="text-red-400">*</span></label>
-                        <input type="number" name="duration_minutes" value="{{ old('duration_minutes', 60) }}" min="5" max="480" required
+                        <input type="number" name="duration_minutes" value="{{ old('duration_minutes', 60) }}" min="5" max="2880" required
                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 @error('duration_minutes') border-red-500 @enderror">
-                        @error('duration_minutes')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
+                        <p class="text-xs text-slate-500 mt-0.5">For full-day events use 480+ (e.g. 480 = 8 hrs)</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Price (R) <span class="text-red-400">*</span></label>
-                        <input type="number" name="price" value="{{ old('price', '0.00') }}" min="0" step="0.01" required
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 @error('price') border-red-500 @enderror">
-                        @error('price')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Pricing Type</label>
+                        <select name="pricing_type" id="pricing_type"
+                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            <option value="flat"     {{ old('pricing_type','flat') === 'flat'     ? 'selected' : '' }}>Flat rate</option>
+                            <option value="per_head" {{ old('pricing_type') === 'per_head' ? 'selected' : '' }}>Per person / per head</option>
+                            <option value="per_unit" {{ old('pricing_type') === 'per_unit' ? 'selected' : '' }}>Per unit</option>
+                        </select>
                     </div>
                 </div>
+
+                <div class="grid grid-cols-2 gap-4" id="price-fields">
+                    <div id="flat-price-field">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Flat Price (R)</label>
+                        <input type="number" name="price" value="{{ old('price', '0.00') }}" min="0" step="0.01"
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                    <div id="unit-price-fields" style="display:none">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Price Per Person / Unit (R)</label>
+                        <input type="number" name="price_per_unit" value="{{ old('price_per_unit') }}" min="0" step="0.01"
+                               placeholder="e.g. 150.00"
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                    <div id="unit-label-field" style="display:none">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Unit Label</label>
+                        <input type="text" name="unit_label" value="{{ old('unit_label') }}"
+                               placeholder="per pax / per table / per hour"
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <script>
+                    (function() {
+                        const sel = document.getElementById('pricing_type');
+                        function toggle() {
+                            const isFlat = sel.value === 'flat';
+                            document.getElementById('flat-price-field').style.display = isFlat ? '' : 'none';
+                            document.getElementById('unit-price-fields').style.display = isFlat ? 'none' : '';
+                            document.getElementById('unit-label-field').style.display = isFlat ? 'none' : '';
+                        }
+                        sel.addEventListener('change', toggle);
+                        toggle();
+                    })();
+                </script>
 
                 <div class="flex items-center gap-2">
                     <input type="hidden" name="is_active" value="0">

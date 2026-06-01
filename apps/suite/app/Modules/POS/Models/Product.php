@@ -27,15 +27,38 @@ class Product extends Model
         'is_active',
         'image_url',
         'is_available_online',
+        'is_rentable',
+        'rental_rate',
+        'total_units',
+        'condition',
     ];
 
     protected $casts = [
-        'price'          => 'decimal:2',
-        'cost_price'     => 'decimal:2',
+        'price'               => 'decimal:2',
+        'cost_price'          => 'decimal:2',
+        'rental_rate'         => 'decimal:2',
         'track_stock'         => 'boolean',
         'is_active'           => 'boolean',
         'is_available_online' => 'boolean',
+        'is_rentable'         => 'boolean',
     ];
+
+    public function rentalOrders()
+    {
+        return $this->hasMany(\App\Models\RentalOrder::class);
+    }
+
+    public function unitsAvailable(?string $onDate = null): int
+    {
+        if (! $this->is_rentable || ! $this->total_units) return 0;
+        $date = $onDate ?? now()->toDateString();
+        $out = $this->rentalOrders()
+            ->whereIn('status', ['reserved', 'out'])
+            ->where('event_date', '<=', $date)
+            ->where('return_due_at', '>=', $date)
+            ->sum('quantity');
+        return max(0, $this->total_units - $out);
+    }
 
     // ── Relationships ──────────────────────────────────────────
 
