@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Booking\Models\Staff;
 use App\Modules\Booking\Models\StaffBlock;
 use App\Modules\Booking\Models\StaffSchedule;
+use App\Services\Notifications\BookingNotificationService;
 use Illuminate\Http\Request;
 
 class StaffScheduleController extends Controller
@@ -33,7 +34,7 @@ class StaffScheduleController extends Controller
         return view('staff.schedule', compact('staff', 'scheduleByDay'));
     }
 
-    public function update(Request $request, Staff $staff)
+    public function update(Request $request, Staff $staff, BookingNotificationService $notifications)
     {
         // Base structural rules
         $request->validate([
@@ -75,11 +76,13 @@ class StaffScheduleController extends Controller
             );
         }
 
+        $notifications->notifyStaffScheduleChanged($staff, "Working hours were updated for {$staff->name}.");
+
         return redirect()->route('staff.show', $staff)
             ->with('success', 'Working hours saved.');
     }
 
-    public function storeBlock(Request $request, Staff $staff)
+    public function storeBlock(Request $request, Staff $staff, BookingNotificationService $notifications)
     {
         $validated = $request->validate([
             'starts_at' => 'required|date|after_or_equal:today',
@@ -95,14 +98,17 @@ class StaffScheduleController extends Controller
             'reason'    => $validated['reason'] ?? null,
         ]);
 
+        $notifications->notifyStaffScheduleChanged($staff, "A block was added for {$staff->name} from {$validated['starts_at']} to {$validated['ends_at']}.");
+
         return redirect()->route('staff.schedule', $staff)
             ->with('success', 'Time block added.');
     }
 
-    public function destroyBlock(Staff $staff, StaffBlock $block)
+    public function destroyBlock(Staff $staff, StaffBlock $block, BookingNotificationService $notifications)
     {
         abort_if($block->staff_id !== $staff->id, 403);
         $block->delete();
+        $notifications->notifyStaffScheduleChanged($staff, "A time block was removed for {$staff->name}.");
 
         return redirect()->route('staff.schedule', $staff)
             ->with('success', 'Time block removed.');

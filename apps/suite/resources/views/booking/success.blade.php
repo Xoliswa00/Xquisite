@@ -17,27 +17,50 @@
     </div>
 
     <div class="bg-white rounded-2xl border border-slate-200 p-6 text-left space-y-4 max-w-sm mx-auto">
-        <div class="grid grid-cols-2 gap-4 text-sm">
+        <div class="text-sm space-y-4">
+
+            {{-- Services list --}}
             <div>
-                <p class="text-slate-400 text-xs uppercase font-semibold">Service</p>
-                <p class="font-semibold text-slate-900 mt-0.5">{{ $appointment->service->name }}</p>
+                <p class="text-slate-400 text-xs uppercase font-semibold mb-2">Services</p>
+                <div class="divide-y divide-slate-100">
+                    @foreach($appointment->services as $service)
+                        <div class="flex items-center justify-between py-1.5">
+                            <span class="font-medium text-slate-900">{{ $service->name }}</span>
+                            <span class="text-slate-400 text-xs">{{ $service->pivot->duration_minutes ?? $service->duration_minutes }} min</span>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100 font-semibold">
+                    <span class="text-slate-700">Total</span>
+                    <span class="text-indigo-600">{{ $appointment->duration_minutes }} min</span>
+                </div>
             </div>
-            <div>
-                <p class="text-slate-400 text-xs uppercase font-semibold">Staff</p>
-                @if($appointment->isUnassigned())
-                    <p class="text-slate-400 text-sm mt-0.5 italic">Assigned on confirmation</p>
-                @else
-                    <p class="font-semibold text-slate-900 mt-0.5">{{ $appointment->staff->name }}</p>
-                @endif
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-slate-400 text-xs uppercase font-semibold">Staff</p>
+                    @if($appointment->isUnassigned())
+                        <p class="text-slate-400 text-sm mt-0.5 italic">Assigned on confirmation</p>
+                    @else
+                        <p class="font-semibold text-slate-900 mt-0.5">{{ $appointment->staff->name }}</p>
+                    @endif
+                </div>
+                <div>
+                    <p class="text-slate-400 text-xs uppercase font-semibold">Date</p>
+                    <p class="font-semibold text-slate-900 mt-0.5">{{ $appointment->scheduled_at->format('d M Y') }}</p>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-xs uppercase font-semibold">Time</p>
+                    <p class="font-semibold text-slate-900 mt-0.5">{{ $appointment->scheduled_at->format('H:i') }}</p>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-xs uppercase font-semibold">Ends</p>
+                    <p class="font-semibold text-slate-900 mt-0.5">
+                        {{ $appointment->scheduled_at->copy()->addMinutes($appointment->duration_minutes)->format('H:i') }}
+                    </p>
+                </div>
             </div>
-            <div>
-                <p class="text-slate-400 text-xs uppercase font-semibold">Date</p>
-                <p class="font-semibold text-slate-900 mt-0.5">{{ $appointment->scheduled_at->format('d M Y') }}</p>
-            </div>
-            <div>
-                <p class="text-slate-400 text-xs uppercase font-semibold">Time</p>
-                <p class="font-semibold text-slate-900 mt-0.5">{{ $appointment->scheduled_at->format('H:i') }}</p>
-            </div>
+
         </div>
     </div>
 
@@ -54,4 +77,3 @@
 
 </div>
 @endsection
-

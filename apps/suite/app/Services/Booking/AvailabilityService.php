@@ -56,7 +56,7 @@ class AvailabilityService
         $sameDay = Appointment::where('staff_id', $staff->id)
             ->whereNotIn('status', ['cancelled', 'no_show'])
             ->whereBetween('scheduled_at', [$dayStart, $dayEnd])
-            ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
+            ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
             ->get();
 
         foreach ($sameDay as $existing) {
@@ -73,17 +73,15 @@ class AvailabilityService
     /**
      * Generate all available time slots for a staff member on a given date.
      *
-     * @param  Staff   $staff
-     * @param  Carbon  $date         The date to generate slots for (time is ignored)
-     * @param  int     $duration     Service duration in minutes
-     * @return Collection<Carbon>    Available slot start times
+     * @param  Staff            $staff
+     * @param  Carbon           $date      The date to generate slots for (time is ignored)
+     * @param  int              $duration  Duration in minutes
+     * @return Collection<Carbon>
      */
     public function availableSlots(Staff $staff, Carbon $date, int $duration): Collection
     {
-        // Must not generate slots in the past
         $now = now();
 
-        // Load working hours for this day
         $schedule = $staff->schedules()
             ->where('day_of_week', $date->dayOfWeek)
             ->where('is_active', true)
@@ -96,13 +94,11 @@ class AvailabilityService
         $workStart = Carbon::parse($date->format('Y-m-d') . ' ' . $schedule->start_time);
         $workEnd   = Carbon::parse($date->format('Y-m-d') . ' ' . $schedule->end_time);
 
-        // Load existing appointments for that day (active only)
         $booked = Appointment::where('staff_id', $staff->id)
             ->whereNotIn('status', ['cancelled', 'no_show'])
             ->whereBetween('scheduled_at', [$workStart, $workEnd])
             ->get();
 
-        // Load blocks overlapping this day
         $blocks = $staff->blocks()
             ->where('starts_at', '<', $workEnd)
             ->where('ends_at', '>', $workStart)
@@ -114,19 +110,16 @@ class AvailabilityService
         while ($cursor->copy()->addMinutes($duration)->lte($workEnd)) {
             $slotEnd = $cursor->copy()->addMinutes($duration);
 
-            // Skip past slots
             if ($slotEnd->lte($now)) {
                 $cursor->addMinutes(15);
                 continue;
             }
 
-            // Check block overlap
-            $blockedBy = $blocks->first(function ($block) use ($cursor, $slotEnd) {
-                return $block->starts_at->lt($slotEnd) && $block->ends_at->gt($cursor);
-            });
+            $blockedBy = $blocks->first(
+                fn($block) => $block->starts_at->lt($slotEnd) && $block->ends_at->gt($cursor)
+            );
 
-            // Check appointment overlap
-            $bookedBy = $booked->first(function ($appt) use ($cursor, $slotEnd, $duration) {
+            $bookedBy = $booked->first(function ($appt) use ($cursor, $slotEnd) {
                 $apptEnd = $appt->scheduled_at->copy()->addMinutes($appt->duration_minutes);
                 return $appt->scheduled_at->lt($slotEnd) && $apptEnd->gt($cursor);
             });
@@ -135,34 +128,58 @@ class AvailabilityService
                 $slots->push($cursor->copy());
             }
 
-            $cursor->addMinutes(15); // 15-minute slot grid
+            $cursor->addMinutes(15);
         }
 
         return $slots;
     }
 
     /**
-     * Generate available slots for a service on a given date.
-     * A slot is available if at least one active staff member can take it.
-     * Used by the public booking portal — client never picks a staff member.
+     * Generate available slots for a single service on a given date.
+     * A slot is available if at least one active staff member assigned
+     * to that service can cover the full duration.
      *
      * @return Collection<Carbon>
      */
     public function availableSlotsForService(Service $service, Carbon $date): Collection
     {
-        $staff = Staff::where('is_active', true)
-            ->whereHas('services', fn ($q) => $q->where('services.id', $service->id))
-            ->with(['schedules', 'blocks'])
-            ->get();
+        return $this->availableSlotsForDuration(
+            $service->duration_minutes,
+            $date,
+            [$service->id]
+        );
+    }
+
+    /**
+     * Generate available slots for a combined duration across multiple services.
+     * A slot is available if at least one active staff member — who is linked
+     * to at least one of the selected services — can cover the full duration.
+     * Used by the public booking portal when multiple services are selected.
+     *
+     * @param  int              $totalDuration  Combined minutes of all selected services
+     * @param  Carbon           $date           The date to check (time is ignored)
+     * @param  array            $serviceIds     Filter staff to those linked to these services
+     * @return Collection<Carbon>
+     */
+    public function availableSlotsForDuration(int $totalDuration, Carbon $date, array $serviceIds = []): Collection
+    {
+        $staffQuery = Staff::where('is_active', true)->with(['schedules', 'blocks']);
+
+        if (!empty($serviceIds)) {
+            $staffQuery->whereHas('services', fn($q) => $q->whereIn('services.id', $serviceIds));
+        }
+
+        $staff = $staffQuery->get();
 
         if ($staff->isEmpty()) {
             return collect();
         }
 
-        // Union: a slot is offered if at least one staff member is free for it
+        // Union: slot is offered if at least one staff member is free for the full duration
         $allSlots = collect();
+
         foreach ($staff as $member) {
-            $memberSlots = $this->availableSlots($member, $date, $service->duration_minutes);
+            $memberSlots = $this->availableSlots($member, $date, $totalDuration);
             foreach ($memberSlots as $slot) {
                 $key = $slot->format('Y-m-d H:i');
                 if (!$allSlots->has($key)) {
@@ -171,6 +188,6 @@ class AvailabilityService
             }
         }
 
-        return $allSlots->values()->sortBy(fn ($s) => $s->timestamp)->values();
+        return $allSlots->values()->sortBy(fn($s) => $s->timestamp)->values();
     }
 }

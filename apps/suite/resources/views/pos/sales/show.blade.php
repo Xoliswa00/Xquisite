@@ -41,7 +41,7 @@
 
             <!-- Line items -->
             <div class="px-6 py-4 border-b border-slate-700">
-                <table class="w-full text-sm">
+                <table class="w-full text-sm summary-on-mobile">
                     <thead>
                         <tr class="text-slate-400 text-left border-b border-slate-700 pb-2">
                             <th class="pb-2 font-medium">Item</th>

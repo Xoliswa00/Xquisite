@@ -14,7 +14,7 @@
 
         {{-- Line items --}}
         <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-5">
-            <table class="min-w-full divide-y divide-gray-100">
+            <table class="min-w-full divide-y divide-gray-100 summary-on-mobile">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Description</th>

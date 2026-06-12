@@ -95,7 +95,7 @@
             <form method="POST" action="{{ route('purchase-orders.receive', $purchaseOrder) }}">
                 @csrf
 
-                <table class="w-full text-sm">
+                <table class="w-full text-sm summary-on-mobile">
                     <thead>
                         <tr class="border-b border-slate-700 text-slate-400 text-left">
                             <th class="px-4 py-3 font-medium">Product</th>

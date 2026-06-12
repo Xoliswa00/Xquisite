@@ -70,7 +70,7 @@
         @if($instances->count() > 0)
             <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                    <table class="w-full text-sm summary-on-mobile">
                         <thead class="bg-slate-900/50 border-b border-slate-700">
                             <tr>
                                 <th class="px-6 py-3 text-left font-semibold text-slate-300">Instance</th>

@@ -28,8 +28,13 @@
                 @foreach($upcoming as $appt)
                     <div class="bg-white rounded-2xl border border-slate-200 p-5 flex items-center justify-between">
                         <div>
-                            <p class="font-semibold text-slate-900">{{ $appt->service->name }}</p>
-                            <p class="text-sm text-slate-500 mt-0.5">
+@php
+    $serviceNames = $appt->services->pluck('name')->join(', ');
+@endphp
+
+<p class="font-semibold text-slate-900">
+    {{ $serviceNames }}
+</p>                            <p class="text-sm text-slate-500 mt-0.5">
                                 with {{ $appt->staff->name }}
                                 Â· {{ $appt->scheduled_at->format('d M Y, H:i') }}
                                 Â· {{ $appt->duration_minutes }} min
@@ -47,6 +52,11 @@
                                     @method('PATCH')
                                     <button class="text-xs text-red-500 hover:text-red-700">Cancel</button>
                                 </form>
+
+                                <a read_exif_datata href="{{ route('book.edit', [$slug, $appt]) }}"
+                                   class="text-xs text-indigo-600 hover:text-indigo-500">
+                                    Reschedule →
+                                </a>
                             @else
                                 <span class="text-xs text-slate-300" title="Cancellation window has passed">Cannot cancel</span>
                             @endif
@@ -65,7 +75,13 @@
             @foreach($past as $appt)
                 <div class="bg-white rounded-2xl border border-slate-200 p-4 flex items-center justify-between opacity-70">
                     <div>
-                        <p class="font-medium text-slate-800">{{ $appt->service->name }}</p>
+                     </p>@php
+    $serviceNames = $appt->services->pluck('name')->join(', ');
+@endphp
+
+<p class="font-semibold text-slate-900">
+    {{ $serviceNames }}
+</p>
                         <p class="text-xs text-slate-400 mt-0.5">
                             with {{ $appt->staff->name }}
                             Â· {{ $appt->scheduled_at->format('d M Y, H:i') }}

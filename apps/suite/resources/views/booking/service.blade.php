@@ -3,22 +3,32 @@
 @section('content')
 <div class="space-y-8" x-data="slotPicker()">
 
+    {{-- Breadcrumb --}}
     <nav class="flex items-center gap-2 text-sm text-slate-400">
         <a href="{{ route('book.index', $slug) }}" class="hover:text-indigo-600">Services</a>
         <span>&rsaquo;</span>
-        <span class="text-slate-700 font-medium">{{ $service->name }}</span>
+        <span class="text-slate-700 font-medium">Choose a time</span>
     </nav>
 
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-900">{{ $service->name }}</h1>
-            @if($service->description)
-                <p class="text-slate-500 mt-1">{{ $service->description }}</p>
-            @endif
+    {{-- Selected services summary --}}
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-3">
+        <h1 class="text-xl font-bold text-slate-900">Your selected services</h1>
+        <div class="divide-y divide-slate-100">
+            @foreach($services as $service)
+                <div class="flex items-center justify-between py-2.5 text-sm">
+                    <span class="text-slate-700 font-medium">{{ $service->name }}</span>
+                    <span class="text-slate-500">{{ $service->duration_minutes }} min &nbsp;·&nbsp;
+                        <span class="text-slate-700 font-semibold">R{{ number_format($service->price, 2) }}</span>
+                    </span>
+                </div>
+            @endforeach
         </div>
-        <div class="text-right">
-            <p class="text-2xl font-bold text-indigo-600">R{{ number_format($service->price, 2) }}</p>
-            <p class="text-sm text-slate-400">{{ $service->duration_minutes }} min</p>
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-sm font-semibold">
+            <span class="text-slate-700">Total</span>
+            <span class="text-indigo-600">
+                {{ $services->sum('duration_minutes') }} min &nbsp;·&nbsp;
+                R{{ number_format($services->sum('price'), 2) }}
+            </span>
         </div>
     </div>
 
@@ -60,7 +70,9 @@
     {{-- Proceed --}}
     <div x-show="selectedSlot" x-cloak>
         <form method="GET" action="{{ route('book.confirm', $slug) }}">
-            <input type="hidden" name="service_id" value="{{ $service->id }}">
+            @foreach($services as $service)
+                <input type="hidden" name="service_ids[]" value="{{ $service->id }}">
+            @endforeach
             <input type="hidden" name="scheduled_at" x-bind:value="selectedSlot">
             <button type="submit"
                     class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl transition text-lg">
@@ -87,15 +99,17 @@ function slotPicker() {
 
         async loadSlots() {
             if (!this.selectedDate) return;
-            this.loading = true;
+            this.loading      = true;
             this.selectedSlot = null;
-            this.slots = [];
+            this.slots        = [];
             try {
-                const params = new URLSearchParams({
-                    service_id: {{ $service->id }},
-                    date: this.selectedDate,
-                });
-                const res = await fetch(`{{ route('book.slots', $slug) }}?${params}`);
+                // Pass all service IDs so the backend can calculate combined duration
+                const params = new URLSearchParams({ date: this.selectedDate });
+                @foreach($services as $service)
+                    params.append('service_ids[]', {{ $service->id }});
+                @endforeach
+
+                const res  = await fetch(`{{ route('book.slots', $slug) }}?${params}`);
                 const data = await res.json();
                 this.slots = data.slots ?? [];
             } catch (e) {

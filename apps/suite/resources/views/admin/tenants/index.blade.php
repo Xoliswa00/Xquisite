@@ -21,7 +21,7 @@
     </form>
 
     <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
-        <table class="w-full text-sm">
+        <table class="w-full text-sm summary-on-mobile">
             <thead>
                 <tr class="border-b border-slate-700 text-left text-xs text-slate-400">
                     <th class="px-5 py-3 font-medium">Tenant</th>

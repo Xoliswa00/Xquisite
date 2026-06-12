@@ -86,7 +86,7 @@
             <div class="px-4 py-3 border-b border-slate-700">
                 <h3 class="text-sm font-medium text-slate-300">Recent Appointments</h3>
             </div>
-            <table class="w-full text-sm">
+            <table class="w-full text-sm summary-on-mobile">
                 <thead>
                     <tr class="border-b border-slate-700 text-slate-400 text-left">
                         <th class="px-4 py-3 font-medium">Date</th>

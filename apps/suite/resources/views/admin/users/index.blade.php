@@ -47,7 +47,7 @@
 
         {{-- Users Table --}}
         <div class="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm summary-on-mobile">
                 <thead class="border-b border-gray-200 bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left font-semibold text-gray-700">Name</th>

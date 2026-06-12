@@ -62,7 +62,7 @@
         </div>
 
         <h2>Your Items</h2>
-        <table class="items-table">
+        <table class="items-table summary-on-mobile">
             <thead>
                 <tr>
                     <th>Item</th>

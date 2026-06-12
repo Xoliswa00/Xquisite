@@ -41,7 +41,7 @@
         </div>
 
         <div class="bg-slate-800 rounded-xl overflow-hidden">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm summary-on-mobile">
                 <thead>
                     <tr class="border-b border-slate-700 text-slate-400 text-left">
                         <th class="px-4 py-3 font-medium">Reference</th>

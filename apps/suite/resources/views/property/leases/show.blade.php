@@ -132,7 +132,7 @@
             <div class="px-5 py-3 border-b border-slate-700">
                 <h3 class="text-sm font-semibold text-slate-300">Rent Payments</h3>
             </div>
-            <table class="w-full text-sm">
+            <table class="w-full text-sm summary-on-mobile">
                 <thead>
                     <tr class="border-b border-slate-700 text-slate-400 text-left">
                         <th class="px-4 py-2 font-medium">Period</th>

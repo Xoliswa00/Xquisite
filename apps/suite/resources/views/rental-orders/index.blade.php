@@ -23,7 +23,7 @@
         @endif
 
         <div class="bg-slate-800 rounded-xl overflow-hidden">
-            <table class="min-w-full divide-y divide-slate-700">
+            <table class="min-w-full divide-y divide-slate-700 summary-on-mobile">
                 <thead class="bg-slate-700/50">
                     <tr>
                         <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 uppercase">Ref</th>

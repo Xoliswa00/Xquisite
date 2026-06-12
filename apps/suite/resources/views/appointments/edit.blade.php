@@ -17,45 +17,81 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Service</label>
-                        <select name="service_id" required
-                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                            @foreach($services as $s)
-                                <option value="{{ $s->id }}" @selected(old('service_id', $appointment->service_id) == $s->id)>
-                                    {{ $s->name }} ({{ $s->duration_minutes }}m)
-                                </option>
-                            @endforeach
-                        </select>
+                <div x-data="staffAvailabilityPanel(@json($staffAvailability), '{{ route('appointments.availability', $appointment) }}')" x-init="init()">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Service</label>
+                            <select name="service_id" required
+                                    x-ref="service_id"
+                                    @change="update"
+                                    class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                @foreach($services as $s)
+                                    <option value="{{ $s->id }}" data-duration="{{ $s->duration_minutes }}" @selected(old('service_id', $appointment->service_id) == $s->id)>
+                                        {{ $s->name }} ({{ $s->duration_minutes }}m)
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">
+                                Staff
+                                <span class="text-slate-500 font-normal text-xs ml-1">(cleared automatically if you change the date/time)</span>
+                            </label>
+                            <select name="staff_id"
+                                    class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                <option value="">— Unassigned —</option>
+                                @foreach($staff as $m)
+                                    <option value="{{ $m->id }}" @selected(old('staff_id', $appointment->staff_id) == $m->id)>{{ $m->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">
-                            Staff
-                            <span class="text-slate-500 font-normal text-xs ml-1">(cleared automatically if you change the date/time)</span>
-                        </label>
-                        <select name="staff_id"
-                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                            <option value="">— Unassigned —</option>
-                            @foreach($staff as $m)
-                                <option value="{{ $m->id }}" @selected(old('staff_id', $appointment->staff_id) == $m->id)>{{ $m->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Date & Time</label>
-                        <input type="datetime-local" name="scheduled_at" required
-                               value="{{ old('scheduled_at', $appointment->scheduled_at->format('Y-m-d\TH:i')) }}"
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Date & Time</label>
+                            <input type="datetime-local" name="scheduled_at" required
+                                   x-ref="scheduled_at"
+                                   @input="update"
+                                   @change="update"
+                                   value="{{ old('scheduled_at', $appointment->scheduled_at->format('Y-m-d\TH:i')) }}"
+                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Duration (minutes)</label>
+                            <input type="number" name="duration_minutes" min="5" max="480" required
+                                   x-ref="duration_minutes"
+                                   @input="update"
+                                   @change="update"
+                                   value="{{ old('duration_minutes', $appointment->duration_minutes) }}"
+                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Duration (minutes)</label>
-                        <input type="number" name="duration_minutes" min="5" max="480" required
-                               value="{{ old('duration_minutes', $appointment->duration_minutes) }}"
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+
+                    <div class="mt-6 rounded-2xl border border-slate-700 bg-slate-900 p-4">
+                    <div class="flex items-center justify-between gap-4 mb-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-white">Staff availability for this slot</h3>
+                            <p class="text-xs text-slate-500">Based on the selected date, time, duration and current bookings.</p>
+                        </div>
+                        <span class="text-xs font-semibold text-slate-400">
+                            <span x-text="staffAvailability.filter(item => item.available).length"></span> available
+                        </span>
+                    </div>
+                    <div class="grid gap-3">
+                        <template x-for="info in staffAvailability" :key="info.id">
+                            <div :class="info.available ? 'rounded-xl p-3 bg-slate-800 border border-slate-700' : 'rounded-xl p-3 bg-slate-950 border border-red-800'">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div>
+                                        <p class="font-medium text-white" x-text="info.name"></p>
+                                        <p class="text-xs text-slate-400 mt-1" x-text="info.available ? 'Available for this slot' : info.reason"></p>
+                                    </div>
+                                    <span class="inline-flex items-center rounded-full px-2 py-1 text-[11px] font-semibold"
+                                          :class="info.available ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/10 text-red-300'"
+                                          x-text="info.available ? 'Available' : 'Unavailable'"></span>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
@@ -159,4 +195,43 @@
             </form>
         </div>
     </div>
+
+    <script>
+        function staffAvailabilityPanel(initialAvailability, url) {
+            return {
+                staffAvailability: initialAvailability,
+                url,
+                init() {
+                    this.update();
+                },
+                async update() {
+                    const scheduled = this.$refs.scheduled_at?.value;
+                    const duration = this.$refs.duration_minutes?.value;
+                    if (!scheduled || !duration) {
+                        return;
+                    }
+
+                    try {
+                        const params = new URLSearchParams({
+                            scheduled_at: scheduled,
+                            duration_minutes: duration,
+                            service_id: this.$refs.service_id?.value || '',
+                        });
+                        const response = await fetch(`${this.url}?${params.toString()}`, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        });
+
+                        if (!response.ok) {
+                            return;
+                        }
+
+                        const data = await response.json();
+                        this.staffAvailability = data.staffAvailability;
+                    } catch (error) {
+                        console.error('Failed to refresh staff availability:', error);
+                    }
+                },
+            };
+        }
+    </script>
 </x-app-layout>

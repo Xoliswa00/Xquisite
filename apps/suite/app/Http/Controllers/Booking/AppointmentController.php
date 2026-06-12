@@ -8,16 +8,19 @@ use App\Modules\Booking\Models\Appointment;
 use App\Modules\Booking\Models\Customer;
 use App\Modules\Booking\Models\Staff;
 use App\Modules\Booking\Models\Service;
+use App\Notifications\AppointmentBookedNotification;
 use App\Services\Booking\AvailabilityService;
+use App\Services\Notifications\BookingNotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 
 class AppointmentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Appointment::with(['customer', 'staff', 'service'])
+        $query = Appointment::with(['customer', 'staff', 'services'])  // service → services
             ->orderByDesc('scheduled_at');
 
         if ($request->filled('status')) {
@@ -54,45 +57,85 @@ class AppointmentController extends Controller
         return view('appointments.create', compact('customers', 'staff', 'services'));
     }
 
-    public function store(Request $request, AvailabilityService $availability)
+    public function store(Request $request, AvailabilityService $availability, BookingNotificationService $notifications)
     {
         $data = $request->validate([
-            'customer_id'      => 'required|exists:customers,id',
-            'staff_id'         => 'nullable|exists:staff,id',
-            'service_id'       => 'required|exists:services,id',
-            'scheduled_at'     => 'required|date|after:now',
-            'duration_minutes' => 'required|integer|min:5|max:480',
-            'status'           => 'required|in:pending,confirmed,completed,cancelled,no_show,tentative',
-            'notes'            => 'nullable|string|max:1000',
-            'headcount'        => 'nullable|integer|min:1',
-            'venue'            => 'nullable|string|max:255',
-            'event_type'       => 'nullable|string|max:50',
-            'dietary_notes'    => 'nullable|string|max:1000',
-            'theme_notes'      => 'nullable|string|max:1000',
-            'setup_at'         => 'nullable|date',
-            'breakdown_at'     => 'nullable|date',
+            'customer_id'   => 'required|exists:customers,id',
+            'staff_id'      => 'nullable|exists:staff,id',
+            'service_ids'   => 'required|array|min:1',
+            'service_ids.*' => 'required|exists:services,id',
+            'scheduled_at'  => 'required|date|after:now',
+            'status'        => 'required|in:pending,confirmed,completed,cancelled,no_show,tentative',
+            'notes'         => 'nullable|string|max:1000',
+            'headcount'     => 'nullable|integer|min:1',
+            'venue'         => 'nullable|string|max:255',
+            'event_type'    => 'nullable|string|max:50',
+            'dietary_notes' => 'nullable|string|max:1000',
+            'theme_notes'   => 'nullable|string|max:1000',
+            'setup_at'      => 'nullable|date',
+            'breakdown_at'  => 'nullable|date',
         ]);
 
-        // Only run availability check if a staff member was selected
+        $services = Service::findMany($data['service_ids']);
+
+        if ($services->count() !== count($data['service_ids'])) {
+            return back()->withInput()->withErrors(['service_ids' => 'One or more selected services are invalid.']);
+        }
+
+        $totalDuration = $services->sum('duration_minutes');
+
         if ($data['staff_id']) {
             $staff = Staff::findOrFail($data['staff_id']);
             $start = Carbon::parse($data['scheduled_at']);
-            $error = $availability->check($staff, $start, (int) $data['duration_minutes']);
+            $error = $availability->check($staff, $start, $totalDuration);
 
             if ($error) {
                 return back()->withInput()->withErrors(['scheduled_at' => $error]);
             }
         }
 
-        $appointment = Appointment::create($data);
+        $customer = Customer::findOrFail($data['customer_id']);
+
+        $appointment = Appointment::create([
+            ...$data,
+            'tenant_id'        => $customer->tenant_id ?? auth()->user()->tenant_id,
+            'duration_minutes' => $totalDuration,
+        ]);
+
+        $appointment->services()->sync(
+            $services->mapWithKeys(fn($service, $index) => [
+                $service->id => [
+                    'duration_minutes' => $service->duration_minutes,
+                    'price_at_booking' => $service->price,
+                    'sort_order'       => $index,
+                ],
+            ])->all()
+        );
 
         if (in_array($data['status'], ['confirmed', 'pending'])) {
-            $appointment->load(['customer', 'staff', 'service']);
-            if ($appointment->customer->email) {
-                Mail::to($appointment->customer->email)
-                    ->queue(new AppointmentConfirmationEmail($appointment));
+            $appointment->load(['customer', 'staff', 'services']);
+
+            $booker        = auth()->user();
+            $customerEmail = $appointment->customer->email;
+            $bookerEmail   = $booker->email;
+
+            if ($customerEmail) {
+                Mail::to($customerEmail)
+                    ->queue(new AppointmentConfirmationEmail($appointment, recipient: 'customer'));
             }
+
+            if ($bookerEmail && $bookerEmail !== $customerEmail) {
+                Mail::to($bookerEmail)
+                    ->queue(new AppointmentConfirmationEmail($appointment, recipient: 'booker'));
+            }
+
+            Notification::send(
+                collect([$appointment->customer->user, $booker])->filter()->unique('id'),
+                new AppointmentBookedNotification($appointment, booker: $booker)
+            );
         }
+
+        $notifications->notifyAppointmentCreated($appointment);
 
         return redirect()->route('appointments.index')
             ->with('success', 'Appointment booked successfully.');
@@ -100,60 +143,132 @@ class AppointmentController extends Controller
 
     public function show(Appointment $appointment)
     {
-        $appointment->load(['customer', 'staff', 'service', 'reminders']);
+        $appointment->load(['customer', 'staff', 'services', 'reminders']); // service → services
 
         return view('appointments.show', compact('appointment'));
     }
 
-    public function edit(Appointment $appointment)
+    public function edit(Appointment $appointment, AvailabilityService $availability)
     {
         $customers = Customer::where('is_active', true)->orderBy('name')->get();
         $staff     = Staff::where('is_active', true)->orderBy('name')->get();
         $services  = Service::where('is_active', true)->orderBy('name')->get();
 
-        return view('appointments.edit', compact('appointment', 'customers', 'staff', 'services'));
+        // Pass the appointment's currently attached service IDs to the view
+        // so the form can pre-select them
+        $selectedServiceIds = $appointment->services->pluck('id')->all();
+
+        $totalDuration = $appointment->services->sum('duration_minutes');
+
+        $staffAvailability = $staff->map(function (Staff $member) use ($availability, $appointment, $totalDuration) {
+            $reason = $availability->check($member, $appointment->scheduled_at, $totalDuration, $appointment->id);
+
+            return [
+                'id'        => $member->id,
+                'name'      => $member->name,
+                'available' => $reason === null,
+                'reason'    => $reason,
+                'selected'  => $member->id === $appointment->staff_id,
+            ];
+        });
+
+        return view('appointments.edit', compact(
+            'appointment', 'customers', 'staff', 'services', 'staffAvailability', 'selectedServiceIds'
+        ));
     }
 
-    public function update(Request $request, Appointment $appointment, AvailabilityService $availability)
+    public function availability(Request $request, Appointment $appointment, AvailabilityService $availability)
     {
         $data = $request->validate([
-            'customer_id'      => 'required|exists:customers,id',
-            'staff_id'         => 'nullable|exists:staff,id',
-            'service_id'       => 'required|exists:services,id',
-            'scheduled_at'     => 'required|date',
-            'duration_minutes' => 'required|integer|min:5|max:480',
-            'status'           => 'required|in:pending,confirmed,completed,cancelled,no_show,tentative',
-            'notes'            => 'nullable|string|max:1000',
-            'headcount'        => 'nullable|integer|min:1',
-            'venue'            => 'nullable|string|max:255',
-            'event_type'       => 'nullable|string|max:50',
-            'dietary_notes'    => 'nullable|string|max:1000',
-            'theme_notes'      => 'nullable|string|max:1000',
-            'setup_at'         => 'nullable|date',
-            'breakdown_at'     => 'nullable|date',
+            'scheduled_at'  => 'required|date',
+            'service_ids'   => 'required|array|min:1',   // service_id → service_ids
+            'service_ids.*' => 'required|exists:services,id',
         ]);
+
+        $totalDuration = Service::findMany($data['service_ids'])->sum('duration_minutes');
+
+        $staff           = Staff::where('is_active', true)->orderBy('name')->get();
+        $scheduledAt     = Carbon::parse($data['scheduled_at']);
+
+        $availabilityData = $staff->map(function (Staff $member) use ($availability, $scheduledAt, $totalDuration, $appointment) {
+            $reason = $availability->check($member, $scheduledAt, $totalDuration, $appointment->id);
+
+            return [
+                'id'        => $member->id,
+                'name'      => $member->name,
+                'available' => $reason === null,
+                'reason'    => $reason,
+            ];
+        });
+
+        return response()->json(['staffAvailability' => $availabilityData]);
+    }
+
+    public function update(Request $request, Appointment $appointment, AvailabilityService $availability, BookingNotificationService $notifications)
+    {
+        $data = $request->validate([
+            'customer_id'   => 'required|exists:customers,id',
+            'staff_id'      => 'nullable|exists:staff,id',
+            'service_ids'   => 'required|array|min:1',   // service_id → service_ids
+            'service_ids.*' => 'required|exists:services,id',
+            'scheduled_at'  => 'required|date',
+            'status'        => 'required|in:pending,confirmed,completed,cancelled,no_show,tentative',
+            'notes'         => 'nullable|string|max:1000',
+            'headcount'     => 'nullable|integer|min:1',
+            'venue'         => 'nullable|string|max:255',
+            'event_type'    => 'nullable|string|max:50',
+            'dietary_notes' => 'nullable|string|max:1000',
+            'theme_notes'   => 'nullable|string|max:1000',
+            'setup_at'      => 'nullable|date',
+            'breakdown_at'  => 'nullable|date',
+        ]);
+
+        $services      = Service::findMany($data['service_ids']);
+        $totalDuration = $services->sum('duration_minutes');
 
         $slotChanged     = $appointment->scheduled_at->toDateTimeString() !== Carbon::parse($data['scheduled_at'])->toDateTimeString();
         $staffChanged    = $appointment->staff_id !== (int) ($data['staff_id'] ?? 0);
-        $durationChanged = $appointment->duration_minutes !== (int) $data['duration_minutes'];
+        $durationChanged = $appointment->duration_minutes !== $totalDuration;
 
-        // Rescheduling clears staff assignment — they must be re-assigned
         if ($slotChanged || $durationChanged) {
             $data['staff_id'] = null;
         }
 
-        // If staff is explicitly assigned (not a reschedule), run availability check
         if (!$slotChanged && !$durationChanged && $data['staff_id']) {
             $staff = Staff::findOrFail($data['staff_id']);
             $start = Carbon::parse($data['scheduled_at']);
-            $error = $availability->check($staff, $start, (int) $data['duration_minutes'], $appointment->id);
+            $error = $availability->check($staff, $start, $totalDuration, $appointment->id);
 
             if ($error) {
                 return back()->withInput()->withErrors(['staff_id' => $error]);
             }
         }
 
-        $appointment->update($data);
+        $appointment->update([
+            ...$data,
+            'duration_minutes' => $totalDuration,
+        ]);
+
+        // Re-sync services, preserving price snapshots for unchanged ones
+        $existingPivots = $appointment->services->keyBy('id');
+
+        $appointment->services()->sync(
+            $services->mapWithKeys(fn($service, $index) => [
+                $service->id => [
+                    'duration_minutes' => $service->duration_minutes,
+                    // Keep original price snapshot if this service was already on the appointment
+                    'price_at_booking' => $existingPivots->get($service->id)?->pivot->price_at_booking
+                                          ?? $service->price,
+                    'sort_order'       => $index,
+                ],
+            ])->all()
+        );
+
+        $notifications->notifyAppointmentUpdated($appointment, array_filter([
+            $slotChanged     ? 'rescheduled'      : null,
+            $staffChanged    ? 'staff changed'    : null,
+            $durationChanged ? 'duration changed' : null,
+        ]));
 
         return redirect()->route('appointments.show', $appointment)
             ->with('success', $slotChanged || $durationChanged
@@ -162,8 +277,7 @@ class AppointmentController extends Controller
             );
     }
 
-    /** Admin assigns a staff member to an unassigned appointment */
-    public function assign(Request $request, Appointment $appointment, AvailabilityService $availability)
+    public function assign(Request $request, Appointment $appointment, AvailabilityService $availability, BookingNotificationService $notifications)
     {
         $data = $request->validate([
             'staff_id' => 'required|exists:staff,id',
@@ -181,33 +295,34 @@ class AppointmentController extends Controller
             'status'   => $appointment->status === 'pending' ? 'confirmed' : $appointment->status,
         ]);
 
+        $notifications->notifyAppointmentAssigned($appointment);
+
         return redirect()->route('appointments.show', $appointment)
             ->with('success', "{$staff->name} assigned. Appointment confirmed.");
     }
 
     public function calendar(?string $date = null)
     {
-        $week  = $date ? Carbon::parse($date)->startOfWeek() : Carbon::now()->startOfWeek();
-        $days  = collect(range(0, 6))->map(fn ($i) => $week->copy()->addDays($i));
-        $prev  = $week->copy()->subWeek()->toDateString();
-        $next  = $week->copy()->addWeek()->toDateString();
+        $week = $date ? Carbon::parse($date)->startOfWeek() : Carbon::now()->startOfWeek();
+        $days = collect(range(0, 6))->map(fn($i) => $week->copy()->addDays($i));
+        $prev = $week->copy()->subWeek()->toDateString();
+        $next = $week->copy()->addWeek()->toDateString();
 
-        // Load all appointments for the week
-        $appointments = Appointment::with(['customer', 'staff', 'service'])
+        $appointments = Appointment::with(['customer', 'staff', 'services'])  // service → services
             ->whereBetween('scheduled_at', [$week, $week->copy()->endOfWeek()])
             ->whereNotIn('status', ['cancelled', 'no_show'])
             ->orderBy('scheduled_at')
             ->get()
-            ->groupBy(fn ($a) => $a->scheduled_at->format('Y-m-d'));
+            ->groupBy(fn($a) => $a->scheduled_at->format('Y-m-d'));
 
-        // Hours to display (7am – 8pm)
-        $hours = collect(range(7, 20))->map(fn ($h) => str_pad($h, 2, '0', STR_PAD_LEFT) . ':00');
+        $hours = collect(range(7, 20))->map(fn($h) => str_pad($h, 2, '0', STR_PAD_LEFT) . ':00');
 
-        $staff     = Staff::where('is_active', true)->orderBy('name')->get();
+        $staff = Staff::where('is_active', true)->orderBy('name')->get();
+
         $unassigned = Appointment::whereNull('staff_id')
             ->whereIn('status', ['pending', 'confirmed'])
             ->where('scheduled_at', '>=', now())
-            ->with(['customer', 'service'])
+            ->with(['customer', 'services'])  // service → services
             ->orderBy('scheduled_at')
             ->count();
 

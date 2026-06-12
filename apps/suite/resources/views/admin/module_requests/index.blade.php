@@ -17,7 +17,7 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-700 text-sm text-left">
+            <table class="min-w-full divide-y divide-slate-700 text-sm text-left summary-on-mobile">
                 <thead>
                     <tr class="text-xs uppercase tracking-wider text-slate-500">
                         <th class="px-4 py-3">Tenant</th>

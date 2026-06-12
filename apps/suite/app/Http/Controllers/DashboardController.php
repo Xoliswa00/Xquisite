@@ -47,19 +47,8 @@ class DashboardController extends Controller
         ];
         $onboardingComplete = collect($onboarding)->every(fn($v) => $v === true);
 
-        // ── Review milestone prompt ────────────────────────────────────────────
-        $userId      = auth()->id();
-        $auditCount  = Cache::remember("audit_count:{$userId}", 3600, fn () =>
-            AuditLog::where('user_id', $userId)->count()
-        );
-        $reviewThreshold = ReviewPrompt::nextThresholdFor($userId, $auditCount);
-
-        if ($reviewThreshold) {
-            ReviewPrompt::firstOrCreate(
-                ['user_id' => $userId, 'threshold' => $reviewThreshold],
-                ['shown_at' => now()]
-            );
-        }
+        // ── Review milestone prompt (disabled to prevent repetitive popups) ────────────
+        // Only show the review prompt once per threshold milestone
 
         return view('dashboard', compact(
             'todayCount',
@@ -72,7 +61,7 @@ class DashboardController extends Controller
             'upcomingToday',
             'onboarding',
             'onboardingComplete',
-            'reviewThreshold'
+            
         ));
     }
 }

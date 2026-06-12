@@ -7,10 +7,10 @@
 </head>
 <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Helvetica,Arial,sans-serif;color:#1e293b;">
 
-<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" class="summary-on-mobile" style="background-color:#f1f5f9;padding:40px 16px;">
 <tr><td align="center">
 
-    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+    <table width="100%" cellpadding="0" cellspacing="0" class="summary-on-mobile" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
 
         <!-- Header -->
         <tr>
@@ -33,9 +33,9 @@
                 </p>
 
                 <!-- Details block -->
-                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:28px;">
+                <table width="100%" cellpadding="0" cellspacing="0" class="summary-on-mobile" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:28px;">
                     @foreach([
-                        ['Service',   $appointment->service->name],
+                        ['Service',   $appointment->services->pluck('name')->implode(', ')],
                         ['Date',      $appointment->scheduled_at->format('l, d F Y')],
                         ['Time',      $appointment->scheduled_at->format('H:i')],
                         ['Duration',  $appointment->duration_minutes . ' minutes'],
@@ -55,13 +55,13 @@
                             <span style="font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Price</span>
                         </td>
                         <td style="padding:12px 20px;">
-                            <span style="font-size:15px;font-weight:700;color:#059669;">R{{ number_format($appointment->service->price, 2) }}</span>
+                            <span style="font-size:15px;font-weight:700;color:#059669;">R{{ number_format($appointment->services->sum(fn($s) => $s->pivot->price_at_booking ?? $s->price), 2) }}</span>
                         </td>
                     </tr>
                 </table>
 
                 @if($appointment->notes)
-                <table width="100%" cellpadding="0" cellspacing="0" style="background:#fefce8;border:1px solid #fde68a;border-radius:10px;margin-bottom:28px;">
+                <table width="100%" cellpadding="0" cellspacing="0" class="summary-on-mobile" style="background:#fefce8;border:1px solid #fde68a;border-radius:10px;margin-bottom:28px;">
                     <tr>
                         <td style="padding:14px 18px;">
                             <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#92400e;text-transform:uppercase;">Note</p>

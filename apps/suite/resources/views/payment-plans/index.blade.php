@@ -23,7 +23,7 @@
         @endif
 
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-100">
+            <table class="min-w-full divide-y divide-gray-100 summary-on-mobile">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Plan</th>

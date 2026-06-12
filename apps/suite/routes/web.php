@@ -44,6 +44,7 @@ use App\Http\Controllers\Property\RenterPortalController;
 use App\Http\Controllers\Admin\PlatformModuleController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\MonitoringController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Settings\ModuleController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,10 +62,16 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
 
     // Booking module — gated behind module:booking
     Route::middleware('module:booking')->group(function () {
+        // Staff dashboard (realtime-ready)
+        Route::get('staff/dashboard', [\App\Http\Controllers\Booking\StaffDashboardController::class, 'index'])->name('staff.dashboard');
+
         Route::resource('appointments', AppointmentController::class);
+        Route::get('appointments/{appointment}/availability', [\App\Http\Controllers\Booking\AppointmentController::class, 'availability'])->name('appointments.availability');
         Route::post('appointments/{appointment}/assign', [\App\Http\Controllers\Booking\AppointmentController::class, 'assign'])->name('appointments.assign');
         Route::get('calendar/{date?}', [\App\Http\Controllers\Booking\AppointmentController::class, 'calendar'])->name('appointments.calendar');
         Route::resource('customers', CustomerController::class);
@@ -232,28 +239,35 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// ─── Public client booking portal (/book/{slug}) ─────────────────────────────
-// No staff auth required — customers create their own accounts here.
 Route::prefix('book/{slug}')->name('book.')->group(function () {
 
-    // Service listing
-    Route::get('/',                           [PublicBookingController::class, 'index'])->name('index');
-    Route::get('/services/{service}',         [PublicBookingController::class, 'service'])->name('service');
-    Route::get('/slots',                      [PublicBookingController::class, 'slots'])->name('slots');
-    Route::get('/confirm',                    [PublicBookingController::class, 'confirm'])->name('confirm');
-    Route::post('/book',                      [PublicBookingController::class, 'store'])->name('store');
-    Route::get('/success/{appointment}',      [PublicBookingController::class, 'success'])->name('success');
+    Route::get('/',          [PublicBookingController::class, 'index'])->name('index');
+    Route::get('/schedule',  [PublicBookingController::class, 'service'])->name('service'); // was /services/{service}
+    Route::get('/slots',     [PublicBookingController::class, 'slots'])->name('slots');
 
-    // Customer auth
-    Route::get('/login',                      [CustomerAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login',                     [CustomerAuthController::class, 'login'])->name('login.post');
-    Route::get('/register',                   [CustomerAuthController::class, 'showRegister'])->name('register');
-    Route::post('/register',                  [CustomerAuthController::class, 'register'])->name('register.post');
-    Route::post('/logout',                    [CustomerAuthController::class, 'logout'])->name('logout');
+    // ── Customer auth routes (guests only — redirect if already logged in) ───
+    Route::middleware('guest:customer')->group(function () {
+        Route::get('/login',              [CustomerAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login',             [CustomerAuthController::class, 'login'])->name('login.post');
+        Route::get('/register',           [CustomerAuthController::class, 'showRegister'])->name('register');
+        Route::post('/register',          [CustomerAuthController::class, 'register'])->name('register.post');
+    });
 
-    // Customer portal (auth checked inside controller)
-    Route::get('/my-bookings',                [CustomerPortalController::class, 'myBookings'])->name('my-bookings');
-    Route::patch('/appointments/{appointment}/cancel', [CustomerPortalController::class, 'cancel'])->name('cancel');
+    // ── Requires customer auth ────────────────────────────────────────────────
+    Route::middleware('auth:customer')->group(function () {
+        Route::get('/confirm',                                          [PublicBookingController::class, 'confirm'])->name('confirm');
+        Route::post('/book',                                            [PublicBookingController::class, 'store'])->name('store');
+        Route::get('/edit/{appointment}',                               [PublicBookingController::class, 'edit'])->name('edit');
+        Route::patch('/update/{appointment}',                           [PublicBookingController::class, 'updateBooking'])->name('update');
+        Route::get('/success/{appointment}',                            [PublicBookingController::class, 'success'])->name('success');
+        Route::post('/logout',                                          [CustomerAuthController::class, 'logout'])->name('logout');
+
+        // Customer portal
+        Route::get('/my-bookings',                                      [CustomerPortalController::class, 'myBookings'])->name('my-bookings');
+        Route::get('/notifications',                                    [CustomerPortalController::class, 'notifications'])->name('notifications');
+        Route::post('/notifications/read-all',                          [CustomerPortalController::class, 'markNotificationsRead'])->name('notifications.read-all');
+        Route::patch('/appointments/{appointment}/cancel',              [CustomerPortalController::class, 'cancel'])->name('cancel');
+    });
 });
 
 // ─── Renter portal (/rent/{slug}) ────────────────────────────────────────────

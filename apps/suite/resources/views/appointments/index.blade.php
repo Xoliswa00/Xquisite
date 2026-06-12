@@ -13,7 +13,7 @@
                        class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                 <select id="appointment-status" name="status" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                     <option value="">All statuses</option>
-                    @foreach(['pending','confirmed','completed','cancelled','no_show'] as $s)
+                    @foreach(['pending','confirmed','completed','cancelled','no_show','tentative'] as $s)
                         <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
                     @endforeach
                     <option value="unassigned" @selected(request('status') === 'unassigned')>Unassigned Staff</option>
@@ -31,12 +31,12 @@
 
         <!-- Table -->
         <div class="bg-slate-800 rounded-xl overflow-hidden">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm summary-on-mobile">
                 <thead>
                     <tr class="border-b border-slate-700 text-slate-400 text-left">
                         <th class="px-4 py-3 font-medium">Date & Time</th>
                         <th class="px-4 py-3 font-medium">Customer</th>
-                        <th class="px-4 py-3 font-medium">Service</th>
+                        <th class="px-4 py-3 font-medium">Services</th>  {{-- plural --}}
                         <th class="px-4 py-3 font-medium">Staff</th>
                         <th class="px-4 py-3 font-medium">Duration</th>
                         <th class="px-4 py-3 font-medium">Status</th>
@@ -55,7 +55,23 @@
                                     {{ $appt->customer->name }}
                                 </a>
                             </td>
-                            <td class="px-4 py-3 text-slate-300">{{ $appt->service->name }}</td>
+
+                            {{-- Services: show up to 2 pills, +N badge if more --}}
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($appt->services->take(2) as $service)
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs bg-slate-700 text-slate-300 border border-slate-600">
+                                            {{ $service->name }}
+                                        </span>
+                                    @endforeach
+                                    @if($appt->services->count() > 2)
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs bg-slate-700 text-slate-500 border border-slate-600">
+                                            +{{ $appt->services->count() - 2 }} more
+                                        </span>
+                                    @endif
+                                </div>
+                            </td>
+
                             <td class="px-4 py-3">
                                 @if($appt->staff_id)
                                     <span class="text-slate-300">{{ $appt->staff->name }}</span>
@@ -67,7 +83,17 @@
                             </td>
                             <td class="px-4 py-3 text-slate-400">{{ $appt->duration_minutes }}m</td>
                             <td class="px-4 py-3">
-                                @php $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','cancelled'=>'red','no_show'=>'slate']; $c = $colors[$appt->status] ?? 'slate'; @endphp
+                                @php
+                                    $colors = [
+                                        'pending'   => 'yellow',
+                                        'confirmed' => 'emerald',
+                                        'completed' => 'blue',
+                                        'cancelled' => 'red',
+                                        'no_show'   => 'slate',
+                                        'tentative' => 'purple',
+                                    ];
+                                    $c = $colors[$appt->status] ?? 'slate';
+                                @endphp
                                 <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-{{ $c }}-900/50 text-{{ $c }}-400 border border-{{ $c }}-800">
                                     {{ ucfirst(str_replace('_', ' ', $appt->status)) }}
                                 </span>
@@ -91,32 +117,24 @@
 
     <script>
         (() => {
-            const form = document.getElementById('appointments-filter-form');
+            const form   = document.getElementById('appointments-filter-form');
             const search = document.getElementById('appointment-search');
-            const date = document.getElementById('appointment-date');
+            const date   = document.getElementById('appointment-date');
             const status = document.getElementById('appointment-status');
             let debounceTimeout;
 
-            if (!form) {
-                return;
-            }
+            if (!form) return;
 
             const submitForm = () => form.submit();
 
-            if (date) {
-                date.addEventListener('change', submitForm);
-            }
-
-            if (status) {
-                status.addEventListener('change', submitForm);
-            }
+            if (date)   date.addEventListener('change', submitForm);
+            if (status) status.addEventListener('change', submitForm);
 
             if (search) {
                 const submitSearch = () => {
                     clearTimeout(debounceTimeout);
                     debounceTimeout = setTimeout(submitForm, 450);
                 };
-
                 search.addEventListener('input', submitSearch);
                 search.addEventListener('change', submitSearch);
             }

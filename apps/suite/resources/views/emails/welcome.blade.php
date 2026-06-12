@@ -7,11 +7,11 @@
 </head>
 <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Figtree',Helvetica,Arial,sans-serif;color:#1e293b;">
 
-<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" class="summary-on-mobile" style="background-color:#f1f5f9;padding:40px 16px;">
 <tr><td align="center">
 
     <!-- Card -->
-    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+    <table width="100%" cellpadding="0" cellspacing="0" class="summary-on-mobile" style="max-width:580px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
 
         <!-- Header band -->
         <tr>
@@ -36,7 +36,7 @@
                 </p>
 
                 <!-- Trial callout -->
-                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4ff;border:1px solid #c7d2fe;border-radius:10px;margin-bottom:28px;">
+                <table width="100%" cellpadding="0" cellspacing="0" class="summary-on-mobile" style="background:#f0f4ff;border:1px solid #c7d2fe;border-radius:10px;margin-bottom:28px;">
                     <tr>
                         <td style="padding:16px 20px;">
                             <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#4338ca;text-transform:uppercase;letter-spacing:0.5px;">Free Trial Active</p>
@@ -50,7 +50,7 @@
 
                 <!-- What's included -->
                 <p style="margin:0 0 16px;font-size:14px;font-weight:600;color:#0f172a;">What's included in your account:</p>
-                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <table width="100%" cellpadding="0" cellspacing="0" class="summary-on-mobile" style="margin-bottom:28px;">
                     @foreach([
                         ['Booking Engine', 'Appointments, staff scheduling & automated reminders'],
                         ['Point of Sale', 'Fast checkout for services and products'],
@@ -60,7 +60,7 @@
                     ] as [$title, $desc])
                     <tr>
                         <td style="padding:6px 0;vertical-align:top;">
-                            <table cellpadding="0" cellspacing="0">
+                            <table cellpadding="0" cellspacing="0" class="summary-on-mobile">
                                 <tr>
                                     <td style="width:24px;vertical-align:top;padding-top:2px;">
                                         <div style="width:18px;height:18px;background:#e0e7ff;border-radius:4px;text-align:center;line-height:18px;font-size:11px;color:#4338ca;">✓</div>
@@ -76,7 +76,7 @@
                 </table>
 
                 <!-- CTA -->
-                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <table width="100%" cellpadding="0" cellspacing="0" class="summary-on-mobile" style="margin-bottom:28px;">
                     <tr>
                         <td align="center">
                             <a href="{{ url('/dashboard') }}"
@@ -88,7 +88,7 @@
                 </table>
 
                 <!-- Getting started tips -->
-                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:8px;">
+                <table width="100%" cellpadding="0" cellspacing="0" class="summary-on-mobile" style="background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:8px;">
                     <tr>
                         <td style="padding:20px;">
                             <p style="margin:0 0 12px;font-size:13px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.5px;">Quick Start</p>

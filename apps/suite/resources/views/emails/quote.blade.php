@@ -39,7 +39,7 @@
             Please find your quote below. Review the details and use the buttons at the bottom to accept or decline.
         </p>
 
-        <table>
+        <table class="summary-on-mobile">
             <thead>
                 <tr>
                     <th>Description</th>

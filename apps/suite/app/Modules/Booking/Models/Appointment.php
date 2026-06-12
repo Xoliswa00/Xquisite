@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Traits\HasTenant;
 use App\Models\Traits\Auditable;
 use App\Modules\POS\Models\Sale;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 
 
 class Appointment extends Model
@@ -41,7 +43,7 @@ class Appointment extends Model
 
     public function isEventBooking(): bool
     {
-        return ! empty($this->headcount) || ! empty($this->venue) || ! empty($this->event_type);
+        return ! empty($this->headcount) || ! empty($this->venue) || ! empty($this->event_type);}
     public function paymentPlan()
     {
         return $this->morphOne(\App\Models\PaymentPlan::class, 'plannable');
@@ -67,10 +69,27 @@ class Appointment extends Model
         return $this->staff_id === null;
     }
 
-    public function service()
-    {
-        return $this->belongsTo(Service::class);
-    }
+  // Instead of belongsTo(Service::class)
+public function service(): BelongsToMany
+{
+    return $this->belongsToMany(Service::class, 'appointment_services')
+                ->withPivot(['duration_minutes', 'price_at_booking', 'sort_order'])
+                ->withTimestamps()
+                ->orderByPivot('sort_order');
+}
+
+public function services(): BelongsToMany
+{
+    return $this->belongsToMany(Service::class, 'appointment_services')
+                ->withPivot(['duration_minutes', 'price_at_booking', 'sort_order'])
+                ->withTimestamps()
+                ->orderByPivot('sort_order');
+}
+
+public function totalDuration(): int
+{
+    return $this->services->sum(fn($s) => $s->pivot->duration_minutes ?? $s->duration_minutes);
+}
 
     public function sale()
     {

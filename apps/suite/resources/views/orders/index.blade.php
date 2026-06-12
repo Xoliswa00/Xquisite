@@ -51,7 +51,7 @@
                 <p class="text-sm">No orders found.</p>
             </div>
         @else
-            <table class="w-full text-sm">
+            <table class="w-full text-sm summary-on-mobile">
                 <thead>
                     <tr class="border-b border-slate-700 text-left text-xs text-slate-400">
                         <th class="px-5 py-3 font-medium">Reference</th>

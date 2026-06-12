@@ -21,8 +21,10 @@
                     <p class="w-full text-xs text-red-400">{{ $errors->first('staff_id') }}</p>
                 @endif
                 @php
+                    // Filter staff to those who can perform at least one of the booked services
+                    $serviceIds = $appointment->services->pluck('id')->all();
                     $assignableStaff = \App\Modules\Booking\Models\Staff::where('is_active', true)
-                        ->whereHas('services', fn($q) => $q->where('services.id', $appointment->service_id))
+                        ->whereHas('services', fn($q) => $q->whereIn('services.id', $serviceIds))
                         ->orderBy('name')
                         ->get();
                 @endphp
@@ -44,7 +46,17 @@
         <!-- Detail card -->
         <div class="bg-slate-800 rounded-xl p-6 space-y-4">
             <div class="flex items-center justify-between">
-                @php $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','cancelled'=>'red','no_show'=>'slate']; $c = $colors[$appointment->status] ?? 'slate'; @endphp
+                @php
+                    $colors = [
+                        'pending'   => 'yellow',
+                        'confirmed' => 'emerald',
+                        'completed' => 'blue',
+                        'cancelled' => 'red',
+                        'no_show'   => 'slate',
+                        'tentative' => 'purple',
+                    ];
+                    $c = $colors[$appointment->status] ?? 'slate';
+                @endphp
                 <span class="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-{{ $c }}-900/50 text-{{ $c }}-400 border border-{{ $c }}-800">
                     {{ ucfirst(str_replace('_', ' ', $appointment->status)) }}
                 </span>
@@ -84,15 +96,36 @@
                         <p class="text-slate-400 text-xs">{{ $appointment->staff->role }}</p>
                     @endif
                 </div>
-                <div>
-                    <p class="text-slate-400">Service</p>
-                    <p class="text-white font-medium">{{ $appointment->service->name }}</p>
-                    <p class="text-slate-400 text-xs">R{{ number_format($appointment->service->price, 2) }} · {{ $appointment->service->duration_minutes }}min</p>
+
+                {{-- Services --}}
+                <div class="col-span-2">
+                    <p class="text-slate-400 mb-2">Services</p>
+                    <div class="divide-y divide-slate-700">
+                        @foreach($appointment->services as $service)
+                            <div class="flex items-center justify-between py-2">
+                                <span class="text-white font-medium">{{ $service->name }}</span>
+                                <span class="text-slate-400 text-xs">
+                                    R{{ number_format($service->pivot->price_at_booking ?? $service->price, 2) }}
+                                    · {{ $service->pivot->duration_minutes ?? $service->duration_minutes }} min
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-700 text-sm font-semibold">
+                        <span class="text-slate-400">Total</span>
+                        <span class="text-white">
+                            R{{ number_format($appointment->services->sum(fn($s) => $s->pivot->price_at_booking ?? $s->price), 2) }}
+                            · {{ $appointment->duration_minutes }} min
+                        </span>
+                    </div>
                 </div>
+
                 <div>
                     <p class="text-slate-400">Scheduled</p>
                     <p class="text-white font-medium">{{ $appointment->scheduled_at->format('d M Y, H:i') }}</p>
-                    <p class="text-slate-400 text-xs">{{ $appointment->duration_minutes }} minutes</p>
+                    <p class="text-slate-400 text-xs">
+                        Until {{ $appointment->scheduled_at->copy()->addMinutes($appointment->duration_minutes)->format('H:i') }}
+                    </p>
                 </div>
             </div>
 
@@ -155,7 +188,7 @@
             @endif
         </div>
 
-        <!-- Quick status update (hide if checked out) -->
+        <!-- Quick status update -->
         @if(!$appointment->sale)
             <div class="bg-slate-800 rounded-xl p-4">
                 <p class="text-sm text-slate-400 mb-3">Update status</p>
@@ -164,14 +197,15 @@
                     @method('PATCH')
                     <input type="hidden" name="customer_id" value="{{ $appointment->customer_id }}">
                     <input type="hidden" name="staff_id" value="{{ $appointment->staff_id }}">
-                    <input type="hidden" name="service_id" value="{{ $appointment->service_id }}">
+                    @foreach($appointment->services as $service)
+                        <input type="hidden" name="service_ids[]" value="{{ $service->id }}">
+                    @endforeach
                     <input type="hidden" name="scheduled_at" value="{{ $appointment->scheduled_at->format('Y-m-d\TH:i') }}">
-                    <input type="hidden" name="duration_minutes" value="{{ $appointment->duration_minutes }}">
                     <input type="hidden" name="notes" value="{{ $appointment->notes }}">
                     @foreach(['pending','confirmed','cancelled','no_show'] as $s)
                         <button type="submit" name="status" value="{{ $s }}"
                                 class="text-xs px-3 py-1.5 rounded-lg {{ $appointment->status === $s ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600' }}">
-                            {{ ucfirst(str_replace('_',' ',$s)) }}
+                            {{ ucfirst(str_replace('_', ' ', $s)) }}
                         </button>
                     @endforeach
                 </form>

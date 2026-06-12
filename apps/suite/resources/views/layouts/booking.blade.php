@@ -18,6 +18,18 @@
         </div>
         <div class="flex items-center gap-3 text-sm">
             @auth('customer')
+                @php
+                    $customer = auth('customer')->user();
+                    $customerUnread = $customer ? $customer->unreadNotifications()->count() : 0;
+                @endphp
+                <a href="{{ route('book.notifications', $slug) }}" class="text-slate-600 hover:text-indigo-600 flex items-center gap-1">
+                    Notifications
+                    @if($customerUnread > 0)
+                        <span class="inline-flex items-center justify-center px-2 py-0.5 text-[11px] font-semibold leading-none text-white bg-red-500 rounded-full">
+                            {{ $customerUnread }}
+                        </span>
+                    @endif
+                </a>
                 <a href="{{ route('book.my-bookings', $slug) }}" class="text-slate-600 hover:text-indigo-600">
                     My Bookings
                 </a>

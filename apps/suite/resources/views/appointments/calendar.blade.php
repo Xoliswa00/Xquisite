@@ -87,10 +87,9 @@
                                        @elseif($appt->status === 'confirmed') bg-emerald-900/60 border border-emerald-700/50 text-emerald-300
                                        @elseif($appt->status === 'completed') bg-blue-900/60 border border-blue-700/50 text-blue-300
                                        @else bg-slate-700/80 border border-slate-600/50 text-slate-300 @endif"
-                                   title="{{ $appt->customer->name }} — {{ $appt->service->name }} {{ $appt->scheduled_at->format('H:i') }}">
-                                    <span class="font-semibold">{{ $appt->scheduled_at->format('H:i') }}</span>
-                                    {{ $appt->customer->name }}
-                                    <span class="opacity-60">· {{ $appt->service->name }}</span>
+title="{{ $appt->customer?->name ?? 'Customer' }} — {{ $appt->services->pluck('name')->join(', ') }} {{ $appt->scheduled_at->format('H:i') }}"                                    <span class="font-semibold">{{ $appt->scheduled_at->format('H:i') }}</span>
+                                    {{ $appt->customer?->name ?? 'Customer' }}
+                                    <span class="opacity-60">· {{ $appt->services->pluck('name')->join(', ') }}</span>
                                 </a>
                             @endforeach
                         </div>

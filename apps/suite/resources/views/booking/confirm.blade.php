@@ -6,7 +6,8 @@
     <nav class="flex items-center gap-2 text-sm text-slate-400">
         <a href="{{ route('book.index', $slug) }}" class="hover:text-indigo-600">Services</a>
         <span>&rsaquo;</span>
-        <a href="{{ route('book.service', [$slug, $service]) }}" class="hover:text-indigo-600">{{ $service->name }}</a>
+        <a href="{{ route('book.service', $slug) }}?{{ http_build_query(['service_ids' => $services->pluck('id')->all()]) }}"
+           class="hover:text-indigo-600">Change time</a>
         <span>&rsaquo;</span>
         <span class="text-slate-700 font-medium">Confirm</span>
     </nav>
@@ -15,20 +16,47 @@
 
     <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
         <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-                <p class="text-slate-400 text-xs uppercase font-semibold">Service</p>
-                <p class="font-semibold text-slate-900 mt-1">{{ $service->name }}</p>
-                <p class="text-slate-500">{{ $service->duration_minutes }} min &middot; R{{ number_format($service->price, 2) }}</p>
+
+            {{-- Services list --}}
+            <div class="col-span-2">
+                <p class="text-slate-400 text-xs uppercase font-semibold mb-2">Services</p>
+                <div class="divide-y divide-slate-100">
+                    @foreach($services as $service)
+                        <div class="flex items-center justify-between py-2">
+                            <span class="font-medium text-slate-900">{{ $service->name }}</span>
+                            <span class="text-slate-500">
+                                {{ $service->duration_minutes }} min &middot;
+                                R{{ number_format($service->price, 2) }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-sm font-semibold">
+                    <span class="text-slate-700">Total</span>
+                    <span class="text-indigo-600">
+                        {{ $services->sum('duration_minutes') }} min &middot;
+                        R{{ number_format($services->sum('price'), 2) }}
+                    </span>
+                </div>
             </div>
+
+            {{-- Staff --}}
             <div>
                 <p class="text-slate-400 text-xs uppercase font-semibold">Staff</p>
                 <p class="text-slate-400 mt-1 italic text-sm">Assigned on confirmation</p>
             </div>
-            <div class="col-span-2">
+
+            {{-- Date & time --}}
+            <div>
                 <p class="text-slate-400 text-xs uppercase font-semibold">Date &amp; Time</p>
                 <p class="font-semibold text-slate-900 mt-1">{{ $slot->format('l, d F Y') }}</p>
-                <p class="text-slate-500">{{ $slot->format('H:i') }} &ndash; {{ $slot->copy()->addMinutes($service->duration_minutes)->format('H:i') }}</p>
+                <p class="text-slate-500">
+                    {{ $slot->format('H:i') }}
+                    &ndash;
+                    {{ $slot->copy()->addMinutes($services->sum('duration_minutes'))->format('H:i') }}
+                </p>
             </div>
+
         </div>
     </div>
 

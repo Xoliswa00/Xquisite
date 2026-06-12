@@ -14,7 +14,7 @@
         </p>
 
         <div class="bg-slate-800 rounded-xl overflow-hidden shadow-sm">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm summary-on-mobile">
                 <thead class="bg-slate-900/50 border-b border-slate-700">
                     <tr>
                         <th class="px-4 py-3 text-left text-slate-400 font-medium">Source</th>
