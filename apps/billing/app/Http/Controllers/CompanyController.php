@@ -17,17 +17,31 @@ class CompanyController extends Controller
         return view('companies.index', compact('company'));
     }
 
+    public function create()
+    {
+        return view('companies.create');
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name'        => 'required|string|max:255',
+            'legal_name'  => 'nullable|string|max:255',
+            'entity_type' => 'nullable|string|in:private_company,public_company,partnership,sole_proprietor,trust,non_profit,other',
+            'vat_number'  => 'nullable|string|max:50',
+            'email'       => 'nullable|email|max:255',
+            'phone'       => 'nullable|string|max:20',
         ]);
+
+        $validated['slug'] = \Illuminate\Support\Str::slug($validated['name']) . '-' . uniqid();
 
         $company = Company::create($validated);
 
+        // Attach creator to pivot table as owner, then set as active company
+        Auth::user()->companies()->attach($company->id, ['role' => 'owner']);
         Auth::user()->update(['current_company_id' => $company->id]);
 
-        return response()->json($company, 201);
+        return redirect()->route('companies.index')->with('success', 'Company created successfully.');
     }
 
     public function edit(Company $company)

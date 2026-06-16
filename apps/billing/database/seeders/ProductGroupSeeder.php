@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\product_group;
-use App\Models\product_category;
+use App\Models\ProductGroup;
+use App\Models\ProductCategory;
 
 class ProductGroupSeeder extends Seeder
 {
@@ -20,12 +20,12 @@ class ProductGroupSeeder extends Seeder
         | GROUP: Operations & Digital Services
         |--------------------------------------------------------------------------
         */
-        $operations = product_group::create([
+        $operations = ProductGroup::create([
             'name' => 'Operations & Digital Services',
             'slug' => 'operations-digital-services'
         ]);
 
-        product_category::insert([
+        ProductCategory::insert([
             [
                 'name' => 'SLA',
                 'slug' => 'sla',
@@ -54,12 +54,12 @@ class ProductGroupSeeder extends Seeder
         | GROUP: Development & Systems
         |--------------------------------------------------------------------------
         */
-        $development = product_group::create([
+        $development = ProductGroup::create([
             'name' => 'Development & Systems',
             'slug' => 'development-systems'
         ]);
 
-        product_category::insert([
+        ProductCategory::insert([
             [
                 'name' => 'Web Development',
                 'slug' => 'web-development',
@@ -89,12 +89,12 @@ class ProductGroupSeeder extends Seeder
         | GROUP: Consulting & Finance
         |--------------------------------------------------------------------------
         */
-        $consulting = product_group::create([
+        $consulting = ProductGroup::create([
             'name' => 'Consulting & Finance',
             'slug' => 'consulting-finance'
         ]);
 
-        product_category::insert([
+        ProductCategory::insert([
             [
                 'name' => 'Ad-Hoc Analysis',
                 'slug' => 'adhoc-analysis',
@@ -122,12 +122,12 @@ class ProductGroupSeeder extends Seeder
         | GROUP: Packages & Bundles
         |--------------------------------------------------------------------------
         */
-        $packages = product_group::create([
+        $packages = ProductGroup::create([
             'name' => 'Packages & Bundles',
             'slug' => 'packages-bundles'
         ]);
 
-        product_category::insert([
+        ProductCategory::insert([
             [
                 'name' => 'SLA Packages',
                 'slug' => 'sla-packages',
