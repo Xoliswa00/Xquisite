@@ -47,7 +47,7 @@
                        class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Customer</label>
                     <select name="customer_id"
@@ -70,7 +70,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Total Amount (R) <span class="text-red-400">*</span></label>
                     <input type="number" name="total_amount" min="1" step="0.01" required
@@ -88,7 +88,7 @@
 
             <div class="border-t border-slate-700 pt-4">
                 <p class="text-sm font-medium text-slate-300 mb-3">Payment Schedule</p>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Deposit Amount (R) <span class="text-red-400">*</span></label>
                         <input type="number" name="deposit_amount" min="0" step="0.01" required

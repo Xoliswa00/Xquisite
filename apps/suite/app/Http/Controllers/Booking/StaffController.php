@@ -64,7 +64,7 @@ class StaffController extends Controller
         ]);
 
         $recentAppointments = $staff->appointments()
-            ->with(['customer', 'service'])
+            ->with(['customer', 'services'])
             ->orderByDesc('scheduled_at')
             ->limit(10)
             ->get();

@@ -41,7 +41,8 @@
 
             <!-- Line items -->
             <div class="px-6 py-4 border-b border-slate-700">
-                <table class="w-full text-sm summary-on-mobile">
+                <div class="overflow-x-auto">
+                <table class="w-full text-sm min-w-[320px]">
                     <thead>
                         <tr class="text-slate-400 text-left border-b border-slate-700 pb-2">
                             <th class="pb-2 font-medium">Item</th>
@@ -66,6 +67,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <!-- Totals -->

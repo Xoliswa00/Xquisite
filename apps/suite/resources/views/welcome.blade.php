@@ -17,24 +17,31 @@
         'users'    => '<path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/>',
         'map'      => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z"/>',
     ];
+
+    $catColors = [
+        'onboarding' => ['label' => 'Getting Started', 'class' => 'text-emerald-400'],
+        'training'   => ['label' => 'Training',        'class' => 'text-blue-400'],
+        'support'    => ['label' => 'Support',         'class' => 'text-indigo-400'],
+        'custom'     => ['label' => 'Custom Work',     'class' => 'text-purple-400'],
+    ];
 @endphp
 <div class="min-h-screen bg-gray-950 text-gray-100">
 
     <!-- NAV -->
-    <nav class="border-b border-gray-800/60 bg-gray-950/80 backdrop-blur sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg bg-indigo-600/10 flex items-center justify-center">
-                        <x-application-logo class="h-6 w-auto fill-current text-indigo-400" />
+    <nav class="border-b border-gray-800/60 bg-gray-950/90 backdrop-blur sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-14 sm:h-16 items-center gap-4">
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-indigo-600/10 flex items-center justify-center">
+                        <x-application-logo class="h-5 sm:h-6 w-auto fill-current text-indigo-400" />
                     </div>
-                    <span class="text-lg font-semibold tracking-wide text-white">Xquisite</span>
+                    <span class="text-base sm:text-lg font-semibold tracking-wide text-white">Xquisite</span>
                 </div>
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('login') }}" class="text-sm text-gray-400 hover:text-white transition">Log in</a>
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <a href="{{ route('login') }}" class="text-sm text-gray-400 hover:text-white transition px-2 py-1">Log in</a>
                     @if (Route::has('register'))
                         <a href="{{ route('register') }}"
-                           class="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-500 rounded-lg font-medium shadow-sm shadow-indigo-600/20">
+                           class="px-3 sm:px-4 py-1.5 sm:py-2 text-sm bg-indigo-600 hover:bg-indigo-500 rounded-lg font-medium shadow-sm shadow-indigo-600/20 whitespace-nowrap transition-colors">
                             Get Started
                         </a>
                     @endif
@@ -44,28 +51,27 @@
     </nav>
 
     <!-- HERO -->
-    <section class="max-w-6xl mx-auto px-6 lg:px-8 pt-24 pb-16 text-center">
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs tracking-wide mb-6">
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 sm:pt-20 md:pt-28 pb-12 sm:pb-16 text-center">
+        <div class="inline-flex flex-wrap items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs tracking-wide mb-6">
             Xquisite Suite &mdash; Modular Business Operating System
         </div>
-        <h1 class="text-4xl md:text-6xl font-bold leading-tight">
+        <h1 class="text-3xl sm:text-5xl md:text-6xl font-bold leading-tight">
             Run everything.
         </h1>
 
-        <p class="mt-4 text-xl text-indigo-300 font-medium">One platform. Every operation.</p>
+        <p class="mt-3 sm:mt-4 text-lg sm:text-xl text-indigo-300 font-medium">One platform. Every operation.</p>
 
-        <p class="mt-5 text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+        <p class="mt-4 sm:mt-5 text-base sm:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
             Bookings, POS, inventory, e-commerce, and property management — unified into one modular platform built for South African business.
         </p>
-        <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+        <div class="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <a href="{{ route('register') }}"
-               class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold shadow-lg shadow-indigo-600/20">
+               class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold shadow-lg shadow-indigo-600/20 transition-colors">
                 Start Free Trial
             </a>
-
             <a href="{{ route('demo.login') }}"
                class="px-6 py-3 bg-gray-900 border border-gray-700 hover:border-indigo-500/50 rounded-xl text-gray-300 hover:text-white transition flex items-center gap-2 justify-center">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
                 Try Live Demo
             </a>
         </div>
@@ -73,17 +79,17 @@
     </section>
 
     <!-- VALUE PROPS -->
-    <section class="max-w-6xl mx-auto px-6 lg:px-8 pb-16">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-            <div class="p-6 rounded-xl bg-gray-900 border border-gray-800">
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 sm:pb-16">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
+            <div class="p-5 sm:p-6 rounded-xl bg-gray-900 border border-gray-800">
                 <h3 class="font-semibold mb-2">Fully Modular</h3>
                 <p class="text-sm text-gray-400">Activate only what your business needs. Nothing extra.</p>
             </div>
-            <div class="p-6 rounded-xl bg-gray-900 border border-gray-800">
+            <div class="p-5 sm:p-6 rounded-xl bg-gray-900 border border-gray-800">
                 <h3 class="font-semibold mb-2">Real-time Sync</h3>
                 <p class="text-sm text-gray-400">Inventory, POS, and bookings stay instantly aligned.</p>
             </div>
-            <div class="p-6 rounded-xl bg-gray-900 border border-gray-800">
+            <div class="p-5 sm:p-6 rounded-xl bg-gray-900 border border-gray-800">
                 <h3 class="font-semibold mb-2">Multi-tenant Core</h3>
                 <p class="text-sm text-gray-400">Each business runs in a fully isolated environment.</p>
             </div>
@@ -91,29 +97,28 @@
     </section>
 
     <!-- MODULES SHOWCASE -->
-    <section class="max-w-7xl mx-auto px-6 lg:px-8 pb-24" id="modules">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 sm:pb-24" id="modules">
 
-        <div class="text-center mb-14">
-            <h2 class="text-3xl font-bold">Platform Modules</h2>
-            <p class="text-gray-400 mt-3 max-w-xl mx-auto">
+        <div class="text-center mb-10 sm:mb-14">
+            <h2 class="text-2xl sm:text-3xl font-bold">Platform Modules</h2>
+            <p class="text-gray-400 mt-3 max-w-xl mx-auto text-sm sm:text-base">
                 Everything you need to run your business — pick the modules that fit, add more as you grow.
             </p>
         </div>
 
-        {{-- ── LIVE ─────────────────────────────────────────────────────────── --}}
+        {{-- ── LIVE ──────────────────────────────────────────────────────────── --}}
         @if ($active->isNotEmpty())
-        <div class="mb-14">
-            <div class="flex items-center gap-3 mb-6">
-                <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-medium">
+        <div class="mb-12 sm:mb-14">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-medium">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     Live
                 </span>
-                <span class="text-gray-600 text-sm">Available now — activate from your settings</span>
+                <span class="text-gray-500 text-xs sm:text-sm">Available now — activate from your settings</span>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                @foreach ($active as $key => $module)
-                <div class="group p-6 rounded-xl bg-gray-900 border border-gray-800 hover:border-emerald-500/30 transition-colors">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                @foreach ($active as $module)
+                <div class="group p-5 sm:p-6 rounded-xl bg-gray-900 border border-gray-800 hover:border-emerald-500/30 transition-colors">
                     <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
                         <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             {!! $icons[$module['icon']] ?? $icons['chart'] !!}
@@ -130,20 +135,19 @@
         </div>
         @endif
 
-        {{-- ── IN TESTING ───────────────────────────────────────────────────── --}}
+        {{-- ── IN TESTING ────────────────────────────────────────────────────── --}}
         @if ($beta->isNotEmpty())
-        <div class="mb-14">
-            <div class="flex items-center gap-3 mb-6">
-                <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-medium">
+        <div class="mb-12 sm:mb-14">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-medium">
                     <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                     In Testing
                 </span>
-                <span class="text-gray-600 text-sm">Being tested — launching to all clients soon</span>
+                <span class="text-gray-500 text-xs sm:text-sm">Being tested — launching to all clients soon</span>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                @foreach ($beta as $key => $module)
-                <div class="group p-6 rounded-xl bg-gray-900/60 border border-gray-800/60 hover:border-amber-500/30 transition-colors">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                @foreach ($beta as $module)
+                <div class="group p-5 sm:p-6 rounded-xl bg-gray-900/60 border border-gray-800/60 hover:border-amber-500/30 transition-colors">
                     <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center mb-4">
                         <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             {!! $icons[$module['icon']] ?? $icons['chart'] !!}
@@ -163,20 +167,19 @@
         </div>
         @endif
 
-        {{-- ── COMING SOON ──────────────────────────────────────────────────── --}}
+        {{-- ── COMING SOON ───────────────────────────────────────────────────── --}}
         @if ($soon->isNotEmpty())
         <div>
-            <div class="flex items-center gap-3 mb-6">
-                <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 text-xs font-medium">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 text-xs font-medium">
                     <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
                     Coming Soon
                 </span>
-                <span class="text-gray-600 text-sm">On the roadmap — request early access</span>
+                <span class="text-gray-500 text-xs sm:text-sm">On the roadmap — request early access</span>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                @foreach ($soon as $key => $module)
-                <div class="group p-6 rounded-xl bg-gray-900/40 border border-gray-800/40 hover:border-indigo-500/20 transition-colors">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                @foreach ($soon as $module)
+                <div class="group p-5 sm:p-6 rounded-xl bg-gray-900/40 border border-gray-800/40 hover:border-indigo-500/20 transition-colors">
                     <div class="w-10 h-10 rounded-lg bg-indigo-500/8 flex items-center justify-center mb-4">
                         <svg class="w-5 h-5 text-indigo-400/60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             {!! $icons[$module['icon']] ?? $icons['chart'] !!}
@@ -206,31 +209,19 @@
     <!-- SERVICES -->
     @php $publicServices = \App\Models\PlatformService::active()->requestable()->ordered()->get()->groupBy('category'); @endphp
     @if ($publicServices->isNotEmpty())
-    <section class="max-w-7xl mx-auto px-6 lg:px-8 pb-24" id="services">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 sm:pb-24" id="services">
 
-        <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold">Services & Add-ons</h2>
-            <p class="text-gray-400 mt-3">Not just software — we help you get up and running.</p>
+        <div class="text-center mb-10 sm:mb-12">
+            <h2 class="text-2xl sm:text-3xl font-bold">Services & Add-ons</h2>
+            <p class="text-gray-400 mt-3 text-sm sm:text-base">Not just software — we help you get up and running.</p>
         </div>
 
-        @php
-            $catIcons = [
-                'onboarding' => ['label' => 'Getting Started', 'colour' => 'emerald'],
-                'training'   => ['label' => 'Training',        'colour' => 'blue'],
-                'support'    => ['label' => 'Support',         'colour' => 'indigo'],
-                'custom'     => ['label' => 'Custom Work',     'colour' => 'purple'],
-            ];
-        @endphp
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             @foreach ($publicServices->flatten() as $service)
-            <div class="p-6 rounded-2xl bg-gray-900 border border-gray-800 hover:border-gray-700 transition">
-                <p class="text-xs font-medium uppercase tracking-widest mb-3
-                    {{ ($catIcons[$service->category]['colour'] ?? 'gray') === 'emerald' ? 'text-emerald-400' : '' }}
-                    {{ ($catIcons[$service->category]['colour'] ?? 'gray') === 'blue'    ? 'text-blue-400' : '' }}
-                    {{ ($catIcons[$service->category]['colour'] ?? 'gray') === 'indigo'  ? 'text-indigo-400' : '' }}
-                    {{ ($catIcons[$service->category]['colour'] ?? 'gray') === 'purple'  ? 'text-purple-400' : '' }}">
-                    {{ $catIcons[$service->category]['label'] ?? ucfirst($service->category) }}
+            @php $cat = $catColors[$service->category] ?? ['label' => ucfirst($service->category), 'class' => 'text-gray-400']; @endphp
+            <div class="p-5 sm:p-6 rounded-2xl bg-gray-900 border border-gray-800 hover:border-gray-700 transition">
+                <p class="text-xs font-medium uppercase tracking-widest mb-3 {{ $cat['class'] }}">
+                    {{ $cat['label'] }}
                 </p>
                 <h3 class="font-semibold text-white mb-2">{{ $service->name }}</h3>
                 <p class="text-sm text-gray-400 leading-relaxed">{{ $service->description }}</p>
@@ -250,16 +241,16 @@
     <!-- TESTIMONIALS -->
     @php $testimonials = \App\Models\Review::public()->limit(6)->get(); @endphp
     @if ($testimonials->isNotEmpty())
-    <section class="max-w-7xl mx-auto px-6 lg:px-8 pb-24">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 sm:pb-24">
 
-        <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold">Businesses running on Xquisite</h2>
-            <p class="text-gray-400 mt-3">Real feedback from real operators.</p>
+        <div class="text-center mb-10 sm:mb-12">
+            <h2 class="text-2xl sm:text-3xl font-bold">Businesses running on Xquisite</h2>
+            <p class="text-gray-400 mt-3 text-sm sm:text-base">Real feedback from real operators.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             @foreach ($testimonials as $review)
-            <div class="p-6 rounded-2xl bg-gray-900 border {{ $review->is_featured ? 'border-indigo-500/40' : 'border-gray-800' }}">
+            <div class="p-5 sm:p-6 rounded-2xl bg-gray-900 border {{ $review->is_featured ? 'border-indigo-500/40' : 'border-gray-800' }}">
                 <div class="flex items-center gap-0.5 mb-3">
                     @for ($i = 1; $i <= 5; $i++)
                         <svg class="w-4 h-4 {{ $i <= $review->rating ? 'text-amber-400' : 'text-gray-700' }}"
@@ -294,16 +285,16 @@
     @endif
 
     <!-- PRICING -->
-    <section class="max-w-7xl mx-auto px-6 lg:px-8 pb-24" id="pricing">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 sm:pb-24" id="pricing">
         @php $plans = \App\Models\Plan::active()->ordered()->with('planModules.platformModule')->get(); @endphp
 
         @if ($plans->isNotEmpty())
-        <div class="text-center mb-14">
-            <h2 class="text-3xl font-bold">Simple, Transparent Pricing</h2>
-            <p class="text-gray-400 mt-3">Bundle and save — or pick individual modules if you only need one thing.</p>
+        <div class="text-center mb-10 sm:mb-14">
+            <h2 class="text-2xl sm:text-3xl font-bold">Simple, Transparent Pricing</h2>
+            <p class="text-gray-400 mt-3 text-sm sm:text-base">Bundle and save — or pick individual modules if you only need one thing.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 items-start">
             @foreach ($plans as $plan)
             <div class="rounded-2xl border {{ $plan->is_featured ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-gray-900' : 'border-gray-800 bg-gray-900/60' }} overflow-hidden">
 
@@ -313,14 +304,14 @@
                 </div>
                 @endif
 
-                <div class="p-7">
+                <div class="p-5 sm:p-7">
                     <h3 class="text-lg font-bold text-white">{{ $plan->name }}</h3>
                     @if ($plan->tagline)
                         <p class="text-sm text-gray-400 mt-1">{{ $plan->tagline }}</p>
                     @endif
 
-                    <div class="mt-5">
-                        <span class="text-4xl font-bold text-white">R{{ number_format($plan->price_monthly, 0) }}</span>
+                    <div class="mt-4 sm:mt-5">
+                        <span class="text-3xl sm:text-4xl font-bold text-white">R{{ number_format($plan->price_monthly, 0) }}</span>
                         <span class="text-gray-400 text-sm">/month</span>
                     </div>
 
@@ -331,14 +322,14 @@
                     @endif
 
                     <a href="{{ route('register') }}"
-                       class="mt-6 block text-center py-2.5 rounded-xl font-semibold text-sm transition
+                       class="mt-5 sm:mt-6 block text-center py-2.5 rounded-xl font-semibold text-sm transition
                               {{ $plan->is_featured
                                   ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
                                   : 'bg-gray-800 hover:bg-gray-700 text-gray-200' }}">
                         Get started
                     </a>
 
-                    <ul class="mt-6 space-y-2.5">
+                    <ul class="mt-5 sm:mt-6 space-y-2.5">
                         @foreach ($plan->planModules as $pm)
                         <li class="flex items-center gap-2.5 text-sm text-gray-300">
                             <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -363,26 +354,24 @@
 
     <!-- CTA -->
     <section class="border-t border-gray-800">
-        <div class="max-w-4xl mx-auto px-6 lg:px-8 py-20 text-center">
-            <h2 class="text-3xl md:text-4xl font-bold">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 text-center">
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold">
                 Build your system once.
                 <span class="text-indigo-400">Run everything.</span>
             </h2>
-            <p class="text-gray-400 mt-4">
+            <p class="text-gray-400 mt-4 text-sm sm:text-base">
                 No complexity. No fragmented tools. One platform for your entire operation.
-
-            <p class="text-gray-400 mt-3 text-lg">One platform. Every operation.</p>
-
-            <p class="text-gray-500 mt-3 text-sm">
+            </p>
+            <p class="text-gray-500 mt-3 text-xs sm:text-sm">
                 Xquisite Technologies (Pty) Ltd &mdash; Built for South African business.
             </p>
-            <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <div class="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                 <a href="{{ route('register') }}"
-                   class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold">
+                   class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold transition-colors">
                     Get Started
                 </a>
                 <a href="{{ route('login') }}"
-                   class="px-6 py-3 bg-gray-900 border border-gray-800 rounded-xl text-gray-300">
+                   class="px-6 py-3 bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl text-gray-300 hover:text-white transition-colors">
                     Login
                 </a>
             </div>

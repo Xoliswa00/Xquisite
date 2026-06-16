@@ -20,11 +20,13 @@ return Application::configure(basePath: dirname(__DIR__))
             RequestTrackingMiddleware::class,
             ResolveTenant::class,
             DemoModeMiddleware::class,
+            \App\Http\Middleware\CheckCompanySuspension::class,
         ]);
 
         $middleware->alias([
             'module' => EnsureModuleActive::class,
             'enforce-password-change' => EnforcePasswordChange::class,
+            'company.suspension' => \App\Http\Middleware\CheckCompanySuspension::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

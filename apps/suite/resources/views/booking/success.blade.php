@@ -30,10 +30,22 @@
                         </div>
                     @endforeach
                 </div>
+                @php
+                    $successTotal = (float)$appointment->services->sum(fn($s) => $s->pivot->price_at_booking ?? $s->price);
+                    if ($appointment->combo_price) {
+                        $successComboIds = \App\Models\ServiceCombo::with('services')->find($appointment->combo_id)?->services->pluck('id')->all() ?? [];
+                        $successExtras   = $appointment->services->filter(fn($s) => !in_array($s->id, $successComboIds))->sum(fn($s) => $s->pivot->price_at_booking ?? $s->price);
+                        $successTotal    = (float)$appointment->combo_price + $successExtras;
+                    }
+                    $successTotal -= (float)($appointment->promo_discount ?? 0);
+                @endphp
                 <div class="flex items-center justify-between pt-2 border-t border-slate-100 font-semibold">
                     <span class="text-slate-700">Total</span>
-                    <span class="text-indigo-600">{{ $appointment->duration_minutes }} min</span>
+                    <span class="text-indigo-600">R{{ number_format($successTotal, 2) }} · {{ $appointment->duration_minutes }} min</span>
                 </div>
+                @if($appointment->promo_discount)
+                    <p class="text-xs text-emerald-600 text-right">Promo {{ $appointment->promo_code }} saved you R{{ number_format($appointment->promo_discount, 2) }}</p>
+                @endif
             </div>
 
             <div class="grid grid-cols-2 gap-4">

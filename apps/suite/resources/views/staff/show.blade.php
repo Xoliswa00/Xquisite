@@ -4,34 +4,36 @@
     <div class="max-w-3xl space-y-4">
 
         <!-- Profile card -->
-        <div class="bg-slate-800 rounded-xl p-6 flex items-start justify-between">
-            <div class="space-y-1">
-                <h2 class="text-lg font-semibold text-white">{{ $staff->name }}</h2>
-                <p class="text-sm text-slate-400">{{ $staff->role ?? 'Staff member' }}</p>
-                @if($staff->email)
-                    <p class="text-sm text-slate-400">{{ $staff->email }}</p>
-                @endif
-                @if($staff->phone)
-                    <p class="text-sm text-slate-400">{{ $staff->phone }}</p>
-                @endif
-                @if($staff->services->count())
-                    <div class="flex flex-wrap gap-1.5 pt-2">
-                        @foreach($staff->services as $service)
-                            <span class="inline-flex px-2 py-0.5 rounded-full text-xs bg-slate-700 text-slate-300 border border-slate-600">{{ $service->name }}</span>
-                        @endforeach
-                    </div>
+        <div class="bg-slate-800 rounded-xl p-5 space-y-4">
+            <div class="flex items-start justify-between gap-3">
+                <div class="space-y-0.5 min-w-0">
+                    <h2 class="text-lg font-semibold text-white truncate">{{ $staff->name }}</h2>
+                    <p class="text-sm text-slate-400">{{ $staff->role ?? 'Staff member' }}</p>
+                    @if($staff->email)
+                        <p class="text-sm text-slate-400">{{ $staff->email }}</p>
+                    @endif
+                    @if($staff->phone)
+                        <p class="text-sm text-slate-400">{{ $staff->phone }}</p>
+                    @endif
+                    @if($staff->services->count())
+                        <div class="flex flex-wrap gap-1.5 pt-2">
+                            @foreach($staff->services as $service)
+                                <span class="inline-flex px-2 py-0.5 rounded-full text-xs bg-slate-700 text-slate-300 border border-slate-600">{{ $service->name }}</span>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+                @if($staff->is_active)
+                    <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
+                @else
+                    <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
                 @endif
             </div>
-            <div class="flex items-center gap-3">
-                @if($staff->is_active)
-                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
-                @else
-                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
-                @endif
+            <div class="flex gap-2">
                 <a href="{{ route('staff.schedule', $staff) }}"
-                   class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Schedule</a>
+                   class="flex-1 sm:flex-none text-center bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Schedule</a>
                 <a href="{{ route('staff.edit', $staff) }}"
-                   class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Edit</a>
+                   class="flex-1 sm:flex-none text-center bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Edit</a>
             </div>
         </div>
 
@@ -86,12 +88,35 @@
             <div class="px-4 py-3 border-b border-slate-700">
                 <h3 class="text-sm font-medium text-slate-300">Recent Appointments</h3>
             </div>
-            <table class="w-full text-sm summary-on-mobile">
+
+            {{-- Mobile cards --}}
+            <div class="sm:hidden divide-y divide-slate-700">
+                @forelse($recentAppointments as $appt)
+                    @php $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','awaiting_payment'=>'amber','cancelled'=>'red','no_show'=>'slate']; $c = $colors[$appt->status] ?? 'slate'; @endphp
+                    <a href="{{ route('appointments.show', $appt) }}" class="block px-4 py-3 hover:bg-slate-700/50 transition-colors">
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="text-sm text-slate-300 font-medium">{{ $appt->scheduled_at->format('d M Y, H:i') }}</p>
+                            <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-{{ $c }}-900/50 text-{{ $c }}-400 border border-{{ $c }}-800">
+                                {{ ucfirst(str_replace('_', ' ', $appt->status)) }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ $appt->services->pluck('name')->join(', ') ?: '—' }}</p>
+                        @if($appt->customer)
+                            <p class="text-xs text-slate-500 mt-0.5">{{ $appt->customer->name }}</p>
+                        @endif
+                    </a>
+                @empty
+                    <div class="px-4 py-8 text-center text-slate-500 text-sm">No appointments yet.</div>
+                @endforelse
+            </div>
+
+            {{-- Desktop table --}}
+            <table class="hidden sm:table w-full text-sm">
                 <thead>
                     <tr class="border-b border-slate-700 text-slate-400 text-left">
                         <th class="px-4 py-3 font-medium">Date</th>
                         <th class="px-4 py-3 font-medium">Customer</th>
-                        <th class="px-4 py-3 font-medium">Service</th>
+                        <th class="px-4 py-3 font-medium">Services</th>
                         <th class="px-4 py-3 font-medium">Status</th>
                     </tr>
                 </thead>
@@ -100,13 +125,15 @@
                         <tr class="hover:bg-slate-700/50">
                             <td class="px-4 py-3 text-slate-300">{{ $appt->scheduled_at->format('d M Y, H:i') }}</td>
                             <td class="px-4 py-3">
-                                <a href="{{ route('customers.show', $appt->customer) }}" class="text-indigo-400 hover:text-indigo-300">
-                                    {{ $appt->customer->name }}
-                                </a>
+                                @if($appt->customer)
+                                    <a href="{{ route('customers.show', $appt->customer) }}" class="text-indigo-400 hover:text-indigo-300">{{ $appt->customer->name }}</a>
+                                @else
+                                    <span class="text-slate-500">—</span>
+                                @endif
                             </td>
-                            <td class="px-4 py-3 text-slate-300">{{ $appt->service->name }}</td>
+                            <td class="px-4 py-3 text-slate-300">{{ $appt->services->pluck('name')->join(', ') ?: '—' }}</td>
                             <td class="px-4 py-3">
-                                @php $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','cancelled'=>'red','no_show'=>'slate']; $c = $colors[$appt->status] ?? 'slate'; @endphp
+                                @php $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','awaiting_payment'=>'amber','cancelled'=>'red','no_show'=>'slate']; $c = $colors[$appt->status] ?? 'slate'; @endphp
                                 <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-{{ $c }}-900/50 text-{{ $c }}-400 border border-{{ $c }}-800">
                                     {{ ucfirst(str_replace('_', ' ', $appt->status)) }}
                                 </span>

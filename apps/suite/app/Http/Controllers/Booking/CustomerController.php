@@ -56,7 +56,7 @@ class CustomerController extends Controller
     public function show(Customer $customer)
     {
         $appointments = $customer->appointments()
-            ->with(['staff', 'service'])
+            ->with(['staff', 'services'])
             ->orderByDesc('scheduled_at')
             ->paginate(10);
 

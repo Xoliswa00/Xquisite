@@ -1,29 +1,26 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
+    <x-slot name="header">Billing Sync Queue</x-slot>
+
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <div class="flex items-start justify-between gap-4 flex-wrap">
             <div>
-                <h2 class="text-2xl font-bold text-white">Billing Sync Queue</h2>
+                <h1 class="text-xl font-bold text-white">Billing Sync Queue</h1>
                 @if(($counts['pending'] + $counts['retrying']) > 0)
-                    <p class="text-sm text-yellow-400 mt-0.5">
-                        {{ $counts['pending'] + $counts['retrying'] }} item(s) waiting to sync with billing
-                    </p>
+                    <p class="text-sm text-amber-400 mt-0.5">{{ $counts['pending'] + $counts['retrying'] }} item(s) waiting to sync</p>
                 @else
-                    <p class="text-sm text-green-400 mt-0.5">All synced with billing</p>
+                    <p class="text-sm text-emerald-400 mt-0.5">All synced with billing</p>
                 @endif
             </div>
-
             @if(($counts['pending'] + $counts['abandoned']) > 0)
                 <form method="POST" action="{{ route('admin.sync.retry-all') }}">
                     @csrf
-                    <button class="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-semibold rounded-lg transition">
+                    <button class="shrink-0 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold rounded-lg transition-colors">
                         Retry All Pending / Abandoned
                     </button>
                 </form>
             @endif
         </div>
-    </x-slot>
-
-    <div class="max-w-7xl mx-auto p-6 space-y-6">
 
         @if(session('success'))
             <div class="p-4 bg-green-900/30 border border-green-700 text-green-300 rounded-lg text-sm">
@@ -55,7 +52,7 @@
         </div>
 
         {{-- Filters --}}
-        <form method="GET" class="flex gap-3">
+        <form method="GET" class="flex flex-wrap gap-3">
             <select name="status" class="bg-slate-800 border-slate-600 text-slate-300 rounded-lg text-sm">
                 <option value="">All Statuses</option>
                 @foreach(['pending','retrying','completed','abandoned'] as $s)

@@ -38,7 +38,7 @@ class CustomerPortalController extends Controller
         $upcoming = Appointment::where('customer_id', $customer->id)
             ->whereIn('status', ['pending', 'confirmed'])
             ->where('scheduled_at', '>=', now())
-            ->with(['service', 'staff'])
+            ->with(['services', 'staff'])
             ->orderBy('scheduled_at')
             ->get();
 
@@ -47,7 +47,7 @@ class CustomerPortalController extends Controller
                 $q->whereIn('status', ['completed', 'cancelled', 'no_show'])
                   ->orWhere('scheduled_at', '<', now());
             })
-            ->with(['service', 'staff'])
+            ->with(['services', 'staff'])
             ->orderByDesc('scheduled_at')
             ->limit(20)
             ->get();

@@ -4,13 +4,13 @@
     <div class="max-w-4xl space-y-4">
 
         @if($products->count())
-            <div class="bg-amber-900/20 border border-amber-700/50 rounded-xl px-5 py-4 flex items-center justify-between">
-                <div class="text-sm text-amber-300">
+            <div class="bg-amber-900/20 border border-amber-700/50 rounded-xl px-5 py-4 flex flex-wrap items-center gap-3">
+                <div class="text-sm text-amber-300 flex-1">
                     <strong>{{ $products->count() }} {{ $products->count() === 1 ? 'product' : 'products' }}</strong>
                     at or below reorder level. Create a purchase order to restock.
                 </div>
                 <a href="{{ route('purchase-orders.create', ['from_reorder' => 1]) }}"
-                   class="bg-amber-600 hover:bg-amber-500 text-white text-sm px-5 py-2 rounded-lg whitespace-nowrap ml-4">
+                   class="bg-amber-600 hover:bg-amber-500 text-white text-sm px-5 py-2 rounded-lg whitespace-nowrap">
                     Create PO for All
                 </a>
             </div>
@@ -26,7 +26,8 @@
                 <a href="{{ route('purchase-orders.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300">View all POs →</a>
             </div>
 
-            <table class="w-full text-sm summary-on-mobile">
+            <div class="overflow-x-auto">
+            <table class="w-full text-sm min-w-[680px]">
                 <thead>
                     <tr class="border-b border-slate-700 text-slate-400 text-left">
                         <th class="px-4 py-3 font-medium">Product</th>
@@ -70,6 +71,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
 
     </div>

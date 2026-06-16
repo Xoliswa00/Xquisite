@@ -15,9 +15,11 @@ class Service extends Model
     protected $fillable = [
         'tenant_id',
         'name',
+        'service_category_id',
         'description',
         'duration_minutes',
         'price',
+        'cost_price',
         'pricing_type',
         'price_per_unit',
         'unit_label',
@@ -26,6 +28,7 @@ class Service extends Model
 
     protected $casts = [
         'price'          => 'decimal:2',
+        'cost_price'     => 'decimal:2',
         'price_per_unit' => 'decimal:2',
     ];
 
@@ -47,6 +50,11 @@ class Service extends Model
             'per_unit' => 'R' . number_format($this->price_per_unit, 2) . ' ' . ($this->unit_label ?? 'per unit'),
             default    => 'R' . number_format($this->price, 2),
         };
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(\App\Models\ServiceCategory::class, 'service_category_id');
     }
 
     public function serviceProducts()

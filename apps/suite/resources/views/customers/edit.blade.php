@@ -38,8 +38,8 @@
                     <label for="is_active" class="text-sm text-slate-300">Active</label>
                 </div>
 
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">Save Changes</button>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
+                    <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">Save Changes</button>
                     <a href="{{ route('customers.show', $customer) }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>
                 </div>
             </form>

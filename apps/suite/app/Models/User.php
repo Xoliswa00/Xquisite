@@ -66,6 +66,31 @@ class User extends Authenticatable
         return $this->role === 'client';
     }
 
+    // Aliases used throughout new features
+    public function isPlatformOwner(): bool
+    {
+        return $this->isOwner();
+    }
+
+    public function isClientUser(): bool
+    {
+        return $this->isClient();
+    }
+
+    public function isSystemAdmin(): bool
+    {
+        try {
+            return $this->hasPermissionTo('manage-tenants');
+        } catch (\Spatie\Permission\Exceptions\PermissionDoesNotExist) {
+            return false;
+        }
+    }
+
+    public function client()
+    {
+        return $this->hasOne(\App\Models\Client::class);
+    }
+
     public function needsPasswordChange(): bool
     {
         return $this->require_password_change === true;

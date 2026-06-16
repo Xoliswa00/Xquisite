@@ -17,7 +17,8 @@
                     <span class="text-xs text-slate-500">{{ $products->count() }} products</span>
                 </div>
 
-                <table class="w-full text-sm summary-on-mobile">
+                <div class="overflow-x-auto">
+                <table class="w-full text-sm min-w-[600px]">
                     <thead>
                         <tr class="border-b border-slate-700 text-slate-400 text-left">
                             <th class="px-4 py-3 font-medium">Product</th>

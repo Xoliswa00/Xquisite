@@ -110,7 +110,7 @@
     const slotSelect   = document.getElementById('time_slot');
     const loadingMsg   = document.getElementById('slots-loading');
     const emptyMsg     = document.getElementById('slots-empty');
-    const serviceId    = {{ $appointment->service_id }};
+    const serviceIds   = {!! $appointment->services->pluck('id')->toJson() !!};
     const currentSlot  = "{{ old('scheduled_at', $appointment->scheduled_at->format('Y-m-d H:i')) }}";
 
     async function fetchSlots(date) {
@@ -119,7 +119,8 @@
         emptyMsg.classList.add('hidden');
 
         try {
-            const params = new URLSearchParams({ service_id: serviceId, date });
+            const params = new URLSearchParams({ date });
+            serviceIds.forEach(id => params.append('service_ids[]', id));
             const res    = await fetch(`{{ route('book.slots', $slug) }}?${params}`);
             const data   = await res.json();
 

@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Models\ModuleRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Collection;
 
 class Tenant extends Model
 {
@@ -25,6 +24,9 @@ class Tenant extends Model
         'is_active',
         'is_demo',
         'trial_ends_at',
+        'grace_period_ends_at',
+        'suspended_at',
+        'last_billing_date',
     ];
 
     protected $casts = [
@@ -32,6 +34,9 @@ class Tenant extends Model
         'is_demo'                => 'boolean',
         'custom_domain_verified' => 'boolean',
         'trial_ends_at'          => 'datetime',
+        'grace_period_ends_at'   => 'datetime',
+        'suspended_at'           => 'datetime',
+        'last_billing_date'      => 'datetime',
     ];
 
     // ── Relationships ──────────────────────────────────────────
@@ -93,6 +98,54 @@ class Tenant extends Model
     public function monthlyTotal(): float
     {
         return $this->activeModules->sum(fn (TenantModule $tm) => $tm->monthly_price);
+    }
+
+    public function platformInvoices()
+    {
+        return $this->hasMany(PlatformInvoice::class);
+    }
+
+    public function unpaidPlatformInvoices()
+    {
+        return $this->platformInvoices()->whereIn('status', ['unpaid', 'overdue']);
+    }
+
+    // ── Billing helpers ────────────────────────────────────────
+
+    public static function planAmount(string $plan): float
+    {
+        return match ($plan) {
+            'premium'    => 599.00,
+            'enterprise' => 1299.00,
+            default      => 299.00,  // basic
+        };
+    }
+
+    public function isInGrace(): bool
+    {
+        return $this->grace_period_ends_at && now()->lt($this->grace_period_ends_at) && !$this->suspended_at;
+    }
+
+    public function graceDaysLeft(): int
+    {
+        if (!$this->grace_period_ends_at) return 0;
+        return max(0, (int) now()->diffInDays($this->grace_period_ends_at, false));
+    }
+
+    public function billingStatusLabel(): string
+    {
+        if ($this->suspended_at) return 'Suspended';
+        if ($this->isInGrace()) return 'Grace Period';
+        if ($this->unpaidPlatformInvoices()->exists()) return 'Overdue';
+        return 'Active';
+    }
+
+    public function billingStatusClass(): string
+    {
+        if ($this->suspended_at) return 'bg-red-100 text-red-700 border-red-200';
+        if ($this->isInGrace()) return 'bg-amber-100 text-amber-700 border-amber-200';
+        if ($this->unpaidPlatformInvoices()->exists()) return 'bg-orange-100 text-orange-700 border-orange-200';
+        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
     }
 
     // ── Other helpers ──────────────────────────────────────────

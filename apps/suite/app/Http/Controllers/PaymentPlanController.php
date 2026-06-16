@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PaymentPlan;
 use App\Models\PaymentPlanInstallment;
 use App\Modules\Booking\Models\Customer;
+use App\Notifications\PaymentReceivedNotification;
 use Illuminate\Http\Request;
 
 class PaymentPlanController extends Controller
@@ -92,6 +93,16 @@ class PaymentPlanController extends Controller
         ]);
 
         $installment->markPaid($data['payment_method'], $data['reference'] ?? null);
+
+        // Notify the tenant owner
+        $owner = auth()->user()->tenant->users()->where('role', 'owner')->first();
+        if ($owner) {
+            $owner->notify(new PaymentReceivedNotification(
+                (float) $installment->amount,
+                $data['reference'] ?? 'N/A',
+                $data['payment_method']
+            ));
+        }
 
         return back()->with('success', "{$installment->label} of R" . number_format($installment->amount, 2) . " marked as paid.");
     }

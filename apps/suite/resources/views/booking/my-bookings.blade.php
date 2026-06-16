@@ -53,7 +53,7 @@
                                     <button class="text-xs text-red-500 hover:text-red-700">Cancel</button>
                                 </form>
 
-                                <a read_exif_datata href="{{ route('book.edit', [$slug, $appt]) }}"
+                                <a href="{{ route('book.edit', [$slug, $appt]) }}"
                                    class="text-xs text-indigo-600 hover:text-indigo-500">
                                     Reschedule →
                                 </a>

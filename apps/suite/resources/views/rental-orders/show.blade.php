@@ -32,7 +32,7 @@
                 <span class="text-xl font-bold text-slate-100">R{{ number_format($rentalOrder->totalCharge(), 2) }}</span>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 text-sm">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
                     <p class="text-slate-400 text-xs">Item</p>
                     <p class="text-white font-medium">{{ $rentalOrder->product->name }}</p>
@@ -89,7 +89,7 @@
         @if (in_array($rentalOrder->status, ['out', 'overdue']))
         <div class="bg-slate-800 rounded-xl p-5">
             <p class="text-sm font-medium text-slate-300 mb-3">Record return</p>
-            <form method="POST" action="{{ route('rental-orders.return', $rentalOrder) }}" class="flex items-center gap-3">
+            <form method="POST" action="{{ route('rental-orders.return', $rentalOrder) }}" class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 @csrf @method('PATCH')
                 <select name="condition_on_return" required
                         class="bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">

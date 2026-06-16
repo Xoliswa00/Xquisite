@@ -3,13 +3,10 @@
 namespace App\Notifications;
 
 use App\Models\ModuleRequest;
-use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 
-class ModuleRequestSubmitted extends Notification
+class ModuleRequestSubmitted extends MailNotification
 {
-    use Queueable;
 
     public function __construct(public ModuleRequest $request)
     {

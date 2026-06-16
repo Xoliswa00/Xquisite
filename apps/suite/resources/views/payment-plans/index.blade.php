@@ -1,22 +1,22 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold">Laybys & Payment Plans</h2>
-            <div class="flex items-center gap-3">
+    <x-slot name="header">Laybys & Payment Plans</x-slot>
+
+    <div class="max-w-5xl space-y-5">
+
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="text-xl font-bold text-white">Laybys & Payment Plans</h1>
                 @if ($overdueCount > 0)
-                    <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/15 text-red-400">
                         {{ $overdueCount }} overdue
                     </span>
                 @endif
-                <a href="{{ route('payment-plans.create') }}"
-                   class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg font-medium">
-                    + New Plan
-                </a>
             </div>
+            <a href="{{ route('payment-plans.create') }}"
+               class="shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg font-medium transition-colors">
+                + New Plan
+            </a>
         </div>
-    </x-slot>
-
-    <div class="py-8 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
         @if (session('success'))
             <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-sm">{{ session('success') }}</div>

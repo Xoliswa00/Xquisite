@@ -2,29 +2,59 @@
     <x-slot name="header">Customers</x-slot>
 
     <div class="space-y-4">
-        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <form method="GET" class="flex flex-wrap gap-2">
+        <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            <form method="GET" class="flex flex-col sm:flex-row flex-wrap gap-2">
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Name, email or phone…"
-                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-56 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                <select name="status" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                    <option value="">All</option>
-                    <option value="active" @selected(request('status') === 'active')>Active</option>
-                    <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
-                </select>
-                <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Filter</button>
-                @if(request()->hasAny(['search','status']))
-                    <a href="{{ route('customers.index') }}" class="text-sm px-4 py-2 rounded-lg text-slate-400 hover:text-white">Clear</a>
-                @endif
+                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-full sm:w-52 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <div class="flex gap-2">
+                    <select name="status" class="flex-1 sm:flex-none bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <option value="">All</option>
+                        <option value="active" @selected(request('status') === 'active')>Active</option>
+                        <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
+                    </select>
+                    <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Filter</button>
+                    @if(request()->hasAny(['search','status']))
+                        <a href="{{ route('customers.index') }}" class="text-sm px-4 py-2 rounded-lg text-slate-400 hover:text-white border border-slate-700">Clear</a>
+                    @endif
+                </div>
             </form>
             <a href="{{ route('customers.create') }}"
-               class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
+               class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
                 + New Customer
             </a>
         </div>
 
-        <div class="bg-slate-800 rounded-xl overflow-hidden">
-            <table class="w-full text-sm summary-on-mobile">
+        {{-- Mobile cards --}}
+        <div class="sm:hidden space-y-2">
+            @forelse($customers as $customer)
+                <a href="{{ route('customers.show', $customer) }}"
+                   class="block bg-slate-800 rounded-xl p-4 hover:bg-slate-700/70 transition-colors">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="font-medium text-white text-sm truncate">{{ $customer->name }}</p>
+                        @if($customer->is_active)
+                            <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
+                        @else
+                            <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
+                        @endif
+                    </div>
+                    <div class="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                        @if($customer->phone)
+                            <span>{{ $customer->phone }}</span>
+                        @endif
+                        @if($customer->email)
+                            <span class="truncate">{{ $customer->email }}</span>
+                        @endif
+                    </div>
+                </a>
+            @empty
+                <p class="text-center text-slate-500 py-10 text-sm">No customers found.</p>
+            @endforelse
+        </div>
+
+        {{-- Desktop table --}}
+        <div class="hidden sm:block bg-slate-800 rounded-xl overflow-hidden overflow-x-auto">
+            <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-slate-700 text-slate-400 text-left">
                         <th class="px-4 py-3 font-medium">Name</th>

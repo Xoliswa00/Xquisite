@@ -44,7 +44,7 @@
                     </div>
                 @endif
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Supplier Name (free text)</label>
                         <input type="text" name="supplier" value="{{ old('supplier') }}"
@@ -141,7 +141,7 @@
             </div>
 
             <!-- Notes + submit -->
-            <div class="flex items-start gap-4">
+            <div class="flex flex-col sm:flex-row items-start gap-4">
                 <div class="flex-1">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Notes (optional)</label>
                     <input type="text" name="notes" value="{{ old('notes') }}"

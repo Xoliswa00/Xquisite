@@ -15,6 +15,8 @@ class Product extends Model
         'name',
         'sku',
         'category',
+        'service_category_id',
+        'duration_minutes',
         'description',
         'price',
         'cost_price',
@@ -63,6 +65,11 @@ class Product extends Model
 
     // ── Relationships ──────────────────────────────────────────
 
+    public function serviceCategory()
+    {
+        return $this->belongsTo(\App\Models\ServiceCategory::class);
+    }
+
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
@@ -79,6 +86,16 @@ class Product extends Model
     }
 
     // ── Computed ───────────────────────────────────────────────
+
+    public function getDurationLabelAttribute(): ?string
+    {
+        if (!$this->duration_minutes) return null;
+        $h = intdiv($this->duration_minutes, 60);
+        $m = $this->duration_minutes % 60;
+        if ($h > 0 && $m > 0) return "{$h}h {$m}min";
+        if ($h > 0) return "{$h}h";
+        return "{$m}min";
+    }
 
     public function getNeedsReorderAttribute(): bool
     {

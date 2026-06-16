@@ -13,7 +13,7 @@
                            class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">SKU</label>
                         <input type="text" name="sku" value="{{ old('sku', $product->sku) }}"
@@ -32,7 +32,7 @@
                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{ old('description', $product->description) }}</textarea>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Selling Price (R)</label>
                         <input type="number" name="price" value="{{ old('price', $product->price) }}" min="0" step="0.01" required
@@ -45,7 +45,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Stock Quantity</label>
                         <input type="number" name="stock_quantity" value="{{ old('stock_quantity', $product->stock_quantity) }}" min="0" required
@@ -87,7 +87,7 @@
 
                 <p class="text-xs font-medium text-slate-400 uppercase tracking-wide">Reorder Settings</p>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Reorder Level</label>
                         <input type="number" name="reorder_level" value="{{ old('reorder_level', $product->reorder_level) }}" min="0"
@@ -104,7 +104,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Supplier</label>
                         <input type="text" name="supplier" value="{{ old('supplier', $product->supplier) }}"
@@ -119,8 +119,8 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">Save Changes</button>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
+                    <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">Save Changes</button>
                     <a href="{{ route('products.index') }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>
                 </div>
             </form>

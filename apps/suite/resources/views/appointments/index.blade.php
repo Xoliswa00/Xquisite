@@ -4,39 +4,74 @@
     <div class="space-y-4">
 
         <!-- Toolbar -->
-        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <form id="appointments-filter-form" method="GET" class="flex flex-wrap gap-2">
+        <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            <form id="appointments-filter-form" method="GET" class="flex flex-col sm:flex-row flex-wrap gap-2">
                 <input id="appointment-search" type="text" name="search" value="{{ request('search') }}"
                        placeholder="Search customer…"
-                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-48 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-full sm:w-44 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                 <input id="appointment-date" type="date" name="date" value="{{ request('date') }}"
                        class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                 <select id="appointment-status" name="status" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                     <option value="">All statuses</option>
-                    @foreach(['pending','confirmed','completed','cancelled','no_show','tentative'] as $s)
+                    @foreach(['pending','confirmed','completed','awaiting_payment','cancelled','no_show','tentative'] as $s)
                         <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
                     @endforeach
                     <option value="unassigned" @selected(request('status') === 'unassigned')>Unassigned Staff</option>
                 </select>
-                <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Filter</button>
-                @if(request()->hasAny(['search','date','status']))
-                    <a href="{{ route('appointments.index') }}" class="text-sm px-4 py-2 rounded-lg text-slate-400 hover:text-white">Clear</a>
-                @endif
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 sm:flex-none bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Filter</button>
+                    @if(request()->hasAny(['search','date','status']))
+                        <a href="{{ route('appointments.index') }}" class="flex-1 sm:flex-none text-center text-sm px-4 py-2 rounded-lg text-slate-400 hover:text-white border border-slate-700">Clear</a>
+                    @endif
+                </div>
             </form>
             <a href="{{ route('appointments.create') }}"
-               class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
+               class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
                 + New Booking
             </a>
         </div>
 
-        <!-- Table -->
-        <div class="bg-slate-800 rounded-xl overflow-hidden">
-            <table class="w-full text-sm summary-on-mobile">
+        <!-- Mobile card list (hidden on sm+) -->
+        <div class="sm:hidden space-y-2">
+            @forelse($appointments as $appt)
+                @php
+                    $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','awaiting_payment'=>'amber','cancelled'=>'red','no_show'=>'slate','tentative'=>'purple'];
+                    $c = $colors[$appt->status] ?? 'slate';
+                @endphp
+                <a href="{{ route('appointments.show', $appt) }}"
+                   class="block bg-slate-800 rounded-xl p-4 hover:bg-slate-700/70 transition-colors">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="font-medium text-white text-sm truncate">{{ $appt->customer->name }}</p>
+                            <p class="text-xs text-slate-400 mt-0.5 truncate">
+                                {{ $appt->services->pluck('name')->join(', ') ?: '—' }}
+                            </p>
+                        </div>
+                        <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-{{ $c }}-900/50 text-{{ $c }}-400 border border-{{ $c }}-800">
+                            {{ ucfirst(str_replace('_', ' ', $appt->status)) }}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                        <span>{{ $appt->scheduled_at->format('d M Y, H:i') }}</span>
+                        <span>·</span>
+                        <span>{{ $appt->duration_minutes }}m</span>
+                        <span>·</span>
+                        <span>{{ $appt->staff?->name ?? 'Unassigned' }}</span>
+                    </div>
+                </a>
+            @empty
+                <p class="text-center text-slate-500 py-10 text-sm">No appointments found.</p>
+            @endforelse
+        </div>
+
+        <!-- Desktop table (hidden on mobile) -->
+        <div class="hidden sm:block bg-slate-800 rounded-xl overflow-hidden overflow-x-auto">
+            <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-slate-700 text-slate-400 text-left">
                         <th class="px-4 py-3 font-medium">Date & Time</th>
                         <th class="px-4 py-3 font-medium">Customer</th>
-                        <th class="px-4 py-3 font-medium">Services</th>  {{-- plural --}}
+                        <th class="px-4 py-3 font-medium">Services</th>
                         <th class="px-4 py-3 font-medium">Staff</th>
                         <th class="px-4 py-3 font-medium">Duration</th>
                         <th class="px-4 py-3 font-medium">Status</th>
@@ -45,6 +80,10 @@
                 </thead>
                 <tbody class="divide-y divide-slate-700">
                     @forelse($appointments as $appt)
+                        @php
+                            $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','awaiting_payment'=>'amber','cancelled'=>'red','no_show'=>'slate','tentative'=>'purple'];
+                            $c = $colors[$appt->status] ?? 'slate';
+                        @endphp
                         <tr class="hover:bg-slate-700/50">
                             <td class="px-4 py-3 text-slate-300">
                                 {{ $appt->scheduled_at->format('d M Y') }}<br>
@@ -55,8 +94,6 @@
                                     {{ $appt->customer->name }}
                                 </a>
                             </td>
-
-                            {{-- Services: show up to 2 pills, +N badge if more --}}
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-1">
                                     @foreach($appt->services->take(2) as $service)
@@ -71,7 +108,6 @@
                                     @endif
                                 </div>
                             </td>
-
                             <td class="px-4 py-3">
                                 @if($appt->staff_id)
                                     <span class="text-slate-300">{{ $appt->staff->name }}</span>
@@ -83,17 +119,6 @@
                             </td>
                             <td class="px-4 py-3 text-slate-400">{{ $appt->duration_minutes }}m</td>
                             <td class="px-4 py-3">
-                                @php
-                                    $colors = [
-                                        'pending'   => 'yellow',
-                                        'confirmed' => 'emerald',
-                                        'completed' => 'blue',
-                                        'cancelled' => 'red',
-                                        'no_show'   => 'slate',
-                                        'tentative' => 'purple',
-                                    ];
-                                    $c = $colors[$appt->status] ?? 'slate';
-                                @endphp
                                 <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-{{ $c }}-900/50 text-{{ $c }}-400 border border-{{ $c }}-800">
                                     {{ ucfirst(str_replace('_', ' ', $appt->status)) }}
                                 </span>

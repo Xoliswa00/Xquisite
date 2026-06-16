@@ -7,6 +7,16 @@
                 @csrf
                 @method('PATCH')
 
+                @if($errors->any())
+                    <div class="bg-red-900/30 border border-red-700 rounded-xl px-5 py-4 text-sm text-red-300">
+                        <ul class="space-y-1">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Customer</label>
                     <select name="customer_id" required
@@ -18,19 +28,18 @@
                 </div>
 
                 <div x-data="staffAvailabilityPanel(@json($staffAvailability), '{{ route('appointments.availability', $appointment) }}')" x-init="init()">
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-1">Service</label>
-                            <select name="service_id" required
-                                    x-ref="service_id"
-                                    @change="update"
-                                    class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                                @foreach($services as $s)
-                                    <option value="{{ $s->id }}" data-duration="{{ $s->duration_minutes }}" @selected(old('service_id', $appointment->service_id) == $s->id)>
-                                        {{ $s->name }} ({{ $s->duration_minutes }}m)
-                                    </option>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Services</label>
+                            <div class="flex flex-wrap gap-2 bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2.5 min-h-[42px]">
+                                @foreach($appointment->services as $s)
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-900/50 text-indigo-300 border border-indigo-800">
+                                        {{ $s->name }}
+                                    </span>
+                                    <input type="hidden" name="service_ids[]" value="{{ $s->id }}">
                                 @endforeach
-                            </select>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">To change services, delete and re-book.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1">
@@ -47,7 +56,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1">Date & Time</label>
                             <input type="datetime-local" name="scheduled_at" required
@@ -122,7 +131,7 @@
                     </button>
 
                     <div x-show="open" x-transition class="mt-4 space-y-4 border-t border-slate-700 pt-4">
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-300 mb-1">Guest Count</label>
                                 <input type="number" name="headcount" min="1"
@@ -146,7 +155,7 @@
                                    value="{{ old('venue', $appointment->venue) }}"
                                    class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-300 mb-1">Setup Time</label>
                                 <input type="datetime-local" name="setup_at"
@@ -173,8 +182,8 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
+                    <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">
                         Save Changes
                     </button>
                     <a href="{{ route('appointments.show', $appointment) }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>
@@ -215,7 +224,9 @@
                         const params = new URLSearchParams({
                             scheduled_at: scheduled,
                             duration_minutes: duration,
-                            service_id: this.$refs.service_id?.value || '',
+                        });
+                        document.querySelectorAll('input[name="service_ids[]"]').forEach(input => {
+                            params.append('service_ids[]', input.value);
                         });
                         const response = await fetch(`${this.url}?${params.toString()}`, {
                             headers: { 'X-Requested-With': 'XMLHttpRequest' },

@@ -26,7 +26,7 @@
                         <td class="px-3 py-3"><span class="status text-xs font-bold text-amber-400">{{ $s['status'] }}</span></td>
                         <td class="px-3 py-3">
                             @if($s['current_appointment'])
-                                <div class="text-sm">{{ $s['current_appointment']->service?->name ?? 'Appointment' }}</div>
+                                <div class="text-sm">{{ $s['current_appointment']->services->pluck('name')->join(', ') ?: 'Appointment' }}</div>
                                 <div class="text-xs text-slate-500">{{ $s['current_appointment']->scheduled_at->format('H:i') }}</div>
                             @else
                                 <div class="text-sm text-slate-500">—</div>
@@ -34,7 +34,7 @@
                         </td>
                         <td class="px-3 py-3">
                             @if($s['next_appointment'])
-                                <div class="text-sm">{{ $s['next_appointment']->service?->name ?? 'Appointment' }}</div>
+                                <div class="text-sm">{{ $s['next_appointment']->services->pluck('name')->join(', ') ?: 'Appointment' }}</div>
                                 <div class="text-xs text-slate-500">{{ $s['next_appointment']->scheduled_at->format('Y-m-d H:i') }}</div>
                             @else
                                 <div class="text-sm text-slate-500">—</div>

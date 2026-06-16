@@ -51,7 +51,7 @@
             </div>
 
             <!-- Action buttons -->
-            <div class="flex items-center gap-2 mt-4 pt-4 border-t border-slate-700">
+            <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-slate-700">
                 @if($purchaseOrder->status === 'draft')
                     <form method="POST" action="{{ route('purchase-orders.send', $purchaseOrder) }}">
                         @csrf
@@ -95,7 +95,8 @@
             <form method="POST" action="{{ route('purchase-orders.receive', $purchaseOrder) }}">
                 @csrf
 
-                <table class="w-full text-sm summary-on-mobile">
+                <div class="overflow-x-auto">
+                <table class="w-full text-sm min-w-[640px]">
                     <thead>
                         <tr class="border-b border-slate-700 text-slate-400 text-left">
                             <th class="px-4 py-3 font-medium">Product</th>
@@ -159,9 +160,10 @@
                         </tr>
                     </tfoot>
                 </table>
+                </div>
 
                 @if($canReceive)
-                    <div class="px-4 py-3 border-t border-slate-700 flex items-center justify-between">
+                    <div class="px-4 py-3 border-t border-slate-700 flex flex-wrap items-center justify-between gap-3">
                         <p class="text-xs text-slate-500">
                             Leave a field blank to skip that item. Stock levels update immediately on save.
                         </p>

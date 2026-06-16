@@ -20,7 +20,7 @@
                            placeholder="e.g. Therapist, Nail Tech, Stylist">
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Email</label>
                         <input type="email" name="email" value="{{ old('email') }}"
@@ -57,8 +57,8 @@
                     <label for="is_active" class="text-sm text-slate-300">Active</label>
                 </div>
 
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">Add Staff Member</button>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
+                    <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">Add Staff Member</button>
                     <a href="{{ route('staff.index') }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>
                 </div>
             </form>

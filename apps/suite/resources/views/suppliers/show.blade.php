@@ -5,8 +5,8 @@
 
         <!-- Supplier detail card -->
         <div class="bg-slate-800 rounded-xl p-6">
-            <div class="flex items-start justify-between gap-4">
-                <div class="space-y-1">
+            <div class="flex flex-wrap gap-4">
+                <div class="flex-1 min-w-0 space-y-1">
                     <div class="flex items-center gap-3">
                         <h2 class="text-lg font-semibold text-white">{{ $supplier->name }}</h2>
                         @if($supplier->is_active)
@@ -38,7 +38,7 @@
                     @endif
                 </div>
 
-                <div class="shrink-0 flex flex-col gap-2">
+                <div class="flex flex-row sm:flex-col gap-2">
                     <a href="{{ route('suppliers.edit', $supplier) }}"
                        class="bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-2 rounded-lg text-center">
                         Edit

@@ -27,7 +27,7 @@
                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{ old('description', $service->description) }}</textarea>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Duration (minutes)</label>
                         <input type="number" name="duration_minutes" value="{{ old('duration_minutes', $service->duration_minutes) }}" min="5" max="2880" required
@@ -45,10 +45,11 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div id="edit-flat-price">
                         <label class="block text-sm font-medium text-slate-300 mb-1">Flat Price (R)</label>
-                        <input type="number" name="price" value="{{ old('price', $service->price) }}" min="0" step="0.01"
+                        <input type="number" name="price" id="selling_price" value="{{ old('price', $service->price) }}" min="0" step="0.01"
+                               @input="sellingPrice = $event.target.valueAsNumber || 0"
                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                     </div>
                     <div id="edit-unit-price" style="display:none">
@@ -61,6 +62,24 @@
                         <input type="text" name="unit_label" value="{{ old('unit_label', $service->unit_label) }}"
                                placeholder="per pax / per table"
                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">
+                            Cost Price (R)
+                            <span class="text-xs font-normal text-slate-500 ml-1">your cost to deliver</span>
+                        </label>
+                        <input type="number" name="cost_price" id="cost_price_field" value="{{ old('cost_price', $service->cost_price) }}" min="0" step="0.01"
+                               @input="costPrice = $event.target.valueAsNumber || 0"
+                               placeholder="0.00"
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <p class="mt-1 text-xs"
+                           x-show="costPrice > 0 && sellingPrice > 0"
+                           :class="sellingPrice >= costPrice ? 'text-emerald-400' : 'text-red-400'">
+                            <span x-text="sellingPrice >= costPrice
+                                ? 'Margin: R' + (sellingPrice - costPrice).toFixed(2) + ' (' + Math.round((sellingPrice - costPrice) / sellingPrice * 100) + '%)'
+                                : 'Selling below cost by R' + (costPrice - sellingPrice).toFixed(2)">
+                            </span>
+                        </p>
                     </div>
                 </div>
 
@@ -85,27 +104,37 @@
                     <label for="is_active" class="text-sm text-slate-300">Active (bookable)</label>
                 </div>
 
-                <!-- Product bundles -->
+                {{-- Materials / bundle (inventory module only) --}}
+                @if($hasInventory)
                 <div class="border-t border-slate-700 pt-4">
-                    <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center justify-between mb-1">
                         <div>
-                            <p class="text-sm font-medium text-slate-300">Product Bundle</p>
-                            <p class="text-xs text-slate-500 mt-0.5">Products suggested at checkout when this service is booked</p>
+                            <p class="text-sm font-medium text-slate-300">Materials / Bundle</p>
+                            <p class="text-xs text-slate-500 mt-0.5">Products used or included with this service</p>
                         </div>
-                        <button type="button" @click="addRow()"
-                                class="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg">
-                            + Add Product
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button type="button" @click="calcCostFromMaterials()"
+                                    title="Fill cost price from materials"
+                                    class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-lg">
+                                ↻ Calc cost
+                            </button>
+                            <button type="button" @click="addRow()"
+                                    class="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg">
+                                + Add
+                            </button>
+                        </div>
                     </div>
+                    <p class="text-xs text-slate-600 mb-3">"Calc cost" sums unit cost × qty from your inventory and fills the Cost Price field.</p>
 
                     <template x-if="rows.length === 0">
-                        <p class="text-xs text-slate-600 py-2">No products linked yet.</p>
+                        <p class="text-xs text-slate-600 py-2">No materials linked yet.</p>
                     </template>
 
                     <div class="space-y-2">
                         <template x-for="(row, i) in rows" :key="i">
                             <div class="flex items-center gap-2">
                                 <select :name="`bundles[${i}][product_id]`" x-model="row.product_id"
+                                        @change="row.product_id = parseInt($event.target.value) || ''"
                                         class="flex-1 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                                     <option value="">— Select product —</option>
                                     <template x-for="p in products" :key="p.id">
@@ -121,9 +150,10 @@
                         </template>
                     </div>
                 </div>
+                @endif
 
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">Save Changes</button>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
+                    <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">Save Changes</button>
                     <a href="{{ route('services.index') }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>
                 </div>
             </form>
@@ -143,10 +173,24 @@
 <script>
 function bundleManager(existing, products) {
     return {
-        rows: existing.map(b => ({ product_id: b.product_id, quantity: b.quantity })),
+        rows: (existing || []).map(b => ({ product_id: b.product_id, quantity: b.quantity })),
         products: products,
+        sellingPrice: parseFloat(document.getElementById('selling_price')?.value) || 0,
+        costPrice: parseFloat(document.getElementById('cost_price_field')?.value) || 0,
         addRow() { this.rows.push({ product_id: '', quantity: 1 }); },
         removeRow(i) { this.rows.splice(i, 1); },
+        calcCostFromMaterials() {
+            let total = 0;
+            for (const row of this.rows) {
+                const product = this.products.find(p => p.id == row.product_id);
+                if (product && product.cost_price) {
+                    total += parseFloat(product.cost_price) * (row.quantity || 1);
+                }
+            }
+            this.costPrice = Math.round(total * 100) / 100;
+            const el = document.getElementById('cost_price_field');
+            if (el) el.value = this.costPrice;
+        },
     };
 }
 </script>

@@ -20,7 +20,7 @@ class PosController extends Controller
         $serviceSuggestions = [];
 
         if ($request->filled('appointment')) {
-            $appointment = Appointment::with(['customer', 'service.serviceProducts.product', 'staff', 'sale'])
+            $appointment = Appointment::with(['customer', 'services.serviceProducts.product', 'staff', 'sale'])
                 ->findOrFail($request->appointment);
 
             if ($appointment->sale) {
@@ -28,18 +28,22 @@ class PosController extends Controller
                     ->with('error', 'This appointment has already been checked out.');
             }
 
-            $preloadItems[] = [
-                'id'         => $appointment->service->id,
-                'type'       => 'service',
-                'name'       => $appointment->service->name,
-                'unit_price' => (float) $appointment->service->price,
-                'qty'        => 1,
-                'subtotal'   => (float) $appointment->service->price,
-            ];
+            foreach ($appointment->services as $service) {
+                $preloadItems[] = [
+                    'id'         => $service->id,
+                    'type'       => 'service',
+                    'name'       => $service->name,
+                    'unit_price' => (float) ($service->pivot->price_at_booking ?? $service->price),
+                    'qty'        => 1,
+                    'subtotal'   => (float) ($service->pivot->price_at_booking ?? $service->price),
+                ];
+            }
 
-            // Build product suggestions from linked service_products
-            $serviceSuggestions = $appointment->service->serviceProducts
+            // Build product suggestions from all booked services' linked products
+            $serviceSuggestions = $appointment->services
+                ->flatMap(fn($service) => $service->serviceProducts)
                 ->filter(fn($sp) => $sp->product?->is_active)
+                ->unique(fn($sp) => $sp->product_id)
                 ->map(fn($sp) => [
                     'id'       => $sp->product->id,
                     'name'     => $sp->product->name,

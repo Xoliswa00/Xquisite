@@ -46,6 +46,14 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Settings\ModuleController;
+use App\Http\Controllers\ServiceComboController;
+use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\ServiceCategoryController;
+use App\Http\Controllers\BookingMenuController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\CommunicationController;
+use App\Http\Controllers\ClientPortalController;
+use App\Http\Controllers\BillingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -63,7 +71,39 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+    // Service combos
+    Route::resource('combos', ServiceComboController::class);
+    Route::post('combos/{combo}/toggle', [ServiceComboController::class, 'toggle'])->name('combos.toggle');
+
+    // Promotions
+    Route::get('promotions/generate-code', [PromotionController::class, 'generateCode'])->name('promotions.generate-code');
+    Route::resource('promotions', PromotionController::class);
+    Route::post('promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle');
+
+    // Service categories
+    Route::resource('service-categories', ServiceCategoryController::class);
+    Route::get('api/service-categories', [ServiceCategoryController::class, 'apiList'])->name('api.service-categories');
+
+    // Booking menu
+    Route::get('/booking', [BookingMenuController::class, 'menu'])->name('booking.menu');
+
+    // Clients + messaging
+    Route::resource('clients', ClientController::class);
+    Route::get('clients/{client}/messages', [CommunicationController::class, 'thread'])->name('clients.messages');
+    Route::post('clients/{client}/messages', [CommunicationController::class, 'store'])->name('clients.messages.store');
+
+    // Client portal (for users with role=client)
+    Route::get('/portal/dashboard', [ClientPortalController::class, 'dashboard'])->name('portal.dashboard');
+    Route::get('/portal/messages', [CommunicationController::class, 'clientIndex'])->name('portal.messages');
+    Route::post('/portal/messages/reply', [CommunicationController::class, 'clientReply'])->name('portal.messages.reply');
+
+    // Platform billing (tenant owner view)
+    Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::get('billing/{invoice}', [BillingController::class, 'show'])->name('billing.show');
 
     // Booking module — gated behind module:booking
     Route::middleware('module:booking')->group(function () {
@@ -73,6 +113,8 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::resource('appointments', AppointmentController::class);
         Route::get('appointments/{appointment}/availability', [\App\Http\Controllers\Booking\AppointmentController::class, 'availability'])->name('appointments.availability');
         Route::post('appointments/{appointment}/assign', [\App\Http\Controllers\Booking\AppointmentController::class, 'assign'])->name('appointments.assign');
+        Route::post('appointments/{appointment}/remind', [\App\Http\Controllers\Booking\AppointmentController::class, 'remind'])->name('appointments.remind');
+        Route::post('appointments/{appointment}/mark-paid', [\App\Http\Controllers\Booking\AppointmentController::class, 'markPaid'])->name('appointments.mark-paid');
         Route::get('calendar/{date?}', [\App\Http\Controllers\Booking\AppointmentController::class, 'calendar'])->name('appointments.calendar');
         Route::resource('customers', CustomerController::class);
         Route::resource('services', ServiceController::class)->except(['show']);
@@ -149,6 +191,18 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     });
 
     Route::prefix('admin')->name('admin.')->group(function () {
+        // Platform billing admin (system admin only — auth checked in controller)
+        Route::get('billing', [BillingController::class, 'adminIndex'])->name('billing.index');
+        // Specific routes MUST come before billing/{company} wildcard
+        Route::post('billing/batch-generate', [BillingController::class, 'adminBatchGenerate'])->name('billing.batch-generate');
+        Route::get('billing/settings', [BillingController::class, 'adminSettings'])->name('billing.settings');
+        Route::post('billing/settings', [BillingController::class, 'adminSettingsSave'])->name('billing.settings.save');
+        Route::get('billing/{company}', [BillingController::class, 'adminShow'])->name('billing.show');
+        Route::post('billing/{company}/generate', [BillingController::class, 'adminGenerateInvoice'])->name('billing.generate');
+        Route::post('billing/{company}/suspend', [BillingController::class, 'adminSuspend'])->name('billing.suspend');
+        Route::post('billing/{company}/reactivate', [BillingController::class, 'adminReactivate'])->name('billing.reactivate');
+        Route::post('billing/invoices/{invoice}/mark-paid', [BillingController::class, 'adminMarkPaid'])->name('billing.mark-paid');
+
         Route::middleware('can:manage-tenants')->group(function () {
             Route::get('/tenants', [TenantController::class, 'index'])->name('tenants.index');
             Route::get('/tenants/create', [TenantController::class, 'create'])->name('tenants.create');
@@ -157,6 +211,9 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('/tenants/{tenant}/module', [TenantController::class, 'toggleModule'])->name('tenants.module');
             Route::patch('/tenants/{tenant}/subdomain', [TenantController::class, 'updateSubdomain'])->name('tenants.subdomain');
             Route::delete('/tenants/{tenant}', [TenantController::class, 'destroy'])->name('tenants.destroy');
+            // Platform ↔ tenant messaging
+            Route::get('/tenants/{tenant}/messages', [CommunicationController::class, 'platformThread'])->name('tenants.messages');
+            Route::post('/tenants/{tenant}/messages', [CommunicationController::class, 'platformStore'])->name('tenants.messages.store');
 
         // Billing sync queue
         Route::get('/sync-queue', [SyncQueueController::class, 'index'])->name('sync.index');
@@ -225,7 +282,8 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::resource('quotes', QuoteController::class)->except(['edit', 'update']);
     Route::post('/quotes/{quote}/send', [QuoteController::class, 'send'])->name('quotes.send');
 
-    // Reviews
+    // Reviews / feedback
+    Route::get('/feedback', [ReviewController::class, 'create'])->name('reviews.create');
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::post('/reviews/dismiss', [ReviewController::class, 'dismiss'])->name('reviews.dismiss');
 
@@ -257,6 +315,7 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
     Route::middleware('auth:customer')->group(function () {
         Route::get('/confirm',                                          [PublicBookingController::class, 'confirm'])->name('confirm');
         Route::post('/book',                                            [PublicBookingController::class, 'store'])->name('store');
+        Route::post('/promo/check',                                     [PublicBookingController::class, 'checkPromo'])->name('promo.check');
         Route::get('/edit/{appointment}',                               [PublicBookingController::class, 'edit'])->name('edit');
         Route::patch('/update/{appointment}',                           [PublicBookingController::class, 'updateBooking'])->name('update');
         Route::get('/success/{appointment}',                            [PublicBookingController::class, 'success'])->name('success');

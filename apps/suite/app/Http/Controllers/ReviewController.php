@@ -8,6 +8,16 @@ use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
+    public function create()
+    {
+        $user     = auth()->user();
+        $existing = Review::where('user_id', $user?->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->first();
+
+        return view('feedback', compact('existing'));
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

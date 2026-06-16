@@ -18,7 +18,7 @@
                     @error('customer_id')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {{-- Services multi-select --}}
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Services</label>
@@ -102,7 +102,7 @@
 
                     <div x-show="open" x-transition class="mt-4 space-y-4 border-t border-slate-700 pt-4">
 
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-300 mb-1">Guest Count / Headcount</label>
                                 <input type="number" name="headcount" min="1" value="{{ old('headcount') }}"
@@ -128,7 +128,7 @@
                                    class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-300 mb-1">Setup Time</label>
                                 <input type="datetime-local" name="setup_at" value="{{ old('setup_at') }}"
@@ -158,8 +158,8 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
+                    <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">
                         Book Appointment
                     </button>
                     <a href="{{ route('appointments.index') }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>

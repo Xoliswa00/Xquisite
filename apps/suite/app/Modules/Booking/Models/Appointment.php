@@ -26,6 +26,10 @@ class Appointment extends Model
         'status',
         'pos_order_id',
         'notes',
+        'combo_id',
+        'combo_price',
+        'promo_code',
+        'promo_discount',
         'headcount',
         'venue',
         'event_type',
@@ -39,6 +43,8 @@ class Appointment extends Model
         'scheduled_at' => 'datetime',
         'setup_at'     => 'datetime',
         'breakdown_at' => 'datetime',
+        'combo_price'    => 'decimal:2',
+        'promo_discount' => 'decimal:2',
     ];
 
     public function isEventBooking(): bool

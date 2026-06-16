@@ -117,8 +117,8 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-colors">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-colors">
                     Create Tenant
                 </button>
                 <a href="{{ route('admin.tenants.index') }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>

@@ -1,26 +1,26 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
+    <x-slot name="header">System Logs</x-slot>
+
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <div class="flex items-start justify-between gap-4 flex-wrap">
             <div>
-                <h2 class="text-2xl font-bold text-white">System Logs</h2>
+                <h1 class="text-xl font-bold text-white">System Logs</h1>
                 @if($unresolved > 0)
                     <p class="text-sm text-red-400 mt-0.5">{{ $unresolved }} unresolved critical error{{ $unresolved > 1 ? 's' : '' }}</p>
                 @endif
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2 flex-wrap">
                 <a href="{{ route('admin.logs.audit') }}"
-                   class="px-3 py-2 bg-slate-700 text-white text-sm rounded-lg hover:bg-slate-600">
+                   class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors">
                     Audit Trail
                 </a>
                 <a href="{{ route('admin.logs.combined') }}"
-                   class="px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-500">
+                   class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors">
                     Combined View
                 </a>
             </div>
         </div>
-    </x-slot>
-
-    <div class="max-w-7xl mx-auto p-6 space-y-6">
 
         @if(session('success'))
             <div class="p-4 bg-green-900/30 border border-green-700 text-green-300 rounded-lg text-sm">

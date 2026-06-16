@@ -9,6 +9,7 @@ use App\Modules\Booking\Models\Customer;
 use App\Modules\Booking\Models\Staff;
 use App\Modules\Booking\Models\Service;
 use App\Notifications\AppointmentBookedNotification;
+use App\Notifications\PaymentReminderNotification;
 use App\Services\Booking\AvailabilityService;
 use App\Services\Notifications\BookingNotificationService;
 use Carbon\Carbon;
@@ -65,7 +66,7 @@ class AppointmentController extends Controller
             'service_ids'   => 'required|array|min:1',
             'service_ids.*' => 'required|exists:services,id',
             'scheduled_at'  => 'required|date|after:now',
-            'status'        => 'required|in:pending,confirmed,completed,cancelled,no_show,tentative',
+            'status'        => 'required|in:pending,confirmed,completed,cancelled,no_show,tentative,awaiting_payment',
             'notes'         => 'nullable|string|max:1000',
             'headcount'     => 'nullable|integer|min:1',
             'venue'         => 'nullable|string|max:255',
@@ -143,9 +144,10 @@ class AppointmentController extends Controller
 
     public function show(Appointment $appointment)
     {
-        $appointment->load(['customer', 'staff', 'services', 'reminders']); // service → services
+        $appointment->load(['customer', 'staff', 'services', 'reminders']);
+        $hasPos = auth()->user()->tenant?->hasModule('pos') ?? false;
 
-        return view('appointments.show', compact('appointment'));
+        return view('appointments.show', compact('appointment', 'hasPos'));
     }
 
     public function edit(Appointment $appointment, AvailabilityService $availability)
@@ -212,7 +214,7 @@ class AppointmentController extends Controller
             'service_ids'   => 'required|array|min:1',   // service_id → service_ids
             'service_ids.*' => 'required|exists:services,id',
             'scheduled_at'  => 'required|date',
-            'status'        => 'required|in:pending,confirmed,completed,cancelled,no_show,tentative',
+            'status'        => 'required|in:pending,confirmed,completed,cancelled,no_show,tentative,awaiting_payment',
             'notes'         => 'nullable|string|max:1000',
             'headcount'     => 'nullable|integer|min:1',
             'venue'         => 'nullable|string|max:255',
@@ -329,6 +331,51 @@ class AppointmentController extends Controller
         return view('appointments.calendar', compact(
             'days', 'appointments', 'hours', 'week', 'prev', 'next', 'staff', 'unassigned'
         ));
+    }
+
+    public function remind(Appointment $appointment)
+    {
+        $appointment->load(['customer', 'staff', 'services']);
+
+        // Calculate amount due (combo + extras, or sum of service prices)
+        $comboServiceIds = [];
+        if ($appointment->combo_id) {
+            $combo = \App\Models\ServiceCombo::with('services')->find($appointment->combo_id);
+            $comboServiceIds = $combo ? $combo->services->pluck('id')->all() : [];
+        }
+        $fullTotal  = $appointment->services->sum(fn($s) => (float)($s->pivot->price_at_booking ?? $s->price));
+        $extrasCost = $appointment->combo_price
+            ? $appointment->services
+                ->filter(fn($s) => !in_array($s->id, $comboServiceIds))
+                ->sum(fn($s) => (float)($s->pivot->price_at_booking ?? $s->price))
+            : 0;
+        $amountDue = $appointment->combo_price
+            ? (float)$appointment->combo_price + $extrasCost
+            : $fullTotal;
+        $amountDue -= (float)($appointment->promo_discount ?? 0);
+
+        // Notify the staff member (in-app) + mail the customer
+        $notification = new PaymentReminderNotification($appointment, $amountDue);
+
+        if ($appointment->customer->email) {
+            $appointment->customer->notify($notification);
+        }
+
+        // Also fire an in-app notification for the logged-in staff/admin
+        auth()->user()->notify($notification);
+
+        return redirect()->route('appointments.show', $appointment)
+            ->with('success', 'Reminder sent via email and notification.');
+    }
+
+    public function markPaid(Appointment $appointment)
+    {
+        abort_if($appointment->status !== 'awaiting_payment', 422, 'This appointment is not awaiting payment.');
+
+        $appointment->update(['status' => 'completed']);
+
+        return redirect()->route('appointments.show', $appointment)
+            ->with('success', 'Payment received — appointment marked as completed.');
     }
 
     public function destroy(Appointment $appointment)

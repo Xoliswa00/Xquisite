@@ -3,8 +3,8 @@
 
     <div class="space-y-6">
 
-        {{-- Trial banner --}}
-        @if(Auth::user()->tenant?->isOnTrial())
+        {{-- Trial banner — only shown when on trial AND no modules have been activated yet --}}
+        @if(Auth::user()->tenant?->isOnTrial() && Auth::user()->tenant?->activeModules()->doesntExist())
             @php $daysLeft = (int) now()->diffInDays(Auth::user()->tenant->trial_ends_at, false); @endphp
             <div class="flex items-center justify-between px-5 py-3 rounded-xl bg-indigo-900/30 border border-indigo-700/50 text-sm">
                 <div class="flex items-center gap-2">
@@ -17,9 +17,10 @@
                         @else
                             Your free trial ends <strong>today</strong>.
                         @endif
+                        Activate a module to get started.
                     </span>
                 </div>
-                <a href="#" class="shrink-0 text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg font-medium">Upgrade Now</a>
+                <a href="{{ route('billing.index') }}" class="shrink-0 text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg font-medium">View Plans</a>
             </div>
         @endif
 
@@ -34,12 +35,17 @@
                     <span class="text-xs text-indigo-400 font-medium">{{ collect($onboarding)->filter()->count() }}/{{ count($onboarding) }} done</span>
                 </div>
                 <div class="space-y-2">
-                    @foreach([
-                        ['has_service',     'Add your first service',    'services.create'],
-                        ['has_staff',       'Add a staff member',        'staff.create'],
-                        ['has_appointment', 'Create your first booking', 'appointments.create'],
-                        ['has_product',     'Add a product to stock',    'products.create'],
-                    ] as [$key, $label, $createRoute])
+                    @php
+                        $steps = [
+                            ['has_service',     'Add your first service',    'services.create'],
+                            ['has_staff',       'Add a staff member',        'staff.create'],
+                            ['has_appointment', 'Create your first booking', 'appointments.create'],
+                        ];
+                        if ($hasPos) {
+                            $steps[] = ['has_product', 'Add a product to stock', 'products.create'];
+                        }
+                    @endphp
+                    @foreach($steps as [$key, $label, $createRoute])
                         @php $done = $onboarding[$key]; @endphp
                         <div class="flex items-center gap-3 px-3 py-2 rounded-lg {{ $done ? 'opacity-50' : 'bg-slate-700/40' }}">
                             <div class="w-5 h-5 rounded-full shrink-0 flex items-center justify-center {{ $done ? 'bg-emerald-600' : 'border-2 border-slate-600' }}">
@@ -80,6 +86,7 @@
                 <p class="text-3xl font-bold text-white mt-1">{{ $activeServices }}</p>
                 <a href="{{ route('services.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block">Manage →</a>
             </div>
+            @if($hasPos)
             <div class="{{ $reorderCount > 0 ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-slate-800' }} rounded-xl p-5">
                 <p class="text-xs {{ $reorderCount > 0 ? 'text-amber-400' : 'text-slate-400' }} uppercase tracking-wide">Reorder Alerts</p>
                 <p class="text-3xl font-bold {{ $reorderCount > 0 ? 'text-amber-300' : 'text-slate-500' }} mt-1">{{ $reorderCount }}</p>
@@ -88,6 +95,7 @@
                     {{ $reorderCount > 0 ? 'View alerts →' : 'All stocked up' }}
                 </a>
             </div>
+            @endif
             @can('manage-tenants')
                 <div class="bg-slate-800 rounded-xl p-5">
                     <p class="text-xs text-slate-400 uppercase tracking-wide">Pending Module Requests</p>
@@ -97,6 +105,38 @@
                     </a>
                 </div>
             @endcan
+        </div>
+
+        {{-- ── Money Movement ── --}}
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {{-- Completed this month --}}
+            <div class="bg-slate-800 rounded-xl p-5 border border-emerald-900/40">
+                <p class="text-xs text-slate-400 uppercase tracking-wide">Revenue this month</p>
+                <p class="text-3xl font-bold text-emerald-400 mt-1">R{{ number_format($completedRevenue, 2) }}</p>
+                <p class="text-xs text-slate-500 mt-1">{{ $completedCount }} completed {{ Str::plural('appointment', $completedCount) }}</p>
+            </div>
+            {{-- Awaiting payment --}}
+            <div class="{{ $awaitingCount > 0 ? 'bg-amber-900/25 border-amber-700/50' : 'bg-slate-800 border-slate-700/30' }} rounded-xl p-5 border">
+                <p class="text-xs {{ $awaitingCount > 0 ? 'text-amber-400' : 'text-slate-400' }} uppercase tracking-wide">Outstanding</p>
+                <p class="text-3xl font-bold {{ $awaitingCount > 0 ? 'text-amber-300' : 'text-slate-500' }} mt-1">R{{ number_format($awaitingTotal, 2) }}</p>
+                <p class="text-xs text-slate-500 mt-1">
+                    {{ $awaitingCount }} {{ Str::plural('appointment', $awaitingCount) }} awaiting payment
+                    @if($awaitingCount > 0)
+                        · <a href="{{ route('appointments.index', ['status' => 'awaiting_payment']) }}" class="text-amber-400 hover:text-amber-300">View all →</a>
+                    @endif
+                </p>
+            </div>
+            {{-- Combined total --}}
+            <div class="bg-slate-800 rounded-xl p-5">
+                <p class="text-xs text-slate-400 uppercase tracking-wide">Total billed this month</p>
+                <p class="text-3xl font-bold text-white mt-1">R{{ number_format($completedRevenue + $awaitingTotal, 2) }}</p>
+                <p class="text-xs text-slate-500 mt-1">
+                    R{{ number_format($completedRevenue, 2) }} collected
+                    @if($awaitingTotal > 0)
+                        · <span class="text-amber-400">R{{ number_format($awaitingTotal, 2) }} pending</span>
+                    @endif
+                </p>
+            </div>
         </div>
 
         <div class="grid lg:grid-cols-2 gap-6">
@@ -112,7 +152,7 @@
                         <div class="text-xs text-slate-400 w-12 shrink-0">{{ $appt->scheduled_at->format('H:i') }}</div>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm text-white font-medium truncate">{{ $appt->customer->name }}</p>
-                            <p class="text-xs text-slate-400 truncate">{{ $appt->service->name }} · {{ $appt->staff->name }}</p>
+                            <p class="text-xs text-slate-400 truncate">{{ $appt->services->pluck('name')->join(', ') ?: '—' }} · {{ $appt->staff?->name ?? 'Unassigned' }}</p>
                         </div>
                         @php $colors = ['pending'=>'yellow','confirmed'=>'emerald']; $c = $colors[$appt->status] ?? 'slate'; @endphp
                         <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-{{ $c }}-900/50 text-{{ $c }}-400 border border-{{ $c }}-800 shrink-0">
@@ -135,7 +175,7 @@
                        class="px-4 py-3 border-b border-slate-700/50 flex items-center gap-3 hover:bg-slate-700/50 block">
                         <div class="flex-1 min-w-0">
                             <p class="text-sm text-white truncate">{{ $appt->customer->name }}</p>
-                            <p class="text-xs text-slate-400 truncate">{{ $appt->service->name }} · {{ $appt->scheduled_at->format('d M, H:i') }}</p>
+                            <p class="text-xs text-slate-400 truncate">{{ $appt->services->pluck('name')->join(', ') ?: '—' }} · {{ $appt->scheduled_at->format('d M, H:i') }}</p>
                         </div>
                         @php $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','cancelled'=>'red','no_show'=>'slate']; $c = $colors[$appt->status] ?? 'slate'; @endphp
                         <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-{{ $c }}-900/50 text-{{ $c }}-400 border border-{{ $c }}-800 shrink-0">

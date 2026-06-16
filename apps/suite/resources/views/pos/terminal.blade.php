@@ -29,10 +29,10 @@
     </header>
 
     <!-- Main split layout -->
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
 
         <!-- LEFT: Product catalog -->
-        <div class="flex-1 flex flex-col border-r border-slate-800 overflow-hidden">
+        <div class="flex-1 min-h-0 flex flex-col border-b md:border-b-0 md:border-r border-slate-800 overflow-hidden">
 
             <!-- Search -->
             <div class="p-4 border-b border-slate-800">
@@ -46,7 +46,7 @@
             @if($serviceSuggestions)
                 <div class="px-4 py-3 border-b border-slate-800 bg-indigo-950/30">
                     <p class="text-xs text-indigo-400 font-medium mb-2">
-                        Suggested for {{ $appointment->service->name }}
+                        Suggested for {{ $appointment->services->pluck('name')->join(', ') }}
                     </p>
                     <div class="flex gap-2 overflow-x-auto">
                         <template x-for="p in suggestions" :key="p.id">
@@ -100,7 +100,7 @@
         </div>
 
         <!-- RIGHT: Order panel -->
-        <div class="w-96 shrink-0 flex flex-col bg-slate-900">
+        <div class="md:w-96 md:shrink-0 h-[45vh] md:h-auto flex flex-col bg-slate-900 overflow-hidden">
 
             <!-- Customer info -->
             @if($appointment)

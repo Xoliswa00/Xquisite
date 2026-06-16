@@ -14,8 +14,9 @@ class StaffDashboardController extends Controller
 
         $staffMembers = Staff::with([
             'schedules',
-            'blocks' => fn($q) => $q->where('ends_at', '>', $now)->orderBy('starts_at'),
-            'appointments' => fn($q) => $q->orderBy('scheduled_at'),
+            'blocks'        => fn($q) => $q->where('ends_at', '>', $now)->orderBy('starts_at'),
+            'appointments'  => fn($q) => $q->orderBy('scheduled_at'),
+            'appointments.services',
         ])->orderBy('name')->get();
 
         $list = $staffMembers->map(function ($s) use ($now) {

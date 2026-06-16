@@ -42,10 +42,10 @@
                     @foreach($days as $num => $label)
                         @php $sched = $scheduleByDay[$num]; @endphp
                         <div x-data="{ on: {{ ($sched && $sched->is_active) ? 'true' : 'false' }} }"
-                             class="flex items-center gap-4 px-6 py-4">
+                             class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4">
 
                             {{-- Toggle --}}
-                            <label class="flex items-center gap-3 w-36 cursor-pointer">
+                            <label class="flex items-center gap-3 sm:w-36 cursor-pointer">
                                 <input type="checkbox"
                                        name="days[]"
                                        value="{{ $num }}"
@@ -99,7 +99,7 @@
             <form method="POST" action="{{ route('staff.blocks.store', $staff) }}"
                   class="px-6 py-4 border-b border-slate-700">
                 @csrf
-                <div class="flex flex-wrap gap-3 items-end">
+                <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:items-end">
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">From</label>
                         <input type="datetime-local" name="starts_at"

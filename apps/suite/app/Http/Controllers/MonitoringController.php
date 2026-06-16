@@ -66,9 +66,6 @@ class MonitoringController extends Controller
             'active' => 'boolean',
         ]);
 
-        $validated['is_healthy'] = null;
-        $validated['uptime_percentage'] = null;
-
         MonitoredInstance::create($validated);
 
         return redirect()->route('monitoring.index')

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PaymentPlan;
 use App\Models\Quote;
 use App\Modules\Booking\Models\Customer;
+use App\Notifications\QuoteStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -92,6 +93,12 @@ class QuoteController extends Controller
         Mail::to($email)->queue(new \App\Mail\QuoteMail($quote));
 
         $quote->update(['status' => 'sent']);
+
+        // Notify the tenant owner
+        $owner = auth()->user()->tenant->users()->where('role', 'owner')->first();
+        if ($owner && $owner->id !== auth()->id()) {
+            $owner->notify(new QuoteStatusNotification($quote, 'sent'));
+        }
 
         return back()->with('success', "Quote {$quote->reference} sent to {$email}.");
     }

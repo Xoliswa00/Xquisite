@@ -1,12 +1,12 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-semibold">Customer Reviews</h2>
+        <h2 class="text-xl font-bold text-white">Customer Reviews</h2>
     </x-slot>
 
-    <div class="py-8 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    <div class="space-y-8">
 
         @if (session('success'))
-            <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-sm">{{ session('success') }}</div>
+            <div class="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">{{ session('success') }}</div>
         @endif
 
         @foreach ([
@@ -19,20 +19,20 @@
         @if ($group->isNotEmpty())
 
         <div>
-            <div class="flex items-center gap-3 mb-4">
+            <div class="flex items-center gap-3 mb-3">
                 <span class="px-2.5 py-1 rounded-full text-xs font-medium
-                    {{ $meta['colour'] === 'amber'   ? 'bg-amber-100 text-amber-700' : '' }}
-                    {{ $meta['colour'] === 'emerald' ? 'bg-emerald-100 text-emerald-700' : '' }}
-                    {{ $meta['colour'] === 'red'     ? 'bg-red-100 text-red-700' : '' }}">
+                    {{ $meta['colour'] === 'amber'   ? 'bg-amber-500/20 text-amber-300' : '' }}
+                    {{ $meta['colour'] === 'emerald' ? 'bg-emerald-500/20 text-emerald-300' : '' }}
+                    {{ $meta['colour'] === 'red'     ? 'bg-red-500/20 text-red-300' : '' }}">
                     {{ $meta['label'] }}
                 </span>
-                <span class="text-sm text-gray-500">{{ $group->count() }} {{ Str::plural('review', $group->count()) }}</span>
+                <span class="text-sm text-slate-500">{{ $group->count() }} {{ Str::plural('review', $group->count()) }}</span>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+            <div class="bg-slate-800 rounded-xl border border-slate-700 divide-y divide-slate-700 overflow-hidden">
                 @foreach ($group as $review)
                 <div class="p-5">
-                    <div class="flex items-start justify-between gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-start gap-4">
 
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-3 flex-wrap">
@@ -40,50 +40,44 @@
                                     {{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}
                                 </span>
                                 @if ($review->title)
-                                    <span class="font-semibold text-gray-900 text-sm">{{ $review->title }}</span>
+                                    <span class="font-semibold text-white text-sm">{{ $review->title }}</span>
                                 @endif
                                 @if ($review->is_featured)
-                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 border border-indigo-200">Featured</span>
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-700">Featured</span>
                                 @endif
                             </div>
 
-                            <p class="text-sm text-gray-600 mt-1.5 leading-relaxed">{{ $review->body }}</p>
+                            <p class="text-sm text-slate-300 mt-1.5 leading-relaxed">{{ $review->body }}</p>
 
-                            <div class="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                            <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-slate-500">
                                 <span>{{ $review->display_name ?? 'Anonymous' }}</span>
                                 @if ($review->business_type)
-                                    <span>·</span>
-                                    <span>{{ $review->business_type }}</span>
+                                    <span>·</span><span>{{ $review->business_type }}</span>
                                 @endif
                                 @if ($review->prompted_at_count)
-                                    <span>·</span>
-                                    <span>Prompted at {{ number_format($review->prompted_at_count) }} actions</span>
+                                    <span>·</span><span>Prompted at {{ number_format($review->prompted_at_count) }} actions</span>
                                 @else
-                                    <span>·</span>
-                                    <span>Voluntary</span>
+                                    <span>·</span><span>Voluntary</span>
                                 @endif
-                                <span>·</span>
-                                <span>{{ $review->created_at->diffForHumans() }}</span>
+                                <span>·</span><span>{{ $review->created_at->diffForHumans() }}</span>
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-2 shrink-0">
-                            {{-- Feature toggle --}}
+                        <div class="flex items-center gap-2 flex-wrap shrink-0">
                             @if ($status === 'approved')
                             <form method="POST" action="{{ route('admin.reviews.featured', $review) }}">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="text-xs px-2.5 py-1.5 rounded-lg border transition
-                                    {{ $review->is_featured ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-indigo-300' }}">
+                                    {{ $review->is_featured ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-600 text-slate-400 hover:border-indigo-500 hover:text-indigo-300' }}">
                                     {{ $review->is_featured ? '★ Featured' : 'Feature' }}
                                 </button>
                             </form>
                             @endif
 
-                            {{-- Status switcher --}}
                             <form method="POST" action="{{ route('admin.reviews.status', $review) }}">
                                 @csrf @method('PATCH')
                                 <select name="status" onchange="this.form.submit()"
-                                        class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        class="bg-slate-700 border border-slate-600 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                                     <option value="pending"  {{ $review->status === 'pending'  ? 'selected' : '' }}>Pending</option>
                                     <option value="approved" {{ $review->status === 'approved' ? 'selected' : '' }}>Approve</option>
                                     <option value="rejected" {{ $review->status === 'rejected' ? 'selected' : '' }}>Reject</option>
@@ -101,9 +95,9 @@
         @endforeach
 
         @if ($reviews->isEmpty())
-            <div class="text-center py-16 text-gray-400">
+            <div class="text-center py-16 text-slate-500">
                 <p>No reviews yet.</p>
-                <p class="text-sm mt-1">Reviews appear here after users submit them from the app.</p>
+                <p class="text-sm mt-1 text-slate-600">Reviews appear here after users submit them from the app.</p>
             </div>
         @endif
 

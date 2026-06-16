@@ -4,6 +4,7 @@ namespace App\Logging;
 
 use Monolog\Logger;
 use Monolog\Handler\AbstractProcessingHandler;
+use Monolog\LogRecord;
 use Illuminate\Support\Facades\DB;
 
 class DatabaseLogger
@@ -17,17 +18,18 @@ class DatabaseLogger
         $logger->pushHandler(new class extends AbstractProcessingHandler {
             private const ALERT_LEVELS = ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY'];
 
-            protected function write(array $record): void
+            protected function write(LogRecord $record): void
             {
                 try {
                     $requestId = app()->bound('request_id') ? app('request_id') : null;
+                    $levelName = $record->level->name;
 
                     $id = DB::table('system_logs')->insertGetId([
-                        'level'      => $record['level_name'],
-                        'message'    => $record['message'],
-                        'context'    => json_encode($record['context'] ?? []),
+                        'level'      => $levelName,
+                        'message'    => $record->message,
+                        'context'    => json_encode($record->context),
                         'request_id' => $requestId,
-                        'user_id'    => auth()->id(),
+                        'user_id'    => \Illuminate\Support\Facades\Auth::id(),
                         'ip_address' => request()->ip(),
                         'url'        => request()->fullUrl(),
                         'status'     => 'new',
@@ -36,8 +38,7 @@ class DatabaseLogger
                         'updated_at' => now(),
                     ]);
 
-                    // Alert admin on critical/error levels
-                    if (in_array(strtoupper($record['level_name']), self::ALERT_LEVELS)) {
+                    if (in_array(strtoupper($levelName), self::ALERT_LEVELS)) {
                         $this->alertAdmin($id);
                     }
 

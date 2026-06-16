@@ -39,7 +39,7 @@ class PermissionRoleSeeder extends Seeder
             'admin' => [
                 'manage-staff',
                 'view-reports',
-                `manage-tenants`,
+                'manage-tenants',
                 'manage-products',
                 'manage-appointments',
                 'manage-customers',

@@ -53,10 +53,10 @@ return [
     'channels' => [
 
         'database' => [
-        'driver' => 'custom',
-        'via' => App\Logging\DatabaseLogger::class,
-        'level' => env('LOG_LEVEL', 'error'),
-    ],
+            'driver' => 'custom',
+            'via'    => App\Logging\DatabaseLogger::class,
+            'level'  => env('LOG_DB_LEVEL', 'error'),
+        ],
 
         'stack' => [
             'driver' => 'stack',
