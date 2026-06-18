@@ -10,7 +10,7 @@
                 @endif
             </div>
             <a href="{{ route('rental-orders.create') }}"
-               class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg font-medium">
+               class="px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg font-medium">
                 + New Rental
             </a>
         </div>
@@ -66,7 +66,7 @@
                             </span>
                         </td>
                         <td class="px-5 py-4 text-right">
-                            <a href="{{ route('rental-orders.show', $order) }}" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">View</a>
+                            <a href="{{ route('rental-orders.show', $order) }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0] font-medium">View</a>
                         </td>
                     </tr>
                     @empty

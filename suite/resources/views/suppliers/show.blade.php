@@ -8,7 +8,7 @@
             <div class="flex flex-wrap gap-4">
                 <div class="flex-1 min-w-0 space-y-1">
                     <div class="flex items-center gap-3">
-                        <h2 class="text-lg font-semibold text-white">{{ $supplier->name }}</h2>
+                        <h2 class="text-lg font-semibold text-[#D4AF37]">{{ $supplier->name }}</h2>
                         @if($supplier->is_active)
                             <span class="inline-flex px-2 py-0.5 rounded-full text-xs bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
                         @else
@@ -25,7 +25,7 @@
                         <p class="text-sm text-slate-400">Phone: <span class="text-white">{{ $supplier->phone }}</span></p>
                     @endif
                     @if($supplier->website)
-                        <p class="text-sm text-slate-400">Website: <a href="{{ $supplier->website }}" target="_blank" class="text-indigo-400 hover:text-indigo-300">{{ $supplier->website }}</a></p>
+                        <p class="text-sm text-slate-400">Website: <a href="{{ $supplier->website }}" target="_blank" class="text-[#0078D4] hover:text-[#B8D4F0]">{{ $supplier->website }}</a></p>
                     @endif
                     @if($supplier->payment_terms)
                         <p class="text-sm text-slate-400">Payment Terms: <span class="text-white">{{ $supplier->payment_terms }}</span></p>
@@ -44,7 +44,7 @@
                         Edit
                     </a>
                     <a href="{{ route('purchase-orders.create', ['supplier_id' => $supplier->id]) }}"
-                       class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg text-center">
+                       class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg text-center">
                         New PO
                     </a>
                 </div>
@@ -72,7 +72,7 @@
             <div class="bg-slate-800 rounded-xl overflow-hidden">
                 <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
                     <h3 class="text-sm font-medium text-slate-300">Linked Products</h3>
-                    <a href="{{ route('products.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300">All products →</a>
+                    <a href="{{ route('products.index') }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">All products →</a>
                 </div>
                 @forelse($products as $product)
                     <div class="px-4 py-3 border-b border-slate-700/50 flex items-center justify-between hover:bg-slate-700/30">
@@ -98,7 +98,7 @@
             <div class="bg-slate-800 rounded-xl overflow-hidden">
                 <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
                     <h3 class="text-sm font-medium text-slate-300">Recent Orders</h3>
-                    <a href="{{ route('purchase-orders.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300">All orders →</a>
+                    <a href="{{ route('purchase-orders.index') }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">All orders →</a>
                 </div>
                 @forelse($orders as $order)
                     @php

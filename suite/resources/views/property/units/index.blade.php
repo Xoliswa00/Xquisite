@@ -2,11 +2,11 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div>
-                <h2 class="text-2xl font-bold text-white">Units &mdash; {{ $property->name }}</h2>
+                <h2 class="text-2xl font-bold text-[#D4AF37]">Units &mdash; {{ $property->name }}</h2>
                 <a href="{{ route('properties.show', $property) }}" class="text-sm text-slate-400 hover:text-white">&larr; Back to Property</a>
             </div>
             <a href="{{ route('properties.units.create', $property) }}"
-               class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg">
+               class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg">
                 + Add Unit
             </a>
         </div>
@@ -65,14 +65,14 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{{ route('properties.units.show', [$property, $unit]) }}"
-                                   class="text-indigo-400 hover:text-indigo-300 text-xs">View</a>
+                                   class="text-[#0078D4] hover:text-[#B8D4F0] text-xs">View</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="9" class="px-4 py-12 text-center text-slate-500">
                                 No units yet.
-                                <a href="{{ route('properties.units.create', $property) }}" class="text-indigo-400 hover:text-indigo-300 ml-1">Add first unit</a>
+                                <a href="{{ route('properties.units.create', $property) }}" class="text-[#0078D4] hover:text-[#B8D4F0] ml-1">Add first unit</a>
                             </td>
                         </tr>
                     @endforelse

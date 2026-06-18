@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AboutController;
 use App\Http\Controllers\PaymentPlanController;
 use App\Http\Controllers\PublicQuoteController;
 use App\Http\Controllers\QuoteController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Ecommerce\StorefrontController;
 use App\Http\Controllers\Ecommerce\CartController;
 use App\Http\Controllers\Ecommerce\CheckoutController;
 use App\Http\Controllers\Ecommerce\OrderController;
+use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\PlatformServiceController;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
@@ -57,14 +59,16 @@ use App\Http\Controllers\BillingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('dashboard');
-});
-
-Route::get('/welcome', function () {
+    if (request()->user() !== null) {
+        return redirect()->route('dashboard');
+    }
     return view('welcome');
 })->name('welcome');
 
 Route::get('/demo', [DemoController::class, 'login'])->name('demo.login');
+Route::get('/about',   AboutController::class)->name('about');
+Route::get('/terms',   fn() => view('terms'))->name('terms');
+Route::get('/privacy', fn() => view('privacy'))->name('privacy');
 
 Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(function () {
 
@@ -103,6 +107,10 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
 
     // Platform billing (tenant owner view)
     Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::patch('billing/info', [BillingController::class, 'updateBillingInfo'])->name('billing.info.update');
+    Route::post('billing/invoices/{invoice}/pop', [BillingController::class, 'uploadPop'])->name('billing.pop.upload');
+    Route::get('billing/invoices/{invoice}/pop', [BillingController::class, 'downloadPop'])->name('billing.pop.download');
+    Route::get('billing/invoices/{invoice}/pdf', [BillingController::class, 'downloadPdf'])->name('billing.pdf');
     Route::get('billing/{invoice}', [BillingController::class, 'show'])->name('billing.show');
 
     // Booking module — gated behind module:booking
@@ -193,15 +201,17 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::prefix('admin')->name('admin.')->group(function () {
         // Platform billing admin (system admin only — auth checked in controller)
         Route::get('billing', [BillingController::class, 'adminIndex'])->name('billing.index');
-        // Specific routes MUST come before billing/{company} wildcard
+        // Specific routes MUST come before billing/{tenant} wildcard
         Route::post('billing/batch-generate', [BillingController::class, 'adminBatchGenerate'])->name('billing.batch-generate');
         Route::get('billing/settings', [BillingController::class, 'adminSettings'])->name('billing.settings');
         Route::post('billing/settings', [BillingController::class, 'adminSettingsSave'])->name('billing.settings.save');
-        Route::get('billing/{company}', [BillingController::class, 'adminShow'])->name('billing.show');
-        Route::post('billing/{company}/generate', [BillingController::class, 'adminGenerateInvoice'])->name('billing.generate');
-        Route::post('billing/{company}/suspend', [BillingController::class, 'adminSuspend'])->name('billing.suspend');
-        Route::post('billing/{company}/reactivate', [BillingController::class, 'adminReactivate'])->name('billing.reactivate');
+        Route::get('billing/{tenant}', [BillingController::class, 'adminShow'])->name('billing.show');
+        Route::post('billing/{tenant}/generate', [BillingController::class, 'adminGenerateInvoice'])->name('billing.generate');
+        Route::post('billing/{tenant}/suspend', [BillingController::class, 'adminSuspend'])->name('billing.suspend');
+        Route::post('billing/{tenant}/reactivate', [BillingController::class, 'adminReactivate'])->name('billing.reactivate');
         Route::post('billing/invoices/{invoice}/mark-paid', [BillingController::class, 'adminMarkPaid'])->name('billing.mark-paid');
+        Route::get('billing/invoices/{invoice}/pop', [BillingController::class, 'adminDownloadPop'])->name('billing.pop.admin-download');
+        Route::get('billing/invoices/{invoice}/pdf', [BillingController::class, 'adminDownloadPdf'])->name('billing.pdf.admin');
 
         Route::middleware('can:manage-tenants')->group(function () {
             Route::get('/tenants', [TenantController::class, 'index'])->name('tenants.index');
@@ -243,6 +253,9 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
             Route::patch('/module-requests/{moduleRequest}/reject', [ModuleRequestController::class, 'reject'])->name('module-requests.reject');
+
+            // Team members (about page)
+            Route::resource('team-members', TeamMemberController::class)->except(['show']);
 
             // Bundle plans
             Route::resource('plans', PlanController::class)->except(['show']);

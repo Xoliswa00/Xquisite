@@ -5,7 +5,7 @@
 
         <div class="flex items-start justify-between gap-4 flex-wrap">
             <div>
-                <h1 class="text-xl font-bold text-white">Billing Sync Queue</h1>
+                <h1 class="text-xl font-bold text-[#D4AF37]">Billing Sync Queue</h1>
                 @if(($counts['pending'] + $counts['retrying']) > 0)
                     <p class="text-sm text-amber-400 mt-0.5">{{ $counts['pending'] + $counts['retrying'] }} item(s) waiting to sync</p>
                 @else
@@ -88,7 +88,7 @@
                         <tr class="hover:bg-slate-700/30">
                             <td class="px-4 py-3">
                                 <span class="px-2 py-0.5 rounded text-xs font-mono
-                                    {{ $item->type === 'create_subscription' ? 'bg-indigo-900/60 text-indigo-300' : 'bg-red-900/60 text-red-300' }}">
+                                    {{ $item->type === 'create_subscription' ? 'bg-[#001A3A]/60 text-[#B8D4F0]' : 'bg-red-900/60 text-red-300' }}">
                                     {{ $item->type === 'create_subscription' ? 'create' : 'cancel' }}
                                 </span>
                             </td>

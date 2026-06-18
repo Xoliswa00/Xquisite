@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Models\Tenant;
+use App\Models\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class RentalOrder extends Model
 {
+    use HasTenant;
     protected $fillable = [
         'tenant_id', 'product_id', 'appointment_id', 'customer_id',
         'reference', 'quantity', 'rental_rate', 'event_date',

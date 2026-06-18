@@ -7,7 +7,7 @@
         <h1 class="text-2xl font-bold text-slate-900">Sign in</h1>
         <p class="text-slate-500 mt-1 text-sm">
             New customer?
-            <a href="{{ route('book.register', $slug) }}" class="text-indigo-600 hover:underline">Create an account</a>
+            <a href="{{ route('book.register', $slug) }}" class="text-[#0078D4] hover:underline">Create an account</a>
         </p>
     </div>
 
@@ -25,7 +25,7 @@
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
                 <input type="password" name="password" required
-                       class="w-full border-slate-300 rounded-xl">
+                       class="w-full border-slate-300 rounded-xl @error('password') border-red-400 @enderror">
                 @error('password') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
@@ -35,14 +35,14 @@
             </label>
 
             <button type="submit"
-                    class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition">
+                    class="w-full py-3 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition">
                 Sign in
             </button>
         </form>
     </div>
 
     <p class="text-center text-sm">
-        <a href="{{ route('book.index', $slug) }}" class="text-slate-400 hover:text-slate-600">â† Back to services</a>
+        <a href="{{ route('book.index', $slug) }}" class="text-slate-400 hover:text-slate-600">&larr; Back to services</a>
     </p>
 
 </div>

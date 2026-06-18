@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-white">Audit Trail</h2>
+            <h2 class="text-2xl font-bold text-[#D4AF37]">Audit Trail</h2>
             <a href="{{ route('admin.logs.index') }}" class="text-sm text-slate-400 hover:text-white">&larr; System Logs</a>
         </div>
     </x-slot>

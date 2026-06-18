@@ -4,11 +4,11 @@
     <div class="max-w-5xl mx-auto space-y-6">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-xl font-bold text-white">Service Combos</h2>
+                <h2 class="text-xl font-bold text-[#D4AF37]">Service Combos</h2>
                 <p class="text-sm text-slate-400 mt-1">Bundle services together with a discount.</p>
             </div>
             <a href="{{ route('combos.create') }}"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors">
+               class="inline-flex items-center gap-2 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium rounded-lg transition-colors">
                 + New Combo
             </a>
         </div>
@@ -42,7 +42,7 @@
                             <div class="flex items-center gap-2 flex-wrap">
                                 <form method="POST" action="{{ route('combos.toggle', $combo) }}">
                                     @csrf
-                                    <button class="text-xs px-3 py-1.5 rounded-lg border {{ $combo->is_active ? 'border-slate-700 text-slate-300 hover:bg-slate-700' : 'border-indigo-700 text-indigo-400 hover:bg-indigo-900/40' }}">
+                                    <button class="text-xs px-3 py-1.5 rounded-lg border {{ $combo->is_active ? 'border-slate-700 text-slate-300 hover:bg-slate-700' : 'border-[#002B5B] text-[#0078D4] hover:bg-[#001A3A]/40' }}">
                                         {{ $combo->is_active ? 'Deactivate' : 'Activate' }}
                                     </button>
                                 </form>
@@ -56,7 +56,7 @@
                     </div>
                 </div>
             @empty
-                <div class="px-5 py-10 text-center text-slate-400 text-sm">No combos yet. <a href="{{ route('combos.create') }}" class="text-indigo-400 hover:underline">Create one.</a></div>
+                <div class="px-5 py-10 text-center text-slate-400 text-sm">No combos yet. <a href="{{ route('combos.create') }}" class="text-[#0078D4] hover:underline">Create one.</a></div>
             @endforelse
         </div>
 

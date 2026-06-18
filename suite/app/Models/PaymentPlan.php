@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class PaymentPlan extends Model
 {
+    use HasTenant;
     protected $fillable = [
         'plannable_type', 'plannable_id', 'tenant_id', 'customer_id',
         'title', 'total_amount', 'amount_paid', 'cancellation_fee',

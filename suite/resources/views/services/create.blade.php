@@ -14,7 +14,7 @@
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Service Name <span class="text-red-400">*</span></label>
                         <input type="text" name="name" value="{{ old('name') }}" required
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 @error('name') border-red-500 @enderror">
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('name') border-red-500 @enderror">
                         @error('name')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                     </div>
 
@@ -26,7 +26,7 @@
                             <input type="hidden" name="service_category_id" value="">
                         @else
                             <select name="service_category_id"
-                                    class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                    class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                 <option value="">— No category —</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}" {{ old('service_category_id') == $cat->id ? 'selected' : '' }}>
@@ -40,20 +40,20 @@
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Description</label>
                         <textarea name="description" rows="3"
-                                  class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{ old('description') }}</textarea>
+                                  class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">{{ old('description') }}</textarea>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1">Duration (minutes) <span class="text-red-400">*</span></label>
                             <input type="number" name="duration_minutes" value="{{ old('duration_minutes', 60) }}" min="5" max="2880" required
-                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 @error('duration_minutes') border-red-500 @enderror">
+                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('duration_minutes') border-red-500 @enderror">
                             <p class="text-xs text-slate-500 mt-0.5">480 = 8 hrs</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1">Pricing Type</label>
                             <select name="pricing_type" id="pricing_type"
-                                    class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                    class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                 <option value="flat"     {{ old('pricing_type','flat') === 'flat'     ? 'selected' : '' }}>Flat rate</option>
                                 <option value="per_head" {{ old('pricing_type') === 'per_head' ? 'selected' : '' }}>Per person</option>
                                 <option value="per_unit" {{ old('pricing_type') === 'per_unit' ? 'selected' : '' }}>Per unit</option>
@@ -66,19 +66,19 @@
                             <label class="block text-sm font-medium text-slate-300 mb-1">Flat Price (R)</label>
                             <input type="number" name="price" id="selling_price" value="{{ old('price', '0.00') }}" min="0" step="0.01"
                                    @input="sellingPrice = $event.target.valueAsNumber || 0"
-                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                         </div>
                         <div id="unit-price-fields" style="display:none">
                             <label class="block text-sm font-medium text-slate-300 mb-1">Price Per Person / Unit (R)</label>
                             <input type="number" name="price_per_unit" value="{{ old('price_per_unit') }}" min="0" step="0.01"
                                    placeholder="e.g. 150.00"
-                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                         </div>
                         <div id="unit-label-field" style="display:none">
                             <label class="block text-sm font-medium text-slate-300 mb-1">Unit Label</label>
                             <input type="text" name="unit_label" value="{{ old('unit_label') }}"
                                    placeholder="per pax / per table / per hour"
-                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1">
@@ -88,7 +88,7 @@
                             <input type="number" name="cost_price" id="cost_price_field" value="{{ old('cost_price') }}" min="0" step="0.01"
                                    @input="costPrice = $event.target.valueAsNumber || 0"
                                    placeholder="0.00"
-                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                             {{-- Margin indicator --}}
                             <p class="mt-1 text-xs"
                                x-show="costPrice > 0 && sellingPrice > 0"
@@ -118,7 +118,7 @@
                     <div class="flex items-center gap-2">
                         <input type="hidden" name="is_active" value="0">
                         <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
-                               class="rounded bg-slate-700 border-slate-600 text-indigo-600 focus:ring-indigo-500">
+                               class="rounded bg-slate-700 border-slate-600 text-[#0078D4] focus:ring-[#0078D4]">
                         <label for="is_active" class="text-sm text-slate-300">Active (bookable)</label>
                     </div>
 
@@ -137,7 +137,7 @@
                                     ↻ Calc cost
                                 </button>
                                 <button type="button" @click="addRow()"
-                                        class="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg">
+                                        class="text-xs bg-[#002B5B] hover:bg-[#0078D4] text-white px-3 py-1.5 rounded-lg">
                                     + Add
                                 </button>
                             </div>
@@ -153,7 +153,7 @@
                                 <div class="flex items-center gap-2">
                                     <select :name="`bundles[${i}][product_id]`" x-model="row.product_id"
                                             @change="row.product_id = parseInt($event.target.value) || ''"
-                                            class="flex-1 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                            class="flex-1 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                         <option value="">— Select product —</option>
                                         <template x-for="p in products" :key="p.id">
                                             <option :value="p.id" x-text="p.name" :selected="row.product_id == p.id"></option>
@@ -161,7 +161,7 @@
                                     </select>
                                     <input type="number" :name="`bundles[${i}][quantity]`" x-model.number="row.quantity"
                                            min="1" placeholder="Qty"
-                                           class="w-20 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                           class="w-20 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                     <button type="button" @click="removeRow(i)"
                                             class="text-slate-600 hover:text-red-400 text-xl leading-none">×</button>
                                 </div>
@@ -171,7 +171,7 @@
                     @endif
 
                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
-                        <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">Create Service</button>
+                        <button type="submit" class="w-full sm:w-auto bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-6 py-2 rounded-lg">Create Service</button>
                         <a href="{{ route('services.index') }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>
                     </div>
                 </form>
@@ -214,7 +214,7 @@
             <div class="bg-slate-800 rounded-xl p-4">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-sm font-semibold text-slate-200">Categories</h3>
-                    <a href="{{ route('service-categories.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300">Manage all →</a>
+                    <a href="{{ route('service-categories.index') }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">Manage all →</a>
                 </div>
 
                 @if($categories->isEmpty())
@@ -249,11 +249,11 @@
                     <div class="flex items-center gap-2">
                         <div class="w-9 h-9 rounded-lg bg-slate-700 flex items-center justify-center text-xl shrink-0" x-text="icon"></div>
                         <input name="icon" x-model="icon" maxlength="10" placeholder="✨"
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                     </div>
 
                     <input name="name" required placeholder="Category name" value="{{ old('name') }}"
-                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 @error('name') border-red-500 @enderror">
+                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('name') border-red-500 @enderror">
                     @error('name')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
 
                     {{-- Color grid --}}
@@ -274,7 +274,7 @@
                     <input type="hidden" name="is_active" value="1">
 
                     <button type="submit"
-                            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium py-2 rounded-lg transition-colors">
+                            class="w-full bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium py-2 rounded-lg transition-colors">
                         + Create Category
                     </button>
                 </form>

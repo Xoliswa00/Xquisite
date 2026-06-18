@@ -36,7 +36,7 @@
                     @endforeach
                 </select>
                 <button type="submit"
-                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg">
+                        class="px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-semibold rounded-lg">
                     Assign &amp; Confirm
                 </button>
             </form>
@@ -81,7 +81,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
                     <p class="text-slate-400">Customer</p>
-                    <a href="{{ route('customers.show', $appointment->customer) }}" class="text-indigo-400 hover:text-indigo-300 font-medium">
+                    <a href="{{ route('customers.show', $appointment->customer) }}" class="text-[#0078D4] hover:text-[#B8D4F0] font-medium">
                         {{ $appointment->customer->name }}
                     </a>
                     @if($appointment->customer->phone)
@@ -119,9 +119,9 @@
                         $grandTotal -= (float)($appointment->promo_discount ?? 0);
                     @endphp
                     @if($appointment->combo_id)
-                        <div class="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-indigo-900/40 border border-indigo-800/60">
-                            <span class="text-indigo-400">✨</span>
-                            <span class="text-xs font-semibold text-indigo-300">{{ $comboModel?->name ?? 'Combo deal' }} applied</span>
+                        <div class="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-[#001A3A]/40 border border-[#002B5B]/60">
+                            <span class="text-[#0078D4]">✨</span>
+                            <span class="text-xs font-semibold text-[#B8D4F0]">{{ $comboModel?->name ?? 'Combo deal' }} applied</span>
                         </div>
                     @endif
                     <p class="text-slate-400 mb-2">Services</p>
@@ -132,7 +132,7 @@
                                 <div class="flex items-center gap-2">
                                     <span class="text-white font-medium">{{ $service->name }}</span>
                                     @if($inCombo)
-                                        <span class="text-xs bg-indigo-900/60 text-indigo-300 font-bold px-2 py-0.5 rounded-full border border-indigo-800/60">combo</span>
+                                        <span class="text-xs bg-[#001A3A]/60 text-[#B8D4F0] font-bold px-2 py-0.5 rounded-full border border-[#002B5B]/60">combo</span>
                                     @endif
                                 </div>
                                 <span class="text-slate-400 text-xs">
@@ -147,7 +147,7 @@
                         @endforeach
                     </div>
                     @if($appointment->combo_price)
-                        <div class="flex items-center justify-between pt-2 border-t border-slate-700 text-xs text-indigo-400 font-semibold">
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-700 text-xs text-[#0078D4] font-semibold">
                             <span>{{ $comboModel?->name ?? 'Combo deal' }}</span>
                             <span>R{{ number_format($appointment->combo_price, 2) }}</span>
                         </div>
@@ -216,7 +216,7 @@
             {{-- Event Brief --}}
             @if($appointment->isEventBooking())
             <div class="pt-3 border-t border-slate-700">
-                <p class="text-xs font-semibold uppercase tracking-widest text-indigo-400 mb-3">Event Brief</p>
+                <p class="text-xs font-semibold uppercase tracking-widest text-[#0078D4] mb-3">Event Brief</p>
                 <div class="grid grid-cols-2 gap-3 text-sm">
                     @if($appointment->headcount)
                     <div>
@@ -314,7 +314,7 @@
                         <form method="POST" action="{{ route('appointments.remind', $appointment) }}">
                             @csrf
                             <button type="submit"
-                                    class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition">
+                                    class="inline-flex items-center gap-2 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-xs font-bold rounded-lg transition">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                                 Email + Notify
                             </button>
@@ -342,7 +342,7 @@
                     @endphp
                     @foreach($statuses as $s)
                         <button type="submit" name="status" value="{{ $s }}"
-                                class="text-xs px-3 py-1.5 rounded-lg {{ $appointment->status === $s ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600' }}">
+                                class="text-xs px-3 py-1.5 rounded-lg {{ $appointment->status === $s ? 'bg-[#0078D4] text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600' }}">
                             {{ ucfirst(str_replace('_', ' ', $s)) }}
                         </button>
                     @endforeach

@@ -20,7 +20,7 @@
             @if($tenant->logo_url)
                 <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}" class="h-8 w-auto object-contain">
             @else
-                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                <div class="w-8 h-8 bg-[#0078D4] rounded-lg flex items-center justify-center">
                     <span class="text-white font-bold text-sm">{{ strtoupper(substr($tenant->name, 0, 1)) }}</span>
                 </div>
             @endif
@@ -31,15 +31,15 @@
             <form action="{{ route('shop.index', $tenant->slug) }}" method="GET" class="hidden sm:block">
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Search products…"
-                       class="bg-gray-100 border-0 text-sm rounded-full px-4 py-2 w-48 focus:w-64 focus:ring-1 focus:ring-indigo-400 focus:outline-none transition-all placeholder-gray-400">
+                       class="bg-gray-100 border-0 text-sm rounded-full px-4 py-2 w-48 focus:w-64 focus:ring-1 focus:ring-[#0078D4] focus:outline-none transition-all placeholder-gray-400">
             </form>
 
-            <a href="{{ route('shop.cart', $tenant->slug) }}" class="relative flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-indigo-600">
+            <a href="{{ route('shop.cart', $tenant->slug) }}" class="relative flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-[#0078D4]">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
                 @if($cart && $cart->count() > 0)
-                    <span class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-indigo-600 text-white text-xs font-bold rounded-full flex items-center justify-center leading-none">
+                    <span class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#0078D4] text-white text-xs font-bold rounded-full flex items-center justify-center leading-none">
                         {{ $cart->count() }}
                     </span>
                 @endif
@@ -77,7 +77,7 @@
 <footer class="border-t border-gray-200 mt-12">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-gray-400">
         <span>© {{ date('Y') }} {{ $tenant->name }}</span>
-        <span>Powered by <span class="text-indigo-500 font-medium">Xquisite Suite</span></span>
+        <span>Powered by <span class="text-[#0078D4] font-medium">Xquisite Suite</span></span>
     </div>
 </footer>
 

@@ -19,7 +19,7 @@
         <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6 text-left">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-sm font-semibold text-gray-900">Order Details</h2>
-                <span class="text-xs font-mono font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">
+                <span class="text-xs font-mono font-semibold text-[#0078D4] bg-[#F0F7FF] px-2 py-1 rounded-lg">
                     {{ $order->reference }}
                 </span>
             </div>
@@ -54,7 +54,7 @@
                 @endif
                 <div class="flex justify-between font-bold text-sm pt-2 border-t border-gray-100">
                     <span>Total</span>
-                    <span class="text-indigo-600">R{{ number_format($order->total, 2) }}</span>
+                    <span class="text-[#0078D4]">R{{ number_format($order->total, 2) }}</span>
                 </div>
             </div>
 
@@ -96,7 +96,7 @@
         </div>
 
         <a href="{{ route('shop.index', $tenant->slug) }}"
-           class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3 rounded-xl text-sm transition-colors">
+           class="inline-block bg-[#0078D4] hover:bg-[#002B5B] text-white font-semibold px-8 py-3 rounded-xl text-sm transition-colors">
             Continue Shopping
         </a>
     </div>

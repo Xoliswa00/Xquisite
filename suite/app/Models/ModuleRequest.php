@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ModuleRequest extends Model
 {
+    use HasTenant;
     protected $fillable = [
         'tenant_id',
         'user_id',

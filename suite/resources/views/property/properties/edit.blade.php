@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-white">Edit — {{ $property->name }}</h2>
+            <h2 class="text-2xl font-bold text-[#D4AF37]">Edit — {{ $property->name }}</h2>
             <a href="{{ route('properties.show', $property) }}" class="text-sm text-slate-400 hover:text-white">&larr; Back</a>
         </div>
     </x-slot>
@@ -95,7 +95,7 @@
 
             <div class="flex justify-between">
                 <a href="{{ route('properties.show', $property) }}" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm">Cancel</a>
-                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold">Save Changes</button>
+                <button type="submit" class="px-5 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg text-sm font-semibold">Save Changes</button>
             </div>
         </form>
     </div>

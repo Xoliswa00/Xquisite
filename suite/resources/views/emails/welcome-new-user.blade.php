@@ -7,7 +7,7 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f4f5; margin: 0; padding: 0; color: #18181b; }
         .wrap { max-width: 600px; margin: 32px auto; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e4e4e7; }
-        .header { background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 40px 40px 32px; color: #fff; }
+        .header { background: linear-gradient(135deg, #002B5B, #003d7a); padding: 40px 40px 32px; color: #fff; border-bottom: 3px solid #D4AF37; }
         .header h1 { margin: 0 0 8px; font-size: 24px; font-weight: 700; }
         .header p { margin: 0; opacity: .85; font-size: 15px; }
         .body { padding: 32px 40px; }
@@ -22,16 +22,17 @@
         .module-price { font-size: 12px; color: #a1a1aa; margin-top: 4px; }
         .cta-block { background: #f4f4f5; border-radius: 10px; padding: 24px 28px; margin: 28px 0 0; text-align: center; }
         .cta-block p { margin: 0 0 16px; font-size: 15px; color: #3f3f46; }
-        .btn { display: inline-block; background: #4f46e5; color: #fff !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; }
+        .btn { display: inline-block; background: #0078D4; color: #fff !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; }
         .btn-wa { display: inline-block; background: #25D366; color: #fff !important; text-decoration: none; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 13px; margin-top: 12px; }
         .footer { padding: 20px 40px; background: #fafafa; border-top: 1px solid #f4f4f5; font-size: 12px; color: #a1a1aa; text-align: center; }
-        a { color: #4f46e5; }
+        a { color: #0078D4; }
     </style>
 </head>
 <body>
 <div class="wrap">
 
     <div class="header">
+        <img src="{{ asset('img/android-icon-192x192.png') }}" alt="Xquisite" style="height:52px;width:auto;margin:0 auto 16px;display:block;">
         <h1>Welcome to Xquisite, {{ $user->name }}!</h1>
         <p>Your account is set up and ready. Here's what you can activate right now.</p>
     </div>
@@ -45,7 +46,7 @@
 
         {{-- Live modules --}}
         @if ($activeModules->isNotEmpty())
-        <div class="section-title">✅ Live — Available now</div>
+        <div class="section-title">Live — Available now</div>
         @foreach ($activeModules as $module)
         <div class="module-row">
             <div class="module-dot dot-active"></div>
@@ -60,7 +61,7 @@
 
         {{-- Beta modules --}}
         @if ($betaModules->isNotEmpty())
-        <div class="section-title">🧪 In Testing — launching soon</div>
+        <div class="section-title">In Testing — launching soon</div>
         @foreach ($betaModules as $module)
         <div class="module-row">
             <div class="module-dot dot-beta"></div>
@@ -71,6 +72,12 @@
             </div>
         </div>
         @endforeach
+        @endif
+
+        @if ($activeModules->isEmpty() && $betaModules->isEmpty())
+        <p style="color:#71717a;font-size:13px;line-height:1.6;margin:16px 0;">
+            We're finishing up the module catalogue — check your dashboard to see what's available and activate what fits your business.
+        </p>
         @endif
 
         <div class="cta-block">

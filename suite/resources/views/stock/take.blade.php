@@ -55,7 +55,7 @@
                                            @change="changed = true"
                                            min="0"
                                            placeholder="{{ $product->stock_quantity }}"
-                                           class="w-24 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 text-center focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                           class="w-24 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 text-center focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                 </td>
                                 <td class="px-4 py-3 text-right font-medium">
                                     <template x-if="physicalQty !== null && physicalQty !== ''">
@@ -84,11 +84,11 @@
                     <div class="flex-1">
                         <label class="block text-sm font-medium text-slate-300 mb-1">Notes (optional)</label>
                         <input type="text" name="notes" placeholder="e.g. Monthly stock take — June 2026"
-                               class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                               class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                     </div>
                     <div class="pt-6">
                         <button type="submit"
-                                class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">
+                                class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-6 py-2 rounded-lg">
                             Save Stock Take
                         </button>
                     </div>

@@ -30,12 +30,12 @@
                 </p>
             </div>
             <a href="{{ route('rent.maintenance', $slug) }}"
-               class="bg-white rounded-2xl border border-slate-200 p-5 hover:border-indigo-300 transition group">
+               class="bg-white rounded-2xl border border-slate-200 p-5 hover:border-[#B8D4F0] transition group">
                 <p class="text-xs text-slate-400 uppercase font-semibold">Open Maintenance</p>
                 <p class="text-2xl font-bold {{ $openMaintenance > 0 ? 'text-orange-500' : 'text-slate-900' }} mt-1">
                     {{ $openMaintenance }}
                 </p>
-                <p class="text-xs text-indigo-500 mt-2 group-hover:underline">View &rarr;</p>
+                <p class="text-xs text-[#0078D4] mt-2 group-hover:underline">View &rarr;</p>
             </a>
         </div>
 
@@ -44,7 +44,7 @@
         <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
             <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
                 <h2 class="text-sm font-semibold text-slate-800">Recent Payments</h2>
-                <a href="{{ route('rent.payments', $slug) }}" class="text-xs text-indigo-600 hover:underline">View all</a>
+                <a href="{{ route('rent.payments', $slug) }}" class="text-xs text-[#0078D4] hover:underline">View all</a>
             </div>
             <div class="divide-y divide-slate-100">
                 @foreach($activeLease->rentPayments as $payment)

@@ -14,10 +14,10 @@
             </p>
 
             @if ($deposit)
-            <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-6">
-                <p class="text-sm text-indigo-600 font-medium">Deposit Amount</p>
-                <p class="text-3xl font-bold text-indigo-700 my-1">R{{ number_format($deposit->amount, 2) }}</p>
-                <p class="text-xs text-indigo-500">Due: {{ $deposit->due_date->format('d F Y') }}</p>
+            <div class="bg-[#F0F7FF] border border-[#DCEEFA] rounded-xl p-5 mb-6">
+                <p class="text-sm text-[#0078D4] font-medium">Deposit Amount</p>
+                <p class="text-3xl font-bold text-[#002B5B] my-1">R{{ number_format($deposit->amount, 2) }}</p>
+                <p class="text-xs text-[#0078D4]">Due: {{ $deposit->due_date->format('d F Y') }}</p>
             </div>
 
             <div class="text-left space-y-3 text-sm text-gray-600 mb-6">
@@ -33,7 +33,7 @@
             @endif
 
             <a href="{{ route('public.quotes.show', [$quote, $token]) }}"
-               class="text-sm text-indigo-600 hover:text-indigo-800">← View full quote</a>
+               class="text-sm text-[#0078D4] hover:text-[#002B5B]">← View full quote</a>
         </div>
 
         <p class="text-xs text-gray-400 text-center mt-6">Powered by Xquisite Technologies (Pty) Ltd</p>

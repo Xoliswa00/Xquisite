@@ -7,7 +7,7 @@
         <div class="bg-slate-800 rounded-xl p-5 space-y-4">
             <div class="flex items-start justify-between gap-3">
                 <div class="space-y-0.5 min-w-0">
-                    <h2 class="text-lg font-semibold text-white truncate">{{ $staff->name }}</h2>
+                    <h2 class="text-lg font-semibold text-[#D4AF37] truncate">{{ $staff->name }}</h2>
                     <p class="text-sm text-slate-400">{{ $staff->role ?? 'Staff member' }}</p>
                     @if($staff->email)
                         <p class="text-sm text-slate-400">{{ $staff->email }}</p>
@@ -46,7 +46,7 @@
         <div class="bg-slate-800 rounded-xl p-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-medium text-slate-300">Working Hours</h3>
-                <a href="{{ route('staff.schedule', $staff) }}" class="text-xs text-indigo-400 hover:text-indigo-300">Edit →</a>
+                <a href="{{ route('staff.schedule', $staff) }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">Edit →</a>
             </div>
             <div class="flex gap-2 flex-wrap">
                 @foreach($days as $num => $label)
@@ -126,7 +126,7 @@
                             <td class="px-4 py-3 text-slate-300">{{ $appt->scheduled_at->format('d M Y, H:i') }}</td>
                             <td class="px-4 py-3">
                                 @if($appt->customer)
-                                    <a href="{{ route('customers.show', $appt->customer) }}" class="text-indigo-400 hover:text-indigo-300">{{ $appt->customer->name }}</a>
+                                    <a href="{{ route('customers.show', $appt->customer) }}" class="text-[#0078D4] hover:text-[#B8D4F0]">{{ $appt->customer->name }}</a>
                                 @else
                                     <span class="text-slate-500">—</span>
                                 @endif

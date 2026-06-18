@@ -16,10 +16,10 @@
         </div>
         <div class="flex items-center gap-4 text-sm">
             @auth('renter')
-                <a href="{{ route('rent.portal', $slug) }}" class="text-slate-600 hover:text-indigo-600 {{ request()->routeIs('rent.portal') ? 'font-semibold text-indigo-600' : '' }}">Home</a>
-                <a href="{{ route('rent.lease', $slug) }}" class="text-slate-600 hover:text-indigo-600 {{ request()->routeIs('rent.lease') ? 'font-semibold text-indigo-600' : '' }}">My Lease</a>
-                <a href="{{ route('rent.payments', $slug) }}" class="text-slate-600 hover:text-indigo-600 {{ request()->routeIs('rent.payments') ? 'font-semibold text-indigo-600' : '' }}">Payments</a>
-                <a href="{{ route('rent.maintenance', $slug) }}" class="text-slate-600 hover:text-indigo-600 {{ request()->routeIs('rent.maintenance') ? 'font-semibold text-indigo-600' : '' }}">Maintenance</a>
+                <a href="{{ route('rent.portal', $slug) }}" class="text-slate-600 hover:text-[#0078D4] {{ request()->routeIs('rent.portal') ? 'font-semibold text-[#0078D4]' : '' }}">Home</a>
+                <a href="{{ route('rent.lease', $slug) }}" class="text-slate-600 hover:text-[#0078D4] {{ request()->routeIs('rent.lease') ? 'font-semibold text-[#0078D4]' : '' }}">My Lease</a>
+                <a href="{{ route('rent.payments', $slug) }}" class="text-slate-600 hover:text-[#0078D4] {{ request()->routeIs('rent.payments') ? 'font-semibold text-[#0078D4]' : '' }}">Payments</a>
+                <a href="{{ route('rent.maintenance', $slug) }}" class="text-slate-600 hover:text-[#0078D4] {{ request()->routeIs('rent.maintenance') ? 'font-semibold text-[#0078D4]' : '' }}">Maintenance</a>
                 <form method="POST" action="{{ route('rent.logout', $slug) }}" class="inline">
                     @csrf
                     <button class="text-slate-400 hover:text-slate-700 text-sm">Sign out</button>

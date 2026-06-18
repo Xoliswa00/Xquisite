@@ -9,7 +9,7 @@
                 From Reorder List
             </a>
             <a href="{{ route('purchase-orders.create') }}"
-               class="w-full sm:w-auto text-center bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-5 py-2 rounded-lg">
+               class="w-full sm:w-auto text-center bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-5 py-2 rounded-lg">
                 New Order
             </a>
         </div>
@@ -37,7 +37,7 @@
                 @empty
                     <div class="px-4 py-12 text-center text-slate-500 text-sm">
                         No purchase orders yet.
-                        <a href="{{ route('purchase-orders.create') }}" class="text-indigo-400 hover:text-indigo-300 ml-1">Create one.</a>
+                        <a href="{{ route('purchase-orders.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0] ml-1">Create one.</a>
                     </div>
                 @endforelse
             </div>
@@ -71,14 +71,14 @@
                             <td class="px-4 py-3 text-right text-white font-medium">R {{ number_format($order->total_cost, 2) }}</td>
                             <td class="px-4 py-3 text-slate-400">{{ $order->created_at->format('d M Y') }}</td>
                             <td class="px-4 py-3 text-right">
-                                <a href="{{ route('purchase-orders.show', $order) }}" class="text-xs text-indigo-400 hover:text-indigo-300">View →</a>
+                                <a href="{{ route('purchase-orders.show', $order) }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">View →</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="7" class="px-4 py-12 text-center text-slate-500">
                                 No purchase orders yet.
-                                <a href="{{ route('purchase-orders.create') }}" class="text-indigo-400 hover:text-indigo-300 ml-1">Create one.</a>
+                                <a href="{{ route('purchase-orders.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0] ml-1">Create one.</a>
                             </td>
                         </tr>
                     @endforelse

@@ -3,7 +3,7 @@
         <div class="flex justify-between items-center">
             <div>
                 <div class="flex items-center gap-3 flex-wrap">
-                    <h2 class="text-2xl font-bold text-white">{{ $maintenance->title }}</h2>
+                    <h2 class="text-2xl font-bold text-[#D4AF37]">{{ $maintenance->title }}</h2>
                     <span class="px-2 py-0.5 rounded text-xs font-medium
                         @if($maintenance->priority === 'urgent') bg-red-900/40 text-red-400
                         @elseif($maintenance->priority === 'high') bg-orange-900/40 text-orange-400
@@ -13,7 +13,7 @@
                     </span>
                     <span class="px-2 py-0.5 rounded text-xs font-medium
                         @if($maintenance->status === 'open') bg-yellow-900/40 text-yellow-400
-                        @elseif($maintenance->status === 'in_progress') bg-indigo-900/40 text-indigo-400
+                        @elseif($maintenance->status === 'in_progress') bg-[#001A3A]/40 text-[#0078D4]
                         @elseif($maintenance->status === 'resolved') bg-emerald-900/40 text-emerald-400
                         @else bg-slate-700 text-slate-400 @endif">
                         {{ ucfirst(str_replace('_', ' ', $maintenance->status)) }}
@@ -22,7 +22,7 @@
                 <a href="{{ route('maintenance.index') }}" class="text-sm text-slate-400 hover:text-white">&larr; Maintenance</a>
             </div>
             <a href="{{ route('maintenance.edit', $maintenance) }}"
-               class="px-3 py-2 bg-indigo-700 hover:bg-indigo-600 text-white text-sm rounded-lg">Edit</a>
+               class="px-3 py-2 bg-[#002B5B] hover:bg-[#0078D4] text-white text-sm rounded-lg">Edit</a>
         </div>
     </x-slot>
 
@@ -48,7 +48,7 @@
                 <div>
                     <p class="text-xs text-slate-400 uppercase font-semibold">Renter</p>
                     <p class="text-slate-200 mt-0.5">
-                        <a href="{{ route('renters.show', $maintenance->renter) }}" class="hover:text-indigo-400">{{ $maintenance->renter->name }}</a>
+                        <a href="{{ route('renters.show', $maintenance->renter) }}" class="hover:text-[#0078D4]">{{ $maintenance->renter->name }}</a>
                     </p>
                 </div>
                 @endif
@@ -56,7 +56,7 @@
                 <div>
                     <p class="text-xs text-slate-400 uppercase font-semibold">Lease</p>
                     <p class="text-slate-200 mt-0.5">
-                        <a href="{{ route('leases.show', $maintenance->lease) }}" class="hover:text-indigo-400">Lease #{{ $maintenance->lease->id }}</a>
+                        <a href="{{ route('leases.show', $maintenance->lease) }}" class="hover:text-[#0078D4]">Lease #{{ $maintenance->lease->id }}</a>
                     </p>
                 </div>
                 @endif
@@ -124,7 +124,7 @@
 
                 <div class="flex justify-end">
                     <button type="submit"
-                            class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold">
+                            class="px-5 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg text-sm font-semibold">
                         Update Status
                     </button>
                 </div>

@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-2xl font-bold text-white">Working Hours — {{ $staff->name }}</h2>
+                <h2 class="text-2xl font-bold text-[#D4AF37]">Working Hours — {{ $staff->name }}</h2>
                 <p class="text-sm text-slate-400 mt-0.5">Set which days and hours this staff member is available for bookings.</p>
             </div>
             <a href="{{ route('staff.show', $staff) }}" class="text-sm text-slate-400 hover:text-white">&larr; Back</a>
@@ -51,7 +51,7 @@
                                        value="{{ $num }}"
                                        x-model="on"
                                        {{ ($sched && $sched->is_active) ? 'checked' : '' }}
-                                       class="w-4 h-4 rounded border-slate-600 bg-slate-700 text-indigo-500">
+                                       class="w-4 h-4 rounded border-slate-600 bg-slate-700 text-[#0078D4]">
                                 <span class="text-sm font-medium text-slate-200">{{ $label }}</span>
                             </label>
 
@@ -81,7 +81,7 @@
 
                 <div class="px-6 py-4 border-t border-slate-700 flex justify-end">
                     <button type="submit"
-                            class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition">
+                            class="px-5 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-semibold rounded-lg transition">
                         Save Working Hours
                     </button>
                 </div>

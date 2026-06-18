@@ -26,17 +26,18 @@ class MonitoringController extends Controller
     /**
      * Show instance detail page
      */
-    public function show(MonitoredInstance $instance): View
+    public function show(MonitoredInstance $monitoring): View
     {
+        $instance = $monitoring;
         $instance->load(['lastHealthCheck']);
-        
+
         $lastCheck = $instance->lastHealthCheck;
-        
+
         $healthLogs = HealthCheckLog::where('monitored_instance_id', $instance->id)
             ->latest()
             ->limit(20)
             ->get();
-        
+
         $alerts = InstanceAlert::where('monitored_instance_id', $instance->id)
             ->latest()
             ->limit(10)
@@ -75,22 +76,21 @@ class MonitoringController extends Controller
     /**
      * Show the edit instance form
      */
-    public function edit(MonitoredInstance $instance): View
+    public function edit(MonitoredInstance $monitoring): View
     {
+        $instance = $monitoring;
         return view('admin.monitoring.edit', compact('instance'));
     }
 
-    /**
-     * Update a monitored instance
-     */
-    public function update(Request $request, MonitoredInstance $instance): RedirectResponse
+    public function update(Request $request, MonitoredInstance $monitoring): RedirectResponse
     {
+        $instance = $monitoring;
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'url' => 'required|url',
+            'name'      => 'required|string|max:255',
+            'url'       => 'required|url',
             'api_token' => 'required|string|min:32|unique:monitored_instances,api_token,' . $instance->id,
             'tenant_id' => 'nullable|string|max:255',
-            'active' => 'boolean',
+            'active'    => 'boolean',
         ]);
 
         $instance->update($validated);
@@ -99,12 +99,9 @@ class MonitoringController extends Controller
             ->with('success', 'Instance updated successfully.');
     }
 
-    /**
-     * Delete a monitored instance
-     */
-    public function destroy(MonitoredInstance $instance): RedirectResponse
+    public function destroy(MonitoredInstance $monitoring): RedirectResponse
     {
-        $instance->delete();
+        $monitoring->delete();
 
         return redirect()->route('monitoring.index')
             ->with('success', 'Instance deleted successfully.');

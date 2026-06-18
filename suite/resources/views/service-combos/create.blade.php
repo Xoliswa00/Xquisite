@@ -10,7 +10,7 @@
             {{-- Main form --}}
             <div class="lg:col-span-2 space-y-5">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-                    <h3 class="font-semibold text-white">Combo Details</h3>
+                    <h3 class="font-semibold text-[#D4AF37]">Combo Details</h3>
 
                     <div>
                         <x-input-label value="Name" />
@@ -19,7 +19,7 @@
                     </div>
                     <div>
                         <x-input-label value="Description" />
-                        <textarea name="description" rows="2" class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-indigo-500 focus:border-indigo-500">{{ old('description', $combo->description ?? '') }}</textarea>
+                        <textarea name="description" rows="2" class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-[#0078D4] focus:border-[#0078D4]">{{ old('description', $combo->description ?? '') }}</textarea>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
@@ -53,23 +53,23 @@
 
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="hidden" name="is_active" value="0">
-                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', $combo->is_active ?? true) ? 'checked' : '' }} class="rounded border-slate-600 bg-slate-800 text-indigo-500">
+                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', $combo->is_active ?? true) ? 'checked' : '' }} class="rounded border-slate-600 bg-slate-800 text-[#0078D4]">
                         <span class="text-sm text-slate-300">Active</span>
                     </label>
                 </div>
 
                 {{-- Service picker --}}
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                    <h3 class="font-semibold text-white mb-3">Select Services (min. 2)</h3>
+                    <h3 class="font-semibold text-[#D4AF37] mb-3">Select Services (min. 2)</h3>
                     @if($services->isEmpty())
-                        <p class="text-sm text-slate-500 py-2">No active services yet. <a href="{{ route('services.create') }}" class="text-indigo-400 hover:text-indigo-300">Add a service first.</a></p>
+                        <p class="text-sm text-slate-500 py-2">No active services yet. <a href="{{ route('services.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0]">Add a service first.</a></p>
                     @else
                         <div class="space-y-1 max-h-72 overflow-y-auto">
                             @foreach($services as $service)
                                 @php $selectedIds = old('service_ids', isset($combo) ? $combo->services->pluck('id')->toArray() : []); @endphp
                                 <label class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 cursor-pointer">
                                     <input type="checkbox" name="service_ids[]" value="{{ $service->id }}"
-                                           class="rounded border-slate-600 bg-slate-800 text-indigo-500"
+                                           class="rounded border-slate-600 bg-slate-800 text-[#0078D4]"
                                            {{ in_array($service->id, $selectedIds) ? 'checked' : '' }}
                                            @change="toggleService({{ $service->id }}, {{ (float) $service->price }}, {{ (float) ($service->cost_price ?? 0) }}, $event.target.checked)">
                                     <div class="flex-1 min-w-0">
@@ -90,7 +90,7 @@
             {{-- Pricing sidebar --}}
             <div class="space-y-4">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sticky top-6">
-                    <h3 class="font-semibold text-white mb-4">Live Pricing</h3>
+                    <h3 class="font-semibold text-[#D4AF37] mb-4">Live Pricing</h3>
                     <div class="space-y-3 text-sm">
                         <div class="flex justify-between text-slate-400">
                             <span>Total (full price)</span>
@@ -124,7 +124,7 @@
                         </template>
                     </div>
 
-                    <button type="submit" class="mt-6 w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg text-sm transition-colors">
+                    <button type="submit" class="mt-6 w-full py-2.5 bg-[#0078D4] hover:bg-[#0078D4] text-white font-medium rounded-lg text-sm transition-colors">
                         {{ isset($combo) ? 'Update Combo' : 'Create Combo' }}
                     </button>
                     <a href="{{ route('services.index', ['tab' => 'combos']) }}" class="block text-center text-xs text-slate-400 hover:text-white mt-3">Cancel</a>

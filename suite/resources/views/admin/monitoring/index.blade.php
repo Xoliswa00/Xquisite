@@ -5,11 +5,11 @@
         {{-- Header with Add Instance button --}}
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-2xl font-bold text-white">Monitored Instances</h2>
+                <h2 class="text-2xl font-bold text-[#D4AF37]">Monitored Instances</h2>
                 <p class="text-slate-400 text-sm mt-1">Track health and status of all remote app instances</p>
             </div>
             <a href="{{ route('monitoring.create') }}" 
-               class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition">
+               class="inline-flex items-center gap-2 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg font-medium transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Add Instance
             </a>
@@ -53,7 +53,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-slate-400 text-sm">Avg Uptime</p>
-                        <p class="text-2xl font-bold text-indigo-400 mt-1">
+                        <p class="text-2xl font-bold text-[#0078D4] mt-1">
                             @if($instances->count() > 0)
                                 {{ number_format($instances->average('uptime_percentage') ?? 0, 1) }}%
                             @else
@@ -61,7 +61,7 @@
                             @endif
                         </p>
                     </div>
-                    <svg class="w-8 h-8 text-indigo-600/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <svg class="w-8 h-8 text-[#0078D4]/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 </div>
             </div>
         </div>
@@ -160,7 +160,7 @@
                 <h3 class="text-lg font-semibold text-slate-300">No instances yet</h3>
                 <p class="text-slate-400 text-sm mt-1 mb-4">Start monitoring remote app instances by adding one.</p>
                 <a href="{{ route('monitoring.create') }}" 
-                   class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition">
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg font-medium transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Add Your First Instance
                 </a>

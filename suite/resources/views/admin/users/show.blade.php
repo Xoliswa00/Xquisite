@@ -3,7 +3,7 @@
         <div class="flex items-center gap-3">
             <a href="{{ route('admin.users.index') }}" class="text-slate-400 hover:text-white transition-colors">← Staff</a>
             <span class="text-slate-600">/</span>
-            <h2 class="text-xl font-bold text-white">{{ $user->name }}</h2>
+            <h2 class="text-xl font-bold text-[#D4AF37]">{{ $user->name }}</h2>
         </div>
     </x-slot>
 
@@ -91,7 +91,7 @@
                 <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Actions</h3>
                 <div class="space-y-2">
                     <a href="{{ route('admin.users.edit', $user) }}"
-                       class="block w-full text-center px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition-colors">
+                       class="block w-full text-center px-3 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg text-sm font-medium transition-colors">
                         Edit Account
                     </a>
 

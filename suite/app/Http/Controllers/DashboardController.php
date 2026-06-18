@@ -7,8 +7,14 @@ use App\Modules\Booking\Models\Customer;
 use App\Modules\Booking\Models\Staff;
 use App\Modules\Booking\Models\Service;
 use App\Modules\POS\Models\Product;
+use App\Models\BillingQueue;
 use App\Models\ModuleRequest;
+use App\Models\PlatformInvoice;
+use App\Models\Tenant;
+use App\Models\TenantModule;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -17,14 +23,22 @@ class DashboardController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // Platform admin (no tenant) → admin panel
+        // Platform admin (no tenant) → owner analytics dashboard
         if (!$user->tenant_id) {
-            return redirect()->route('admin.tenants.index');
+            return $this->ownerDashboard();
         }
 
         // Client portal users
         if ($user->isClient()) {
             return redirect()->route('portal.dashboard');
+        }
+
+        // No modules activated yet — send to module selection (onboarding step)
+        $tenant = $user->tenant;
+        $tenant->load('activeModules');
+        if ($tenant->activeModules->isEmpty()) {
+            return redirect()->route('settings.modules.index')
+                ->with('info', 'Welcome! Choose the modules you want to activate for your business.');
         }
 
         $hasPos         = $user->tenant?->hasModule('pos') ?? false;
@@ -98,6 +112,103 @@ class DashboardController extends Controller
             'completedCount',
             'awaitingTotal',
             'awaitingCount',
+        ));
+    }
+
+    private function ownerDashboard()
+    {
+        $now          = now();
+        $thisMonth    = $now->copy()->startOfMonth();
+        $lastMonth    = $now->copy()->subMonth()->startOfMonth();
+        $lastMonthEnd = $now->copy()->subMonth()->endOfMonth();
+
+        // ── Tenant counts ─────────────────────────────────────────
+        $totalTenants     = Tenant::count();
+        $activeTenants    = Tenant::where('is_active', true)->whereNull('suspended_at')->count();
+        $trialTenants     = Tenant::whereNotNull('trial_ends_at')->where('trial_ends_at', '>', $now)->whereNull('suspended_at')->count();
+        $paidTenants      = Tenant::where('is_active', true)->whereNull('suspended_at')
+                                ->where(fn($q) => $q->whereNull('trial_ends_at')->orWhere('trial_ends_at', '<=', $now))
+                                ->count();
+        $suspendedTenants = Tenant::whereNotNull('suspended_at')->count();
+        $graceTenants     = Tenant::whereNotNull('grace_period_ends_at')->whereNull('suspended_at')->count();
+        $newThisMonth     = Tenant::where('created_at', '>=', $thisMonth)->count();
+        $newLastMonth     = Tenant::whereBetween('created_at', [$lastMonth, $lastMonthEnd])->count();
+
+        // ── MRR ───────────────────────────────────────────────────
+        $mrr = Tenant::where('is_active', true)->whereNull('suspended_at')
+            ->get()->sum(fn($t) => $t->monthlyTotal());
+        $avgMrr = $paidTenants > 0 ? round($mrr / max($paidTenants, 1), 2) : 0;
+
+        // ── Invoice financials ────────────────────────────────────
+        $collectedThisMonth  = PlatformInvoice::where('status', 'paid')->where('paid_at', '>=', $thisMonth)->sum('amount');
+        $collectedLastMonth  = PlatformInvoice::where('status', 'paid')->whereBetween('paid_at', [$lastMonth, $lastMonthEnd])->sum('amount');
+        $invoicedThisMonth   = PlatformInvoice::where('created_at', '>=', $thisMonth)->sum('amount');
+        $outstandingTotal    = PlatformInvoice::whereIn('status', ['unpaid', 'overdue'])->sum('amount');
+        $overdueTotal        = PlatformInvoice::where('status', 'overdue')->sum('amount');
+        $overdueCount        = PlatformInvoice::where('status', 'overdue')->count();
+        $popPending          = PlatformInvoice::whereNotNull('pop_path')->whereIn('status', ['unpaid', 'overdue'])->count();
+        $collectionRate      = $invoicedThisMonth > 0 ? round(($collectedThisMonth / $invoicedThisMonth) * 100) : 0;
+        $revenueGrowth       = $collectedLastMonth > 0
+            ? round((($collectedThisMonth - $collectedLastMonth) / $collectedLastMonth) * 100, 1)
+            : null;
+
+        // ── 6-month revenue trend ─────────────────────────────────
+        $sixMonthsAgo = $now->copy()->subMonths(5)->startOfMonth();
+        $monthlyRevenue = PlatformInvoice::where('status', 'paid')
+            ->where('paid_at', '>=', $sixMonthsAgo)
+            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as month, SUM(amount) as total")
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('total', 'month');
+
+        // ── 6-month tenant sign-up trend ──────────────────────────
+        $monthlySignups = Tenant::where('created_at', '>=', $sixMonthsAgo)
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count")
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('count', 'month');
+
+        // Normalise to last 6 calendar months (fill gaps with 0)
+        $months = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $months->push($now->copy()->subMonths($i)->format('Y-m'));
+        }
+        $revenueByMonth = $months->mapWithKeys(fn($m) => [$m => (float)($monthlyRevenue[$m] ?? 0)]);
+        $signupsByMonth = $months->mapWithKeys(fn($m) => [$m => (int)($monthlySignups[$m] ?? 0)]);
+
+        // ── Module adoption ───────────────────────────────────────
+        $moduleStats = TenantModule::where('is_active', true)
+            ->select('module', DB::raw('count(*) as tenant_count'))
+            ->groupBy('module')
+            ->orderByDesc('tenant_count')
+            ->with('platformModule')
+            ->get();
+
+        // ── Ops ───────────────────────────────────────────────────
+        $billingQueueCount = BillingQueue::pendingCount();
+        $pendingModReqs    = ModuleRequest::where('status', 'pending')->count();
+        $totalUsers        = User::whereNotNull('tenant_id')->where('is_active', true)->count();
+
+        // ── Attention list ────────────────────────────────────────
+        $attentionTenants = Tenant::with('platformInvoices')
+            ->where(fn($q) => $q->whereNotNull('suspended_at')
+                ->orWhereNotNull('grace_period_ends_at')
+                ->orWhereHas('platformInvoices', fn($q2) => $q2->where('status', 'overdue')))
+            ->orderByDesc('suspended_at')
+            ->limit(8)->get();
+
+        // ── Recent sign-ups ───────────────────────────────────────
+        $recentTenants = Tenant::with('tenantModules')->latest()->limit(8)->get();
+
+        return view('dashboard-owner', compact(
+            'totalTenants', 'activeTenants', 'trialTenants', 'paidTenants',
+            'suspendedTenants', 'graceTenants', 'newThisMonth', 'newLastMonth',
+            'mrr', 'avgMrr', 'collectedThisMonth', 'collectedLastMonth',
+            'invoicedThisMonth', 'collectionRate', 'revenueGrowth',
+            'outstandingTotal', 'overdueTotal', 'overdueCount', 'popPending',
+            'revenueByMonth', 'signupsByMonth', 'months',
+            'moduleStats', 'billingQueueCount', 'pendingModReqs', 'totalUsers',
+            'attentionTenants', 'recentTenants',
         ));
     }
 }

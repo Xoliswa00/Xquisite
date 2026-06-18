@@ -2,14 +2,14 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div>
-                <h2 class="text-2xl font-bold text-white">{{ $property->name }}</h2>
+                <h2 class="text-2xl font-bold text-[#D4AF37]">{{ $property->name }}</h2>
                 <p class="text-sm text-slate-400 mt-0.5">{{ $property->address_line_1 }}, {{ $property->city }}</p>
             </div>
             <div class="flex gap-2">
                 <a href="{{ route('properties.units.create', $property) }}"
                    class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded-lg">+ Add Unit</a>
                 <a href="{{ route('properties.edit', $property) }}"
-                   class="px-3 py-2 bg-indigo-700 hover:bg-indigo-600 text-white text-sm rounded-lg">Edit</a>
+                   class="px-3 py-2 bg-[#002B5B] hover:bg-[#0078D4] text-white text-sm rounded-lg">Edit</a>
             </div>
         </div>
     </x-slot>
@@ -27,7 +27,7 @@
                 ['label'=>'Occupied',     'value'=>$stats['occupied'],     'color'=>'text-emerald-400'],
                 ['label'=>'Vacant',       'value'=>$stats['vacant'],       'color'=>'text-yellow-400'],
                 ['label'=>'Maintenance',  'value'=>$stats['maintenance'],  'color'=>'text-orange-400'],
-                ['label'=>'Monthly Rent', 'value'=>'R'.number_format($stats['monthly_rent'],2), 'color'=>'text-indigo-400'],
+                ['label'=>'Monthly Rent', 'value'=>'R'.number_format($stats['monthly_rent'],2), 'color'=>'text-[#0078D4]'],
             ] as $kpi)
             <div class="bg-slate-800 rounded-xl p-4">
                 <p class="text-xs text-slate-400 uppercase font-semibold">{{ $kpi['label'] }}</p>
@@ -40,7 +40,7 @@
         <div class="bg-slate-800 rounded-xl overflow-hidden">
             <div class="px-5 py-3 border-b border-slate-700 flex justify-between items-center">
                 <h3 class="text-sm font-semibold text-slate-200">Units</h3>
-                <a href="{{ route('properties.units.index', $property) }}" class="text-xs text-indigo-400 hover:text-indigo-300">Manage →</a>
+                <a href="{{ route('properties.units.index', $property) }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">Manage →</a>
             </div>
             <table class="w-full text-sm summary-on-mobile">
                 <thead>
@@ -71,7 +71,7 @@
                                 {{ $unit->activeLease?->renter?->name ?? '—' }}
                             </td>
                             <td class="px-4 py-2.5 text-right">
-                                <a href="{{ route('properties.units.show', [$property, $unit]) }}" class="text-indigo-400 hover:text-indigo-300 text-xs">View</a>
+                                <a href="{{ route('properties.units.show', [$property, $unit]) }}" class="text-[#0078D4] hover:text-[#B8D4F0] text-xs">View</a>
                             </td>
                         </tr>
                     @empty

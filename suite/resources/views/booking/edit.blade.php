@@ -59,7 +59,7 @@
                        value="{{ old('date', $appointment->scheduled_at->toDateString()) }}"
                        required
                        class="w-full bg-white border border-slate-200 text-slate-800 text-sm rounded-lg px-3 py-2
-                              focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                              focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
             </div>
 
             {{-- Time slot picker --}}
@@ -69,7 +69,7 @@
                         name="scheduled_at"
                         required
                         class="w-full bg-white border border-slate-200 text-slate-800 text-sm rounded-lg px-3 py-2
-                               focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                               focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
                     <option value="">Select a date first…</option>
                 </select>
                 <p id="slots-loading" class="text-xs text-slate-400 mt-1 hidden">Loading available times…</p>
@@ -86,7 +86,7 @@
                           rows="3"
                           placeholder="Anything the team should know…"
                           class="w-full bg-white border border-slate-200 text-slate-800 text-sm rounded-lg px-3 py-2
-                                 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none">{{ old('notes', $appointment->notes) }}</textarea>
+                                 focus:outline-none focus:ring-2 focus:ring-[#0078D4] resize-none">{{ old('notes', $appointment->notes) }}</textarea>
             </div>
 
             {{-- Actions --}}
@@ -96,7 +96,7 @@
                     Cancel
                 </a>
                 <button type="submit"
-                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl text-sm font-semibold transition">
+                        class="bg-[#0078D4] hover:bg-[#0078D4] text-white px-6 py-2 rounded-xl text-sm font-semibold transition">
                     Save Changes
                 </button>
             </div>

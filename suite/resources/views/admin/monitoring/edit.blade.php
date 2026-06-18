@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
-        <a href="{{ route('monitoring.show', $instance) }}" class="text-indigo-400 hover:text-indigo-300 text-sm mb-2 inline-block">← Back to {{ $instance->name }}</a>
-        <h2 class="text-2xl font-bold text-white">Edit Instance</h2>
+        <a href="{{ route('monitoring.show', $instance) }}" class="text-[#0078D4] hover:text-[#B8D4F0] text-sm mb-2 inline-block">← Back to {{ $instance->name }}</a>
+        <h2 class="text-2xl font-bold text-[#D4AF37]">Edit Instance</h2>
     </x-slot>
 
     <div class="max-w-2xl">
@@ -16,7 +16,7 @@
                            id="name" 
                            name="name" 
                            value="{{ old('name', $instance->name) }}"
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 @error('name') border-red-500 @enderror"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4] @error('name') border-red-500 @enderror"
                            required>
                     @error('name')
                         <p class="text-red-400 text-xs mt-2">{{ $message }}</p>
@@ -29,7 +29,7 @@
                            id="url" 
                            name="url" 
                            value="{{ old('url', $instance->url) }}"
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 @error('url') border-red-500 @enderror"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4] @error('url') border-red-500 @enderror"
                            required>
                     @error('url')
                         <p class="text-red-400 text-xs mt-2">{{ $message }}</p>
@@ -42,7 +42,7 @@
                            id="api_token" 
                            name="api_token" 
                            value="{{ old('api_token', $instance->api_token) }}"
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg font-mono text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 @error('api_token') border-red-500 @enderror"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg font-mono text-sm focus:outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4] @error('api_token') border-red-500 @enderror"
                            required>
                     @error('api_token')
                         <p class="text-red-400 text-xs mt-2">{{ $message }}</p>
@@ -56,7 +56,7 @@
                            id="tenant_id" 
                            name="tenant_id" 
                            value="{{ old('tenant_id', $instance->tenant_id) }}"
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]">
                 </div>
 
                 <div class="flex items-center gap-3">
@@ -65,13 +65,13 @@
                            name="active" 
                            value="1"
                            {{ old('active', $instance->active) ? 'checked' : '' }}
-                           class="w-4 h-4 bg-slate-700 border-slate-600 rounded focus:ring-indigo-500">
+                           class="w-4 h-4 bg-slate-700 border-slate-600 rounded focus:ring-[#0078D4]">
                     <label for="active" class="text-sm text-slate-300">Actively monitor this instance</label>
                 </div>
 
                 <div class="flex gap-3">
                     <button type="submit" 
-                            class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition">
+                            class="flex-1 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg font-medium transition">
                         Save Changes
                     </button>
                     <a href="{{ route('monitoring.show', $instance) }}"

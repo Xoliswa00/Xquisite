@@ -1,9 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-white">Leases</h2>
+            <h2 class="text-2xl font-bold text-[#D4AF37]">Leases</h2>
             <a href="{{ route('leases.create') }}"
-               class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg">
+               class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg">
                 + New Lease
             </a>
         </div>
@@ -31,7 +31,7 @@
                     @endforeach
                 </select>
                 <button type="submit"
-                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg">Filter</button>
+                        class="px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg">Filter</button>
                 @if(request()->hasAny(['status','property_id']))
                     <a href="{{ route('leases.index') }}"
                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded-lg">Clear</a>
@@ -74,14 +74,14 @@
                             <td class="px-4 py-3 text-slate-300">R{{ number_format($lease->monthly_rent, 2) }}</td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{{ route('leases.show', $lease) }}"
-                                   class="text-indigo-400 hover:text-indigo-300 text-xs">View</a>
+                                   class="text-[#0078D4] hover:text-[#B8D4F0] text-xs">View</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="8" class="px-4 py-12 text-center text-slate-500">
                                 No leases found.
-                                <a href="{{ route('leases.create') }}" class="text-indigo-400 hover:text-indigo-300 ml-1">Create first lease</a>
+                                <a href="{{ route('leases.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0] ml-1">Create first lease</a>
                             </td>
                         </tr>
                     @endforelse

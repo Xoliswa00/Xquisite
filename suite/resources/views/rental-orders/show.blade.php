@@ -92,7 +92,7 @@
             <form method="POST" action="{{ route('rental-orders.return', $rentalOrder) }}" class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 @csrf @method('PATCH')
                 <select name="condition_on_return" required
-                        class="bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        class="bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                     <option value="">— Condition on return —</option>
                     <option value="excellent">Excellent — no issues</option>
                     <option value="good">Good — minor wear</option>

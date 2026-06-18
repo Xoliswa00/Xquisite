@@ -5,7 +5,7 @@
 
         {{-- Heading row --}}
         <div class="flex items-center justify-between gap-4 flex-wrap">
-            <h2 class="text-xl font-bold text-white">Platform Billing</h2>
+            <h2 class="text-xl font-bold text-[#D4AF37]">Platform Billing</h2>
             <div class="flex items-center gap-2 flex-wrap">
                 @if($queueCount > 0)
                     <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20">
@@ -49,18 +49,18 @@
 
         {{-- Billing Waitlist --}}
         @if($dueTenants->isNotEmpty())
-            <div class="bg-slate-900 border border-indigo-800/50 rounded-2xl overflow-hidden">
+            <div class="bg-slate-900 border border-[#002B5B]/50 rounded-2xl overflow-hidden">
                 <div class="px-5 py-3 border-b border-slate-800 flex items-center justify-between gap-4 flex-wrap">
                     <div class="flex items-center gap-3">
                         <p class="font-semibold text-white">Due for Billing This Month</p>
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-medium">
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-[#0078D4]/20 text-[#B8D4F0] font-medium">
                             {{ $dueTenants->count() }} tenant{{ $dueTenants->count() === 1 ? '' : 's' }}
                         </span>
                     </div>
                     <form method="POST" action="{{ route('admin.billing.batch-generate') }}"
                           onsubmit="return confirm('Generate invoices for all {{ $dueTenants->count() }} tenant(s) now?')">
                         @csrf
-                        <button class="px-4 py-1.5 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors">
+                        <button class="px-4 py-1.5 text-sm bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg transition-colors">
                             Generate All Now
                         </button>
                     </form>
@@ -77,7 +77,7 @@
                                     R{{ number_format(\App\Models\Tenant::planAmount($tenant->plan ?? 'basic'), 2) }}
                                     <span class="text-xs text-slate-500 ml-1">{{ ucfirst($tenant->plan ?? 'basic') }}</span>
                                 </span>
-                                <a href="{{ route('admin.billing.show', ['company' => $tenant->id]) }}"
+                                <a href="{{ route('admin.billing.show', ['tenant' => $tenant->id]) }}"
                                    class="text-xs px-3 py-1 border border-slate-700 text-slate-300 hover:bg-slate-700 rounded-lg">Manage</a>
                             </div>
                         </div>
@@ -116,7 +116,7 @@
                             </td>
                             <td class="px-5 py-4 text-slate-300">{{ $tenant->unpaid_count }}</td>
                             <td class="px-5 py-4">
-                                <a href="{{ route('admin.billing.show', ['company' => $tenant->id]) }}" class="text-xs px-3 py-1.5 border border-slate-700 text-slate-300 hover:bg-slate-700 rounded-lg">Manage</a>
+                                <a href="{{ route('admin.billing.show', ['tenant' => $tenant->id]) }}" class="text-xs px-3 py-1.5 border border-slate-700 text-slate-300 hover:bg-slate-700 rounded-lg">Manage</a>
                             </td>
                         </tr>
                     @endforeach

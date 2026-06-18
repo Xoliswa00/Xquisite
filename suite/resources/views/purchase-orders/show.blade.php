@@ -139,7 +139,7 @@
                                                    name="received[{{ $item->id }}]"
                                                    min="0" max="{{ $item->remaining }}"
                                                    placeholder="{{ $item->remaining }}"
-                                                   class="w-24 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 text-center focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                                   class="w-24 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 text-center focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                         @else
                                             <span class="text-emerald-400 text-xs">Complete</span>
                                         @endif

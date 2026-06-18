@@ -9,7 +9,7 @@
             <p class="text-slate-500 text-sm mt-0.5">{{ auth('customer')->user()->name }}</p>
         </div>
         <a href="{{ route('book.index', $slug) }}"
-           class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">
+           class="bg-[#0078D4] hover:bg-[#0078D4] text-white px-4 py-2 rounded-xl text-sm font-semibold transition">
             + Book again
         </a>
     </div>
@@ -21,7 +21,7 @@
         @if($upcoming->isEmpty())
             <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-400">
                 No upcoming appointments.
-                <a href="{{ route('book.index', $slug) }}" class="text-indigo-600 hover:underline ml-1">Book one now â†’</a>
+                <a href="{{ route('book.index', $slug) }}" class="text-[#0078D4] hover:underline ml-1">Book one now â†’</a>
             </div>
         @else
             <div class="space-y-3">
@@ -54,7 +54,7 @@
                                 </form>
 
                                 <a href="{{ route('book.edit', [$slug, $appt]) }}"
-                                   class="text-xs text-indigo-600 hover:text-indigo-500">
+                                   class="text-xs text-[#0078D4] hover:text-[#0078D4]">
                                     Reschedule →
                                 </a>
                             @else

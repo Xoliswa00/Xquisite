@@ -8,7 +8,7 @@
 
             <!-- Header -->
             <div class="px-6 py-5 border-b border-slate-700 text-center">
-                <h1 class="text-xl font-bold text-white">Xquisite Suite</h1>
+                <h1 class="text-xl font-bold text-[#D4AF37]">Xquisite Suite</h1>
                 <p class="text-xs text-slate-500 mt-0.5">{{ now()->format('d M Y') }}</p>
             </div>
 
@@ -34,7 +34,7 @@
                     <div class="col-span-2">
                         <p class="text-slate-400">Appointment</p>
                         <a href="{{ route('appointments.show', $sale->appointment_id) }}"
-                           class="text-indigo-400 hover:text-indigo-300">#{{ $sale->appointment_id }}</a>
+                           class="text-[#0078D4] hover:text-[#B8D4F0]">#{{ $sale->appointment_id }}</a>
                     </div>
                 @endif
             </div>
@@ -56,7 +56,7 @@
                             <tr>
                                 <td class="py-2.5">
                                     <p class="text-white">{{ $item->name }}</p>
-                                    <span class="text-xs px-1.5 py-0.5 rounded {{ $item->item_type === 'service' ? 'bg-indigo-900/50 text-indigo-300' : 'bg-slate-700 text-slate-400' }}">
+                                    <span class="text-xs px-1.5 py-0.5 rounded {{ $item->item_type === 'service' ? 'bg-[#001A3A]/50 text-[#B8D4F0]' : 'bg-slate-700 text-slate-400' }}">
                                         {{ ucfirst($item->item_type) }}
                                     </span>
                                 </td>

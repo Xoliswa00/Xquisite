@@ -15,9 +15,9 @@
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 <div class="relative overflow-hidden rounded-3xl mb-10 shadow-2xl">
     {{-- Layered gradient background --}}
-    <div class="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900"></div>
+    <div class="absolute inset-0 bg-gradient-to-br from-[#001A3A] via-[#002B5B] to-slate-900"></div>
     {{-- Glowing orbs --}}
-    <div class="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-indigo-600 opacity-20 blur-3xl"></div>
+    <div class="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#0078D4] opacity-20 blur-3xl"></div>
     <div class="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-purple-600 opacity-15 blur-3xl"></div>
     <div class="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-violet-500 opacity-10 blur-3xl"></div>
 
@@ -29,14 +29,14 @@
                 <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}"
                      class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-white/20 shadow-2xl shrink-0">
             @else
-                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 border border-white/20 shadow-2xl flex items-center justify-center shrink-0">
+                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[#0078D4] to-[#002B5B] border border-white/20 shadow-2xl flex items-center justify-center shrink-0">
                     <span class="text-4xl sm:text-5xl font-black text-white">{{ strtoupper(substr($tenant->name, 0, 1)) }}</span>
                 </div>
             @endif
 
             {{-- Info --}}
             <div class="flex-1 min-w-0">
-                <p class="text-indigo-300 text-xs font-bold uppercase tracking-[0.2em] mb-2">
+                <p class="text-[#B8D4F0] text-xs font-bold uppercase tracking-[0.2em] mb-2">
                     {{ ucwords(str_replace('_', ' ', $tenant->industry ?? 'Beauty & Wellness')) }}
                 </p>
                 <h1 class="text-3xl sm:text-5xl font-black text-white leading-[1.05] tracking-tight">
@@ -54,7 +54,7 @@
                     </div>
                     @if($combos->isNotEmpty())
                         <div class="flex items-center gap-2 text-white/60 text-sm">
-                            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                            <svg class="w-4 h-4 text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
                             <span>{{ $combos->count() }} combo {{ Str::plural('deal', $combos->count()) }}</span>
                         </div>
                     @endif
@@ -87,7 +87,7 @@
                 Reminder by email
             </div>
             @if($combos->isNotEmpty())
-                <span class="ml-auto hidden sm:flex items-center gap-2 text-indigo-300/80 text-xs font-semibold">
+                <span class="ml-auto hidden sm:flex items-center gap-2 text-[#B8D4F0]/80 text-xs font-semibold">
                     <svg class="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                     Scroll to see our combo deals below
                 </span>
@@ -108,15 +108,15 @@
 @if($combos->isNotEmpty())
 <section>
     <div class="flex items-center gap-3 mb-5">
-        <div class="flex items-center justify-center w-8 h-8 rounded-xl bg-indigo-600 shadow-md shadow-indigo-200">
+        <div class="flex items-center justify-center w-8 h-8 rounded-xl bg-[#0078D4] shadow-md shadow-[#DCEEFA]">
             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
         </div>
         <div>
             <h2 class="text-lg font-bold text-slate-900 leading-none">Combo Deals</h2>
             <p class="text-xs text-slate-400 mt-0.5">Bundle services and save more</p>
         </div>
-        <div class="ml-auto flex items-center gap-1.5 bg-indigo-50 border border-indigo-200 text-indigo-600 text-xs font-bold px-3 py-1.5 rounded-full">
-            <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+        <div class="ml-auto flex items-center gap-1.5 bg-[#F0F7FF] border border-[#DCEEFA] text-[#0078D4] text-xs font-bold px-3 py-1.5 rounded-full">
+            <div class="w-1.5 h-1.5 rounded-full bg-[#0078D4] animate-pulse"></div>
             {{ $combos->count() }} available
         </div>
     </div>
@@ -134,12 +134,12 @@
         @endphp
         <div class="group relative rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
              :class="isComboSelected({{ json_encode($ids) }}, {{ $combo->id }})
-                 ? 'ring-2 ring-indigo-500 ring-offset-2 shadow-xl shadow-indigo-100'
+                 ? 'ring-2 ring-[#0078D4] ring-offset-2 shadow-xl shadow-[#E8F2FA]'
                  : ''">
 
             {{-- Background --}}
-            <div class="absolute inset-0 {{ $isFeat ? 'bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-950' : 'bg-gradient-to-br from-slate-900 to-indigo-950' }}"></div>
-            <div class="pointer-events-none absolute -top-12 -right-12 w-48 h-48 rounded-full {{ $isFeat ? 'bg-indigo-600' : 'bg-indigo-800' }} opacity-20 blur-2xl group-hover:opacity-30 transition-opacity"></div>
+            <div class="absolute inset-0 {{ $isFeat ? 'bg-gradient-to-br from-[#002B5B] via-purple-900 to-[#001A3A]' : 'bg-gradient-to-br from-slate-900 to-[#001A3A]' }}"></div>
+            <div class="pointer-events-none absolute -top-12 -right-12 w-48 h-48 rounded-full {{ $isFeat ? 'bg-[#0078D4]' : 'bg-[#002B5B]' }} opacity-20 blur-2xl group-hover:opacity-30 transition-opacity"></div>
 
             {{-- Badges --}}
             <div class="absolute top-4 right-4 flex flex-col items-end gap-1.5">
@@ -195,7 +195,7 @@
                         class="w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2"
                         :class="isComboSelected({{ json_encode($ids) }}, {{ $combo->id }})
                             ? 'bg-emerald-400 text-emerald-950 shadow-lg shadow-emerald-400/30'
-                            : 'bg-white text-indigo-900 hover:bg-indigo-50 shadow-md'">
+                            : 'bg-white text-[#001A3A] hover:bg-[#F0F7FF] shadow-md'">
                     <template x-if="!isComboSelected({{ json_encode($ids) }}, {{ $combo->id }})">
                         <span class="flex items-center gap-2">
                             Book this combo
@@ -322,7 +322,7 @@
                         @click="toggle({{ $service->id }})"
                         class="group relative text-left w-full rounded-2xl border bg-white p-4 transition-all duration-200 overflow-hidden"
                         :class="selected.includes({{ $service->id }})
-                            ? 'border-indigo-400 bg-indigo-50/80 ring-2 ring-indigo-400 ring-offset-1 shadow-lg shadow-indigo-100'
+                            ? 'border-[#0078D4] bg-[#F0F7FF]/80 ring-2 ring-[#0078D4] ring-offset-1 shadow-lg shadow-[#E8F2FA]'
                             : 'border-slate-200 hover:border-slate-300 hover:shadow-md hover:bg-slate-50/50'">
 
                     {{-- Left accent stripe --}}
@@ -331,22 +331,22 @@
 
                     {{-- Check ring --}}
                     <div x-show="selected.includes({{ $service->id }})" x-cloak
-                         class="absolute top-3.5 right-3.5 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
+                         class="absolute top-3.5 right-3.5 w-6 h-6 bg-[#0078D4] rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
                         <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                         </svg>
                     </div>
                     {{-- Plus ring (unselected) --}}
                     <div x-show="!selected.includes({{ $service->id }})"
-                         class="absolute top-3.5 right-3.5 w-6 h-6 bg-slate-100 group-hover:bg-indigo-100 group-hover:border-indigo-300 rounded-full flex items-center justify-center border border-slate-200 transition-all">
-                        <svg class="w-3 h-3 text-slate-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                         class="absolute top-3.5 right-3.5 w-6 h-6 bg-slate-100 group-hover:bg-[#E8F2FA] group-hover:border-[#B8D4F0] rounded-full flex items-center justify-center border border-slate-200 transition-all">
+                        <svg class="w-3 h-3 text-slate-400 group-hover:text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                         </svg>
                     </div>
 
                     <div class="pl-3 pr-10">
-                        <p class="font-semibold text-sm text-slate-900 group-hover:text-indigo-700 transition-colors leading-snug"
-                           :class="selected.includes({{ $service->id }}) ? '!text-indigo-700' : ''">
+                        <p class="font-semibold text-sm text-slate-900 group-hover:text-[#002B5B] transition-colors leading-snug"
+                           :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
                             {{ $service->name }}
                         </p>
                         @if($service->description)
@@ -358,7 +358,7 @@
                                 {{ $service->duration_minutes }} min
                             </div>
                             <p class="font-bold text-slate-900 text-sm"
-                               :class="selected.includes({{ $service->id }}) ? '!text-indigo-700' : ''">
+                               :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
                                 R{{ number_format($service->price, 2) }}
                             </p>
                         </div>
@@ -385,28 +385,28 @@
                         @click="toggle({{ $service->id }})"
                         class="group relative text-left w-full rounded-2xl border bg-white p-4 transition-all duration-200 overflow-hidden"
                         :class="selected.includes({{ $service->id }})
-                            ? 'border-indigo-400 bg-indigo-50/80 ring-2 ring-indigo-400 ring-offset-1 shadow-lg shadow-indigo-100'
+                            ? 'border-[#0078D4] bg-[#F0F7FF]/80 ring-2 ring-[#0078D4] ring-offset-1 shadow-lg shadow-[#E8F2FA]'
                             : 'border-slate-200 hover:border-slate-300 hover:shadow-md hover:bg-slate-50/50'">
 
                     <div class="absolute top-0 left-0 w-1 h-full bg-slate-400 transition-opacity"
-                         :class="selected.includes({{ $service->id }}) ? 'opacity-100 !bg-indigo-500' : 'opacity-30'"></div>
+                         :class="selected.includes({{ $service->id }}) ? 'opacity-100 !bg-[#0078D4]' : 'opacity-30'"></div>
 
                     <div x-show="selected.includes({{ $service->id }})" x-cloak
-                         class="absolute top-3.5 right-3.5 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
+                         class="absolute top-3.5 right-3.5 w-6 h-6 bg-[#0078D4] rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
                         <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                         </svg>
                     </div>
                     <div x-show="!selected.includes({{ $service->id }})"
-                         class="absolute top-3.5 right-3.5 w-6 h-6 bg-slate-100 group-hover:bg-indigo-100 group-hover:border-indigo-300 rounded-full flex items-center justify-center border border-slate-200 transition-all">
-                        <svg class="w-3 h-3 text-slate-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                         class="absolute top-3.5 right-3.5 w-6 h-6 bg-slate-100 group-hover:bg-[#E8F2FA] group-hover:border-[#B8D4F0] rounded-full flex items-center justify-center border border-slate-200 transition-all">
+                        <svg class="w-3 h-3 text-slate-400 group-hover:text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                         </svg>
                     </div>
 
                     <div class="pl-3 pr-10">
-                        <p class="font-semibold text-sm text-slate-900 group-hover:text-indigo-700 transition-colors leading-snug"
-                           :class="selected.includes({{ $service->id }}) ? '!text-indigo-700' : ''">
+                        <p class="font-semibold text-sm text-slate-900 group-hover:text-[#002B5B] transition-colors leading-snug"
+                           :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
                             {{ $service->name }}
                         </p>
                         @if($service->description)
@@ -418,7 +418,7 @@
                                 {{ $service->duration_minutes }} min
                             </div>
                             <p class="font-bold text-slate-900 text-sm"
-                               :class="selected.includes({{ $service->id }}) ? '!text-indigo-700' : ''">
+                               :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
                                 R{{ number_format($service->price, 2) }}
                             </p>
                         </div>
@@ -442,13 +442,13 @@
         <div class="rounded-2xl overflow-hidden shadow-lg border border-slate-200">
 
             {{-- Header --}}
-            <div class="bg-gradient-to-br from-slate-900 to-indigo-950 px-5 py-5">
+            <div class="bg-gradient-to-br from-slate-900 to-[#001A3A] px-5 py-5">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
                         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                     </div>
                     <div>
-                        <p class="text-xs font-semibold text-indigo-300 uppercase tracking-widest">Your Booking</p>
+                        <p class="text-xs font-semibold text-[#B8D4F0] uppercase tracking-widest">Your Booking</p>
                         <p class="text-white font-bold text-sm mt-0.5 leading-tight"
                            x-text="selected.length === 0 ? 'Nothing selected yet' : (selectedCombo ? selectedCombo.name : selected.length + ' service' + (selected.length > 1 ? 's' : '') + ' selected')"></p>
                     </div>
@@ -469,9 +469,9 @@
 
                 {{-- Combo badge --}}
                 <template x-if="selectedCombo">
-                    <div class="mx-4 mt-4 flex items-center gap-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
-                        <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-                        <span class="text-xs text-indigo-700 font-bold">Combo deal applied!</span>
+                    <div class="mx-4 mt-4 flex items-center gap-2 p-3 bg-[#F0F7FF] border border-[#DCEEFA] rounded-xl">
+                        <svg class="w-4 h-4 text-[#0078D4] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                        <span class="text-xs text-[#002B5B] font-bold">Combo deal applied!</span>
                     </div>
                 </template>
 
@@ -480,14 +480,14 @@
                     <template x-for="id in selected" :key="id">
                         <div class="flex items-start gap-3 p-2.5 rounded-xl border"
                              :class="selectedCombo && selectedCombo.serviceIds.includes(id)
-                                 ? 'bg-indigo-50/60 border-indigo-100'
+                                 ? 'bg-[#F0F7FF]/60 border-[#E8F2FA]'
                                  : 'bg-slate-50 border-slate-100'">
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-semibold text-slate-800 leading-snug" x-text="services.find(s => s.id === id)?.name"></p>
                                 <div class="flex items-center gap-1.5 mt-0.5">
                                     <p class="text-xs text-slate-400" x-text="(services.find(s => s.id === id)?.duration_minutes || 0) + ' min'"></p>
                                     <template x-if="selectedCombo && selectedCombo.serviceIds.includes(id)">
-                                        <span class="text-xs text-indigo-600 font-bold bg-indigo-100 px-1.5 py-0.5 rounded-full">combo</span>
+                                        <span class="text-xs text-[#0078D4] font-bold bg-[#E8F2FA] px-1.5 py-0.5 rounded-full">combo</span>
                                     </template>
                                 </div>
                             </div>
@@ -513,7 +513,7 @@
                     </div>
                     {{-- Combo price row --}}
                     <template x-if="selectedCombo">
-                        <div class="flex justify-between text-xs text-indigo-600 font-semibold px-1">
+                        <div class="flex justify-between text-xs text-[#0078D4] font-semibold px-1">
                             <span x-text="selectedCombo.name + ' deal'"></span>
                             <span x-text="'R' + selectedCombo.price.toLocaleString('en-ZA', {minimumFractionDigits:2})"></span>
                         </div>
@@ -555,7 +555,7 @@
                         </template>
                         <input type="hidden" name="combo_id" :value="selectedComboId || ''">
                         <button type="submit"
-                                class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 flex items-center justify-center gap-2 text-sm">
+                                class="w-full bg-[#0078D4] hover:bg-[#0078D4] active:scale-[0.98] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#DCEEFA] hover:shadow-xl hover:shadow-[#B8D4F0] flex items-center justify-center gap-2 text-sm">
                             Choose Date &amp; Time
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                         </button>
@@ -652,7 +652,7 @@
             </template>
             <input type="hidden" name="combo_id" :value="selectedComboId || ''">
             <button type="submit"
-                    class="shrink-0 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold px-5 py-3 rounded-xl transition-all shadow-lg shadow-indigo-300 flex items-center gap-2 text-sm whitespace-nowrap">
+                    class="shrink-0 bg-[#0078D4] hover:bg-[#0078D4] active:scale-95 text-white font-bold px-5 py-3 rounded-xl transition-all shadow-lg shadow-[#B8D4F0] flex items-center gap-2 text-sm whitespace-nowrap">
                 Book Now
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
             </button>

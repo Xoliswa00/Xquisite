@@ -4,9 +4,9 @@
     <div class="space-y-8">
 
         <div class="flex items-center justify-between gap-4 flex-wrap">
-            <h1 class="text-xl font-bold text-white">Platform Modules</h1>
+            <h1 class="text-xl font-bold text-[#D4AF37]">Platform Modules</h1>
             <a href="{{ route('admin.platform-modules.create') }}"
-               class="shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg font-medium transition-colors">
+               class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg font-medium transition-colors">
                 + Add Module
             </a>
         </div>
@@ -29,7 +29,7 @@
                     <span class="px-2.5 py-1 rounded-full text-xs font-medium
                         {{ $meta['colour'] === 'emerald' ? 'bg-emerald-500/20 text-emerald-300' : '' }}
                         {{ $meta['colour'] === 'amber'   ? 'bg-amber-500/20 text-amber-300' : '' }}
-                        {{ $meta['colour'] === 'indigo'  ? 'bg-indigo-500/20 text-indigo-300' : '' }}">
+                        {{ $meta['colour'] === 'indigo'  ? 'bg-[#0078D4]/20 text-[#B8D4F0]' : '' }}">
                         {{ $meta['label'] }}
                     </span>
                     <span class="text-sm text-slate-500">{{ $group->count() }} {{ Str::plural('module', $group->count()) }}</span>
@@ -61,7 +61,7 @@
                         <form method="POST" action="{{ route('admin.platform-modules.status', $module) }}" class="shrink-0">
                             @csrf @method('PATCH')
                             <select name="status" onchange="this.form.submit()"
-                                    class="bg-slate-700 border border-slate-600 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                    class="bg-slate-700 border border-slate-600 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                 <option value="active"       {{ $module->status === 'active'       ? 'selected' : '' }}>Live</option>
                                 <option value="beta"         {{ $module->status === 'beta'         ? 'selected' : '' }}>In Testing</option>
                                 <option value="coming_soon"  {{ $module->status === 'coming_soon'  ? 'selected' : '' }}>Coming Soon</option>
@@ -69,7 +69,7 @@
                         </form>
 
                         <a href="{{ route('admin.platform-modules.edit', $module) }}"
-                           class="text-xs text-indigo-400 hover:text-indigo-300 font-medium shrink-0 transition-colors">
+                           class="text-xs text-[#0078D4] hover:text-[#B8D4F0] font-medium shrink-0 transition-colors">
                             Edit
                         </a>
                     </div>

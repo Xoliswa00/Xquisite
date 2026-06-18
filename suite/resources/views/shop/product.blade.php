@@ -2,10 +2,10 @@
 
     <!-- Breadcrumb -->
     <nav class="text-xs text-gray-400 mb-6 flex items-center gap-2">
-        <a href="{{ route('shop.index', $tenant->slug) }}" class="hover:text-indigo-600">Shop</a>
+        <a href="{{ route('shop.index', $tenant->slug) }}" class="hover:text-[#0078D4]">Shop</a>
         <span>/</span>
         @if($product->category)
-            <a href="{{ route('shop.index', ['tenantSlug' => $tenant->slug, 'category' => $product->category]) }}" class="hover:text-indigo-600">{{ $product->category }}</a>
+            <a href="{{ route('shop.index', ['tenantSlug' => $tenant->slug, 'category' => $product->category]) }}" class="hover:text-[#0078D4]">{{ $product->category }}</a>
             <span>/</span>
         @endif
         <span class="text-gray-700">{{ $product->name }}</span>
@@ -29,7 +29,7 @@
         <!-- Details -->
         <div class="flex flex-col">
             @if($product->category)
-                <p class="text-sm text-indigo-500 font-medium mb-1">{{ $product->category }}</p>
+                <p class="text-sm text-[#0078D4] font-medium mb-1">{{ $product->category }}</p>
             @endif
             <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ $product->name }}</h1>
 
@@ -37,7 +37,7 @@
                 <p class="text-xs text-gray-400 mb-3">SKU: {{ $product->sku }}</p>
             @endif
 
-            <p class="text-3xl font-bold text-indigo-600 mb-4">R{{ number_format($product->price, 2) }}</p>
+            <p class="text-3xl font-bold text-[#0078D4] mb-4">R{{ number_format($product->price, 2) }}</p>
 
             @if($product->description)
                 <p class="text-sm text-gray-600 leading-relaxed mb-6">{{ $product->description }}</p>
@@ -73,7 +73,7 @@
                                 class="px-3 py-2.5 text-gray-500 hover:bg-gray-50 text-lg leading-none">+</button>
                     </div>
                     <button type="submit"
-                            class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors">
+                            class="flex-1 bg-[#0078D4] hover:bg-[#002B5B] text-white font-semibold py-3 px-6 rounded-xl transition-colors">
                         Add to Cart
                     </button>
                 </form>
@@ -83,7 +83,7 @@
                 </button>
             @endif
 
-            <a href="{{ route('shop.cart', $tenant->slug) }}" class="mt-3 text-center text-sm text-indigo-600 hover:text-indigo-700">
+            <a href="{{ route('shop.cart', $tenant->slug) }}" class="mt-3 text-center text-sm text-[#0078D4] hover:text-[#002B5B]">
                 View Cart ({{ $cart->count() }} items)
             </a>
         </div>
@@ -104,7 +104,7 @@
                         </div>
                         <div class="p-3">
                             <p class="text-sm font-medium text-gray-900 leading-tight line-clamp-2">{{ $rel->name }}</p>
-                            <p class="text-sm font-bold text-indigo-600 mt-1">R{{ number_format($rel->price, 2) }}</p>
+                            <p class="text-sm font-bold text-[#0078D4] mt-1">R{{ number_format($rel->price, 2) }}</p>
                         </div>
                     </a>
                 @endforeach

@@ -20,10 +20,10 @@
             <form method="GET" class="flex flex-wrap gap-2">
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Reference or customer…"
-                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-full sm:w-52 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-full sm:w-52 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                 <input type="date" name="date" value="{{ request('date') }}"
-                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                <select name="method" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                <select name="method" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                     <option value="">All methods</option>
                     @foreach(['cash','card','eft','split'] as $m)
                         <option value="{{ $m }}" @selected(request('method') === $m)>{{ strtoupper($m) }}</option>
@@ -47,7 +47,7 @@
                 @forelse($sales as $sale)
                     <a href="{{ route('pos.sales.show', $sale) }}" class="block px-4 py-3 hover:bg-slate-700/50 transition-colors">
                         <div class="flex items-center justify-between gap-3">
-                            <span class="font-mono text-xs text-indigo-400">{{ $sale->reference }}</span>
+                            <span class="font-mono text-xs text-[#0078D4]">{{ $sale->reference }}</span>
                             @if($sale->status === 'paid')
                                 <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs bg-emerald-900/50 text-emerald-400 border border-emerald-800">Paid</span>
                             @elseif($sale->status === 'voided')
@@ -85,7 +85,7 @@
                 <tbody class="divide-y divide-slate-700">
                     @forelse($sales as $sale)
                         <tr class="hover:bg-slate-700/50">
-                            <td class="px-4 py-3 font-mono text-indigo-400">{{ $sale->reference }}</td>
+                            <td class="px-4 py-3 font-mono text-[#0078D4]">{{ $sale->reference }}</td>
                             <td class="px-4 py-3 text-slate-300">{{ $sale->customer?->name ?? 'Walk-in' }}</td>
                             <td class="px-4 py-3 text-slate-400">{{ $sale->items->count() }}</td>
                             <td class="px-4 py-3">

@@ -4,10 +4,27 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Xquisite Suite') }}</title>
+    <title>{{ config('app.name', 'Xquisite Creations') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=montserrat:500,600,700|inter:400,500,600&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="apple-touch-icon" sizes="57x57" href="/img/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/img/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/img/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/img/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/img/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/img/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/img/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/img/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/img/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
+    <link rel="manifest" href="/img/manifest.json">
+    <meta name="msapplication-TileColor" content="#002B5B">
+    <meta name="msapplication-TileImage" content="/img/ms-icon-144x144.png">
+    <meta name="theme-color" content="#002B5B">
 </head>
 
 <body class="font-sans antialiased bg-slate-950 text-slate-100">
@@ -15,10 +32,18 @@
 <div class="min-h-screen flex">
 
     <!-- Sidebar (desktop + mobile off-canvas) -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform -translate-x-full md:translate-x-0 md:static bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-200">
-        <div class="px-6 py-5 border-b border-slate-800">
-            <span class="text-xl font-bold tracking-wide text-white">Xquisite</span>
-            <p class="text-[10px] text-slate-500 mt-0.5 tracking-wide">One platform. Every operation.</p>
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform -translate-x-full lg:translate-x-0 lg:static bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-200">
+        <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <img src="/img/android-icon-96x96.png" alt="Xquisite" class="h-8 w-8 object-contain shrink-0 rounded-lg">
+                <div class="min-w-0">
+                    <span class="text-base font-bold tracking-wide text-white" style="font-family:'Montserrat',sans-serif">XQUISITE <span class="text-[#D4AF37]">CREATIONS</span></span>
+                    <p class="text-[10px] text-slate-500 mt-0.5 tracking-wide italic" style="font-family:'Montserrat',sans-serif">Understand Your Why.</p>
+                </div>
+            </div>
+            <button id="sidebar-close-btn" class="lg:hidden -mr-1 p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors" aria-label="Close menu">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
         </div>
 
         <nav class="flex-1 px-3 py-4 space-y-1 text-sm overflow-y-auto">
@@ -104,7 +129,7 @@
             {{-- Booking module --}}
             @if($authTenant && $authTenant->hasModule('booking'))
                 <div class="pt-2 border-t border-slate-800 mt-2">
-                    <p class="px-3 text-xs text-slate-600 uppercase tracking-wide mb-1">Bookings</p>
+                    <p class="px-3 text-xs text-[#D4AF37] uppercase tracking-wide mb-1">Bookings</p>
                     
                     <a href="{{ route('appointments.index') }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs($bookingRoutes) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
@@ -139,9 +164,9 @@
                     @if($authTenant)
                         <div class="px-3 mt-2">
                             <p class="text-xs text-slate-500 mb-1">Shareable links</p>
-                            <div class="flex flex-col sm:flex-row gap-2">
-                                <a href="{{ $bookingUrl }}" target="_blank" rel="noopener" class="flex-1 text-slate-400 hover:text-white text-sm px-3 py-2 rounded-lg bg-slate-800/20 hover:bg-slate-800">Open booking</a>
-                                <button type="button" onclick="navigator.clipboard.writeText('{{ $bookingUrl }}')" class="w-full sm:w-auto px-3 py-2 rounded-lg bg-slate-700 text-slate-200 text-sm hover:bg-slate-600">Copy</button>
+                            <div class="flex flex-col gap-2">
+                                <a href="{{ $bookingUrl }}" target="_blank" rel="noopener" class="text-slate-400 hover:text-white text-sm px-3 py-2 rounded-lg bg-slate-800/20 hover:bg-slate-800">Open booking</a>
+                                <button type="button" onclick="navigator.clipboard.writeText('{{ $bookingUrl }}')" class="px-3 py-2 rounded-lg bg-slate-700 text-slate-200 text-sm hover:bg-slate-600">Copy link</button>
                             </div>
                         </div>
                     @endif
@@ -151,7 +176,7 @@
             {{-- POS module --}}
             @if($authTenant && $authTenant->hasModule('pos'))
                 <div class="pt-2 border-t border-slate-800 mt-2">
-                    <p class="px-3 text-xs text-slate-600 uppercase tracking-wide mb-1">POS</p>
+                    <p class="px-3 text-xs text-[#D4AF37] uppercase tracking-wide mb-1">POS</p>
                     <a href="{{ route('pos.terminal') }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs($posTerminalRoutes) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
@@ -185,7 +210,7 @@
                 </div>
 
                 <div class="pt-2 border-t border-slate-800 mt-2">
-                    <p class="px-3 text-xs text-slate-600 uppercase tracking-wide mb-1">Suppliers</p>
+                    <p class="px-3 text-xs text-[#D4AF37] uppercase tracking-wide mb-1">Suppliers</p>
                     <a href="{{ route('suppliers.index') }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs($posSuppliersRoutes) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg>
@@ -194,7 +219,7 @@
                 </div>
 
                 <div class="pt-2 border-t border-slate-800 mt-2">
-                    <p class="px-3 text-xs text-slate-600 uppercase tracking-wide mb-1">Inventory</p>
+                    <p class="px-3 text-xs text-[#D4AF37] uppercase tracking-wide mb-1">Inventory</p>
                     <a href="{{ route('stock.take') }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs($posStockTakeRoutes) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
@@ -221,7 +246,7 @@
             {{-- E-commerce module --}}
             @if($authTenant && $authTenant->hasModule('ecommerce'))
                 <div class="pt-2 border-t border-slate-800 mt-2">
-                    <p class="px-3 text-xs text-slate-600 uppercase tracking-wide mb-1">E-commerce</p>
+                    <p class="px-3 text-xs text-[#D4AF37] uppercase tracking-wide mb-1">E-commerce</p>
                     <a href="{{ route('orders.index') }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs($ecommerceRoutes) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
@@ -240,7 +265,7 @@
             {{-- Analytics module --}}
             @if($authTenant && $authTenant->hasModule('analytics'))
                 <div class="pt-2 border-t border-slate-800 mt-2">
-                    <p class="px-3 text-xs text-slate-600 uppercase tracking-wide mb-1">Reporting</p>
+                    <p class="px-3 text-xs text-[#D4AF37] uppercase tracking-wide mb-1">Reporting</p>
                     <a href="{{ route('analytics.index') }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs($analyticsRoutes) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
@@ -252,7 +277,7 @@
             {{-- Property Management module --}}
             @if($authTenant && $authTenant->hasModule('property_management'))
                 <div class="pt-2 border-t border-slate-800 mt-2">
-                    <p class="px-3 text-xs text-slate-600 uppercase tracking-wide mb-1">Property</p>
+                    <p class="px-3 text-xs text-[#D4AF37] uppercase tracking-wide mb-1">Property</p>
                     <a href="{{ route('properties.index') }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs($propertyPropertiesRoutes) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -284,7 +309,7 @@
             {{-- Clients + Messaging --}}
             @if($authTenant && !Auth::user()->isClient())
                 <div class="pt-2 border-t border-slate-800 mt-2">
-                    <p class="px-3 text-xs text-slate-600 uppercase tracking-wide mb-1">Clients</p>
+                    <p class="px-3 text-xs text-[#D4AF37] uppercase tracking-wide mb-1">Clients</p>
                     <a href="{{ route('clients.index') }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('clients.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -296,7 +321,7 @@
             {{-- Client portal nav --}}
             @if(Auth::user()->isClient())
                 <div class="pt-2 border-t border-slate-800 mt-2">
-                    <p class="px-3 text-xs text-slate-600 uppercase tracking-wide mb-1">My Portal</p>
+                    <p class="px-3 text-xs text-[#D4AF37] uppercase tracking-wide mb-1">My Portal</p>
                     <a href="{{ route('portal.dashboard') }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('portal.dashboard') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -312,7 +337,7 @@
 
             {{-- Settings + Admin --}}
             <div class="pt-2 border-t border-slate-800 mt-2">
-                <p class="px-3 text-xs text-slate-600 uppercase tracking-wide mb-1">Settings</p>
+                <p class="px-3 text-xs text-[#D4AF37] uppercase tracking-wide mb-1">Settings</p>
                 @if($authTenant)
                     <a href="{{ route('settings.modules.index') }}"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs($settingsModulesRoutes) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
@@ -341,7 +366,7 @@
 
                 @can('manage-tenants')
                     <div class="pt-2 border-t border-slate-800 mt-2">
-                        <p class="px-3 text-xs text-slate-600 uppercase tracking-wide mb-1">System Owner</p>
+                        <p class="px-3 text-xs text-[#D4AF37] uppercase tracking-wide mb-1">System Owner</p>
                         <a href="{{ route('monitoring.index') }}"
                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs($systemMonitoringRoutes) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M4 6h16M4 18h16M4 12h16"/></svg>
@@ -361,6 +386,11 @@
                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs($systemUsersRoutes) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197"/></svg>
                             Users
+                        </a>
+                        <a href="{{ route('admin.team-members.index') }}"
+                           class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('admin.team-members.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4h-3m-4 6H7a4 4 0 01-4-4v-2a4 4 0 014-4h1m4 0a4 4 0 100-8 4 4 0 000 8z"/></svg>
+                            Team Members
                         </a>
                         <a href="{{ route('admin.reviews.index') }}"
                            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs($systemReviewsRoutes) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
@@ -389,7 +419,7 @@
 
         <div class="px-3 py-4 border-t border-slate-800">
             <div class="flex items-center gap-3 px-3 py-2">
-                <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold">
+                <div class="w-8 h-8 rounded-full bg-[#0078D4] flex items-center justify-center text-xs font-bold">
                     {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
                 </div>
                 <div class="flex-1 min-w-0">
@@ -416,12 +446,12 @@
     <div class="flex-1 flex flex-col min-w-0">
 
         <!-- Top bar (mobile + breadcrumb) -->
-        <header class="h-14 flex items-center justify-between px-3 sm:px-6 border-b border-slate-800 bg-slate-900 md:bg-transparent">
+        <header class="h-14 flex items-center justify-between px-3 sm:px-6 border-b border-slate-800 bg-slate-900 lg:bg-slate-950/60 lg:backdrop-blur-sm sticky top-0 z-20">
             <div class="flex items-center gap-3">
-                <button id="sidebar-open-btn" class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-slate-300 hover:bg-slate-800" aria-label="Open menu">
+                <button id="sidebar-open-btn" class="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-slate-300 hover:bg-slate-800" aria-label="Open menu">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
-                <div class="text-sm font-medium text-slate-300">
+                <div class="text-sm font-semibold text-[#D4AF37]">
                     @isset($header){{ $header }}@endisset
                 </div>
             </div>
@@ -438,7 +468,7 @@
                         @endif
                     </button>
                     <div x-show="openNotifications" x-cloak @click.away="openNotifications = false"
-                         class="absolute right-0 mt-2 w-80 max-w-xs bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden z-50 text-left">
+                         class="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1rem)] bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden z-50 text-left">
                         <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-semibold text-white">Notifications</p>
@@ -489,7 +519,7 @@
                         </div>
                     </div>
                 </div>
-                <span class="text-sm text-slate-400 md:hidden">{{ Auth::user()->name }}</span>
+                <span class="text-sm text-slate-400 lg:hidden">{{ Auth::user()->name }}</span>
             </div>
         </header>
 
@@ -509,6 +539,16 @@
                     @if(str_contains(session('error', ''), 'suspended'))
                         <a href="{{ route('billing.index') }}" class="shrink-0 text-xs font-semibold underline hover:no-underline">View Billing →</a>
                     @endif
+                </div>
+            @endif
+            @if(session('info'))
+                <div class="mb-4 px-4 py-3 rounded-lg bg-[#0078D4]/10 border border-[#0078D4]/30 text-[#0078D4] text-sm">
+                    {{ session('info') }}
+                </div>
+            @endif
+            @if(session('warning'))
+                <div class="mb-4 px-4 py-3 rounded-lg bg-amber-900/30 border border-amber-700 text-amber-300 text-sm">
+                    {{ session('warning') }}
                 </div>
             @endif
             {{ $slot }}
@@ -537,8 +577,10 @@
             document.body.classList.remove('overflow-hidden');
         }
 
-        if (openBtn) openBtn.addEventListener('click', openSidebar);
-        if (overlay) overlay.addEventListener('click', closeSidebar);
+        const closeBtn = document.getElementById('sidebar-close-btn');
+        if (openBtn)  openBtn.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (overlay)  overlay.addEventListener('click', closeSidebar);
         document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeSidebar(); });
     })();
 </script>

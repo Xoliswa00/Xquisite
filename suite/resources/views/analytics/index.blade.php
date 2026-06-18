@@ -44,7 +44,7 @@
                     @foreach($revenueChart as $day)
                         @php $heightPct = max(4, ($day['revenue'] / $maxRev) * 100); @endphp
                         <div class="flex-1 flex flex-col items-center gap-1 group relative">
-                            <div class="w-full bg-indigo-600/80 hover:bg-indigo-500 rounded-sm transition-colors"
+                            <div class="w-full bg-[#0078D4]/80 hover:bg-[#0078D4] rounded-sm transition-colors"
                                  style="height: {{ $heightPct }}%"
                                  title="R {{ number_format($day['revenue'], 2) }}">
                             </div>
@@ -75,7 +75,7 @@
                                 <span class="text-slate-400">{{ $pct }}% · R {{ number_format($pm->revenue, 0) }}</span>
                             </div>
                             <div class="w-full bg-slate-700 rounded-full h-1.5">
-                                <div class="bg-indigo-500 h-1.5 rounded-full" style="width: {{ $pct }}%"></div>
+                                <div class="bg-[#0078D4] h-1.5 rounded-full" style="width: {{ $pct }}%"></div>
                             </div>
                         </div>
                     @empty
@@ -134,7 +134,7 @@
                                     <span class="text-slate-400 shrink-0">{{ $svc->sold }}× · R {{ number_format($svc->revenue, 0) }}</span>
                                 </div>
                                 <div class="w-full bg-slate-700 rounded-full h-1.5">
-                                    <div class="bg-indigo-500 h-1.5 rounded-full" style="width: {{ round(($svc->revenue / $maxSvcRev) * 100) }}%"></div>
+                                    <div class="bg-[#0078D4] h-1.5 rounded-full" style="width: {{ round(($svc->revenue / $maxSvcRev) * 100) }}%"></div>
                                 </div>
                             </div>
                         @endforeach
@@ -192,7 +192,7 @@
                             View reorder alerts →
                         </a>
                     @endif
-                    <a href="{{ route('stock.take') }}" class="text-xs text-indigo-400 hover:text-indigo-300 {{ $reorderNeeded > 0 ? 'ml-auto' : '' }}">
+                    <a href="{{ route('stock.take') }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0] {{ $reorderNeeded > 0 ? 'ml-auto' : '' }}">
                         Stock take →
                     </a>
                 </div>
@@ -212,7 +212,7 @@
                     </div>
                 </div>
                 <div class="pt-2 border-t border-slate-700">
-                    <a href="{{ route('customers.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300">
+                    <a href="{{ route('customers.index') }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">
                         Manage customers →
                     </a>
                 </div>
@@ -222,7 +222,7 @@
             <div class="bg-slate-800 rounded-xl overflow-hidden">
                 <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
                     <h3 class="text-sm font-medium text-slate-300">Recent Sales</h3>
-                    <a href="{{ route('pos.sales.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300">All →</a>
+                    <a href="{{ route('pos.sales.index') }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">All →</a>
                 </div>
                 @forelse($recentSales as $sale)
                     <a href="{{ route('pos.sales.show', $sale) }}"

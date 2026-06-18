@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-white">Log #{{ $log->id }}</h2>
+            <h2 class="text-2xl font-bold text-[#D4AF37]">Log #{{ $log->id }}</h2>
             <a href="{{ route('admin.logs.index') }}" class="text-sm text-slate-400 hover:text-white">&larr; Back</a>
         </div>
     </x-slot>

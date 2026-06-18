@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div>
-                <h2 class="text-2xl font-bold text-white">Payment &mdash; {{ $rentPayment->period }}</h2>
+                <h2 class="text-2xl font-bold text-[#D4AF37]">Payment &mdash; {{ $rentPayment->period }}</h2>
                 <a href="{{ route('rent-payments.index') }}" class="text-sm text-slate-400 hover:text-white">&larr; Back to Payments</a>
             </div>
             <span class="px-2 py-0.5 rounded text-xs font-medium

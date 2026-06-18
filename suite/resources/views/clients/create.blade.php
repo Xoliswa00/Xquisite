@@ -25,12 +25,12 @@
                 </div>
                 <div>
                     <x-input-label value="Notes" />
-                    <textarea name="notes" rows="3" class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-indigo-500 focus:border-indigo-500">{{ old('notes', $client->notes ?? '') }}</textarea>
+                    <textarea name="notes" rows="3" class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-[#0078D4] focus:border-[#0078D4]">{{ old('notes', $client->notes ?? '') }}</textarea>
                 </div>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3">
-                <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg text-sm">
+                <button type="submit" class="px-6 py-2.5 bg-[#0078D4] hover:bg-[#0078D4] text-white font-medium rounded-lg text-sm">
                     {{ isset($client) ? 'Update Client' : 'Add Client' }}
                 </button>
                 <a href="{{ route('clients.index') }}" class="px-6 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-lg text-sm text-center">Cancel</a>

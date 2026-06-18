@@ -16,7 +16,7 @@
         @endif
 
         @if($existing)
-            <div class="rounded-2xl bg-white border border-slate-200 p-6 space-y-3">
+            <div class="rounded-2xl bg-slate-800 border border-slate-200 p-6 space-y-3">
                 <div class="flex items-center gap-0.5 text-2xl leading-none">
                     @for($i = 1; $i <= 5; $i++)
                         <span class="{{ $i <= $existing->rating ? 'text-amber-400' : 'text-slate-200' }}">★</span>
@@ -34,7 +34,7 @@
                 </p>
             </div>
         @else
-            <div class="rounded-2xl bg-white border border-slate-200 p-6"
+            <div class="rounded-2xl bg-slate-800 border border-slate-200 p-6"
                  x-data="{ rating: 0, hovered: 0 }">
                 <form method="POST" action="{{ route('reviews.store') }}" class="space-y-5">
                     @csrf
@@ -64,7 +64,7 @@
                         <input type="text" name="display_name"
                                value="{{ old('display_name', auth()->user()->tenant?->name) }}"
                                placeholder="Your business name"
-                               class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                               class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
                     </div>
 
                     {{-- Headline --}}
@@ -75,7 +75,7 @@
                         <input type="text" name="title" maxlength="120"
                                value="{{ old('title') }}"
                                placeholder="e.g. Game changer for my salon"
-                               class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                               class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
                     </div>
 
                     {{-- Body --}}
@@ -85,13 +85,13 @@
                         </label>
                         <textarea name="body" rows="4" required minlength="10" maxlength="1000"
                                   placeholder="What do you love? What could be better?"
-                                  class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none">{{ old('body') }}</textarea>
+                                  class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D4] resize-none">{{ old('body') }}</textarea>
                         @error('body') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <button type="submit"
                             :disabled="rating === 0"
-                            class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition">
+                            class="w-full py-2.5 bg-[#0078D4] hover:bg-[#0078D4] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition">
                         Submit feedback
                     </button>
 

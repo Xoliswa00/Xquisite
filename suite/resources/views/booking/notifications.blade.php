@@ -8,7 +8,7 @@
             <p class="text-sm text-slate-500 mt-0.5">All activity related to your appointments and booking updates.</p>
         </div>
         <a href="{{ route('book.my-bookings', $slug) }}"
-           class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">
+           class="bg-[#0078D4] hover:bg-[#0078D4] text-white px-4 py-2 rounded-xl text-sm font-semibold transition">
             My Bookings
         </a>
     </div>
@@ -44,7 +44,7 @@
                         @if(! empty($data['url']))
                             <div class="mt-3">
                                 
-                                <a href="{{ $data['url'] }}" class="text-xs font-medium text-indigo-600 hover:text-indigo-500">View details</a>
+                                <a href="{{ $data['url'] }}" class="text-xs font-medium text-[#0078D4] hover:text-[#0078D4]">View details</a>
                             </div>
                         @endif
                     </div>

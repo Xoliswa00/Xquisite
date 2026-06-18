@@ -6,14 +6,14 @@
             <form method="GET" class="flex flex-wrap gap-2">
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Name, SKU or category…"
-                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-full sm:w-52 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-full sm:w-52 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                 <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Search</button>
                 @if(request('search'))
                     <a href="{{ route('products.index') }}" class="text-sm px-4 py-2 rounded-lg text-slate-400 hover:text-white">Clear</a>
                 @endif
             </form>
             <a href="{{ route('products.create') }}"
-               class="w-full sm:w-auto text-center bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
+               class="w-full sm:w-auto text-center bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
                 + Add Product
             </a>
         </div>
@@ -49,7 +49,7 @@
                     </a>
                 @empty
                     <div class="px-4 py-10 text-center text-slate-500 text-sm">
-                        No products yet. <a href="{{ route('products.create') }}" class="text-indigo-400 hover:text-indigo-300">Add one.</a>
+                        No products yet. <a href="{{ route('products.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0]">Add one.</a>
                     </div>
                 @endforelse
             </div>
@@ -102,7 +102,7 @@
                     @empty
                         <tr>
                             <td colspan="7" class="px-4 py-10 text-center text-slate-500">
-                                No products yet. <a href="{{ route('products.create') }}" class="text-indigo-400 hover:text-indigo-300">Add one.</a>
+                                No products yet. <a href="{{ route('products.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0]">Add one.</a>
                             </td>
                         </tr>
                     @endforelse

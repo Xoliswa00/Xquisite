@@ -35,7 +35,12 @@ class DemoController extends Controller
             return redirect()->route('welcome')->with('error', 'Demo is being set up. Please check back shortly.');
         }
 
+        if (! $demoUser->hasVerifiedEmail()) {
+            $demoUser->markEmailAsVerified();
+        }
+
         Auth::login($demoUser);
+        session()->regenerate();
 
         session(['demo_mode' => true]);
 

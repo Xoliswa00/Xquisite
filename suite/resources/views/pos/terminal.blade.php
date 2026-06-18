@@ -20,7 +20,7 @@
             <a href="{{ route('dashboard') }}" class="text-slate-400 hover:text-white text-sm">← Back</a>
             <span class="text-white font-semibold">POS Terminal</span>
             @if($appointment)
-                <span class="text-xs bg-indigo-900/50 text-indigo-300 border border-indigo-800 px-2 py-0.5 rounded-full">
+                <span class="text-xs bg-[#001A3A]/50 text-[#B8D4F0] border border-[#002B5B] px-2 py-0.5 rounded-full">
                     Appointment #{{ $appointment->id }} · {{ $appointment->customer->name }}
                 </span>
             @endif
@@ -39,21 +39,21 @@
                 <input type="text"
                        x-model="search"
                        placeholder="Search products…"
-                       class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                       class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
             </div>
 
             <!-- Suggested products for this service -->
             @if($serviceSuggestions)
-                <div class="px-4 py-3 border-b border-slate-800 bg-indigo-950/30">
-                    <p class="text-xs text-indigo-400 font-medium mb-2">
+                <div class="px-4 py-3 border-b border-slate-800 bg-[#001A3A]/30">
+                    <p class="text-xs text-[#0078D4] font-medium mb-2">
                         Suggested for {{ $appointment->services->pluck('name')->join(', ') }}
                     </p>
                     <div class="flex gap-2 overflow-x-auto">
                         <template x-for="p in suggestions" :key="p.id">
                             <button @click="addProduct(p)"
-                                    class="shrink-0 bg-indigo-900/40 hover:bg-indigo-900/70 border border-indigo-800 rounded-lg px-3 py-2 text-left transition-colors">
+                                    class="shrink-0 bg-[#001A3A]/40 hover:bg-[#001A3A]/70 border border-[#002B5B] rounded-lg px-3 py-2 text-left transition-colors">
                                 <p class="text-xs text-white font-medium" x-text="p.name"></p>
-                                <p class="text-xs text-indigo-300 font-bold mt-0.5" x-text="'R' + p.price.toFixed(2)"></p>
+                                <p class="text-xs text-[#B8D4F0] font-bold mt-0.5" x-text="'R' + p.price.toFixed(2)"></p>
                             </button>
                         </template>
                     </div>
@@ -63,13 +63,13 @@
             <!-- Category tabs -->
             <div class="flex gap-2 px-4 py-3 border-b border-slate-800 overflow-x-auto">
                 <button @click="activeCategory = ''"
-                        :class="activeCategory === '' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'"
+                        :class="activeCategory === '' ? 'bg-[#0078D4] text-white' : 'bg-slate-800 text-slate-400 hover:text-white'"
                         class="shrink-0 text-xs px-3 py-1.5 rounded-lg">
                     All
                 </button>
                 <template x-for="cat in categories" :key="cat">
                     <button @click="activeCategory = cat"
-                            :class="activeCategory === cat ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'"
+                            :class="activeCategory === cat ? 'bg-[#0078D4] text-white' : 'bg-slate-800 text-slate-400 hover:text-white'"
                             class="shrink-0 text-xs px-3 py-1.5 rounded-lg"
                             x-text="cat">
                     </button>
@@ -81,7 +81,7 @@
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     <template x-for="product in filteredProducts" :key="product.id">
                         <button @click="addProduct(product)"
-                                class="bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-indigo-600 rounded-xl p-3 text-left transition-colors group">
+                                class="bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-[#0078D4] rounded-xl p-3 text-left transition-colors group">
                             <p class="text-xs text-slate-400 mb-1" x-text="product.category"></p>
                             <p class="text-sm font-medium text-white leading-tight" x-text="product.name"></p>
                             <p class="text-sm font-bold text-emerald-400 mt-1.5" x-text="'R' + product.price.toFixed(2)"></p>
@@ -129,7 +129,7 @@
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-1.5">
                                             <span class="text-xs px-1.5 py-0.5 rounded"
-                                                  :class="item.type === 'service' ? 'bg-indigo-900/50 text-indigo-300' : 'bg-slate-700 text-slate-300'"
+                                                  :class="item.type === 'service' ? 'bg-[#001A3A]/50 text-[#B8D4F0]' : 'bg-slate-700 text-slate-300'"
                                                   x-text="item.type === 'service' ? 'Service' : 'Product'">
                                             </span>
                                         </div>
@@ -168,7 +168,7 @@
                 <div class="flex items-center gap-3">
                     <label class="text-xs text-slate-400 shrink-0">Discount (R)</label>
                     <input type="number" x-model.number="discount" min="0" step="0.01"
-                           class="flex-1 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                           class="flex-1 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                 </div>
 
                 <!-- Totals -->
@@ -195,7 +195,7 @@
                     <div class="grid grid-cols-4 gap-1.5">
                         <template x-for="method in ['cash','card','eft','split']" :key="method">
                             <button @click="paymentMethod = method"
-                                    :class="paymentMethod === method ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-800 text-slate-400 border-slate-700'"
+                                    :class="paymentMethod === method ? 'bg-[#0078D4] text-white border-[#0078D4]' : 'bg-slate-800 text-slate-400 border-slate-700'"
                                     class="border text-xs py-2 rounded-lg capitalize">
                                 <span x-text="method.toUpperCase()"></span>
                             </button>
@@ -206,7 +206,7 @@
                 <!-- Notes -->
                 <textarea x-model="notes" rows="2"
                           placeholder="Notes (optional)"
-                          class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"></textarea>
+                          class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] resize-none"></textarea>
 
                 <!-- Checkout button -->
                 <form id="checkout-form" method="POST" action="{{ route('pos.checkout') }}">

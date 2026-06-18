@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
-        <a href="{{ route('monitoring.index') }}" class="text-indigo-400 hover:text-indigo-300 text-sm mb-2 inline-block">← Back to Monitoring</a>
-        <h2 class="text-2xl font-bold text-white">Add Monitored Instance</h2>
+        <a href="{{ route('monitoring.index') }}" class="text-[#0078D4] hover:text-[#B8D4F0] text-sm mb-2 inline-block">← Back to Monitoring</a>
+        <h2 class="text-2xl font-bold text-[#D4AF37]">Add Monitored Instance</h2>
     </x-slot>
 
     <div class="max-w-2xl">
@@ -16,7 +16,7 @@
                            name="name" 
                            value="{{ old('name') }}"
                            placeholder="e.g., Billing App, CRM Service"
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 @error('name') border-red-500 @enderror"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg focus:outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4] @error('name') border-red-500 @enderror"
                            required>
                     @error('name')
                         <p class="text-red-400 text-xs mt-2">{{ $message }}</p>
@@ -30,7 +30,7 @@
                            name="url" 
                            value="{{ old('url') }}"
                            placeholder="https://example.com"
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 @error('url') border-red-500 @enderror"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg focus:outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4] @error('url') border-red-500 @enderror"
                            required>
                     @error('url')
                         <p class="text-red-400 text-xs mt-2">{{ $message }}</p>
@@ -46,7 +46,7 @@
                                name="api_token" 
                                value="{{ old('api_token') }}"
                                placeholder="64-character random token"
-                               class="flex-1 px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg font-mono text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 @error('api_token') border-red-500 @enderror"
+                               class="flex-1 px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg font-mono text-sm focus:outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4] @error('api_token') border-red-500 @enderror"
                                required>
                         <button type="button" 
                                 onclick="generateToken()"
@@ -67,7 +67,7 @@
                            name="tenant_id" 
                            value="{{ old('tenant_id') }}"
                            placeholder="e.g., tenant_123"
-                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg focus:outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4]">
                     <p class="text-xs text-slate-400 mt-1">Associate this instance with a specific tenant</p>
                 </div>
 
@@ -77,24 +77,24 @@
                            name="active" 
                            value="1"
                            {{ old('active', true) ? 'checked' : '' }}
-                           class="w-4 h-4 bg-slate-700 border-slate-600 rounded focus:ring-indigo-500">
+                           class="w-4 h-4 bg-slate-700 border-slate-600 rounded focus:ring-[#0078D4]">
                     <label for="active" class="text-sm text-slate-300">Actively monitor this instance</label>
                 </div>
 
                 {{-- Integration Instructions --}}
-                <div class="bg-indigo-900/20 border border-indigo-700/30 rounded-lg p-4">
-                    <h4 class="text-sm font-semibold text-indigo-300 mb-3">Integration Steps</h4>
+                <div class="bg-[#001A3A]/20 border border-[#002B5B]/30 rounded-lg p-4">
+                    <h4 class="text-sm font-semibold text-[#B8D4F0] mb-3">Integration Steps</h4>
                     <ol class="space-y-2 text-xs text-slate-300">
                         <li><strong>1.</strong> After creating this instance, you'll receive setup instructions</li>
                         <li><strong>2.</strong> Use the API token to configure the remote app</li>
-                        <li><strong>3.</strong> Remote app will POST health data to: <code class="bg-slate-900 px-1.5 py-0.5 rounded text-indigo-300">{{ config('app.url') }}/api/health-report</code></li>
+                        <li><strong>3.</strong> Remote app will POST health data to: <code class="bg-slate-900 px-1.5 py-0.5 rounded text-[#B8D4F0]">{{ config('app.url') }}/api/health-report</code></li>
                         <li><strong>4.</strong> This platform will automatically check instance health every 5 minutes</li>
                     </ol>
                 </div>
 
                 <div class="flex gap-3">
                     <button type="submit" 
-                            class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition">
+                            class="flex-1 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg font-medium transition">
                         Create Instance
                     </button>
                     <a href="{{ route('monitoring.index') }}"
@@ -107,7 +107,7 @@
 
         {{-- Example Configuration --}}
         <div class="mt-8 bg-slate-800 rounded-xl p-6 border border-slate-700">
-            <h3 class="text-lg font-semibold text-white mb-4">How to Configure Remote App</h3>
+            <h3 class="text-lg font-semibold text-[#D4AF37] mb-4">How to Configure Remote App</h3>
             <p class="text-slate-400 text-sm mb-4">Add this code to your remote Laravel app to report health:</p>
             <pre class="bg-slate-900 p-4 rounded-lg overflow-x-auto text-xs text-slate-300"><code>// config/services.php
 'monitoring' => [

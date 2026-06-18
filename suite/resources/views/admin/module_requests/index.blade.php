@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
-            <h2 class="text-xl font-bold text-white">Module Requests</h2>
+            <h2 class="text-xl font-bold text-[#D4AF37]">Module Requests</h2>
         </div>
     </x-slot>
 
@@ -26,7 +26,7 @@
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <p class="text-sm font-semibold text-white truncate">{{ $request->tenant->name }}</p>
-                            <p class="text-xs text-indigo-300 mt-0.5">{{ $request->module_name }}</p>
+                            <p class="text-xs text-[#B8D4F0] mt-0.5">{{ $request->module_name }}</p>
                         </div>
                         <span class="shrink-0 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold
                             {{ $request->status === 'pending'  ? 'bg-amber-500/15 text-amber-300'  :
@@ -51,9 +51,9 @@
                             @csrf @method('PATCH')
                             <input type="number" name="price_override" step="0.01" placeholder="Price override (optional)"
                                    value="{{ old('price_override', $request->price_override) }}"
-                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                             <textarea name="review_notes" rows="2" placeholder="Review notes (optional)"
-                                      class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
+                                      class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"></textarea>
                             <div class="flex gap-2">
                                 <button type="submit"
                                         class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-900 rounded-lg px-3 py-2 text-xs font-semibold transition-colors">
@@ -117,9 +117,9 @@
                                             @csrf @method('PATCH')
                                             <input type="number" name="price_override" step="0.01" placeholder="Price override"
                                                    value="{{ old('price_override', $request->price_override) }}"
-                                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                             <textarea name="review_notes" rows="2" placeholder="Review notes (optional)"
-                                                      class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
+                                                      class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"></textarea>
                                             <button type="submit"
                                                     class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-900 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors">
                                                 Approve

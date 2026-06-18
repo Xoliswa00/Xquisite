@@ -8,7 +8,7 @@
             {{-- Top row: name + status --}}
             <div class="flex items-start justify-between gap-3">
                 <div class="space-y-0.5 min-w-0">
-                    <h2 class="text-lg font-semibold text-white truncate">{{ $customer->name }}</h2>
+                    <h2 class="text-lg font-semibold text-[#D4AF37] truncate">{{ $customer->name }}</h2>
                     @if($customer->email)
                         <p class="text-sm text-slate-400">{{ $customer->email }}</p>
                     @endif
@@ -30,7 +30,7 @@
                 <a href="{{ route('customers.edit', $customer) }}"
                    class="flex-1 sm:flex-none text-center bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Edit</a>
                 <a href="{{ route('appointments.create') }}?customer_id={{ $customer->id }}"
-                   class="flex-1 sm:flex-none text-center bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg font-medium">+ Book</a>
+                   class="flex-1 sm:flex-none text-center bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg font-medium">+ Book</a>
             </div>
         </div>
 

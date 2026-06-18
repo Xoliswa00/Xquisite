@@ -4,35 +4,34 @@
     <div class="space-y-6">
 
         {{-- Trial banner — only shown when on trial AND no modules have been activated yet --}}
-        @if(Auth::user()->tenant?->isOnTrial() && Auth::user()->tenant?->activeModules()->doesntExist())
+        @if(Auth::user()->tenant?->isOnTrial())
             @php $daysLeft = (int) now()->diffInDays(Auth::user()->tenant->trial_ends_at, false); @endphp
-            <div class="flex items-center justify-between px-5 py-3 rounded-xl bg-indigo-900/30 border border-indigo-700/50 text-sm">
+            <div class="flex items-center justify-between px-5 py-3 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-sm">
                 <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span class="text-indigo-300">
+                    <svg class="w-4 h-4 text-[#D4AF37] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-[#D4AF37]">
                         @if($daysLeft > 1)
-                            Your free trial ends in <strong>{{ $daysLeft }} days</strong>.
+                            Free trial — <strong>{{ $daysLeft }} days</strong> remaining. No billing until your trial ends.
                         @elseif($daysLeft === 1)
-                            Your free trial ends <strong>tomorrow</strong>.
+                            Free trial ends <strong>tomorrow</strong>. No billing today.
                         @else
-                            Your free trial ends <strong>today</strong>.
+                            Free trial ends <strong>today</strong>.
                         @endif
-                        Activate a module to get started.
                     </span>
                 </div>
-                <a href="{{ route('billing.index') }}" class="shrink-0 text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg font-medium">View Plans</a>
+                <a href="{{ route('settings.modules.index') }}" class="shrink-0 text-xs bg-[#D4AF37] hover:bg-[#C09B28] text-[#002B5B] font-semibold px-3 py-1.5 rounded-lg">Manage Modules</a>
             </div>
         @endif
 
         {{-- Onboarding checklist --}}
         @if(!$onboardingComplete)
-            <div class="bg-slate-800 rounded-xl p-5 border border-indigo-800/40">
+            <div class="bg-slate-800 rounded-xl p-5 border border-[#0078D4]/20">
                 <div class="flex items-start justify-between mb-4">
                     <div>
-                        <h3 class="text-sm font-semibold text-white">Get started with Xquisite Suite</h3>
+                        <h3 class="text-sm font-semibold text-[#D4AF37]">Get started with Xquisite</h3>
                         <p class="text-xs text-slate-400 mt-0.5">Complete these steps to get your business running</p>
                     </div>
-                    <span class="text-xs text-indigo-400 font-medium">{{ collect($onboarding)->filter()->count() }}/{{ count($onboarding) }} done</span>
+                    <span class="text-xs text-[#0078D4] font-medium">{{ collect($onboarding)->filter()->count() }}/{{ count($onboarding) }} done</span>
                 </div>
                 <div class="space-y-2">
                     @php
@@ -55,7 +54,7 @@
                             </div>
                             <span class="text-sm {{ $done ? 'line-through text-slate-500' : 'text-slate-300' }} flex-1">{{ $label }}</span>
                             @if(!$done)
-                                <a href="{{ route($createRoute) }}" class="text-xs text-indigo-400 hover:text-indigo-300 shrink-0">Start →</a>
+                                <a href="{{ route($createRoute) }}" class="text-xs text-[#0078D4] hover:text-[#0065B8] shrink-0">Start →</a>
                             @endif
                         </div>
                     @endforeach
@@ -69,22 +68,22 @@
                 <p class="text-xs text-slate-400 uppercase tracking-wide">Today's Bookings</p>
                 <p class="text-3xl font-bold text-white mt-1">{{ $todayCount }}</p>
                 <a href="{{ route('appointments.index', ['date' => today()->toDateString()]) }}"
-                   class="text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block">View today →</a>
+                   class="text-xs text-[#0078D4] hover:text-[#0065B8] mt-2 inline-block">View today →</a>
             </div>
             <div class="bg-slate-800 rounded-xl p-5">
                 <p class="text-xs text-slate-400 uppercase tracking-wide">Customers</p>
                 <p class="text-3xl font-bold text-white mt-1">{{ $totalCustomers }}</p>
-                <a href="{{ route('customers.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block">Manage →</a>
+                <a href="{{ route('customers.index') }}" class="text-xs text-[#0078D4] hover:text-[#0065B8] mt-2 inline-block">Manage →</a>
             </div>
             <div class="bg-slate-800 rounded-xl p-5">
                 <p class="text-xs text-slate-400 uppercase tracking-wide">Active Staff</p>
                 <p class="text-3xl font-bold text-white mt-1">{{ $activeStaff }}</p>
-                <a href="{{ route('staff.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block">Manage →</a>
+                <a href="{{ route('staff.index') }}" class="text-xs text-[#0078D4] hover:text-[#0065B8] mt-2 inline-block">Manage →</a>
             </div>
             <div class="bg-slate-800 rounded-xl p-5">
                 <p class="text-xs text-slate-400 uppercase tracking-wide">Active Services</p>
                 <p class="text-3xl font-bold text-white mt-1">{{ $activeServices }}</p>
-                <a href="{{ route('services.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block">Manage →</a>
+                <a href="{{ route('services.index') }}" class="text-xs text-[#0078D4] hover:text-[#0065B8] mt-2 inline-block">Manage →</a>
             </div>
             @if($hasPos)
             <div class="{{ $reorderCount > 0 ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-slate-800' }} rounded-xl p-5">
@@ -100,7 +99,7 @@
                 <div class="bg-slate-800 rounded-xl p-5">
                     <p class="text-xs text-slate-400 uppercase tracking-wide">Pending Module Requests</p>
                     <p class="text-3xl font-bold text-white mt-1">{{ $pendingModuleRequests }}</p>
-                    <a href="{{ route('admin.module-requests.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block">
+                    <a href="{{ route('admin.module-requests.index') }}" class="text-xs text-[#0078D4] hover:text-[#0065B8] mt-2 inline-block">
                         Review requests →
                     </a>
                 </div>
@@ -145,7 +144,7 @@
             <div class="bg-slate-800 rounded-xl overflow-hidden">
                 <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
                     <h3 class="text-sm font-medium text-slate-300">Today's Schedule</h3>
-                    <a href="{{ route('appointments.create') }}" class="text-xs text-indigo-400 hover:text-indigo-300">+ New</a>
+                    <a href="{{ route('appointments.create') }}" class="text-xs text-[#0078D4] hover:text-[#0065B8]">+ New</a>
                 </div>
                 @forelse($upcomingToday as $appt)
                     <div class="px-4 py-3 border-b border-slate-700/50 flex items-center gap-3">
@@ -168,7 +167,7 @@
             <div class="bg-slate-800 rounded-xl overflow-hidden">
                 <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
                     <h3 class="text-sm font-medium text-slate-300">Recent Bookings</h3>
-                    <a href="{{ route('appointments.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300">View all →</a>
+                    <a href="{{ route('appointments.index') }}" class="text-xs text-[#0078D4] hover:text-[#0065B8]">View all →</a>
                 </div>
                 @forelse($recentAppointments as $appt)
                     <a href="{{ route('appointments.show', $appt) }}"
@@ -184,7 +183,7 @@
                     </a>
                 @empty
                     <div class="px-4 py-8 text-center text-slate-500 text-sm">
-                        No bookings yet. <a href="{{ route('appointments.create') }}" class="text-indigo-400 hover:text-indigo-300">Create one.</a>
+                        No bookings yet. <a href="{{ route('appointments.create') }}" class="text-[#0078D4] hover:text-[#0065B8]">Create one.</a>
                     </div>
                 @endforelse
             </div>

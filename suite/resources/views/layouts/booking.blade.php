@@ -6,6 +6,23 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', $tenant->name . ' — Book')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="apple-touch-icon" sizes="57x57" href="/img/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/img/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/img/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/img/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/img/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/img/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/img/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/img/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/img/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
+    <link rel="manifest" href="/img/manifest.json">
+    <meta name="msapplication-TileColor" content="#002B5B">
+    <meta name="msapplication-TileImage" content="/img/ms-icon-144x144.png">
+    <meta name="theme-color" content="#002B5B">
     <style>
         [x-cloak] { display: none !important; }
         body { background: linear-gradient(160deg, #f8faff 0%, #ffffff 40%, #f5f3ff 100%); min-height: 100vh; }
@@ -22,7 +39,7 @@
             @if(!empty($tenant->logo_url))
                 <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}" class="w-8 h-8 rounded-lg object-cover shrink-0">
             @else
-                <span class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-black text-sm shrink-0">
+                <span class="w-8 h-8 rounded-lg bg-[#0078D4] flex items-center justify-center text-white font-black text-sm shrink-0">
                     {{ strtoupper(substr($tenant->name, 0, 1)) }}
                 </span>
             @endif
@@ -49,7 +66,7 @@
                 </form>
             @else
                 <a href="{{ route('book.login', $slug) }}" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition">Sign in</a>
-                <a href="{{ route('book.register', $slug) }}" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm">
+                <a href="{{ route('book.register', $slug) }}" class="bg-[#0078D4] hover:bg-[#0078D4] text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm">
                     Register
                 </a>
             @endauth
@@ -83,7 +100,7 @@
 </main>
 
 <footer class="border-t border-slate-100 py-6 text-center text-xs text-slate-400">
-    Powered by <span class="font-semibold text-slate-500">Xquisite</span>
+    Powered by <a href="/" target="_blank" rel="noopener" class="font-semibold text-slate-500 hover:text-[#0078D4] transition-colors">Xquisite</a>
 </footer>
 
 @stack('scripts')

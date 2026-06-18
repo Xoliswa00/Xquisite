@@ -9,19 +9,19 @@
             {{-- Tabs --}}
             <div class="flex gap-1 bg-slate-800 p-1 rounded-xl overflow-x-auto">
                 <button @click="tab='services'" type="button"
-                        :class="tab==='services' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'"
+                        :class="tab==='services' ? 'bg-[#0078D4] text-white' : 'text-slate-400 hover:text-white'"
                         class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors">
                     Services
                     <span class="ml-1.5 text-xs opacity-70">{{ $services->total() }}</span>
                 </button>
                 <button @click="tab='combos'" type="button"
-                        :class="tab==='combos' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'"
+                        :class="tab==='combos' ? 'bg-[#0078D4] text-white' : 'text-slate-400 hover:text-white'"
                         class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors">
                     Combos
                     <span class="ml-1.5 text-xs opacity-70">{{ $combos->total() }}</span>
                 </button>
                 <button @click="tab='promotions'" type="button"
-                        :class="tab==='promotions' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'"
+                        :class="tab==='promotions' ? 'bg-[#0078D4] text-white' : 'text-slate-400 hover:text-white'"
                         class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors">
                     Promotions
                     <span class="ml-1.5 text-xs opacity-70">{{ $promotions->total() }}</span>
@@ -31,15 +31,15 @@
             {{-- Context-aware create button --}}
             <div class="flex gap-2">
                 <a x-show="tab==='services'" href="{{ route('services.create') }}"
-                   class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
+                   class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
                     + New Service
                 </a>
                 <a x-show="tab==='combos'" href="{{ route('combos.create') }}"
-                   class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
+                   class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
                     + New Combo
                 </a>
                 <a x-show="tab==='promotions'" href="{{ route('promotions.create') }}"
-                   class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
+                   class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
                     + New Promotion
                 </a>
             </div>
@@ -51,7 +51,7 @@
                 <input type="hidden" name="tab" value="services">
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Search services…"
-                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 flex-1 sm:flex-none sm:w-48 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 flex-1 sm:flex-none sm:w-48 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                 <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg text-slate-200">Search</button>
                 @if(request('search'))
                     <a href="{{ route('services.index') }}" class="text-sm px-4 py-2 rounded-lg text-slate-400 hover:text-white">Clear</a>
@@ -88,7 +88,7 @@
                     </a>
                 @empty
                     <p class="text-center text-slate-500 py-10 text-sm">
-                        No services yet. <a href="{{ route('services.create') }}" class="text-indigo-400">Add one.</a>
+                        No services yet. <a href="{{ route('services.create') }}" class="text-[#0078D4]">Add one.</a>
                     </p>
                 @endforelse
             </div>
@@ -141,7 +141,7 @@
                         @empty
                             <tr>
                                 <td colspan="6" class="px-4 py-10 text-center text-slate-500">
-                                    No services yet. <a href="{{ route('services.create') }}" class="text-indigo-400 hover:text-indigo-300">Add one.</a>
+                                    No services yet. <a href="{{ route('services.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0]">Add one.</a>
                                 </td>
                             </tr>
                         @endforelse
@@ -182,7 +182,7 @@
                         <div class="flex items-center gap-2 mt-3 flex-wrap">
                             <form method="POST" action="{{ route('combos.toggle', $combo) }}">
                                 @csrf
-                                <button class="text-xs px-3 py-1.5 rounded-lg border {{ $combo->is_active ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-indigo-700 text-indigo-400 hover:bg-indigo-900/40' }}">
+                                <button class="text-xs px-3 py-1.5 rounded-lg border {{ $combo->is_active ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-[#002B5B] text-[#0078D4] hover:bg-[#001A3A]/40' }}">
                                     {{ $combo->is_active ? 'Deactivate' : 'Activate' }}
                                 </button>
                             </form>
@@ -195,7 +195,7 @@
                     </div>
                 @empty
                     <div class="px-5 py-10 text-center text-slate-500 text-sm">
-                        No combos yet. <a href="{{ route('combos.create') }}" class="text-indigo-400 hover:text-indigo-300">Create one.</a>
+                        No combos yet. <a href="{{ route('combos.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0]">Create one.</a>
                     </div>
                 @endforelse
             </div>
@@ -234,7 +234,7 @@
                                 <div class="shrink-0 w-20 text-right">
                                     <p class="text-xs text-slate-500 mb-1">{{ $promo->used_count }}/{{ $promo->max_uses }}</p>
                                     <div class="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                                        <div class="h-full bg-indigo-500 rounded-full" style="width: {{ $pct }}%"></div>
+                                        <div class="h-full bg-[#0078D4] rounded-full" style="width: {{ $pct }}%"></div>
                                     </div>
                                 </div>
                             @else
@@ -244,7 +244,7 @@
                         <div class="flex items-center gap-2 mt-3 flex-wrap">
                             <form method="POST" action="{{ route('promotions.toggle', $promo) }}">
                                 @csrf
-                                <button class="text-xs px-3 py-1.5 rounded-lg border {{ $promo->is_active ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-indigo-700 text-indigo-400 hover:bg-indigo-900/40' }}">
+                                <button class="text-xs px-3 py-1.5 rounded-lg border {{ $promo->is_active ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-[#002B5B] text-[#0078D4] hover:bg-[#001A3A]/40' }}">
                                     {{ $promo->is_active ? 'Deactivate' : 'Activate' }}
                                 </button>
                             </form>
@@ -257,7 +257,7 @@
                     </div>
                 @empty
                     <div class="px-5 py-10 text-center text-slate-500 text-sm">
-                        No promotions yet. <a href="{{ route('promotions.create') }}" class="text-indigo-400 hover:text-indigo-300">Create one.</a>
+                        No promotions yet. <a href="{{ route('promotions.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0]">Create one.</a>
                     </div>
                 @endforelse
             </div>

@@ -15,11 +15,10 @@
 
         <!-- Header band -->
         <tr>
-            <td style="background:linear-gradient(135deg,#312e81,#4338ca);padding:36px 40px;text-align:center;">
-                <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:10px 18px;margin-bottom:16px;">
-                    <span style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">Xquisite Suite</span>
-                </div>
-                <p style="margin:0;color:rgba(255,255,255,0.75);font-size:14px;">Your business management platform</p>
+            <td style="background:linear-gradient(135deg,#002B5B,#003d7a);padding:36px 40px;text-align:center;border-bottom:3px solid #D4AF37;">
+                <img src="{{ asset('img/android-icon-192x192.png') }}" alt="Xquisite" style="height:56px;width:auto;margin:0 auto 16px;display:block;">
+                <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:0.3px;">Xquisite Suite</p>
+                <p style="margin:6px 0 0;color:rgba(255,255,255,0.70);font-size:14px;">Your business management platform</p>
             </td>
         </tr>
 
@@ -32,14 +31,14 @@
                 </h1>
                 <p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.6;">
                     Your <strong style="color:#1e293b;">{{ $tenant->name }}</strong> account is ready.
-                    You're on a <strong style="color:#4338ca;">14-day free trial</strong> — no credit card required.
+                    You're on a <strong style="color:#0078D4;">14-day free trial</strong> — no credit card required.
                 </p>
 
                 <!-- Trial callout -->
-                <table width="100%" cellpadding="0" cellspacing="0" class="summary-on-mobile" style="background:#f0f4ff;border:1px solid #c7d2fe;border-radius:10px;margin-bottom:28px;">
+                <table width="100%" cellpadding="0" cellspacing="0" class="summary-on-mobile" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:28px;">
                     <tr>
                         <td style="padding:16px 20px;">
-                            <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#4338ca;text-transform:uppercase;letter-spacing:0.5px;">Free Trial Active</p>
+                            <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#0078D4;text-transform:uppercase;letter-spacing:0.5px;">Free Trial Active</p>
                             <p style="margin:0;font-size:14px;color:#374151;">
                                 Your trial runs until <strong>{{ $tenant->trial_ends_at->format('d F Y') }}</strong>.
                                 Upgrade anytime to keep access.
@@ -63,7 +62,7 @@
                             <table cellpadding="0" cellspacing="0" class="summary-on-mobile">
                                 <tr>
                                     <td style="width:24px;vertical-align:top;padding-top:2px;">
-                                        <div style="width:18px;height:18px;background:#e0e7ff;border-radius:4px;text-align:center;line-height:18px;font-size:11px;color:#4338ca;">✓</div>
+                                        <div style="width:18px;height:18px;background:#dbeafe;border-radius:4px;text-align:center;line-height:18px;font-size:11px;color:#0078D4;">✓</div>
                                     </td>
                                     <td style="padding-left:10px;">
                                         <p style="margin:0;font-size:14px;color:#1e293b;"><strong>{{ $title }}</strong> — <span style="color:#64748b;">{{ $desc }}</span></p>
@@ -80,7 +79,7 @@
                     <tr>
                         <td align="center">
                             <a href="{{ url('/dashboard') }}"
-                               style="display:inline-block;background:#4338ca;color:#ffffff;font-size:15px;font-weight:600;padding:14px 32px;border-radius:10px;text-decoration:none;letter-spacing:0.2px;">
+                               style="display:inline-block;background:#0078D4;color:#ffffff;font-size:15px;font-weight:600;padding:14px 32px;border-radius:10px;text-decoration:none;letter-spacing:0.2px;">
                                 Open Your Dashboard →
                             </a>
                         </td>
@@ -99,7 +98,7 @@
                                 'Add your products and set stock levels',
                             ] as $i => $step)
                             <p style="margin:0 0 8px;font-size:14px;color:#374151;">
-                                <span style="display:inline-block;background:#e0e7ff;color:#4338ca;font-size:11px;font-weight:700;border-radius:4px;padding:1px 6px;margin-right:8px;">{{ $i + 1 }}</span>
+                                <span style="display:inline-block;background:#dbeafe;color:#0078D4;font-size:11px;font-weight:700;border-radius:4px;padding:1px 6px;margin-right:8px;">{{ $i + 1 }}</span>
                                 {{ $step }}
                             </p>
                             @endforeach

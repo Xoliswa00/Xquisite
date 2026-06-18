@@ -17,13 +17,16 @@ class BillingSetting extends Model
 
     public static function get(string $key): ?string
     {
-        $row = static::where('key', $key)->first();
-        return $row?->value ?? static::$defaults[$key] ?? null;
+        return cache()->remember("billing_setting:{$key}", 3600, function () use ($key) {
+            $row = static::where('key', $key)->first();
+            return $row?->value ?? static::$defaults[$key] ?? null;
+        });
     }
 
     public static function set(string $key, ?string $value): void
     {
         static::updateOrCreate(['key' => $key], ['value' => $value]);
+        cache()->forget("billing_setting:{$key}");
     }
 
     public static function getSettings(): array

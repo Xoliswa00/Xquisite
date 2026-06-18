@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class Communication extends Model
 {
+    use HasTenant;
     protected $fillable = [
         'tenant_id', 'client_id', 'from_user_id', 'to_user_id',
         'subject', 'body', 'is_from_owner', 'read_at',

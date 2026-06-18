@@ -6,9 +6,9 @@
             <form method="GET" class="flex flex-col sm:flex-row flex-wrap gap-2">
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Name, email or phone…"
-                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-full sm:w-52 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-full sm:w-52 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                 <div class="flex gap-2">
-                    <select name="status" class="flex-1 sm:flex-none bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <select name="status" class="flex-1 sm:flex-none bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                         <option value="">All</option>
                         <option value="active" @selected(request('status') === 'active')>Active</option>
                         <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
@@ -20,7 +20,7 @@
                 </div>
             </form>
             <a href="{{ route('customers.create') }}"
-               class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
+               class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
                 + New Customer
             </a>
         </div>
@@ -68,7 +68,7 @@
                     @forelse($customers as $customer)
                         <tr class="hover:bg-slate-700/50">
                             <td class="px-4 py-3">
-                                <a href="{{ route('customers.show', $customer) }}" class="text-indigo-400 hover:text-indigo-300 font-medium">
+                                <a href="{{ route('customers.show', $customer) }}" class="text-[#0078D4] hover:text-[#B8D4F0] font-medium">
                                     {{ $customer->name }}
                                 </a>
                             </td>

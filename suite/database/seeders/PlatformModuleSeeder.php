@@ -120,7 +120,7 @@ class PlatformModuleSeeder extends Seeder
                 'icon'          => 'chat',
                 'price'         => 99.00,
                 'status'        => 'active',
-                'auto_activate' => false,
+                'auto_activate' => true,
                 'sort_order'    => 11,
             ],
         ];

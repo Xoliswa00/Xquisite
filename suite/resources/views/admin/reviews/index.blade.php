@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-bold text-white">Customer Reviews</h2>
+        <h2 class="text-xl font-bold text-[#D4AF37]">Customer Reviews</h2>
     </x-slot>
 
     <div class="space-y-8">
@@ -43,7 +43,7 @@
                                     <span class="font-semibold text-white text-sm">{{ $review->title }}</span>
                                 @endif
                                 @if ($review->is_featured)
-                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-700">Featured</span>
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#0078D4]/20 text-[#B8D4F0] border border-[#002B5B]">Featured</span>
                                 @endif
                             </div>
 
@@ -68,7 +68,7 @@
                             <form method="POST" action="{{ route('admin.reviews.featured', $review) }}">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="text-xs px-2.5 py-1.5 rounded-lg border transition
-                                    {{ $review->is_featured ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-600 text-slate-400 hover:border-indigo-500 hover:text-indigo-300' }}">
+                                    {{ $review->is_featured ? 'bg-[#0078D4] border-[#0078D4] text-white' : 'border-slate-600 text-slate-400 hover:border-[#0078D4] hover:text-[#B8D4F0]' }}">
                                     {{ $review->is_featured ? '★ Featured' : 'Feature' }}
                                 </button>
                             </form>
@@ -77,7 +77,7 @@
                             <form method="POST" action="{{ route('admin.reviews.status', $review) }}">
                                 @csrf @method('PATCH')
                                 <select name="status" onchange="this.form.submit()"
-                                        class="bg-slate-700 border border-slate-600 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                        class="bg-slate-700 border border-slate-600 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                     <option value="pending"  {{ $review->status === 'pending'  ? 'selected' : '' }}>Pending</option>
                                     <option value="approved" {{ $review->status === 'approved' ? 'selected' : '' }}>Approve</option>
                                     <option value="rejected" {{ $review->status === 'rejected' ? 'selected' : '' }}>Reject</option>

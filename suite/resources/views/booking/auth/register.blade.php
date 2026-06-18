@@ -7,7 +7,7 @@
         <h1 class="text-2xl font-bold text-slate-900">Create your account</h1>
         <p class="text-slate-500 mt-1 text-sm">
             Already have one?
-            <a href="{{ route('book.login', $slug) }}" class="text-indigo-600 hover:underline">Sign in</a>
+            <a href="{{ route('book.login', $slug) }}" class="text-[#0078D4] hover:underline">Sign in</a>
         </p>
     </div>
 
@@ -49,14 +49,14 @@
             </div>
 
             <button type="submit"
-                    class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition">
+                    class="w-full py-3 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition">
                 Create account & continue
             </button>
         </form>
     </div>
 
     <p class="text-center text-sm">
-        <a href="{{ route('book.index', $slug) }}" class="text-slate-400 hover:text-slate-600">â† Back to services</a>
+        <a href="{{ route('book.index', $slug) }}" class="text-slate-400 hover:text-slate-600">&larr; Back to services</a>
     </p>
 
 </div>

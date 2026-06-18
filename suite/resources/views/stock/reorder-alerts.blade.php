@@ -23,7 +23,7 @@
         <div class="bg-slate-800 rounded-xl overflow-hidden">
             <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
                 <h3 class="text-sm font-medium text-slate-300">Products Needing Restock</h3>
-                <a href="{{ route('purchase-orders.index') }}" class="text-xs text-indigo-400 hover:text-indigo-300">View all POs →</a>
+                <a href="{{ route('purchase-orders.index') }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">View all POs →</a>
             </div>
 
             <div class="overflow-x-auto">
@@ -59,7 +59,7 @@
                             <td class="px-4 py-3 text-slate-400">{{ $product->supplier ?? '—' }}</td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{{ route('stock.history', $product) }}"
-                                   class="text-xs text-indigo-400 hover:text-indigo-300">History</a>
+                                   class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">History</a>
                             </td>
                         </tr>
                     @empty

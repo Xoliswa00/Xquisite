@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class MonitoredInstance extends Model
 {
@@ -33,6 +34,11 @@ class MonitoredInstance extends Model
     public function healthChecks(): HasMany
     {
         return $this->hasMany(HealthCheckLog::class);
+    }
+
+    public function lastHealthCheck(): HasOne
+    {
+        return $this->hasOne(HealthCheckLog::class)->latestOfMany();
     }
 
     public function alerts(): HasMany

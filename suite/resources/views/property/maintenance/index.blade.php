@@ -1,9 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-white">Maintenance Requests</h2>
+            <h2 class="text-2xl font-bold text-[#D4AF37]">Maintenance Requests</h2>
             <a href="{{ route('maintenance.create') }}"
-               class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg">
+               class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg">
                 + New Request
             </a>
         </div>
@@ -37,7 +37,7 @@
                     @endforeach
                 </select>
                 <button type="submit"
-                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg">Filter</button>
+                        class="px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg">Filter</button>
                 @if(request()->hasAny(['status','priority','property_id']))
                     <a href="{{ route('maintenance.index') }}"
                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded-lg">Clear</a>
@@ -83,7 +83,7 @@
                             <td class="px-4 py-3">
                                 <span class="px-2 py-0.5 rounded text-xs font-medium
                                     @if($request->status === 'open') bg-yellow-900/40 text-yellow-400
-                                    @elseif($request->status === 'in_progress') bg-indigo-900/40 text-indigo-400
+                                    @elseif($request->status === 'in_progress') bg-[#001A3A]/40 text-[#0078D4]
                                     @elseif($request->status === 'resolved') bg-emerald-900/40 text-emerald-400
                                     @else bg-slate-700 text-slate-400 @endif">
                                     {{ ucfirst(str_replace('_', ' ', $request->status)) }}
@@ -93,14 +93,14 @@
                             <td class="px-4 py-3 text-slate-400 text-xs">{{ $request->assigned_to ?? '—' }}</td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{{ route('maintenance.show', $request) }}"
-                                   class="text-indigo-400 hover:text-indigo-300 text-xs">View</a>
+                                   class="text-[#0078D4] hover:text-[#B8D4F0] text-xs">View</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="8" class="px-4 py-12 text-center text-slate-500">
                                 No maintenance requests found.
-                                <a href="{{ route('maintenance.create') }}" class="text-indigo-400 hover:text-indigo-300 ml-1">Create one</a>
+                                <a href="{{ route('maintenance.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0] ml-1">Create one</a>
                             </td>
                         </tr>
                     @endforelse

@@ -5,7 +5,7 @@
 
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-xl font-bold text-white">{{ $tenant->name }}</h2>
+                <h2 class="text-xl font-bold text-[#D4AF37]">{{ $tenant->name }}</h2>
                 <p class="text-sm text-slate-400 mt-0.5">{{ $tenant->email }} · Platform support thread</p>
             </div>
             <a href="{{ route('admin.tenants.show', $tenant) }}" class="text-sm text-slate-400 hover:text-white">← Tenant</a>
@@ -21,7 +21,7 @@
                             @if($msg->subject)
                                 <p class="text-xs text-slate-400 text-right mb-1 font-medium">{{ $msg->subject }}</p>
                             @endif
-                            <div class="bg-indigo-700 text-white rounded-2xl rounded-tr-none px-4 py-3 text-sm">
+                            <div class="bg-[#002B5B] text-white rounded-2xl rounded-tr-none px-4 py-3 text-sm">
                                 {!! nl2br(e($msg->body)) !!}
                             </div>
                             <p class="text-[10px] text-slate-500 text-right mt-1">{{ $msg->created_at->diffForHumans() }} · You (Xquisite)</p>
@@ -59,11 +59,11 @@
                 <div>
                     <x-input-label value="Message" />
                     <textarea name="body" rows="4" required
-                              class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                              class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-[#0078D4] focus:border-[#0078D4]"
                               placeholder="Write your message to {{ $tenant->name }}…"></textarea>
                     <x-input-error :messages="$errors->get('body')" />
                 </div>
-                <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg">
+                <button type="submit" class="px-5 py-2.5 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium rounded-lg">
                     Send to Tenant
                 </button>
             </form>

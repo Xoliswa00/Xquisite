@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\BillingSetting;
 use App\Models\PlatformModule;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -36,7 +37,7 @@ class WelcomeNewUserMail extends Mailable
                 'betaModules'   => $betaModules,
                 'loginUrl'      => route('login'),
                 'modulesUrl'    => route('settings.modules.index'),
-                'whatsappUrl'   => 'https://wa.me/' . config('contact.whatsapp_number') . '?text=' . urlencode(config('contact.whatsapp_message')),
+                'whatsappUrl'   => 'https://wa.me/' . (BillingSetting::get('whatsapp_number') ?? config('contact.whatsapp_number')) . '?text=' . urlencode(BillingSetting::get('whatsapp_message') ?? config('contact.whatsapp_message')),
             ],
         );
     }

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-white">Combined Log View</h2>
+            <h2 class="text-2xl font-bold text-[#D4AF37]">Combined Log View</h2>
             <a href="{{ route('admin.logs.index') }}" class="text-sm text-slate-400 hover:text-white">&larr; Suite Logs</a>
         </div>
     </x-slot>
@@ -64,7 +64,7 @@
                             <td class="px-4 py-3 text-right">
                                 @if($source === 'suite' && isset($log['id']))
                                     <a href="{{ route('admin.logs.show', $log['id']) }}"
-                                       class="text-indigo-400 hover:text-indigo-300 text-xs">View</a>
+                                       class="text-[#0078D4] hover:text-[#B8D4F0] text-xs">View</a>
                                 @endif
                             </td>
                         </tr>

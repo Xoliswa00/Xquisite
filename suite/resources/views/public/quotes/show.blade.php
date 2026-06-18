@@ -59,10 +59,10 @@
         </div>
 
         {{-- Deposit highlight --}}
-        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-5 text-center">
-            <p class="text-sm text-indigo-700 font-medium">To confirm this booking, a deposit of</p>
-            <p class="text-3xl font-bold text-indigo-700 my-1">R{{ number_format($quote->depositAmount(), 2) }}</p>
-            <p class="text-xs text-indigo-500">({{ $quote->deposit_percentage }}% of total) is required to secure your date.</p>
+        <div class="bg-[#F0F7FF] border border-[#DCEEFA] rounded-xl p-5 mb-5 text-center">
+            <p class="text-sm text-[#002B5B] font-medium">To confirm this booking, a deposit of</p>
+            <p class="text-3xl font-bold text-[#002B5B] my-1">R{{ number_format($quote->depositAmount(), 2) }}</p>
+            <p class="text-xs text-[#0078D4]">({{ $quote->deposit_percentage }}% of total) is required to secure your date.</p>
         </div>
 
         @if (in_array($quote->status, ['draft', 'sent']))
@@ -71,7 +71,7 @@
             <form method="POST" action="{{ route('public.quotes.accept', [$quote, $token]) }}" class="flex-1">
                 @csrf
                 <button type="submit"
-                        class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition">
+                        class="w-full py-3.5 bg-[#0078D4] hover:bg-[#0078D4] text-white font-semibold rounded-xl transition">
                     Accept & Pay Deposit
                 </button>
             </form>

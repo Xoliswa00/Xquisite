@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PlatformInvoice extends Model
 {
@@ -11,6 +12,7 @@ class PlatformInvoice extends Model
         'tenant_id', 'invoice_number', 'plan', 'amount', 'status',
         'due_date', 'billing_period_start', 'billing_period_end',
         'paid_at', 'payment_method', 'payment_reference', 'notes',
+        'pop_path', 'pop_uploaded_at', 'pop_notes',
     ];
 
     protected $casts = [
@@ -19,6 +21,7 @@ class PlatformInvoice extends Model
         'billing_period_start' => 'date',
         'billing_period_end'   => 'date',
         'paid_at'              => 'datetime',
+        'pop_uploaded_at'      => 'datetime',
     ];
 
     public function tenant()
@@ -31,6 +34,16 @@ class PlatformInvoice extends Model
         return $this->status === 'overdue';
     }
 
+    public function hasPop(): bool
+    {
+        return (bool) $this->pop_path;
+    }
+
+    public function isAwaitingConfirmation(): bool
+    {
+        return $this->hasPop() && in_array($this->status, ['unpaid', 'overdue']);
+    }
+
     public function getDaysOverdueAttribute(): int
     {
         if (!in_array($this->status, ['unpaid', 'overdue'])) return 0;
@@ -39,21 +52,28 @@ class PlatformInvoice extends Model
 
     public function getStatusBadgeAttribute(): array
     {
+        if ($this->isAwaitingConfirmation()) {
+            return ['label' => 'POP Submitted', 'class' => 'bg-[#0078D4]/20 text-[#0078D4] border-[#0078D4]/30'];
+        }
+
         return match ($this->status) {
-            'paid'      => ['label' => 'Paid',      'class' => 'bg-emerald-100 text-emerald-700 border-emerald-200'],
-            'overdue'   => ['label' => 'Overdue',   'class' => 'bg-red-100 text-red-700 border-red-200'],
-            'cancelled' => ['label' => 'Cancelled', 'class' => 'bg-slate-100 text-slate-700 border-slate-200'],
-            default     => ['label' => 'Unpaid',    'class' => 'bg-amber-100 text-amber-700 border-amber-200'],
+            'paid'      => ['label' => 'Paid',      'class' => 'bg-emerald-900/40 text-emerald-300 border-emerald-700'],
+            'overdue'   => ['label' => 'Overdue',   'class' => 'bg-red-900/40 text-red-300 border-red-700'],
+            'cancelled' => ['label' => 'Cancelled', 'class' => 'bg-slate-700 text-slate-400 border-slate-600'],
+            default     => ['label' => 'Unpaid',    'class' => 'bg-amber-900/40 text-amber-300 border-amber-700'],
         };
     }
 
     public static function generateNumber(): string
     {
-        $prefix = 'PI-' . now()->format('Ym') . '-';
-        $last = static::where('invoice_number', 'like', $prefix . '%')
-            ->orderByDesc('invoice_number')
-            ->value('invoice_number');
-        $seq = $last ? ((int) substr($last, -4)) + 1 : 1;
-        return $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
+        return DB::transaction(function () {
+            $prefix = 'PI-' . now()->format('Ym') . '-';
+            $last = static::where('invoice_number', 'like', $prefix . '%')
+                ->lockForUpdate()
+                ->orderByDesc('invoice_number')
+                ->value('invoice_number');
+            $seq = $last ? ((int) substr($last, -4)) + 1 : 1;
+            return $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
+        });
     }
 }

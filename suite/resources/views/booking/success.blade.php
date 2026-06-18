@@ -41,7 +41,7 @@
                 @endphp
                 <div class="flex items-center justify-between pt-2 border-t border-slate-100 font-semibold">
                     <span class="text-slate-700">Total</span>
-                    <span class="text-indigo-600">R{{ number_format($successTotal, 2) }} · {{ $appointment->duration_minutes }} min</span>
+                    <span class="text-[#0078D4]">R{{ number_format($successTotal, 2) }} · {{ $appointment->duration_minutes }} min</span>
                 </div>
                 @if($appointment->promo_discount)
                     <p class="text-xs text-emerald-600 text-right">Promo {{ $appointment->promo_code }} saved you R{{ number_format($appointment->promo_discount, 2) }}</p>
@@ -78,7 +78,7 @@
 
     <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
         <a href="{{ route('book.my-bookings', $slug) }}"
-           class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition">
+           class="px-6 py-3 bg-[#0078D4] hover:bg-[#0078D4] text-white font-semibold rounded-xl transition">
             View my bookings
         </a>
         <a href="{{ route('book.index', $slug) }}"

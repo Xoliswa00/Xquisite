@@ -5,18 +5,18 @@
 
     {{-- Breadcrumb --}}
     <nav class="flex items-center gap-2 text-sm text-slate-400">
-        <a href="{{ route('book.index', $slug) }}" class="hover:text-indigo-600">Services</a>
+        <a href="{{ route('book.index', $slug) }}" class="hover:text-[#0078D4]">Services</a>
         <span>&rsaquo;</span>
         <span class="text-slate-700 font-medium">Choose a time</span>
     </nav>
 
     {{-- Combo deal banner --}}
     @if($combo)
-    <div class="rounded-2xl bg-gradient-to-r from-indigo-900 to-purple-900 border border-indigo-700/60 p-5 flex items-start gap-4">
+    <div class="rounded-2xl bg-gradient-to-r from-[#002B5B] to-[#001A3A] border border-[#002B5B]/60 p-5 flex items-start gap-4">
         <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-xl">✨</div>
         <div class="flex-1 min-w-0">
             <p class="font-black text-white text-lg leading-tight">{{ $combo->name }}</p>
-            <p class="text-indigo-300 text-sm mt-1">Bundle deal — all {{ $combo->services->count() }} services included</p>
+            <p class="text-[#B8D4F0] text-sm mt-1">Bundle deal — all {{ $combo->services->count() }} services included</p>
         </div>
         <div class="shrink-0 text-right">
             <p class="text-xs text-white/40 line-through">R{{ number_format($combo->total_service_price, 2) }}</p>
@@ -43,7 +43,7 @@
                     <div class="flex items-center gap-2">
                         <span class="text-slate-700 font-medium">{{ $service->name }}</span>
                         @if($inCombo)
-                            <span class="text-xs bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full">combo</span>
+                            <span class="text-xs bg-[#E8F2FA] text-[#002B5B] font-bold px-2 py-0.5 rounded-full">combo</span>
                         @endif
                     </div>
                     <span class="text-slate-500">
@@ -58,7 +58,7 @@
             @endforeach
         </div>
         @if($combo)
-            <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-indigo-600 font-semibold">
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-[#0078D4] font-semibold">
                 <span>{{ $combo->name }}</span>
                 <span>R{{ number_format($combo->combo_price, 2) }}</span>
             </div>
@@ -71,7 +71,7 @@
         @endif
         <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-sm font-semibold">
             <span class="text-slate-700">Total</span>
-            <span class="text-indigo-600">
+            <span class="text-[#0078D4]">
                 {{ $services->sum('duration_minutes') }} min &nbsp;·&nbsp;R{{ number_format($grandTotal, 2) }}
             </span>
         </div>
@@ -105,8 +105,8 @@
                 <button type="button"
                         @click="selectedSlot = slot.value"
                         :class="selectedSlot === slot.value
-                            ? 'bg-indigo-600 text-white border-indigo-600'
-                            : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-400'"
+                            ? 'bg-[#0078D4] text-white border-[#0078D4]'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-[#0078D4]'"
                         class="py-2.5 text-sm font-medium border rounded-xl transition"
                         x-text="slot.label">
                 </button>
@@ -125,7 +125,7 @@
             @endif
             <input type="hidden" name="scheduled_at" x-bind:value="selectedSlot">
             <button type="submit"
-                    class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl transition text-lg">
+                    class="w-full py-4 bg-[#0078D4] hover:bg-[#0078D4] text-white font-bold rounded-2xl transition text-lg">
                 Continue &rarr;
             </button>
         </form>

@@ -21,18 +21,18 @@
     <form method="GET" action="{{ route('orders.index') }}" class="flex flex-wrap gap-3 mb-5">
         <input type="text" name="search" value="{{ request('search') }}"
                placeholder="Reference, name, email…"
-               class="bg-slate-800 border border-slate-700 text-sm text-white rounded-xl px-4 py-2.5 w-full sm:w-64 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+               class="bg-slate-800 border border-slate-700 text-sm text-white rounded-xl px-4 py-2.5 w-full sm:w-64 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
         <select name="status"
-                class="bg-slate-800 border border-slate-700 text-sm text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                class="bg-slate-800 border border-slate-700 text-sm text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
             <option value="">All Statuses</option>
             @foreach(['pending','paid','processing','ready','shipped','delivered','cancelled','refunded'] as $s)
                 <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst($s) }}</option>
             @endforeach
         </select>
         <input type="date" name="date" value="{{ request('date') }}"
-               class="bg-slate-800 border border-slate-700 text-sm text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+               class="bg-slate-800 border border-slate-700 text-sm text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
         <button type="submit"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
+                class="bg-[#0078D4] hover:bg-[#002B5B] text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
             Filter
         </button>
         @if(request()->hasAny(['search','status','date']))
@@ -70,7 +70,7 @@
                     @endphp
                     <a href="{{ route('orders.show', $order) }}" class="block px-4 py-3 hover:bg-slate-700/30 transition-colors">
                         <div class="flex items-center justify-between gap-3">
-                            <span class="font-mono text-xs text-indigo-400 font-semibold">{{ $order->reference }}</span>
+                            <span class="font-mono text-xs text-[#0078D4] font-semibold">{{ $order->reference }}</span>
                             <span class="inline-flex text-xs font-medium px-2 py-0.5 rounded-full {{ $statusColor }}">{{ ucfirst($order->status) }}</span>
                         </div>
                         <div class="flex items-center justify-between mt-0.5">
@@ -112,7 +112,7 @@
                             };
                         @endphp
                         <tr class="hover:bg-slate-700/30 transition-colors">
-                            <td class="px-5 py-3.5"><span class="font-mono text-xs text-indigo-400 font-semibold">{{ $order->reference }}</span></td>
+                            <td class="px-5 py-3.5"><span class="font-mono text-xs text-[#0078D4] font-semibold">{{ $order->reference }}</span></td>
                             <td class="px-5 py-3.5">
                                 <p class="text-white font-medium">{{ $order->customer_name }}</p>
                                 <p class="text-xs text-slate-400">{{ $order->customer_email }}</p>
@@ -127,7 +127,7 @@
                             </td>
                             <td class="px-5 py-3.5 text-xs text-slate-400">{{ $order->created_at->format('d M, H:i') }}</td>
                             <td class="px-5 py-3.5">
-                                <a href="{{ route('orders.show', $order) }}" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors">View →</a>
+                                <a href="{{ route('orders.show', $order) }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0] font-medium transition-colors">View →</a>
                             </td>
                         </tr>
                     @endforeach

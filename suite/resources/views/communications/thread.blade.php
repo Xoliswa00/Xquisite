@@ -26,7 +26,7 @@
                     {{-- Client (left, white) --}}
                     <div class="flex justify-start">
                         <div class="max-w-[75%]">
-                            <div class="bg-white text-slate-900 border border-slate-200 rounded-2xl rounded-tl-none px-4 py-3 text-sm">
+                            <div class="bg-slate-800 text-slate-900 border border-slate-200 rounded-2xl rounded-tl-none px-4 py-3 text-sm">
                                 {!! nl2br(e($msg->body)) !!}
                             </div>
                             <p class="text-[10px] text-slate-500 mt-1">{{ $msg->created_at->diffForHumans() }} · {{ $client->name }}</p>
@@ -48,10 +48,10 @@
                 </div>
                 <div>
                     <x-input-label value="Message" />
-                    <textarea name="body" rows="4" required class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Type your message…"></textarea>
+                    <textarea name="body" rows="4" required class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-[#0078D4] focus:border-[#0078D4]" placeholder="Type your message…"></textarea>
                     <x-input-error :messages="$errors->get('body')" />
                 </div>
-                <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg">Send Message</button>
+                <button type="submit" class="px-5 py-2.5 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium rounded-lg">Send Message</button>
             </form>
         </div>
     </div>

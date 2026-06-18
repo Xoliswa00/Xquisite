@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <a href="{{ route('monitoring.index') }}" class="text-indigo-400 hover:text-indigo-300 text-sm mb-2 inline-block">← Back to Monitoring</a>
-                <h2 class="text-2xl font-bold text-white">{{ $instance->name }}</h2>
+                <a href="{{ route('monitoring.index') }}" class="text-[#0078D4] hover:text-[#B8D4F0] text-sm mb-2 inline-block">← Back to Monitoring</a>
+                <h2 class="text-2xl font-bold text-[#D4AF37]">{{ $instance->name }}</h2>
             </div>
             <div class="flex items-center gap-2">
                 <a href="{{ route('monitoring.edit', $instance) }}"
@@ -90,7 +90,7 @@
         {{-- Metadata --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-slate-800 rounded-xl p-6 border border-slate-700">
-                <h3 class="text-lg font-semibold text-white mb-4">Instance Details</h3>
+                <h3 class="text-lg font-semibold text-[#D4AF37] mb-4">Instance Details</h3>
                 <dl class="space-y-4">
                     <div class="flex justify-between items-start">
                         <dt class="text-slate-400">URL</dt>
@@ -118,7 +118,7 @@
             </div>
 
             <div class="bg-slate-800 rounded-xl p-6 border border-slate-700">
-                <h3 class="text-lg font-semibold text-white mb-4">Latest Health Metrics</h3>
+                <h3 class="text-lg font-semibold text-[#D4AF37] mb-4">Latest Health Metrics</h3>
                 @if($lastCheck)
                     <dl class="space-y-4">
                         <div class="flex justify-between items-start">
@@ -162,7 +162,7 @@
 
         {{-- Health Check Timeline --}}
         <div class="bg-slate-800 rounded-xl p-6 border border-slate-700">
-            <h3 class="text-lg font-semibold text-white mb-6">Recent Health Checks (Last 20)</h3>
+            <h3 class="text-lg font-semibold text-[#D4AF37] mb-6">Recent Health Checks (Last 20)</h3>
             
             @if($healthLogs->count() > 0)
                 <div class="space-y-3">
@@ -191,7 +191,7 @@
 
                 {{-- Pagination info --}}
                 <div class="mt-6 pt-4 border-t border-slate-700">
-                    <p class="text-xs text-slate-400">Showing 20 most recent checks. <a href="#" class="text-indigo-400 hover:text-indigo-300">View all →</a></p>
+                    <p class="text-xs text-slate-400">Showing 20 most recent checks. <a href="#" class="text-[#0078D4] hover:text-[#B8D4F0]">View all →</a></p>
                 </div>
             @else
                 <div class="text-center py-8">
@@ -203,7 +203,7 @@
         {{-- Alerts --}}
         @if($alerts->count() > 0)
             <div class="bg-slate-800 rounded-xl p-6 border border-red-700/30">
-                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <h3 class="text-lg font-semibold text-[#D4AF37] mb-4 flex items-center gap-2">
                     <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     Recent Alerts
                 </h3>

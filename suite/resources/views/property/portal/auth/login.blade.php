@@ -23,7 +23,7 @@
             <label class="flex items-center gap-2 text-sm text-slate-600">
                 <input type="checkbox" name="remember" class="rounded border-slate-300"> Remember me
             </label>
-            <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl">
+            <button type="submit" class="w-full py-3 bg-[#0078D4] hover:bg-[#0078D4] text-white font-semibold rounded-xl">
                 Sign in
             </button>
         </form>

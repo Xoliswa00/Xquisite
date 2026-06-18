@@ -8,10 +8,10 @@
             <form id="appointments-filter-form" method="GET" class="flex flex-col sm:flex-row flex-wrap gap-2">
                 <input id="appointment-search" type="text" name="search" value="{{ request('search') }}"
                        placeholder="Search customer…"
-                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-full sm:w-44 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-full sm:w-44 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                 <input id="appointment-date" type="date" name="date" value="{{ request('date') }}"
-                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                <select id="appointment-status" name="status" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                <select id="appointment-status" name="status" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                     <option value="">All statuses</option>
                     @foreach(['pending','confirmed','completed','awaiting_payment','cancelled','no_show','tentative'] as $s)
                         <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
@@ -26,7 +26,7 @@
                 </div>
             </form>
             <a href="{{ route('appointments.create') }}"
-               class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
+               class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
                 + New Booking
             </a>
         </div>
@@ -90,7 +90,7 @@
                                 <span class="text-xs text-slate-500">{{ $appt->scheduled_at->format('H:i') }}</span>
                             </td>
                             <td class="px-4 py-3">
-                                <a href="{{ route('customers.show', $appt->customer) }}" class="text-indigo-400 hover:text-indigo-300">
+                                <a href="{{ route('customers.show', $appt->customer) }}" class="text-[#0078D4] hover:text-[#B8D4F0]">
                                     {{ $appt->customer->name }}
                                 </a>
                             </td>

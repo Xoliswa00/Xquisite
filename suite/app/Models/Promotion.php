@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class Promotion extends Model
 {
+    use HasTenant;
     protected $fillable = [
         'tenant_id', 'name', 'description', 'code', 'discount_type',
         'discount_value', 'applies_to', 'valid_from', 'valid_until',

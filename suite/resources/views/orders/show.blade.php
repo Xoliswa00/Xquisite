@@ -6,7 +6,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
             </a>
-            <span class="font-mono text-indigo-400">{{ $order->reference }}</span>
+            <span class="font-mono text-[#0078D4]">{{ $order->reference }}</span>
         </div>
     </x-slot>
 
@@ -24,7 +24,7 @@
             <!-- Items -->
             <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
                 <div class="px-5 py-4 border-b border-slate-700">
-                    <h2 class="text-sm font-semibold text-white">Items</h2>
+                    <h2 class="text-sm font-semibold text-[#D4AF37]">Items</h2>
                 </div>
                 <div class="divide-y divide-slate-700/50">
                     @foreach($order->items as $item)
@@ -60,14 +60,14 @@
                     @endif
                     <div class="flex justify-between font-bold text-sm text-white pt-2 border-t border-slate-700">
                         <span>Total</span>
-                        <span class="text-indigo-400">R{{ number_format($order->total, 2) }}</span>
+                        <span class="text-[#0078D4]">R{{ number_format($order->total, 2) }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Customer + Delivery -->
             <div class="bg-slate-800 rounded-2xl border border-slate-700 p-5">
-                <h2 class="text-sm font-semibold text-white mb-4">Customer & Delivery</h2>
+                <h2 class="text-sm font-semibold text-[#D4AF37] mb-4">Customer & Delivery</h2>
                 <div class="grid sm:grid-cols-2 gap-4 text-sm">
                     <div>
                         <p class="text-xs text-slate-400 mb-1">Name</p>
@@ -117,7 +117,7 @@
 
             <!-- Status update -->
             <div class="bg-slate-800 rounded-2xl border border-slate-700 p-5">
-                <h2 class="text-sm font-semibold text-white mb-4">Order Status</h2>
+                <h2 class="text-sm font-semibold text-[#D4AF37] mb-4">Order Status</h2>
 
                 @php
                     $statusColor = match($order->status) {
@@ -142,13 +142,13 @@
                     @csrf
                     @method('PATCH')
                     <select name="status"
-                            class="w-full bg-slate-700 border border-slate-600 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            class="w-full bg-slate-700 border border-slate-600 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
                         @foreach(['pending','paid','processing','ready','shipped','delivered','cancelled','refunded'] as $s)
                             <option value="{{ $s }}" @selected($order->status === $s)>{{ ucfirst($s) }}</option>
                         @endforeach
                     </select>
                     <button type="submit"
-                            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2.5 rounded-xl transition-colors">
+                            class="w-full bg-[#0078D4] hover:bg-[#002B5B] text-white text-sm font-medium py-2.5 rounded-xl transition-colors">
                         Update Status
                     </button>
                 </form>
@@ -156,7 +156,7 @@
 
             <!-- Payment info -->
             <div class="bg-slate-800 rounded-2xl border border-slate-700 p-5">
-                <h2 class="text-sm font-semibold text-white mb-4">Payment</h2>
+                <h2 class="text-sm font-semibold text-[#D4AF37] mb-4">Payment</h2>
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between">
                         <span class="text-slate-400">Method</span>
@@ -193,14 +193,14 @@
                     @endif
                     <div class="pt-2 border-t border-slate-700 flex justify-between font-bold">
                         <span class="text-slate-300">Total</span>
-                        <span class="text-indigo-400">R{{ number_format($order->total, 2) }}</span>
+                        <span class="text-[#0078D4]">R{{ number_format($order->total, 2) }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Timestamps -->
             <div class="bg-slate-800 rounded-2xl border border-slate-700 p-5">
-                <h2 class="text-sm font-semibold text-white mb-3">Timeline</h2>
+                <h2 class="text-sm font-semibold text-[#D4AF37] mb-3">Timeline</h2>
                 <div class="space-y-2 text-xs text-slate-400">
                     <div class="flex justify-between">
                         <span>Placed</span>

@@ -5,7 +5,7 @@
 
         <div class="flex items-start justify-between gap-4 flex-wrap">
             <div>
-                <h1 class="text-xl font-bold text-white">System Logs</h1>
+                <h1 class="text-xl font-bold text-[#D4AF37]">System Logs</h1>
                 @if($unresolved > 0)
                     <p class="text-sm text-red-400 mt-0.5">{{ $unresolved }} unresolved critical error{{ $unresolved > 1 ? 's' : '' }}</p>
                 @endif
@@ -16,7 +16,7 @@
                     Audit Trail
                 </a>
                 <a href="{{ route('admin.logs.combined') }}"
-                   class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors">
+                   class="px-3 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg transition-colors">
                     Combined View
                 </a>
             </div>
@@ -99,7 +99,7 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{{ route('admin.logs.show', $log) }}"
-                                   class="text-indigo-400 hover:text-indigo-300 text-xs">View</a>
+                                   class="text-[#0078D4] hover:text-[#B8D4F0] text-xs">View</a>
                             </td>
                         </tr>
                     @empty

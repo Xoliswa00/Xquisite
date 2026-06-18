@@ -8,7 +8,7 @@
             <x-form-errors />
 
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-                <h3 class="font-semibold text-white">Promotion Details</h3>
+                <h3 class="font-semibold text-[#D4AF37]">Promotion Details</h3>
 
                 <div>
                     <x-input-label value="Name" />
@@ -18,7 +18,7 @@
 
                 <div>
                     <x-input-label value="Description" />
-                    <textarea name="description" rows="2" class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-indigo-500 focus:border-indigo-500">{{ old('description', $promotion->description ?? '') }}</textarea>
+                    <textarea name="description" rows="2" class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-[#0078D4] focus:border-[#0078D4]">{{ old('description', $promotion->description ?? '') }}</textarea>
                 </div>
 
                 <div>
@@ -53,8 +53,8 @@
                     <x-input-label value="Applies To" />
                     <div class="mt-2 flex gap-4" id="applies-to-group">
                         @foreach(['all' => 'All', 'services' => 'Services (bookings)', 'products' => 'Products (shop)'] as $val => $label)
-                            <label class="applies-option flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-700 cursor-pointer text-sm text-slate-300 hover:bg-slate-800 has-[:checked]:border-indigo-500 has-[:checked]:text-indigo-300">
-                                <input type="radio" name="applies_to" value="{{ $val }}" {{ old('applies_to', $promotion->applies_to ?? 'all') === $val ? 'checked' : '' }} class="text-indigo-500">
+                            <label class="applies-option flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-700 cursor-pointer text-sm text-slate-300 hover:bg-slate-800 has-[:checked]:border-[#0078D4] has-[:checked]:text-[#B8D4F0]">
+                                <input type="radio" name="applies_to" value="{{ $val }}" {{ old('applies_to', $promotion->applies_to ?? 'all') === $val ? 'checked' : '' }} class="text-[#0078D4]">
                                 {{ $label }}
                             </label>
                         @endforeach
@@ -82,13 +82,13 @@
 
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="hidden" name="is_active" value="0">
-                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $promotion->is_active ?? true) ? 'checked' : '' }} class="rounded border-slate-600 bg-slate-800 text-indigo-500">
+                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $promotion->is_active ?? true) ? 'checked' : '' }} class="rounded border-slate-600 bg-slate-800 text-[#0078D4]">
                     <span class="text-sm text-slate-300">Active</span>
                 </label>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3">
-                <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg text-sm transition-colors">
+                <button type="submit" class="px-6 py-2.5 bg-[#0078D4] hover:bg-[#0078D4] text-white font-medium rounded-lg text-sm transition-colors">
                     {{ isset($promotion) ? 'Update' : 'Create Promotion' }}
                 </button>
                 <a href="{{ route('promotions.index') }}" class="px-6 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-lg text-sm transition-colors text-center">Cancel</a>

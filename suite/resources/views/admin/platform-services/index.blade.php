@@ -4,9 +4,9 @@
     <div class="space-y-8">
 
         <div class="flex items-center justify-between gap-4 flex-wrap">
-            <h1 class="text-xl font-bold text-white">Services & Add-ons</h1>
+            <h1 class="text-xl font-bold text-[#D4AF37]">Services & Add-ons</h1>
             <a href="{{ route('admin.platform-services.create') }}"
-               class="shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg font-medium transition-colors">
+               class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg font-medium transition-colors">
                 + Add Service
             </a>
         </div>
@@ -18,7 +18,7 @@
         {{-- Pending Orders --}}
         @if ($orders->isNotEmpty())
         <div>
-            <h3 class="text-sm font-semibold text-white mb-3">
+            <h3 class="text-sm font-semibold text-[#D4AF37] mb-3">
                 Pending Orders
                 <span class="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">{{ $orders->count() }}</span>
             </h3>
@@ -33,7 +33,7 @@
                                 <span class="text-[10px] px-2 py-0.5 rounded-full font-medium
                                     {{ $order->statusColour() === 'amber'   ? 'bg-amber-500/20 text-amber-300' : '' }}
                                     {{ $order->statusColour() === 'blue'    ? 'bg-blue-500/20 text-blue-300' : '' }}
-                                    {{ $order->statusColour() === 'indigo'  ? 'bg-indigo-500/20 text-indigo-300' : '' }}
+                                    {{ $order->statusColour() === 'indigo'  ? 'bg-[#0078D4]/20 text-[#B8D4F0]' : '' }}
                                     {{ $order->statusColour() === 'purple'  ? 'bg-purple-500/20 text-purple-300' : '' }}
                                     {{ $order->statusColour() === 'emerald' ? 'bg-emerald-500/20 text-emerald-300' : '' }}
                                     {{ $order->statusColour() === 'gray'    ? 'bg-slate-700 text-slate-400' : '' }}">
@@ -57,15 +57,15 @@
                             @csrf @method('PATCH')
                             <input type="number" name="quoted_price" placeholder="Quote R"
                                    value="{{ $order->quoted_price }}"
-                                   class="w-24 bg-slate-700 border border-slate-600 text-slate-100 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                   class="w-24 bg-slate-700 border border-slate-600 text-slate-100 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                             <select name="status"
-                                    class="bg-slate-700 border border-slate-600 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                    class="bg-slate-700 border border-slate-600 text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                 @foreach (\App\Models\TenantServiceOrder::STATUS_LABELS as $val => $label)
                                     <option value="{{ $val }}" {{ $order->status === $val ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                             </select>
                             <button type="submit"
-                                    class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition-colors">
+                                    class="text-xs bg-[#0078D4] hover:bg-[#0078D4] text-white px-3 py-1.5 rounded-lg transition-colors">
                                 Save
                             </button>
                         </form>
@@ -78,7 +78,7 @@
 
         {{-- Service Catalog --}}
         <div>
-            <h3 class="text-sm font-semibold text-white mb-4">Service Catalog</h3>
+            <h3 class="text-sm font-semibold text-[#D4AF37] mb-4">Service Catalog</h3>
 
             @foreach ($services->groupBy('category') as $category => $group)
             <div class="mb-5">
@@ -104,7 +104,7 @@
                             <span class="text-xs text-slate-500">{{ $service->orders_count }} {{ Str::plural('order', $service->orders_count) }}</span>
                         </div>
                         <a href="{{ route('admin.platform-services.edit', $service) }}"
-                           class="text-xs text-indigo-400 hover:text-indigo-300 font-medium shrink-0 transition-colors">Edit</a>
+                           class="text-xs text-[#0078D4] hover:text-[#B8D4F0] font-medium shrink-0 transition-colors">Edit</a>
                     </div>
                     @endforeach
                 </div>

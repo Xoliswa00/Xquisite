@@ -9,7 +9,7 @@
             <div class="bg-slate-800 rounded-xl p-5 lg:col-span-2">
                 <div class="flex items-start justify-between">
                     <div>
-                        <h2 class="text-lg font-semibold text-white">{{ $product->name }}</h2>
+                        <h2 class="text-lg font-semibold text-[#D4AF37]">{{ $product->name }}</h2>
                         @if($product->sku)
                             <p class="text-xs text-slate-500 mt-0.5">SKU: {{ $product->sku }}</p>
                         @endif
@@ -35,7 +35,7 @@
                     </div>
                 @endif
                 <div class="mt-4 flex items-center gap-3">
-                    <a href="{{ route('products.edit', $product) }}" class="text-xs text-indigo-400 hover:text-indigo-300">Edit product →</a>
+                    <a href="{{ route('products.edit', $product) }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">Edit product →</a>
                     @if($product->needs_reorder)
                         <a href="{{ route('purchase-orders.create', ['from_reorder' => 1]) }}" class="text-xs text-amber-400 hover:text-amber-300">Create reorder PO →</a>
                     @endif
@@ -48,16 +48,16 @@
                 <form method="POST" action="{{ route('stock.adjust', $product) }}" class="space-y-3">
                     @csrf
                     <select name="type" required
-                            class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                         <option value="adjustment_in">Add Stock (+)</option>
                         <option value="adjustment_out">Remove Stock (−)</option>
                     </select>
                     <input type="number" name="quantity" min="1" placeholder="Quantity" required
-                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                     <input type="text" name="notes" placeholder="Reason (optional)"
-                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                     <button type="submit"
-                            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg">
+                            class="w-full bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg">
                         Apply
                     </button>
                 </form>

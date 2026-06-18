@@ -4,14 +4,14 @@
     <div class="max-w-4xl mx-auto space-y-6">
 
         <div>
-            <h2 class="text-xl font-bold text-white">Welcome, {{ auth()->user()->name }}</h2>
+            <h2 class="text-xl font-bold text-[#D4AF37]">Welcome, {{ auth()->user()->name }}</h2>
             <p class="text-sm text-slate-400 mt-1">{{ $tenant->name }} · Platform overview</p>
         </div>
 
         {{-- Stats row --}}
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div class="{{ $platformUnread > 0 ? 'bg-indigo-900/30 border-indigo-700' : 'bg-slate-900 border-slate-800' }} border rounded-xl p-4">
-                <p class="text-xs {{ $platformUnread > 0 ? 'text-indigo-400' : 'text-slate-400' }} uppercase tracking-wide">Platform Messages</p>
+            <div class="{{ $platformUnread > 0 ? 'bg-[#001A3A]/30 border-[#002B5B]' : 'bg-slate-900 border-slate-800' }} border rounded-xl p-4">
+                <p class="text-xs {{ $platformUnread > 0 ? 'text-[#0078D4]' : 'text-slate-400' }} uppercase tracking-wide">Platform Messages</p>
                 <p class="text-2xl font-bold text-white mt-1">{{ $platformUnread }}</p>
                 <p class="text-xs text-slate-500 mt-1">unread</p>
             </div>
@@ -41,12 +41,12 @@
         {{-- Message CTAs --}}
         @if($platformUnread > 0)
             <a href="{{ route('portal.messages') }}#platform"
-               class="flex items-center justify-between px-5 py-4 bg-indigo-900/30 border border-indigo-700 rounded-xl hover:bg-indigo-900/50 transition-colors">
+               class="flex items-center justify-between px-5 py-4 bg-[#001A3A]/30 border border-[#002B5B] rounded-xl hover:bg-[#001A3A]/50 transition-colors">
                 <div>
-                    <p class="font-semibold text-indigo-300">{{ $platformUnread }} unread message{{ $platformUnread !== 1 ? 's' : '' }} from Xquisite</p>
-                    <p class="text-sm text-indigo-400/80">Click to view your platform messages</p>
+                    <p class="font-semibold text-[#B8D4F0]">{{ $platformUnread }} unread message{{ $platformUnread !== 1 ? 's' : '' }} from Xquisite</p>
+                    <p class="text-sm text-[#0078D4]/80">Click to view your platform messages</p>
                 </div>
-                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                <svg class="w-5 h-5 text-[#0078D4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
         @endif
 
@@ -97,7 +97,7 @@
                     </a>
                 @endforeach
                 <div class="px-5 py-3">
-                    <a href="{{ route('notifications.index') }}" class="text-xs text-indigo-400 hover:underline">View all</a>
+                    <a href="{{ route('notifications.index') }}" class="text-xs text-[#0078D4] hover:underline">View all</a>
                 </div>
             </div>
         @endif

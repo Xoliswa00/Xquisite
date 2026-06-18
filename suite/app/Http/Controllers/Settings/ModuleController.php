@@ -60,8 +60,11 @@ class ModuleController extends Controller
         ]);
 
         if (! $requiresReview) {
-            // Create billing subscription before activating
-            $billingSubscriptionId = $billing->createModuleSubscription($tenant, $moduleKey);
+            // Don't create a billing subscription during the free trial
+            $billingSubscriptionId = null;
+            if (! $tenant->isOnTrial()) {
+                $billingSubscriptionId = $billing->createModuleSubscription($tenant, $moduleKey);
+            }
 
             $moduleRequest->update([
                 'reviewed_at' => now(),

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-white">Rent Payments</h2>
+            <h2 class="text-2xl font-bold text-[#D4AF37]">Rent Payments</h2>
             <div class="flex gap-2">
                 <form method="POST" action="{{ route('rent-payments.generate') }}">
                     @csrf
@@ -40,7 +40,7 @@
                        placeholder="Period (YYYY-MM)"
                        class="bg-slate-700 border-slate-600 text-slate-100 rounded-lg text-sm px-3 py-2 placeholder-slate-500 w-40">
                 <button type="submit"
-                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg">Filter</button>
+                        class="px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg">Filter</button>
                 @if(request()->hasAny(['status','period']))
                     <a href="{{ route('rent-payments.index') }}"
                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded-lg">Clear</a>
@@ -87,7 +87,7 @@
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route('rent-payments.show', $payment) }}"
-                                       class="text-indigo-400 hover:text-indigo-300 text-xs">View</a>
+                                       class="text-[#0078D4] hover:text-[#B8D4F0] text-xs">View</a>
                                     @if($payment->status !== 'paid')
                                         <a href="{{ route('rent-payments.record', $payment) }}"
                                            class="text-emerald-400 hover:text-emerald-300 text-xs">Record</a>

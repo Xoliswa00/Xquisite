@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <h1 class="text-xl font-semibold text-white">Calendar</h1>
+                <h1 class="text-xl font-semibold text-[#D4AF37]">Calendar</h1>
                 <div class="flex items-center gap-1">
                     <a href="{{ route('appointments.calendar', $prev) }}"
                        class="p-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300">
@@ -34,7 +34,7 @@
                 @endif
                 <a href="{{ route('appointments.index') }}" class="text-xs text-slate-400 hover:text-white">List view</a>
                 <a href="{{ route('appointments.create') }}"
-                   class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg">
+                   class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg">
                     + New Booking
                 </a>
             </div>
@@ -49,9 +49,9 @@
                 <div class="py-3 px-2 text-xs text-slate-500 font-medium"></div>
                 @foreach($days as $day)
                     <div class="py-3 px-2 text-center
-                        {{ $day->isToday() ? 'bg-indigo-900/30' : '' }}">
+                        {{ $day->isToday() ? 'bg-[#001A3A]/30' : '' }}">
                         <p class="text-xs font-medium text-slate-400 uppercase">{{ $day->format('D') }}</p>
-                        <p class="text-lg font-bold {{ $day->isToday() ? 'text-indigo-400' : 'text-slate-200' }} mt-0.5">
+                        <p class="text-lg font-bold {{ $day->isToday() ? 'text-[#0078D4]' : 'text-slate-200' }} mt-0.5">
                             {{ $day->format('j') }}
                         </p>
                     </div>
@@ -79,7 +79,7 @@
                                 return $h === $hourInt;
                             });
                         @endphp
-                        <div class="border-r border-slate-800 p-0.5 {{ $day->isToday() ? 'bg-indigo-900/10' : '' }} relative group">
+                        <div class="border-r border-slate-800 p-0.5 {{ $day->isToday() ? 'bg-[#001A3A]/10' : '' }} relative group">
                             @foreach($slotAppts as $appt)
                                 <a href="{{ route('appointments.show', $appt) }}"
                                    class="block rounded px-1.5 py-1 text-xs mb-0.5 truncate leading-tight

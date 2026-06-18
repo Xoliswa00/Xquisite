@@ -10,7 +10,7 @@
                 </svg>
                 <p class="text-gray-400 mb-4">Your cart is empty</p>
                 <a href="{{ route('shop.index', $tenant->slug) }}"
-                   class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-6 py-3 rounded-xl">
+                   class="inline-block bg-[#0078D4] hover:bg-[#002B5B] text-white text-sm font-semibold px-6 py-3 rounded-xl">
                     Continue Shopping
                 </a>
             </div>
@@ -74,7 +74,7 @@
                 </div>
                 <div class="flex justify-between font-bold text-base pt-3 border-t border-gray-100">
                     <span>Estimated Total</span>
-                    <span class="text-indigo-600">R{{ number_format($lines->sum('subtotal'), 2) }}</span>
+                    <span class="text-[#0078D4]">R{{ number_format($lines->sum('subtotal'), 2) }}</span>
                 </div>
             </div>
 
@@ -84,7 +84,7 @@
                     Continue Shopping
                 </a>
                 <a href="{{ route('shop.checkout', $tenant->slug) }}"
-                   class="flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl text-sm transition-colors">
+                   class="flex-1 text-center bg-[#0078D4] hover:bg-[#002B5B] text-white font-semibold py-3 rounded-xl text-sm transition-colors">
                     Proceed to Checkout
                 </a>
             </div>

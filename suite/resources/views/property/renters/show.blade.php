@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div>
-                <h2 class="text-2xl font-bold text-white">{{ $renter->name }}</h2>
+                <h2 class="text-2xl font-bold text-[#D4AF37]">{{ $renter->name }}</h2>
                 <a href="{{ route('renters.index') }}" class="text-sm text-slate-400 hover:text-white">&larr; Back to Renters</a>
             </div>
             <div class="flex gap-2">
@@ -16,7 +16,7 @@
                     </form>
                 @endif
                 <a href="{{ route('renters.edit', $renter) }}"
-                   class="px-3 py-2 bg-indigo-700 hover:bg-indigo-600 text-white text-sm rounded-lg">Edit</a>
+                   class="px-3 py-2 bg-[#002B5B] hover:bg-[#0078D4] text-white text-sm rounded-lg">Edit</a>
             </div>
         </div>
     </x-slot>
@@ -99,7 +99,7 @@
                             <td class="px-4 py-2.5 text-slate-400 text-xs">{{ $lease->end_date ? \Carbon\Carbon::parse($lease->end_date)->format('d M Y') : '—' }}</td>
                             <td class="px-4 py-2.5 text-slate-300">R{{ number_format($lease->monthly_rent, 2) }}</td>
                             <td class="px-4 py-2.5 text-right">
-                                <a href="{{ route('leases.show', $lease) }}" class="text-indigo-400 hover:text-indigo-300 text-xs">View</a>
+                                <a href="{{ route('leases.show', $lease) }}" class="text-[#0078D4] hover:text-[#B8D4F0] text-xs">View</a>
                             </td>
                         </tr>
                     @empty

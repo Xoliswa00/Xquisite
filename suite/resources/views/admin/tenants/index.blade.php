@@ -2,9 +2,9 @@
     <x-slot name="header">Tenants</x-slot>
 
     <div class="flex items-center justify-between gap-4 mb-5 flex-wrap">
-        <h1 class="text-xl font-bold text-white">Tenants</h1>
+        <h1 class="text-xl font-bold text-[#D4AF37]">Tenants</h1>
         <a href="{{ route('admin.tenants.create') }}"
-           class="shrink-0 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+           class="shrink-0 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
             + New Tenant
         </a>
     </div>
@@ -13,8 +13,8 @@
     <form method="GET" class="flex flex-wrap gap-3 mb-5">
         <input type="text" name="search" value="{{ request('search') }}"
                placeholder="Name, email, slug…"
-               class="flex-1 min-w-[180px] bg-slate-800 border border-slate-700 text-sm text-white rounded-xl px-4 py-2.5 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-        <button type="submit" class="shrink-0 bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2.5 rounded-xl transition-colors">
+               class="flex-1 min-w-[180px] bg-slate-800 border border-slate-700 text-sm text-white rounded-xl px-4 py-2.5 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+        <button type="submit" class="shrink-0 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2.5 rounded-xl transition-colors">
             Search
         </button>
         @if(request('search'))
@@ -52,7 +52,7 @@
                         <span class="font-mono text-slate-300">{{ $tenant->slug }}</span>
                         @if($tenant->subdomain)
                         <span class="text-slate-500">Subdomain</span>
-                        <span class="text-indigo-400 truncate">{{ $tenant->subdomain }}.{{ config('app.domain', 'xquisite.co.za') }}</span>
+                        <span class="text-[#0078D4] truncate">{{ $tenant->subdomain }}.{{ config('app.domain', 'xquisite.co.za') }}</span>
                         @endif
                         <span class="text-slate-500">Monthly</span>
                         <span class="font-semibold text-white">R{{ number_format($tenant->monthlyTotal(), 2) }}</span>
@@ -64,7 +64,7 @@
                     @if($tenant->activeModules->isNotEmpty())
                     <div class="flex flex-wrap gap-1">
                         @foreach($tenant->activeModules as $mod)
-                            <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full">
+                            <span class="text-[10px] bg-[#0078D4]/20 text-[#B8D4F0] px-2 py-0.5 rounded-full">
                                 {{ config("modules.{$mod->module}.name") ?? $mod->module }}
                             </span>
                         @endforeach
@@ -73,7 +73,7 @@
 
                     {{-- Action --}}
                     <a href="{{ route('admin.tenants.show', $tenant) }}"
-                       class="inline-block text-xs font-medium text-indigo-400 hover:text-indigo-300">
+                       class="inline-block text-xs font-medium text-[#0078D4] hover:text-[#B8D4F0]">
                         Manage →
                     </a>
                 </div>
@@ -106,13 +106,13 @@
                             <td class="px-5 py-4">
                                 <p class="text-xs font-mono text-slate-300">{{ $tenant->slug }}</p>
                                 @if($tenant->subdomain)
-                                    <p class="text-xs text-indigo-400 mt-0.5">{{ $tenant->subdomain }}.{{ config('app.domain', 'xquisite.co.za') }}</p>
+                                    <p class="text-xs text-[#0078D4] mt-0.5">{{ $tenant->subdomain }}.{{ config('app.domain', 'xquisite.co.za') }}</p>
                                 @endif
                             </td>
                             <td class="px-5 py-4">
                                 <div class="flex flex-wrap gap-1">
                                     @forelse($tenant->activeModules as $mod)
-                                        <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full">
+                                        <span class="text-xs bg-[#0078D4]/20 text-[#B8D4F0] px-2 py-0.5 rounded-full">
                                             {{ config("modules.{$mod->module}.name") ?? $mod->module }}
                                         </span>
                                     @empty
@@ -136,7 +136,7 @@
                             <td class="px-5 py-4 text-slate-400">{{ $tenant->users_count }}</td>
                             <td class="px-5 py-4">
                                 <a href="{{ route('admin.tenants.show', $tenant) }}"
-                                   class="text-xs text-indigo-400 hover:text-indigo-300 font-medium whitespace-nowrap">Manage →</a>
+                                   class="text-xs text-[#0078D4] hover:text-[#B8D4F0] font-medium whitespace-nowrap">Manage →</a>
                             </td>
                         </tr>
                     @empty

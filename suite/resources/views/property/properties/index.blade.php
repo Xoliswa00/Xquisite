@@ -1,9 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-white">Properties</h2>
+            <h2 class="text-2xl font-bold text-[#D4AF37]">Properties</h2>
             <a href="{{ route('properties.create') }}"
-               class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg">
+               class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg">
                 + Add Property
             </a>
         </div>
@@ -54,7 +54,7 @@
                             Units
                         </a>
                         <a href="{{ route('properties.show', $property) }}"
-                           class="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-600 text-white text-xs rounded-lg">
+                           class="px-3 py-1.5 bg-[#002B5B] hover:bg-[#0078D4] text-white text-xs rounded-lg">
                             View
                         </a>
                     </div>
@@ -62,7 +62,7 @@
             @empty
                 <div class="bg-slate-800 rounded-xl p-12 text-center text-slate-500">
                     No properties yet.
-                    <a href="{{ route('properties.create') }}" class="text-indigo-400 hover:text-indigo-300 ml-1">Add your first property</a>
+                    <a href="{{ route('properties.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0] ml-1">Add your first property</a>
                 </div>
             @endforelse
         </div>

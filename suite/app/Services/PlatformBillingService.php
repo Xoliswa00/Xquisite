@@ -6,26 +6,24 @@ use App\Models\BillingSetting;
 use App\Models\PlatformInvoice;
 use App\Models\Tenant;
 use App\Notifications\BillingGracePeriodExpiringNotification;
-use Illuminate\Database\Eloquent\Collection;
 use App\Notifications\BillingGracePeriodStartedNotification;
 use App\Notifications\BillingInvoiceCreatedNotification;
 use App\Notifications\BillingServiceReactivatedNotification;
 use App\Notifications\BillingServiceSuspendedNotification;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 
 class PlatformBillingService
 {
     public function generateInvoice(Tenant $tenant): PlatformInvoice
     {
-        $plan   = $tenant->plan ?? 'basic';
-        $amount = Tenant::planAmount($plan);
+        $amount = $tenant->monthlyTotal();
         $start  = now()->startOfMonth()->toDateString();
         $end    = now()->endOfMonth()->toDateString();
 
         $invoice = PlatformInvoice::create([
             'tenant_id'            => $tenant->id,
             'invoice_number'       => PlatformInvoice::generateNumber(),
-            'plan'                 => $plan,
+            'plan'                 => 'modules',
             'amount'               => $amount,
             'status'               => 'unpaid',
             'due_date'             => now()->addDays((int) (BillingSetting::get('invoice_due_days') ?? 7))->toDateString(),
@@ -72,11 +70,15 @@ class PlatformBillingService
 
         foreach ($inGrace as $tenant) {
             $daysLeft = $tenant->graceDaysLeft();
-            if (in_array($daysLeft, [2, 1])) {
-                $owner = $tenant->users()->where('role', 'owner')->first();
-                if ($owner) {
-                    $owner->notify(new BillingGracePeriodExpiringNotification($tenant, $daysLeft));
-                }
+            if (!in_array($daysLeft, [2, 1])) continue;
+
+            // Only send once per day to prevent duplicate warnings from re-runs
+            if ($tenant->last_grace_warning_sent_at?->isToday()) continue;
+
+            $owner = $tenant->users()->where('role', 'owner')->first();
+            if ($owner) {
+                $owner->notify(new BillingGracePeriodExpiringNotification($tenant, $daysLeft));
+                $tenant->update(['last_grace_warning_sent_at' => now()]);
             }
         }
 

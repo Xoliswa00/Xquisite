@@ -4,9 +4,9 @@
     <div class="space-y-5">
 
         <div class="flex items-center justify-between gap-4 flex-wrap">
-            <h1 class="text-xl font-bold text-white">Staff Management</h1>
+            <h1 class="text-xl font-bold text-[#D4AF37]">Staff Management</h1>
             <a href="{{ route('admin.users.create') }}"
-               class="shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors">
+               class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium rounded-lg transition-colors">
                 + Add Staff Member
             </a>
         </div>
@@ -14,7 +14,7 @@
         {{-- Active / Deleted tabs --}}
         <div class="flex gap-1 bg-slate-800 p-1 rounded-xl overflow-x-auto">
             <a href="{{ route('admin.users.index', request()->except('trashed')) }}"
-               class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors {{ !$showTrashed ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white' }}">
+               class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors {{ !$showTrashed ? 'bg-[#0078D4] text-white' : 'text-slate-400 hover:text-white' }}">
                 Active Staff
             </a>
             <a href="{{ route('admin.users.index', array_merge(request()->except('trashed'), ['trashed' => 1])) }}"
@@ -32,8 +32,8 @@
                 <input type="hidden" name="trashed" value="1">
             @endif
             <input type="text" name="search" placeholder="Search by name or email…" value="{{ request('search') }}"
-                   class="flex-1 min-w-48 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-            <select name="role" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                   class="flex-1 min-w-48 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+            <select name="role" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                 <option value="">All Roles</option>
                 <option value="owner" {{ request('role') === 'owner' ? 'selected' : '' }}>Owner</option>
                 <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Admin</option>
@@ -159,7 +159,7 @@
                                     @else
                                         <a href="{{ route('admin.users.show', $user) }}" class="text-xs text-slate-400 hover:text-white font-medium">View</a>
                                         @if(!$user->isOwner())
-                                            <a href="{{ route('admin.users.edit', $user) }}" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">Edit</a>
+                                            <a href="{{ route('admin.users.edit', $user) }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0] font-medium">Edit</a>
                                             @if($user->is_active)
                                                 <form method="POST" action="{{ route('admin.users.deactivate', $user) }}">
                                                     @csrf

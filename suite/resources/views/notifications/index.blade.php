@@ -4,7 +4,7 @@
     <div class="max-w-3xl mx-auto space-y-4">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-xl font-bold text-white">All Notifications</h2>
+                <h2 class="text-xl font-bold text-[#D4AF37]">All Notifications</h2>
                 <p class="text-sm text-slate-400 mt-1">Recent system and application alerts appear here.</p>
             </div>
             <form method="POST" action="{{ route('notifications.read-all') }}">
@@ -30,15 +30,15 @@
                     $data = $notification->data;
                     $icon = $iconMap[$data['icon'] ?? 'bell'] ?? '🔔';
                 @endphp
-                <div class="flex items-start gap-4 px-5 py-4 {{ $notification->read_at ? '' : 'bg-indigo-950/30' }} hover:bg-slate-800/30">
+                <div class="flex items-start gap-4 px-5 py-4 {{ $notification->read_at ? '' : 'bg-[#001A3A]/30' }} hover:bg-slate-800/30">
                     <div class="text-2xl leading-none mt-0.5">{{ $icon }}</div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-start justify-between gap-2">
-                            <a href="{{ $data['url'] ?? '#' }}" class="font-medium text-white hover:text-indigo-400">
+                            <a href="{{ $data['url'] ?? '#' }}" class="font-medium text-white hover:text-[#0078D4]">
                                 {{ $data['title'] ?? class_basename($notification->type) }}
                             </a>
                             @if(!$notification->read_at)
-                                <span class="shrink-0 w-2 h-2 bg-indigo-500 rounded-full mt-1.5"></span>
+                                <span class="shrink-0 w-2 h-2 bg-[#0078D4] rounded-full mt-1.5"></span>
                             @endif
                         </div>
                         <p class="text-sm text-slate-400 mt-0.5">{{ $data['message'] ?? '' }}</p>

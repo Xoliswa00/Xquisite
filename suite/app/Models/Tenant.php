@@ -18,6 +18,8 @@ class Tenant extends Model
         'custom_domain_verified',
         'email',
         'phone',
+        'address',
+        'vat_number',
         'plan',
         'industry',
         'logo_url',
@@ -25,18 +27,20 @@ class Tenant extends Model
         'is_demo',
         'trial_ends_at',
         'grace_period_ends_at',
+        'last_grace_warning_sent_at',
         'suspended_at',
         'last_billing_date',
     ];
 
     protected $casts = [
-        'is_active'              => 'boolean',
-        'is_demo'                => 'boolean',
-        'custom_domain_verified' => 'boolean',
-        'trial_ends_at'          => 'datetime',
-        'grace_period_ends_at'   => 'datetime',
-        'suspended_at'           => 'datetime',
-        'last_billing_date'      => 'datetime',
+        'is_active'                  => 'boolean',
+        'is_demo'                    => 'boolean',
+        'custom_domain_verified'     => 'boolean',
+        'trial_ends_at'              => 'datetime',
+        'grace_period_ends_at'       => 'datetime',
+        'last_grace_warning_sent_at' => 'datetime',
+        'suspended_at'               => 'datetime',
+        'last_billing_date'          => 'datetime',
     ];
 
     // ── Relationships ──────────────────────────────────────────
@@ -97,7 +101,8 @@ class Tenant extends Model
 
     public function monthlyTotal(): float
     {
-        return $this->activeModules->sum(fn (TenantModule $tm) => $tm->monthly_price);
+        return $this->activeModules()->with('platformModule')->get()
+            ->sum(fn (TenantModule $tm) => $tm->monthly_price);
     }
 
     public function platformInvoices()
@@ -136,16 +141,22 @@ class Tenant extends Model
     {
         if ($this->suspended_at) return 'Suspended';
         if ($this->isInGrace()) return 'Grace Period';
-        if ($this->unpaidPlatformInvoices()->exists()) return 'Overdue';
+        $hasUnpaid = $this->relationLoaded('platformInvoices')
+            ? $this->platformInvoices->whereIn('status', ['unpaid', 'overdue'])->isNotEmpty()
+            : $this->unpaidPlatformInvoices()->exists();
+        if ($hasUnpaid) return 'Overdue';
         return 'Active';
     }
 
     public function billingStatusClass(): string
     {
-        if ($this->suspended_at) return 'bg-red-100 text-red-700 border-red-200';
-        if ($this->isInGrace()) return 'bg-amber-100 text-amber-700 border-amber-200';
-        if ($this->unpaidPlatformInvoices()->exists()) return 'bg-orange-100 text-orange-700 border-orange-200';
-        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        if ($this->suspended_at) return 'bg-red-900/40 text-red-300 border-red-700';
+        if ($this->isInGrace()) return 'bg-amber-900/40 text-amber-300 border-amber-700';
+        $hasUnpaid = $this->relationLoaded('platformInvoices')
+            ? $this->platformInvoices->whereIn('status', ['unpaid', 'overdue'])->isNotEmpty()
+            : $this->unpaidPlatformInvoices()->exists();
+        if ($hasUnpaid) return 'bg-orange-900/40 text-orange-300 border-orange-700';
+        return 'bg-emerald-900/40 text-emerald-300 border-emerald-700';
     }
 
     // ── Other helpers ──────────────────────────────────────────

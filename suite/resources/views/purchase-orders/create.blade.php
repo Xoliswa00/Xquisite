@@ -32,7 +32,7 @@
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Select Supplier</label>
                         <select name="supplier_id"
-                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                             <option value="">— Select from saved suppliers —</option>
                             @foreach($suppliers as $sup)
                                 <option value="{{ $sup->id }}" {{ old('supplier_id') == $sup->id ? 'selected' : '' }}>
@@ -49,13 +49,13 @@
                         <label class="block text-xs font-medium text-slate-400 mb-1">Supplier Name (free text)</label>
                         <input type="text" name="supplier" value="{{ old('supplier') }}"
                                placeholder="e.g. OPI Distributors"
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Contact / Email</label>
                         <input type="text" name="supplier_contact" value="{{ old('supplier_contact') }}"
                                placeholder="e.g. orders@supplier.co.za"
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                     </div>
                 </div>
             </div>
@@ -65,7 +65,7 @@
                 <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
                     <h3 class="text-sm font-medium text-slate-300">Order Items</h3>
                     <button type="button" @click="addItem()"
-                            class="text-xs text-indigo-400 hover:text-indigo-300">
+                            class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">
                         + Add Line
                     </button>
                 </div>
@@ -88,7 +88,7 @@
                                             x-model="item.product_id"
                                             @change="onProductChange(item)"
                                             required
-                                            class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                            class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                         <option value="">Select product…</option>
                                         <template x-for="p in products" :key="p.id">
                                             <option :value="p.id" x-text="p.name" :selected="item.product_id == p.id"></option>
@@ -101,7 +101,7 @@
                                            x-model="item.qty"
                                            @input="updateSubtotal(item)"
                                            min="1" required
-                                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 text-right focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 text-right focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                 </td>
                                 <td class="px-4 py-2">
                                     <input type="number"
@@ -109,7 +109,7 @@
                                            x-model="item.unit_cost"
                                            @input="updateSubtotal(item)"
                                            min="0" step="0.01" required
-                                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 text-right focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 text-right focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                 </td>
                                 <td class="px-4 py-2 text-right text-white font-medium">
                                     R <span x-text="parseFloat(item.subtotal || 0).toFixed(2)"></span>
@@ -146,14 +146,14 @@
                     <label class="block text-xs font-medium text-slate-400 mb-1">Notes (optional)</label>
                     <input type="text" name="notes" value="{{ old('notes') }}"
                            placeholder="e.g. Monthly restock — June 2026"
-                           class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                           class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                 </div>
                 <div class="pt-5 flex items-center gap-3">
                     <a href="{{ route('purchase-orders.index') }}" class="text-sm text-slate-400 hover:text-white">
                         Cancel
                     </a>
                     <button type="submit"
-                            class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-6 py-2 rounded-lg">
+                            class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-6 py-2 rounded-lg">
                         Create Order
                     </button>
                 </div>
