@@ -30,10 +30,27 @@
       "Bash(grep -n '$combo\\\\|combo\\\\|promo' 'c:\\\\Users\\\\beste\\\\x\\\\Xquisite\\\\apps\\\\suite\\\\resources\\\\views\\\\booking\\\\edit.blade.php')",
       "PowerShell(gh auth status 2>&1)",
       "PowerShell(Get-Process php -ErrorAction SilentlyContinue)",
-      "PowerShell(Stop-Process -Force)"
+      "PowerShell(Stop-Process -Force)",
+      "Bash(git mv *)",
+      "Bash(git push *)",
+      "Bash(xargs grep -l \"x-app-layout\")",
+      "Bash(xargs perl -i -pe ' *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\beste\\x\\Xquisite"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -Command \"$status = git -C 'c:\\Users\\beste\\x\\Xquisite' status --porcelain 2>$null; if ($status) { Write-Output 'FILES MODIFIED — type `5-review` for a 5-angle analysis (security / architecture / UX / performance / devil-advocate), or use a single-agent shortcut: `security-check`, `arch-check`, `perf-check`.' }\""
+          }
+        ]
+      }
     ]
   }
 }

@@ -30,6 +30,49 @@
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; }
         .f-mont { font-family: 'Montserrat', sans-serif; }
+
+        /* ─── Xquisite Motion Layer ─────────────────────────────────── */
+        @keyframes xqFadeUp  { from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)} }
+        @keyframes xqLine    { from{width:0;opacity:0}to{width:3.5rem;opacity:1} }
+        @keyframes xqFloatA  { 0%,100%{transform:translate(0,0)}50%{transform:translate(32px,-20px)} }
+        @keyframes xqFloatB  { 0%,100%{transform:translate(0,0)}50%{transform:translate(-24px,28px)} }
+        @keyframes xqShimmer { 0%{transform:translateX(-130%)}100%{transform:translateX(130%)} }
+
+        /* Hero entrance */
+        .xq-enter { opacity:0; animation:xqFadeUp .75s cubic-bezier(.22,1,.36,1) var(--xq-delay,.1s) forwards; }
+        .xq-line  { width:0!important; opacity:0; animation:xqLine .8s cubic-bezier(.22,1,.36,1) .05s forwards; }
+
+        /* Ambient orbs */
+        .xq-orb      { position:absolute;border-radius:9999px;pointer-events:none;filter:blur(100px);will-change:transform; }
+        .xq-orb-blue { width:600px;height:600px;background:rgba(0,120,212,.09);top:-100px;right:-140px;animation:xqFloatA 12s ease-in-out infinite; }
+        .xq-orb-gold { width:360px;height:360px;background:rgba(212,175,55,.07);bottom:-80px;left:25%;animation:xqFloatB 16s ease-in-out infinite; }
+
+        /* Grid texture on dark hero */
+        .xq-grid {
+            background-image: linear-gradient(rgba(0,120,212,.038) 1px,transparent 1px),
+                              linear-gradient(90deg,rgba(0,120,212,.038) 1px,transparent 1px);
+            background-size: 52px 52px;
+        }
+
+        /* Shimmer sweep on primary CTA */
+        .xq-shimmer { position:relative;overflow:hidden; }
+        .xq-shimmer::after {
+            content:'';position:absolute;inset:0;
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);
+            transform:translateX(-130%);
+            animation:xqShimmer 3s ease-in-out 1.8s infinite;
+        }
+
+        /* Scroll reveal */
+        .xq-sr { opacity:0;transform:translateY(20px);transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1); }
+        .xq-sr.xq-in { opacity:1;transform:translateY(0); }
+        .xq-d1 { transition-delay:.07s; }
+        .xq-d2 { transition-delay:.15s; }
+        .xq-d3 { transition-delay:.23s; }
+        .xq-d4 { transition-delay:.31s; }
+
+        /* Card hover lift — applied after xq-sr is cleaned up by JS */
+        .xq-lift:hover { transform:translateY(-4px); }
     </style>
 </head>
 <body class="antialiased text-[#2D3748] bg-white">
@@ -97,36 +140,42 @@
 </header>
 
 {{-- ─── HERO ─────────────────────────────────────────────────────────────── --}}
-<section class="bg-[#002B5B] text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
-        <div class="max-w-3xl">
-            <div class="w-14 h-1 rounded-full bg-[#D4AF37] mb-8"></div>
+<section class="bg-[#002B5B] text-white relative overflow-hidden">
+    {{-- Subtle circuit-grid overlay --}}
+    <div class="absolute inset-0 xq-grid opacity-70 pointer-events-none"></div>
+    {{-- Floating ambient orbs --}}
+    <div class="xq-orb xq-orb-blue"></div>
+    <div class="xq-orb xq-orb-gold"></div>
 
-            <h1 class="f-mont text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36 relative z-10">
+        <div class="max-w-3xl">
+            <div class="w-14 h-1 rounded-full bg-[#D4AF37] mb-8 xq-line"></div>
+
+            <h1 class="f-mont text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-5 xq-enter" style="--xq-delay:.15s">
                 Business Solutions<br>
                 <span class="text-[#0078D4]">Built For Growth.</span>
             </h1>
 
-            <p class="text-base sm:text-lg leading-relaxed mb-4 max-w-2xl text-[#B8D4F0]">
+            <p class="text-base sm:text-lg leading-relaxed mb-4 max-w-2xl text-[#B8D4F0] xq-enter" style="--xq-delay:.28s">
                 Custom software, automation, data analytics, and digital platforms —
                 built around your business, not the other way around.
             </p>
 
-            <p class="f-mont font-semibold text-lg italic mb-10 text-[#D4AF37]">
+            <p class="f-mont font-semibold text-lg italic mb-10 text-[#D4AF37] xq-enter" style="--xq-delay:.4s">
                 Understand Your Why.
             </p>
 
-            <div class="flex flex-col sm:flex-row gap-4">
-                <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-8 py-4 text-white font-semibold bg-[#0078D4] hover:bg-[#0065B8] rounded-xl shadow-lg transition-colors">
+            <div class="flex flex-col sm:flex-row gap-4 xq-enter" style="--xq-delay:.52s">
+                <a href="{{ route('register') }}" class="xq-shimmer inline-flex items-center justify-center px-8 py-4 text-white font-semibold bg-[#0078D4] hover:bg-[#0065B8] rounded-xl shadow-lg transition-colors">
                     Start Your Journey
                 </a>
-                <a href="{{ route('demo.login') }}" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 font-semibold rounded-xl border border-white/25 hover:border-[#D4AF37] text-white hover:text-[#D4AF37] transition-colors">
+                <a href="{{ route('demo.login') }}" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 font-semibold rounded-xl border border-white/25 hover:border-[#D4AF37] text-white hover:text-[#D4AF37] transition-all duration-300">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
                     Try Live Demo
                 </a>
             </div>
 
-            <p class="mt-5 text-xs text-white/30">No credit card required &middot; Resets every 6 hours</p>
+            <p class="mt-5 text-xs text-white/30 xq-enter" style="--xq-delay:.64s">No credit card required &middot; Resets every 6 hours</p>
         </div>
     </div>
 </section>
@@ -140,7 +189,7 @@
                 ['svg' => 'M13 10V3L4 14h7v7l9-11h-7z', 'title' => 'Rapid Delivery', 'body' => 'Modular solutions that deploy fast and scale as your business grows.'],
                 ['svg' => 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z', 'title' => 'Data Intelligence', 'body' => 'Turn operational data into decisions with real-time analytics and dashboards.'],
             ] as $p)
-            <div class="flex items-start gap-4">
+            <div class="flex items-start gap-4 xq-sr xq-d{{ $loop->iteration }}">
                 <div class="w-10 h-10 bg-[#002B5B] rounded-lg flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="{{ $p['svg'] }}"/>
@@ -160,7 +209,7 @@
 <section class="py-16 sm:py-24 bg-white" id="services">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div class="text-center mb-12 lg:mb-16">
+        <div class="text-center mb-12 lg:mb-16 xq-sr">
             <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
             <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-[#002B5B]">What We Do</h2>
             <p class="text-sm sm:text-base text-[#2D3748]/70 max-w-2xl mx-auto leading-relaxed">
@@ -187,7 +236,7 @@
                  'body'  => 'Professional websites, e-commerce stores, and online booking systems that convert.',
                  'items' => ['Business Websites', 'E-Commerce Platforms', 'Online Booking Systems']],
             ] as $svc)
-            <div class="group bg-[#F5F7FA] rounded-2xl p-6 lg:p-8 border border-gray-100 hover:border-[#0078D4]/20 hover:bg-white hover:shadow-lg transition-all">
+            <div class="group bg-[#F5F7FA] rounded-2xl p-6 lg:p-8 border border-gray-100 hover:border-[#0078D4]/20 hover:bg-white hover:shadow-lg transition-all xq-sr xq-lift xq-d{{ $loop->iteration }}">
                 <div class="w-12 h-12 bg-[#002B5B] group-hover:bg-[#0078D4] rounded-xl flex items-center justify-center mb-5 shrink-0 transition-colors">
                     <svg class="w-6 h-6 text-[#D4AF37]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="{{ $svc['icon'] }}"/>
@@ -236,7 +285,7 @@
 <section class="bg-[#F5F7FA] py-16 sm:py-24" id="modules">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div class="text-center mb-12 lg:mb-16">
+        <div class="text-center mb-12 lg:mb-16 xq-sr">
             <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
             <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-[#002B5B]">Platform Modules</h2>
             <p class="text-sm sm:text-base text-[#2D3748]/70 max-w-xl mx-auto">
@@ -254,7 +303,7 @@
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
                 @foreach ($active as $module)
-                <div class="group bg-white rounded-xl border border-gray-100 p-5 lg:p-6 hover:border-[#0078D4]/30 hover:shadow-md transition-all flex flex-col">
+                <div class="group bg-white rounded-xl border border-gray-100 p-5 lg:p-6 hover:border-[#0078D4]/30 hover:shadow-md transition-all flex flex-col xq-sr xq-lift xq-d{{ min($loop->iteration, 4) }}">
                     <div class="w-10 h-10 bg-[#002B5B] group-hover:bg-[#0078D4] rounded-lg flex items-center justify-center mb-4 shrink-0 transition-colors">
                         <svg class="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icons[$module['icon']] ?? $icons['chart'] }}"/>
@@ -279,7 +328,7 @@
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
                 @foreach ($beta as $module)
-                <div class="bg-white/70 rounded-xl border border-gray-100 p-5 lg:p-6 hover:shadow-sm transition-all flex flex-col">
+                <div class="bg-white/70 rounded-xl border border-gray-100 p-5 lg:p-6 hover:shadow-sm transition-all flex flex-col xq-sr xq-d{{ min($loop->iteration, 4) }}">
                     <div class="w-10 h-10 bg-[#002B5B]/60 rounded-lg flex items-center justify-center mb-4 shrink-0">
                         <svg class="w-5 h-5 text-[#D4AF37]/80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icons[$module['icon']] ?? $icons['chart'] }}"/>
@@ -337,14 +386,14 @@
 @if ($testimonials->isNotEmpty())
 <section class="py-16 sm:py-24 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
+        <div class="text-center mb-12 xq-sr">
             <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
             <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-[#002B5B]">Businesses Running on Xquisite</h2>
             <p class="text-sm sm:text-base text-[#2D3748]/60">Real feedback from real operators.</p>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             @foreach ($testimonials as $review)
-            <div class="bg-[#F5F7FA] rounded-2xl p-5 sm:p-6 flex flex-col {{ $review->is_featured ? 'ring-2 ring-[#0078D4]/30 border border-[#0078D4]/50' : 'border border-[#E8EBF0]' }}">
+            <div class="bg-[#F5F7FA] rounded-2xl p-5 sm:p-6 flex flex-col xq-sr xq-d{{ ($loop->index % 4) + 1 }} {{ $review->is_featured ? 'ring-2 ring-[#0078D4]/30 border border-[#0078D4]/50' : 'border border-[#E8EBF0]' }}">
                 <div class="flex items-center gap-0.5 mb-3">
                     @for ($i = 1; $i <= 5; $i++)
                         <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 {{ $i <= $review->rating ? 'text-[#D4AF37]' : 'text-gray-200' }}" fill="currentColor" viewBox="0 0 20 20">
@@ -379,7 +428,7 @@
 @if ($plans->isNotEmpty())
 <section class="bg-[#F5F7FA] py-16 sm:py-24" id="pricing">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12 lg:mb-16">
+        <div class="text-center mb-12 lg:mb-16 xq-sr">
             <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
             <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-[#002B5B]">Simple, Transparent Pricing</h2>
             <p class="text-sm sm:text-base text-[#2D3748]/60">Bundle and save — or activate individual modules from R99/mo.</p>
@@ -388,7 +437,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
             @foreach ($plans as $plan)
             @php $f = $plan->is_featured; @endphp
-            <div class="rounded-2xl overflow-hidden flex flex-col {{ $f ? 'bg-[#002B5B] shadow-2xl ring-2 ring-[#D4AF37]/50' : 'bg-white shadow-sm border border-gray-200' }}">
+            <div class="rounded-2xl overflow-hidden flex flex-col xq-sr xq-d{{ $loop->iteration }} {{ $f ? 'bg-[#002B5B] shadow-2xl ring-2 ring-[#D4AF37]/50' : 'bg-white shadow-sm border border-gray-200' }}">
 
                 {{-- Gold accent line on top --}}
                 <div class="h-1 {{ $f ? 'bg-[#D4AF37]' : 'bg-[#0078D4]/25' }}"></div>
@@ -471,8 +520,9 @@
 @endif
 
 {{-- ─── CTA ──────────────────────────────────────────────────────────────── --}}
-<section class="bg-[#002B5B] py-16 sm:py-24">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+<section class="bg-[#002B5B] py-16 sm:py-24 relative overflow-hidden">
+    <div class="absolute inset-0 xq-grid opacity-50 pointer-events-none"></div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 xq-sr">
         <div class="w-14 h-0.5 mx-auto mb-8 rounded-full bg-[#D4AF37]"></div>
         <h2 class="f-mont text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-5">
             Ready to Build the Right Solution?
@@ -496,5 +546,37 @@
 </section>
 
 <x-whatsapp-button />
+<script>
+(function () {
+    'use strict';
+    var els = document.querySelectorAll('.xq-sr');
+    if (!els.length) return;
+
+    function reveal(el) {
+        el.classList.add('xq-in');
+        // After the transition finishes, clean up so Tailwind hover effects work normally
+        var delay = parseFloat(getComputedStyle(el).transitionDelay) * 1000 || 0;
+        var dur   = parseFloat(getComputedStyle(el).transitionDuration) * 1000 || 600;
+        setTimeout(function () {
+            el.classList.remove('xq-sr', 'xq-in', 'xq-d1', 'xq-d2', 'xq-d3', 'xq-d4');
+        }, delay + dur + 80);
+    }
+
+    if (!('IntersectionObserver' in window)) {
+        els.forEach(reveal);
+        return;
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            reveal(entry.target);
+            io.unobserve(entry.target);
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    els.forEach(function (el) { io.observe(el); });
+})();
+</script>
 </body>
 </html>

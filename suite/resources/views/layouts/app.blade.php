@@ -25,6 +25,34 @@
     <meta name="msapplication-TileColor" content="#002B5B">
     <meta name="msapplication-TileImage" content="/img/ms-icon-144x144.png">
     <meta name="theme-color" content="#002B5B">
+    <style>
+        /* ─── App UI Polish ───────────────────────────────────────── */
+        @keyframes xqToastIn  { from{opacity:0;transform:translateY(10px) scale(.97)} to{opacity:1;transform:none} }
+        @keyframes xqSlideIn  { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:none} }
+
+        /* Sidebar active nav item — left indicator + subtle glow */
+        aside nav a.bg-slate-800 {
+            border-left: 2px solid #0078D4;
+            padding-left: calc(0.75rem - 2px) !important;
+            background-image: linear-gradient(90deg, rgba(0,120,212,.14) 0%, transparent 55%);
+        }
+
+        /* Sidebar section label */
+        aside nav p.text-\[#D4AF37\] {
+            letter-spacing: .08em;
+        }
+
+        /* Toast entrance */
+        .xq-toast { animation: xqToastIn .3s cubic-bezier(.22,1,.36,1) forwards; }
+
+        /* Notification dropdown polish */
+        [x-show="openNotifications"] {
+            animation: xqSlideIn .2s cubic-bezier(.22,1,.36,1) forwards;
+        }
+
+        /* Topbar header blur depth */
+        header.sticky { box-shadow: 0 1px 0 rgba(0,120,212,.08), 0 4px 20px rgba(0,0,0,.15); }
+    </style>
 </head>
 
 <body class="font-sans antialiased bg-slate-950 text-slate-100">
@@ -33,7 +61,7 @@
 
     <!-- Sidebar (desktop + mobile off-canvas) -->
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform -translate-x-full lg:translate-x-0 lg:static bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-200">
-        <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between" style="background:linear-gradient(135deg,rgba(0,120,212,.1) 0%,transparent 60%)">
             <div class="flex items-center gap-2.5 min-w-0">
                 <img src="/img/android-icon-96x96.png" alt="Xquisite" class="h-8 w-8 object-contain shrink-0 rounded-lg">
                 <div class="min-w-0">
@@ -695,7 +723,7 @@
             if (!container) return;
 
             const toast = document.createElement('div');
-            toast.className = 'pointer-events-auto w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900/95 shadow-xl backdrop-blur-lg overflow-hidden';
+            toast.className = 'xq-toast pointer-events-auto w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900/95 shadow-xl backdrop-blur-lg overflow-hidden';
             toast.innerHTML = `
                 <div class="p-4 ${type === 'error' ? 'border-l-4 border-red-500' : type === 'success' ? 'border-l-4 border-emerald-500' : 'border-l-4 border-slate-500'}">
                     <div class="flex items-start justify-between gap-3">
