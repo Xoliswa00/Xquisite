@@ -90,20 +90,72 @@
                 @endif
             </div>
 
-            <!-- Users -->
+            <!-- Tenant Actions -->
             <div class="bg-slate-800 rounded-2xl border border-slate-700 p-5">
-                <h2 class="text-sm font-semibold text-[#D4AF37] mb-3">Users ({{ $tenant->users->count() }})</h2>
-                <div class="space-y-2">
+                <h2 class="text-sm font-semibold text-[#D4AF37] mb-3">Account Control</h2>
+                <div class="flex gap-2">
+                    @if($tenant->is_active)
+                        <form action="{{ route('admin.tenants.suspend', $tenant) }}" method="POST" class="flex-1">
+                            @csrf
+                            <button type="submit" onclick="return confirm('Suspend {{ addslashes($tenant->name) }}? They will lose access immediately.')"
+                                    class="w-full text-xs font-semibold px-3 py-2 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors">
+                                Suspend Tenant
+                            </button>
+                        </form>
+                    @else
+                        <form action="{{ route('admin.tenants.activate', $tenant) }}" method="POST" class="flex-1">
+                            @csrf
+                            <button type="submit" class="w-full text-xs font-semibold px-3 py-2 rounded-lg bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 transition-colors">
+                                Reactivate Tenant
+                            </button>
+                        </form>
+                    @endif
+                    <a href="{{ route('admin.tenants.messages', $tenant) }}"
+                       class="flex-1 text-center text-xs font-semibold px-3 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors">
+                        Message Tenant
+                    </a>
+                </div>
+            </div>
+
+            <!-- Users + IT Support -->
+            <div class="bg-slate-800 rounded-2xl border border-slate-700 p-5">
+                <h2 class="text-sm font-semibold text-[#D4AF37] mb-3">Users ({{ $tenant->users->count() }}) — IT Support</h2>
+                <div class="space-y-3">
                     @foreach($tenant->users as $user)
-                        <div class="flex items-center gap-3">
-                            <div class="w-7 h-7 bg-[#0078D4] rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0">
-                                {{ strtoupper(substr($user->name, 0, 1)) }}
+                        <div class="rounded-xl border border-slate-700 p-3 space-y-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0
+                                    {{ $user->is_active ? 'bg-[#0078D4]' : 'bg-slate-600' }}">
+                                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm text-white font-medium truncate">{{ $user->name }}</p>
+                                    <p class="text-xs text-slate-400 truncate">{{ $user->email }}</p>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <span class="text-xs capitalize {{ $user->role === 'owner' ? 'text-[#D4AF37]' : 'text-slate-500' }}">{{ $user->role }}</span>
+                                    <span class="text-xs {{ $user->is_active ? 'text-emerald-400' : 'text-red-400' }}">
+                                        {{ $user->is_active ? '● Active' : '● Inactive' }}
+                                    </span>
+                                </div>
                             </div>
-                            <div class="min-w-0">
-                                <p class="text-sm text-white font-medium truncate">{{ $user->name }}</p>
-                                <p class="text-xs text-slate-400 truncate">{{ $user->email }}</p>
+                            <div class="flex gap-2 pt-1">
+                                <form action="{{ route('admin.tenants.users.reset-password', [$tenant, $user]) }}" method="POST" class="flex-1">
+                                    @csrf
+                                    <button type="submit" onclick="return confirm('Reset password for {{ addslashes($user->name) }}? They will receive an email with a temporary password.')"
+                                            class="w-full text-xs px-2 py-1.5 rounded-lg bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition-colors">
+                                        Reset Password
+                                    </button>
+                                </form>
+                                <form action="{{ route('admin.tenants.users.toggle', [$tenant, $user]) }}" method="POST" class="flex-1">
+                                    @csrf
+                                    <button type="submit"
+                                            class="w-full text-xs px-2 py-1.5 rounded-lg transition-colors
+                                            {{ $user->is_active ? 'bg-red-500/15 text-red-400 hover:bg-red-500/25' : 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' }}">
+                                        {{ $user->is_active ? 'Deactivate' : 'Activate' }}
+                                    </button>
+                                </form>
                             </div>
-                            <span class="shrink-0 text-xs text-slate-500 capitalize">{{ $user->role }}</span>
                         </div>
                     @endforeach
                 </div>
