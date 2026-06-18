@@ -40,7 +40,7 @@
             <label for="remember_me" class="text-sm text-[#2D3748]/70">Remember me for 30 days</label>
         </div>
 
-        <button type="submit" class="w-full bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold py-3 rounded-xl text-sm transition-colors">
+        <button type="submit" data-loading="Signing in…" class="w-full bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold py-3 rounded-xl text-sm transition-colors">
             Sign In
         </button>
     </form>

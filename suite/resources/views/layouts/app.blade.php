@@ -794,5 +794,32 @@
             });
         };
     </script>
+    <script>
+    /* ── Form submit guard: prevents double-submit on slow networks ── */
+    (function () {
+        var SPINNER = '<svg class="inline animate-spin w-3.5 h-3.5 mr-1.5 -mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>';
+
+        document.addEventListener('submit', function (e) {
+            var form = e.target;
+            if (form.dataset.xqBusy) { e.preventDefault(); return; }
+            form.dataset.xqBusy = '1';
+            var btn = form.querySelector('[type="submit"]');
+            if (!btn) return;
+            btn.disabled = true;
+            btn.dataset.xqOrig = btn.innerHTML;
+            btn.innerHTML = SPINNER + (btn.dataset.loading || 'Please wait…');
+        }, true);
+
+        /* Re-enable on browser back (bfcache restore) */
+        window.addEventListener('pageshow', function (e) {
+            if (!e.persisted) return;
+            document.querySelectorAll('[data-xq-busy]').forEach(function (form) {
+                delete form.dataset.xqBusy;
+                var btn = form.querySelector('[type="submit"]');
+                if (btn && btn.dataset.xqOrig) { btn.disabled = false; btn.innerHTML = btn.dataset.xqOrig; }
+            });
+        });
+    })();
+    </script>
 </body>
 </html>

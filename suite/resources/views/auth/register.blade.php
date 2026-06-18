@@ -95,7 +95,7 @@
             </div>
         </div>
 
-        <button type="submit" class="w-full bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold py-3 rounded-xl text-sm transition-colors mt-2">
+        <button type="submit" data-loading="Creating your account…" class="w-full bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold py-3 rounded-xl text-sm transition-colors mt-2">
             Start Free Trial
         </button>
 
