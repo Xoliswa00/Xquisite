@@ -28,7 +28,7 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         Gate::define('manage-tenants', function (User $user) {
-            return $user->isOwner();
+            return $user->isPlatformOwner();
         });
     }
 }
