@@ -55,6 +55,14 @@ class Tenant extends Model
         return $this->hasMany(User::class);
     }
 
+    /** The tenant's owner user (spatie 'tenant-owner' role). */
+    public function owner(): ?User
+    {
+        return $this->users()
+            ->whereHas('roles', fn ($q) => $q->where('name', 'tenant-owner'))
+            ->first();
+    }
+
     public function tenantModules()
     {
         return $this->hasMany(TenantModule::class);

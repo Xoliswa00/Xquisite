@@ -15,7 +15,7 @@ class ClientController extends Controller
 
     private function ownerUser()
     {
-        return auth()->user()->tenant->users()->where('role', 'owner')->first();
+        return auth()->user()->tenant->owner();
     }
 
     public function index()

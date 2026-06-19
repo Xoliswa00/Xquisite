@@ -95,7 +95,7 @@ class QuoteController extends Controller
         $quote->update(['status' => 'sent']);
 
         // Notify the tenant owner
-        $owner = auth()->user()->tenant->users()->where('role', 'owner')->first();
+        $owner = auth()->user()->tenant->owner();
         if ($owner && $owner->id !== auth()->id()) {
             $owner->notify(new QuoteStatusNotification($quote, 'sent'));
         }

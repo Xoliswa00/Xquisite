@@ -4,7 +4,6 @@ use App\Http\Controllers\AboutController;
 use App\Http\Controllers\PaymentPlanController;
 use App\Http\Controllers\PublicQuoteController;
 use App\Http\Controllers\QuoteController;
-use App\Http\Controllers\DemoController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\DashboardController;
@@ -24,6 +23,7 @@ use App\Http\Controllers\Ecommerce\StorefrontController;
 use App\Http\Controllers\Ecommerce\CartController;
 use App\Http\Controllers\Ecommerce\CheckoutController;
 use App\Http\Controllers\Ecommerce\OrderController;
+use App\Http\Controllers\Ecommerce\StoreSettingsController;
 use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\PlatformServiceController;
 use App\Http\Controllers\Admin\PlanController;
@@ -65,7 +65,6 @@ Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
-Route::get('/demo', [DemoController::class, 'login'])->name('demo.login');
 Route::get('/about',   AboutController::class)->name('about');
 Route::get('/terms',   fn() => view('terms'))->name('terms');
 Route::get('/privacy', fn() => view('privacy'))->name('privacy');
@@ -180,6 +179,10 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index')->middleware('module:ecommerce');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('module:ecommerce');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status')->middleware('module:ecommerce');
+
+    // E-commerce — store settings (shipping, etc.)
+    Route::get('/store/settings', [StoreSettingsController::class, 'edit'])->name('store.settings')->middleware('module:ecommerce');
+    Route::patch('/store/settings', [StoreSettingsController::class, 'update'])->name('store.settings.update')->middleware('module:ecommerce');
 
     // Property management module
     Route::middleware('module:property_management')->group(function () {

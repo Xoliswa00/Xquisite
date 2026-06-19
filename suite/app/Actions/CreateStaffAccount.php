@@ -21,13 +21,10 @@ class CreateStaffAccount
             'email' => $data['email'],
             'password' => Hash::make($temporaryPassword),
             'tenant_id' => $data['tenant_id'],
-            'role' => $data['role'] ?? 'staff',
             'require_password_change' => true,
         ]);
 
-        if (isset($data['role'])) {
-            $staff->assignRole($data['role']);
-        }
+        $staff->assignRole($data['role'] ?? 'employee');
 
         return $staff;
     }

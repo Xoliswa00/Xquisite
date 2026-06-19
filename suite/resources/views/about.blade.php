@@ -49,9 +49,6 @@
                 <a href="/#services" class="hover:text-[#0078D4] transition-colors">Services</a>
                 <a href="/#modules"  class="hover:text-[#0078D4] transition-colors">Platform</a>
                 <a href="/about"     class="text-[#0078D4] border-b-2 border-[#0078D4] pb-0.5">About</a>
-                @if (app()->environment('local'))
-                <a href="{{ route('demo.login') }}" class="hover:text-[#0078D4] transition-colors">Live Demo</a>
-                @endif
             </nav>
 
             <div class="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -201,17 +198,12 @@
             Ready to Work With Us?
         </h2>
         <p class="text-base text-[#B8D4F0] max-w-xl mx-auto mb-10 leading-relaxed">
-            Start with a 14-day free trial — no credit card required. Or try the live demo first.
+            Start with a 14-day free trial — no credit card required.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="{{ route('register') }}" class="px-8 py-4 text-white font-semibold bg-[#0078D4] hover:bg-[#0065B8] rounded-xl shadow-lg transition-colors">
                 Get Started Free
             </a>
-            @if (app()->environment('local'))
-            <a href="{{ route('demo.login') }}" class="px-8 py-4 font-semibold text-white rounded-xl border border-white/25 hover:border-[#D4AF37] hover:text-[#D4AF37] transition-colors">
-                Try Live Demo
-            </a>
-            @endif
         </div>
         <p class="mt-8 text-xs text-white/30">Xquisite Creations (Pty) Ltd — Built for South African Business.</p>
     </div>
