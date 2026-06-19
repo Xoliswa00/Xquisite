@@ -77,7 +77,7 @@
 <footer class="border-t border-gray-200 mt-12">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-gray-400">
         <span>© {{ date('Y') }} {{ $tenant->name }}</span>
-        <span>Powered by <span class="text-[#0078D4] font-medium">Xquisite Suite</span></span>
+        <span>Powered by <span class="text-[#0078D4] font-medium">Xquisite Creation</span></span>
     </div>
 </footer>
 

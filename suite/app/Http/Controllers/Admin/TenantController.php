@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
-use App\Models\TenantModule;
 use App\Models\User;
 use App\Services\BillingBridge;
 use Illuminate\Http\Request;
@@ -75,7 +74,7 @@ class TenantController extends Controller
             'trial_ends_at' => $request->trial_days ? now()->addDays((int) $request->trial_days) : null,
         ]);
 
-        $owner = User::create([
+        User::create([
             'name'      => $request->owner_name,
             'email'     => $request->owner_email,
             'password'  => Hash::make($request->owner_password),
@@ -146,6 +145,49 @@ class TenantController extends Controller
         $tenant->update(['subdomain' => $request->subdomain]);
 
         return back()->with('success', "Subdomain updated to {$request->subdomain}." . config('app.domain', 'xquisite.co.za'));
+    }
+
+    public function activate(Tenant $tenant)
+    {
+        $tenant->update(['is_active' => true, 'suspended_at' => null]);
+
+        return back()->with('success', "'{$tenant->name}' has been activated.");
+    }
+
+    public function suspend(Tenant $tenant)
+    {
+        $tenant->update(['is_active' => false, 'suspended_at' => now()]);
+
+        return back()->with('success', "'{$tenant->name}' has been suspended.");
+    }
+
+    public function resetUserPassword(Tenant $tenant, User $user)
+    {
+        abort_if((int) $user->tenant_id !== (int) $tenant->id, 403);
+
+        $tempPassword = \Illuminate\Support\Str::password(12);
+
+        $user->update([
+            'password'                => Hash::make($tempPassword),
+            'require_password_change' => true,
+        ]);
+
+        \Illuminate\Support\Facades\Mail::to($user->email)->send(
+            new \App\Mail\PasswordResetByAdminMail($user, $tempPassword)
+        );
+
+        return back()->with('success', "Password reset for {$user->name}. They'll receive an email with instructions.");
+    }
+
+    public function toggleUserStatus(Tenant $tenant, User $user)
+    {
+        abort_if((int) $user->tenant_id !== (int) $tenant->id, 403);
+
+        $user->update(['is_active' => !$user->is_active]);
+
+        $status = $user->is_active ? 'activated' : 'deactivated';
+
+        return back()->with('success', "{$user->name} has been {$status}.");
     }
 
     public function destroy(Tenant $tenant)

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Xquisite Suite</title>
+    <title>Welcome to Xquisite Creation</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Figtree',Helvetica,Arial,sans-serif;color:#1e293b;">
 
@@ -17,7 +17,7 @@
         <tr>
             <td style="background:linear-gradient(135deg,#002B5B,#003d7a);padding:36px 40px;text-align:center;border-bottom:3px solid #D4AF37;">
                 <img src="{{ asset('img/android-icon-192x192.png') }}" alt="Xquisite" style="height:56px;width:auto;margin:0 auto 16px;display:block;">
-                <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:0.3px;">Xquisite Suite</p>
+                <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:0.3px;">Xquisite Creation</p>
                 <p style="margin:6px 0 0;color:rgba(255,255,255,0.70);font-size:14px;">Your business management platform</p>
             </td>
         </tr>

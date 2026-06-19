@@ -99,7 +99,7 @@
             </div>
         @endif
 
-        <p class="text-xs text-gray-400 text-center mt-8">Powered by Xquisite Suite · Xquisite Technologies (Pty) Ltd</p>
+        <p class="text-xs text-gray-400 text-center mt-8">Powered by Xquisite Creation · Xquisite Technologies (Pty) Ltd</p>
     </div>
 </div>
 </x-guest-layout>

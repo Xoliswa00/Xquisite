@@ -2,35 +2,33 @@
 
 namespace App\Mail;
 
-use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class WelcomeEmail extends Mailable implements ShouldQueue
+class PasswordResetByAdminMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
         public readonly User   $user,
-        public readonly Tenant $tenant,
+        public readonly string $tempPassword,
     ) {}
 
     public function envelope(): Envelope
     {
-        return new Envelope(
-            subject: "Welcome to Xquisite Creation — {$this->tenant->name}",
-        );
+        return new Envelope(subject: 'Your Xquisite password has been reset');
     }
 
     public function content(): Content
     {
-        return new Content(
-            view: 'emails.welcome',
-        );
+        return new Content(view: 'emails.password-reset-by-admin', with: [
+            'user'         => $this->user,
+            'tempPassword' => $this->tempPassword,
+            'loginUrl'     => route('login'),
+        ]);
     }
 }

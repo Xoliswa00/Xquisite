@@ -16,7 +16,7 @@ class BillingServiceReactivatedNotification extends MailNotification
     {
         return (new MailMessage)
             ->subject('Your account has been reactivated')
-            ->line('Your Xquisite Suite account is now active again. Thank you for your payment!')
+            ->line('Your Xquisite Creation account is now active again. Thank you for your payment!')
             ->action('Go to Dashboard', url('/dashboard'));
     }
 
