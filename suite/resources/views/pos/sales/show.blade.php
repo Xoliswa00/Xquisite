@@ -8,7 +8,7 @@
 
             <!-- Header -->
             <div class="px-6 py-5 border-b border-slate-700 text-center">
-                <h1 class="text-xl font-bold text-[#D4AF37]">Xquisite Suite</h1>
+                <h1 class="text-xl font-bold text-[#D4AF37]">Xquisite Creation</h1>
                 <p class="text-xs text-slate-500 mt-0.5">{{ now()->format('d M Y') }}</p>
             </div>
 

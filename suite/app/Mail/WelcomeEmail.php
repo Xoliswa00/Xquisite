@@ -23,7 +23,7 @@ class WelcomeEmail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Welcome to Xquisite Suite — {$this->tenant->name}",
+            subject: "Welcome to Xquisite Creation — {$this->tenant->name}",
         );
     }
 

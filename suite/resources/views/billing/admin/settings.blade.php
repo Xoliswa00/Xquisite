@@ -175,7 +175,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1.5">Account Name</label>
-                            <input type="text" name="bank_account_name" value="{{ $settings['bank_account_name'] ?? '' }}" class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0078D4]" placeholder="Xquisite Suite (Pty) Ltd">
+                            <input type="text" name="bank_account_name" value="{{ $settings['bank_account_name'] ?? '' }}" class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0078D4]" placeholder="Xquisite Creation (Pty) Ltd">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1.5">Account Number</label>

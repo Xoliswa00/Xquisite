@@ -147,7 +147,7 @@
     <div class="footer">
         <p>
             Questions? Contact us at <strong>{{ $tenant->email }}</strong><br>
-            © {{ date('Y') }} <strong>{{ $tenant->name }}</strong> · Powered by <strong>Xquisite Suite</strong>
+            © {{ date('Y') }} <strong>{{ $tenant->name }}</strong> · Powered by <strong>Xquisite Creation</strong>
         </p>
     </div>
 </div>

@@ -34,7 +34,9 @@
       "Bash(git mv *)",
       "Bash(git push *)",
       "Bash(xargs grep -l \"x-app-layout\")",
-      "Bash(xargs perl -i -pe ' *)"
+      "Bash(xargs perl -i -pe ' *)",
+      "Bash(git fetch *)",
+      "Bash(npm run *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\beste\\x\\Xquisite"

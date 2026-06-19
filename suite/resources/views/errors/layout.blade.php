@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title') — Xquisite Suite</title>
+    <title>@yield('title') — Xquisite Creation</title>
     <link rel="apple-touch-icon" sizes="57x57" href="/img/apple-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="/img/apple-icon-60x60.png">
     <link rel="apple-touch-icon" sizes="72x72" href="/img/apple-icon-72x72.png">
@@ -115,7 +115,7 @@
             <svg fill="none" stroke="#D4AF37" stroke-width="1.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
             </svg>
-            Xquisite Suite
+            Xquisite Creation
         </div>
 
         <div class="code">@yield('code')</div>
