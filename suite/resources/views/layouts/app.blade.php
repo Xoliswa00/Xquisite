@@ -828,5 +828,20 @@
         });
     })();
     </script>
+    <script>
+    window.onerror = function(msg, src, line, col, err) {
+        navigator.sendBeacon('{{ route('js.error') }}', new Blob([JSON.stringify({
+            _token: '{{ csrf_token() }}', message: String(msg).slice(0,500),
+            source: src, line: line, col: col, url: location.href,
+            stack: err ? String(err.stack).slice(0,2000) : null
+        })], {type:'application/json'}));
+    };
+    window.addEventListener('unhandledrejection', function(e) {
+        navigator.sendBeacon('{{ route('js.error') }}', new Blob([JSON.stringify({
+            _token: '{{ csrf_token() }}', message: ('[Promise] ' + (e.reason?.message || String(e.reason))).slice(0,500),
+            url: location.href, stack: e.reason?.stack ? String(e.reason.stack).slice(0,2000) : null
+        })], {type:'application/json'}));
+    });
+    </script>
 </body>
 </html>
