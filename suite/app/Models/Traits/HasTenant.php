@@ -7,6 +7,11 @@ use App\Services\Tenant\TenantContext;
 
 trait HasTenant
 {
+    protected function initializeHasTenant(): void
+    {
+        $this->mergeCasts(['tenant_id' => 'integer']);
+    }
+
     protected static function bootHasTenant(): void
     {
         static::creating(function ($model) {
