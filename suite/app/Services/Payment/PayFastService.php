@@ -34,9 +34,9 @@ class PayFastService
         $data = [
             'merchant_id'   => $this->merchantId,
             'merchant_key'  => $this->merchantKey,
-            'return_url'    => route('shop.checkout.return', $tenantSlug),
-            'cancel_url'    => route('shop.checkout.cancel', $tenantSlug),
-            'notify_url'    => route('shop.checkout.notify', $tenantSlug),
+            'return_url'    => route('shop.payfast.return', $tenantSlug),
+            'cancel_url'    => route('shop.payfast.cancel', $tenantSlug),
+            'notify_url'    => route('shop.payfast.notify', $tenantSlug),
             'name_first'    => $nameParts[0],
             'name_last'     => $nameParts[1] ?? '-',
             'email_address' => $order->customer_email,

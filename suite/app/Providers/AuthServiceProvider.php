@@ -23,12 +23,14 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::define('manage-staff', function (User $user) {
-            return $user->isAdmin();
-        });
+        // Authorization is driven entirely by spatie permissions. The previous
+        // column-backed Gate::define for manage-staff/manage-tenants is gone;
+        // those abilities are now spatie permissions (manage-tenants is granted
+        // only to super-admin), so there is a single source of truth.
 
-        Gate::define('manage-tenants', function (User $user) {
-            return $user->isPlatformOwner();
+        // super-admin can do everything.
+        Gate::before(function (User $user, string $ability) {
+            return $user->hasRole('super-admin') ? true : null;
         });
     }
 }

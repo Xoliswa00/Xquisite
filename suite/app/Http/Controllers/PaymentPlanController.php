@@ -95,7 +95,7 @@ class PaymentPlanController extends Controller
         $installment->markPaid($data['payment_method'], $data['reference'] ?? null);
 
         // Notify the tenant owner
-        $owner = auth()->user()->tenant->users()->where('role', 'owner')->first();
+        $owner = auth()->user()->tenant->owner();
         if ($owner) {
             $owner->notify(new PaymentReceivedNotification(
                 (float) $installment->amount,

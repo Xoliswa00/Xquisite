@@ -35,9 +35,9 @@
                    class="flex-1 min-w-48 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
             <select name="role" class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                 <option value="">All Roles</option>
-                <option value="owner" {{ request('role') === 'owner' ? 'selected' : '' }}>Owner</option>
-                <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-                <option value="staff" {{ request('role') === 'staff' ? 'selected' : '' }}>Staff</option>
+                <option value="tenant-owner" {{ request('role') === 'tenant-owner' ? 'selected' : '' }}>Owner</option>
+                <option value="manager" {{ request('role') === 'manager' ? 'selected' : '' }}>Manager</option>
+                <option value="employee" {{ request('role') === 'employee' ? 'selected' : '' }}>Employee</option>
                 <option value="client" {{ request('role') === 'client' ? 'selected' : '' }}>Client</option>
             </select>
             <button type="submit" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors">Filter</button>
@@ -59,14 +59,16 @@
                         <div class="flex flex-wrap gap-1 shrink-0">
                             @php
                                 $roleColors = [
-                                    'owner'  => 'bg-purple-500/20 text-purple-300',
-                                    'admin'  => 'bg-blue-500/20 text-blue-300',
-                                    'staff'  => 'bg-emerald-500/20 text-emerald-300',
-                                    'client' => 'bg-slate-500/20 text-slate-300',
+                                    'super-admin'  => 'bg-amber-500/20 text-amber-300',
+                                    'tenant-owner' => 'bg-purple-500/20 text-purple-300',
+                                    'manager'      => 'bg-blue-500/20 text-blue-300',
+                                    'employee'     => 'bg-emerald-500/20 text-emerald-300',
+                                    'client'       => 'bg-slate-500/20 text-slate-300',
                                 ];
+                                $roleName = $user->getRoleNames()->first();
                             @endphp
-                            <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ $roleColors[$user->role] ?? 'bg-slate-700 text-slate-300' }}">
-                                {{ ucfirst($user->role) }}
+                            <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ $roleColors[$roleName] ?? 'bg-slate-700 text-slate-300' }}">
+                                {{ $roleName ? ucfirst(str_replace('-', ' ', $roleName)) : '—' }}
                             </span>
                             <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ $user->is_active ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300' }}">
                                 {{ $user->is_active ? 'Active' : 'Inactive' }}
@@ -131,14 +133,16 @@
                             <td class="px-5 py-3.5">
                                 @php
                                     $roleColors = [
-                                        'owner'  => 'bg-purple-500/20 text-purple-300',
-                                        'admin'  => 'bg-blue-500/20 text-blue-300',
-                                        'staff'  => 'bg-emerald-500/20 text-emerald-300',
-                                        'client' => 'bg-slate-500/20 text-slate-300',
+                                        'super-admin'  => 'bg-amber-500/20 text-amber-300',
+                                        'tenant-owner' => 'bg-purple-500/20 text-purple-300',
+                                        'manager'      => 'bg-blue-500/20 text-blue-300',
+                                        'employee'     => 'bg-emerald-500/20 text-emerald-300',
+                                        'client'       => 'bg-slate-500/20 text-slate-300',
                                     ];
+                                    $roleName = $user->getRoleNames()->first();
                                 @endphp
-                                <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ $roleColors[$user->role] ?? 'bg-slate-700 text-slate-300' }}">
-                                    {{ ucfirst($user->role) }}
+                                <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ $roleColors[$roleName] ?? 'bg-slate-700 text-slate-300' }}">
+                                    {{ $roleName ? ucfirst(str_replace('-', ' ', $roleName)) : '—' }}
                                 </span>
                             </td>
                             <td class="px-5 py-3.5">

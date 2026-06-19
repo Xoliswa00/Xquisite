@@ -74,13 +74,13 @@ class TenantController extends Controller
             'trial_ends_at' => $request->trial_days ? now()->addDays((int) $request->trial_days) : null,
         ]);
 
-        User::create([
+        $owner = User::create([
             'name'      => $request->owner_name,
             'email'     => $request->owner_email,
             'password'  => Hash::make($request->owner_password),
             'tenant_id' => $tenant->id,
-            'role'      => 'owner',
         ]);
+        $owner->assignRole('tenant-owner');
 
         $billing = app(BillingBridge::class);
         foreach ($request->input('modules', []) as $module) {

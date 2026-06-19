@@ -34,19 +34,17 @@ class DatabaseSeeder extends Seeder
                 [
                     'name' => 'System Administrator',
                     'password' => Hash::make('password'),
-                    'role' => 'owner',
                     'is_active' => true,
                     'require_password_change' => true,
                 ]
             );
-            $systemOwner->assignRole('owner');
+            $systemOwner->syncRoles(['super-admin']);
 
             $testClient = User::updateOrCreate(
                 ['email' => 'test@example.com'],
                 [
                     'name' => 'Test User',
                     'password' => Hash::make('password'),
-                    'role' => 'client',
                     'is_active' => true,
                 ]
             );

@@ -41,8 +41,8 @@
                     </label>
                     <select id="role" name="role" required
                             class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('role') border-red-500 @enderror">
-                        <option value="staff" {{ old('role') === 'staff' ? 'selected' : '' }}>Staff</option>
-                        <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
+                        <option value="employee" {{ old('role') === 'employee' ? 'selected' : '' }}>Employee</option>
+                        <option value="manager" {{ old('role') === 'manager' ? 'selected' : '' }}>Manager</option>
                     </select>
                     @error('role')
                         <p class="mt-1 text-xs text-red-400">{{ $message }}</p>

@@ -60,9 +60,10 @@ class RegisteredUserController extends Controller
                 'email'              => $request->email,
                 'password'           => Hash::make($request->password),
                 'tenant_id'          => $tenant->id,
-                'role'               => 'owner',
                 'email_verified_at'  => now(),
             ]);
+
+            $user->assignRole('tenant-owner');
 
             return [$tenant, $user];
         });
@@ -71,8 +72,8 @@ class RegisteredUserController extends Controller
 
         Mail::to($user->email)->queue(new WelcomeNewUserMail($user));
 
-        // Notify platform owners of new signup
-        User::where('role', 'owner')->whereNull('tenant_id')->each(
+        // Notify platform operators of new signup
+        User::role('super-admin')->each(
             fn($platformOwner) => $platformOwner->notify(new NewTenantRegistered($tenant, $user))
         );
 
