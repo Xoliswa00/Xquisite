@@ -30,7 +30,7 @@ class AppointmentConfirmationEmail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            markdown: $this->recipient === 'booker'
+            view: $this->recipient === 'booker'
                 ? 'emails.appointments.confirmation-booker'
                 : 'emails.appointments.confirmation-customer',
         );
