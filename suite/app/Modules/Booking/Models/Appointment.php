@@ -40,11 +40,12 @@ class Appointment extends Model
     ];
 
     protected $casts = [
-        'scheduled_at' => 'datetime',
-        'setup_at'     => 'datetime',
-        'breakdown_at' => 'datetime',
-        'combo_price'    => 'decimal:2',
-        'promo_discount' => 'decimal:2',
+        'scheduled_at'     => 'datetime',
+        'setup_at'         => 'datetime',
+        'breakdown_at'     => 'datetime',
+        'duration_minutes' => 'integer',
+        'combo_price'      => 'decimal:2',
+        'promo_discount'   => 'decimal:2',
     ];
 
     public function isEventBooking(): bool
