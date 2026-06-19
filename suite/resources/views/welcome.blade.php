@@ -123,7 +123,9 @@
                 <a href="#services"              class="hover:text-[#0078D4] transition-colors">Services</a>
                 <a href="#modules"               class="hover:text-[#0078D4] transition-colors">Platform</a>
                 <a href="{{ route('about') }}"   class="hover:text-[#0078D4] transition-colors">About</a>
+                @if (app()->environment('local'))
                 <a href="{{ route('demo.login') }}" class="hover:text-[#0078D4] transition-colors">Live Demo</a>
+                @endif
             </nav>
 
             {{-- Auth --}}
@@ -169,10 +171,12 @@
                 <a href="{{ route('register') }}" class="xq-shimmer inline-flex items-center justify-center px-8 py-4 text-white font-semibold bg-[#0078D4] hover:bg-[#0065B8] rounded-xl shadow-lg transition-colors">
                     Start Your Journey
                 </a>
+                @if (app()->environment('local'))
                 <a href="{{ route('demo.login') }}" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 font-semibold rounded-xl border border-white/25 hover:border-[#D4AF37] text-white hover:text-[#D4AF37] transition-all duration-300">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
                     Try Live Demo
                 </a>
+                @endif
             </div>
 
             <p class="mt-5 text-xs text-white/30 xq-enter" style="--xq-delay:.64s">No credit card required &middot; Resets every 6 hours</p>

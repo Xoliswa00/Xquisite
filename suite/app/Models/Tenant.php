@@ -23,6 +23,9 @@ class Tenant extends Model
         'plan',
         'industry',
         'logo_url',
+        'shipping_enabled',
+        'shipping_type',
+        'shipping_cost',
         'is_active',
         'is_demo',
         'trial_ends_at',
@@ -33,6 +36,8 @@ class Tenant extends Model
     ];
 
     protected $casts = [
+        'shipping_enabled'           => 'boolean',
+        'shipping_cost'              => 'decimal:2',
         'is_active'                  => 'boolean',
         'is_demo'                    => 'boolean',
         'custom_domain_verified'     => 'boolean',
@@ -157,6 +162,26 @@ class Tenant extends Model
             : $this->unpaidPlatformInvoices()->exists();
         if ($hasUnpaid) return 'bg-orange-900/40 text-orange-300 border-orange-700';
         return 'bg-emerald-900/40 text-emerald-300 border-emerald-700';
+    }
+
+    // ── Storefront / shipping ──────────────────────────────────
+
+    /**
+     * Resolve the shipping cost for an order.
+     * Collection is always free (nothing to ship). Delivery costs the
+     * configured flat rate, unless shipping is disabled or set to free.
+     */
+    public function calculateShipping(string $fulfillmentType = 'delivery'): float
+    {
+        if ($fulfillmentType === 'collection') {
+            return 0.0;
+        }
+
+        if (! $this->shipping_enabled || $this->shipping_type === 'free') {
+            return 0.0;
+        }
+
+        return (float) $this->shipping_cost;
     }
 
     // ── Other helpers ──────────────────────────────────────────

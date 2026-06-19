@@ -5,16 +5,20 @@ namespace App\Http\Controllers\Ecommerce;
 use App\Http\Controllers\Controller;
 use App\Mail\OrderConfirmationEmail;
 use App\Models\Tenant;
+use App\Modules\Ecommerce\Exceptions\InsufficientStockException;
 use App\Modules\Ecommerce\Models\Order;
-use App\Modules\Ecommerce\Models\OrderItem;
+use App\Modules\Ecommerce\Services\OrderService;
 use App\Services\Cart\CartService;
 use App\Services\Payment\PayFastService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
+    public function __construct(private readonly OrderService $orders) {}
+
     public function index(string $tenantSlug)
     {
         $tenant = Tenant::where('slug', $tenantSlug)->where('is_active', true)->firstOrFail();
@@ -27,7 +31,11 @@ class CheckoutController extends Controller
         $lines    = $cart->lines($tenant->id);
         $subtotal = $cart->subtotal($tenant->id);
 
-        return view('shop.checkout', compact('tenant', 'cart', 'lines', 'subtotal'));
+        // One idempotency token per checkout attempt. Re-used across validation
+        // failures, regenerated only after a successful order.
+        $idempotencyKey = $this->idempotencyKey($tenantSlug);
+
+        return view('shop.checkout', compact('tenant', 'cart', 'lines', 'subtotal', 'idempotencyKey'));
     }
 
     public function place(Request $request, string $tenantSlug)
@@ -36,97 +44,86 @@ class CheckoutController extends Controller
         $cart   = new CartService($tenantSlug);
 
         if ($cart->isEmpty()) {
-            return redirect()->route('shop.index', $tenantSlug);
+            return redirect()->route('shop.index', $tenantSlug)->with('info', 'Your cart is empty.');
         }
 
-        $request->validate([
+        $data = $request->validate([
             'customer_name'     => 'required|string|max:255',
             'customer_email'    => 'required|email|max:255',
             'customer_phone'    => 'nullable|string|max:30',
             'fulfillment_type'  => 'required|in:collection,delivery',
             'payment_method'    => 'required|in:payfast,eft,collection',
             'notes'             => 'nullable|string|max:500',
-            // Delivery address
             'address_line1'     => 'required_if:fulfillment_type,delivery|nullable|string|max:255',
             'address_city'      => 'required_if:fulfillment_type,delivery|nullable|string|max:100',
             'address_province'  => 'nullable|string|max:100',
             'address_postal'    => 'nullable|string|max:20',
         ]);
 
-        $lines    = $cart->lines($tenant->id);
-        $subtotal = $cart->subtotal($tenant->id);
+        // The server-side session token is authoritative — a forged form field
+        // cannot bypass idempotency.
+        $idempotencyKey = $this->idempotencyKey($tenantSlug);
 
-        $shippingCost = $request->fulfillment_type === 'delivery' ? 0 : 0; // configure per tenant later
-        $total        = $subtotal + $shippingCost;
-
-        $order = DB::transaction(function () use ($request, $tenant, $lines, $subtotal, $shippingCost, $total) {
-            $order = Order::create([
-                'tenant_id'        => $tenant->id,
-                'reference'        => Order::generateReference(),
-                'customer_name'    => $request->customer_name,
-                'customer_email'   => $request->customer_email,
-                'customer_phone'   => $request->customer_phone,
-                'fulfillment_type' => $request->fulfillment_type,
-                'shipping_address' => $request->fulfillment_type === 'delivery' ? [
-                    'line1'    => $request->address_line1,
-                    'city'     => $request->address_city,
-                    'province' => $request->address_province,
-                    'postal'   => $request->address_postal,
-                ] : null,
-                'status'         => 'pending',
-                'payment_status' => 'pending',
-                'payment_method' => $request->payment_method,
-                'subtotal'       => $subtotal,
-                'shipping_cost'  => $shippingCost,
-                'total'          => $total,
-                'notes'          => $request->notes,
+        try {
+            $order = $this->orders->placeOrder($tenant, $data, $cart, $idempotencyKey);
+        } catch (InsufficientStockException $e) {
+            return redirect()->route('shop.cart', $tenantSlug)->with('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Online checkout failed', [
+                'tenant' => $tenant->id,
+                'error'  => $e->getMessage(),
             ]);
 
-            foreach ($lines as $line) {
-                OrderItem::create([
-                    'order_id'          => $order->id,
-                    'product_id'        => $line->product->id,
-                    'product_name'      => $line->product->name,
-                    'product_sku'       => $line->product->sku,
-                    'product_image_url' => $line->product->image_url,
-                    'unit_price'        => $line->product->price,
-                    'quantity'          => $line->qty,
-                    'subtotal'          => $line->subtotal,
-                ]);
+            return response()->view('shop.payment-failed', [
+                'tenant'  => $tenant,
+                'message' => 'We could not process your order. No payment was taken — please try again.',
+            ], 500);
+        }
 
-                // Reserve stock immediately for tracked products
-                if ($line->product->track_stock) {
-                    $line->product->decrementStock($line->qty, 'sale', [
-                        'notes' => "Online order {$order->reference}",
-                    ]);
-                }
-            }
-
-            return $order;
-        });
-
+        // Order is committed. Safe to clear the cart and rotate the token.
         $cart->clear();
+        $this->forgetIdempotencyKey($tenantSlug);
         $order->load('items');
 
-        // Collection or EFT — confirm immediately, send email
-        if (in_array($request->payment_method, ['collection', 'eft'])) {
-            if ($request->payment_method === 'collection') {
-                $order->update(['status' => 'processing', 'payment_status' => 'pending']);
+        // EFT / collection — confirm immediately. Only email on first creation
+        // so an idempotent replay never double-sends.
+        if (in_array($order->payment_method, ['collection', 'eft'], true)) {
+            if ($order->wasRecentlyCreated) {
+                if ($order->payment_method === 'collection') {
+                    $order->update(['status' => Order::STATUS_PROCESSING]);
+                }
+                $this->safeMail($order, $tenant);
             }
-
-            Mail::to($order->customer_email)->queue(new OrderConfirmationEmail($order, $tenant));
 
             return redirect()->route('shop.order.confirmed', [$tenantSlug, $order->reference]);
         }
 
-        // PayFast — redirect to payment gateway
-        $payfast     = new PayFastService();
-        $paymentData = $payfast->buildPaymentData($order, $tenantSlug);
+        // Already paid (idempotent replay of a completed PayFast order) — skip the gateway.
+        if ($order->isPaid()) {
+            return redirect()->route('shop.order.confirmed', [$tenantSlug, $order->reference]);
+        }
 
-        return view('shop.payfast-redirect', [
-            'paymentUrl'  => $payfast->getPaymentUrl(),
-            'paymentData' => $paymentData,
-        ]);
+        // PayFast — hand off to the gateway.
+        try {
+            $payfast     = new PayFastService();
+            $paymentData = $payfast->buildPaymentData($order, $tenantSlug);
+
+            return view('shop.payfast-redirect', [
+                'paymentUrl'  => $payfast->getPaymentUrl(),
+                'paymentData' => $paymentData,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('PayFast handoff failed', [
+                'order' => $order->reference,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->view('shop.payment-failed', [
+                'tenant'  => $tenant,
+                'message' => 'We could not reach the payment gateway. Your order ' . $order->reference
+                    . ' is saved as pending — please try paying again or contact the store.',
+            ], 500);
+        }
     }
 
     public function confirmed(string $tenantSlug, string $reference)
@@ -145,24 +142,59 @@ class CheckoutController extends Controller
         $tenant  = Tenant::where('slug', $tenantSlug)->firstOrFail();
         $payfast = new PayFastService();
 
-        if (!$payfast->validateIpn($request, $tenantSlug)) {
+        if (! $payfast->validateIpn($request, $tenantSlug)) {
+            Log::warning('PayFast IPN rejected (signature/IP)', [
+                'tenant'  => $tenant->id,
+                'payment' => $request->input('m_payment_id'),
+                'ip'      => $request->ip(),
+            ]);
+
             abort(400, 'Invalid IPN signature');
         }
 
         $order = Order::where('tenant_id', $tenant->id)
-            ->where('reference', $request->m_payment_id)
+            ->where('reference', $request->input('m_payment_id'))
             ->first();
 
-        if ($order && $request->payment_status === 'COMPLETE') {
+        if (! $order) {
+            Log::warning('PayFast IPN for unknown order', [
+                'tenant'  => $tenant->id,
+                'payment' => $request->input('m_payment_id'),
+            ]);
+
+            return response('OK', 200); // 200 so PayFast stops retrying a dead reference
+        }
+
+        // Duplicate-callback guard: PayFast may send the same IPN several times.
+        if ($order->isPaid()) {
+            Log::info('PayFast IPN duplicate ignored', ['order' => $order->reference]);
+
+            return response('OK', 200);
+        }
+
+        $status = strtoupper((string) $request->input('payment_status'));
+
+        if ($status === 'COMPLETE') {
             $order->update([
-                'status'              => 'paid',
-                'payment_status'      => 'paid',
-                'payfast_payment_id'  => $request->pf_payment_id,
-                'paid_at'             => now(),
+                'status'             => Order::STATUS_PAID,
+                'payment_status'     => 'paid',
+                'payfast_payment_id' => $request->input('pf_payment_id'),
+                'paid_at'            => now(),
             ]);
 
             $order->load('items');
-            Mail::to($order->customer_email)->queue(new OrderConfirmationEmail($order, $tenant));
+            $this->safeMail($order, $tenant);
+
+            Log::info('PayFast payment completed', ['order' => $order->reference]);
+        } else {
+            // Failed / cancelled — release reserved stock so it isn't stuck.
+            $order->update(['payment_status' => 'failed', 'status' => Order::STATUS_CANCELLED]);
+            $this->orders->releaseInventory($order);
+
+            Log::info('PayFast payment not completed', [
+                'order'  => $order->reference,
+                'status' => $status,
+            ]);
         }
 
         return response('OK', 200);
@@ -170,7 +202,6 @@ class CheckoutController extends Controller
 
     public function payfastReturn(string $tenantSlug)
     {
-        // Redirect to a "payment processing" page — actual confirmation comes via IPN
         return redirect()->route('shop.index', $tenantSlug)
             ->with('info', 'Thank you! Your payment is being processed. You will receive a confirmation email shortly.');
     }
@@ -178,6 +209,37 @@ class CheckoutController extends Controller
     public function payfastCancel(string $tenantSlug)
     {
         return redirect()->route('shop.checkout', $tenantSlug)
-            ->with('error', 'Payment was cancelled. Your cart has been restored.');
+            ->with('error', 'Payment was cancelled. Your order is saved as pending — you can try paying again.');
+    }
+
+    // ── Helpers ────────────────────────────────────────────────
+
+    private function idempotencyKey(string $tenantSlug): string
+    {
+        $sessionKey = 'checkout_idem.' . $tenantSlug;
+
+        if (! session()->has($sessionKey)) {
+            session([$sessionKey => (string) Str::uuid()]);
+        }
+
+        return session($sessionKey);
+    }
+
+    private function forgetIdempotencyKey(string $tenantSlug): void
+    {
+        session()->forget('checkout_idem.' . $tenantSlug);
+    }
+
+    private function safeMail(Order $order, Tenant $tenant): void
+    {
+        try {
+            Mail::to($order->customer_email)->queue(new OrderConfirmationEmail($order, $tenant));
+        } catch (\Throwable $e) {
+            // Never let a mail failure break the order/payment flow.
+            Log::error('Order confirmation email failed', [
+                'order' => $order->reference,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

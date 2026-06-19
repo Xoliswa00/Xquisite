@@ -23,3 +23,6 @@ Schedule::command('billing:generate')->monthlyOn(1, '02:00')->withoutOverlapping
 
 // Process billing queue retries (failed invoice generations) every 5 minutes.
 Schedule::command('billing:process-queue')->everyFiveMinutes()->withoutOverlapping();
+
+// Cancel abandoned PayFast orders (>30 min) and release their reserved stock.
+Schedule::command('ecommerce:expire-pending-orders')->everyTenMinutes()->withoutOverlapping();

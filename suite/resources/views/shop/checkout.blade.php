@@ -6,6 +6,7 @@
         <form action="{{ route('shop.checkout.place', $tenant->slug) }}" method="POST"
               x-data="checkoutForm()" @submit.prevent="submitForm">
             @csrf
+            <input type="hidden" name="idempotency_key" value="{{ $idempotencyKey }}">
 
             <div class="grid lg:grid-cols-3 gap-6">
 

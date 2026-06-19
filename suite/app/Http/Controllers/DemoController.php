@@ -13,6 +13,12 @@ class DemoController extends Controller
 {
     public function login(): RedirectResponse
     {
+        // The demo is a sandboxed, password-less owner login. Only ever
+        // expose it in local development — never in production.
+        if (! app()->environment('local')) {
+            abort(404);
+        }
+
         $key = 'demo-login:' . Request::ip();
 
         if (RateLimiter::tooManyAttempts($key, 10)) {

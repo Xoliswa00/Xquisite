@@ -5,6 +5,7 @@ namespace App\Modules\Ecommerce\Models;
 use App\Models\Tenant;
 use App\Models\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
@@ -60,10 +61,13 @@ class Order extends Model
         return $this->belongsTo(Tenant::class);
     }
 
+    /**
+     * Globally-unique, time-ordered reference, e.g. ORD-2026-01JZ4P6T7K....
+     * ULID-based, so it is safe to generate concurrently (no max(id)+1 race).
+     */
     public static function generateReference(): string
     {
-        $last = static::max('id') ?? 0;
-        return 'ORD-' . str_pad($last + 1, 5, '0', STR_PAD_LEFT);
+        return 'ORD-' . now()->format('Y') . '-' . strtoupper((string) Str::ulid());
     }
 
     public function isPaid(): bool
