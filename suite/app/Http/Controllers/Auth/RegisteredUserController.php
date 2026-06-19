@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\WelcomeNewUserMail;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Notifications\NewTenantRegistered;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,11 +56,12 @@ class RegisteredUserController extends Controller
             ]);
 
             $user = User::create([
-                'name'      => $request->name,
-                'email'     => $request->email,
-                'password'  => Hash::make($request->password),
-                'tenant_id' => $tenant->id,
-                'role'      => 'owner',
+                'name'               => $request->name,
+                'email'              => $request->email,
+                'password'           => Hash::make($request->password),
+                'tenant_id'          => $tenant->id,
+                'role'               => 'owner',
+                'email_verified_at'  => now(),
             ]);
 
             return [$tenant, $user];
@@ -68,6 +70,11 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Mail::to($user->email)->queue(new WelcomeNewUserMail($user));
+
+        // Notify platform owners of new signup
+        User::where('role', 'owner')->whereNull('tenant_id')->each(
+            fn($platformOwner) => $platformOwner->notify(new NewTenantRegistered($tenant, $user))
+        );
 
         Auth::login($user);
 

@@ -221,6 +221,10 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('/tenants/{tenant}/module', [TenantController::class, 'toggleModule'])->name('tenants.module');
             Route::patch('/tenants/{tenant}/subdomain', [TenantController::class, 'updateSubdomain'])->name('tenants.subdomain');
             Route::delete('/tenants/{tenant}', [TenantController::class, 'destroy'])->name('tenants.destroy');
+            Route::post('/tenants/{tenant}/activate', [TenantController::class, 'activate'])->name('tenants.activate');
+            Route::post('/tenants/{tenant}/suspend', [TenantController::class, 'suspend'])->name('tenants.suspend');
+            Route::post('/tenants/{tenant}/users/{user}/reset-password', [TenantController::class, 'resetUserPassword'])->name('tenants.users.reset-password');
+            Route::post('/tenants/{tenant}/users/{user}/toggle', [TenantController::class, 'toggleUserStatus'])->name('tenants.users.toggle');
             // Platform ↔ tenant messaging
             Route::get('/tenants/{tenant}/messages', [CommunicationController::class, 'platformThread'])->name('tenants.messages');
             Route::post('/tenants/{tenant}/messages', [CommunicationController::class, 'platformStore'])->name('tenants.messages.store');
