@@ -410,18 +410,18 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             Module Requests
                         </a>
-                        <a href="{{ route('platform-modules.index') }}"
-                           class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('platform-modules.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
+                        <a href="{{ route('admin.platform-modules.index') }}"
+                           class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('admin.platform-modules.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                             Platform Modules
                         </a>
-                        <a href="{{ route('plans.index') }}"
-                           class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('plans.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
+                        <a href="{{ route('admin.plans.index') }}"
+                           class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('admin.plans.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                             Plans
                         </a>
-                        <a href="{{ route('platform-services.index') }}"
-                           class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('platform-services.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
+                        <a href="{{ route('admin.platform-services.index') }}"
+                           class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 {{ request()->routeIs('admin.platform-services.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white' }}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                             Platform Services
                         </a>
