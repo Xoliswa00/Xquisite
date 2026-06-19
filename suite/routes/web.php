@@ -396,4 +396,8 @@ Route::prefix('q/{quote}')->name('public.quotes.')->group(function () {
     Route::post('/{token}/decline',  [PublicQuoteController::class, 'decline'])->name('decline');
 });
 
+
+Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index']);
+
+
 require __DIR__.'/auth.php';
