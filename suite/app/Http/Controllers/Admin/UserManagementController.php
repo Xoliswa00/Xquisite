@@ -38,10 +38,10 @@ class UserManagementController extends Controller
         }
 
         if ($request->filled('role')) {
-            $query->where('role', $request->role);
+            $query->whereHas('roles', fn ($q) => $q->where('name', $request->role));
         }
 
-        $users        = $query->orderBy('role')->orderBy('name')->paginate(15)->withQueryString();
+        $users        = $query->orderBy('name')->paginate(15)->withQueryString();
         $trashedCount = User::onlyTrashed()->where('tenant_id', auth()->user()->tenant_id)->count();
 
         return view('admin.users.index', compact('users', 'showTrashed', 'trashedCount'));
@@ -69,7 +69,7 @@ class UserManagementController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
-            'role' => 'required|in:admin,staff',
+            'role' => 'required|in:manager,employee',
             'permissions' => 'sometimes|array',
             'permissions.*' => 'string|exists:permissions,name',
         ]);
@@ -138,7 +138,7 @@ class UserManagementController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,staff',
+            'role' => 'required|in:manager,employee',
             'is_active' => 'boolean',
             'permissions' => 'sometimes|array',
             'permissions.*' => 'string|exists:permissions,name',
@@ -147,7 +147,6 @@ class UserManagementController extends Controller
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'role' => $validated['role'],
             'is_active' => $request->boolean('is_active'),
         ]);
 

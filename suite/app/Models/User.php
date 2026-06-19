@@ -22,7 +22,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'tenant_id',
-        'role',
         'is_active',
         'require_password_change',
     ];
@@ -47,30 +46,33 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Tenant::class);
     }
 
+    // ── Role helpers ───────────────────────────────────────────
+    // Spatie is the single source of truth. These are thin, readable wrappers
+    // over hasRole() — the legacy `users.role` column no longer exists.
+
     public function isOwner(): bool
     {
-        return $this->role === 'owner';
+        return $this->hasRole('tenant-owner');
     }
 
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['owner', 'admin']);
+        return $this->hasAnyRole(['super-admin', 'tenant-owner', 'manager']);
     }
 
     public function isStaff(): bool
     {
-        return $this->role === 'staff';
+        return $this->hasRole('employee');
     }
 
     public function isClient(): bool
     {
-        return $this->role === 'client';
+        return $this->hasRole('client');
     }
 
-    // Aliases used throughout new features
     public function isPlatformOwner(): bool
     {
-        return $this->role === 'owner' && $this->tenant_id === null;
+        return $this->hasRole('super-admin');
     }
 
     public function isClientUser(): bool
@@ -80,11 +82,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isSystemAdmin(): bool
     {
-        try {
-            return $this->hasPermissionTo('manage-tenants');
-        } catch (\Spatie\Permission\Exceptions\PermissionDoesNotExist) {
-            return false;
-        }
+        return $this->hasRole('super-admin');
     }
 
     public function client()

@@ -5,6 +5,7 @@ namespace App\Modules\POS\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Traits\HasTenant;
+use App\Modules\POS\Services\InventoryService;
 
 class Product extends Model
 {
@@ -114,57 +115,28 @@ class Product extends Model
 
     // ── Stock mutation helpers ─────────────────────────────────
 
+    // Stock mutations are delegated to InventoryService, which row-locks the
+    // product inside a transaction so stock can never be corrupted or go
+    // negative. These thin wrappers keep existing callers working; refresh()
+    // syncs this in-memory instance with the locked write.
+
     public function decrementStock(int $qty, string $type = StockAdjustment::TYPE_SALE, array $extra = []): void
     {
         if (!$this->track_stock) return;
 
-        $before = $this->stock_quantity;
-        $after  = max(0, $before - $qty);
-
-        $this->update(['stock_quantity' => $after]);
-
-        StockAdjustment::create(array_merge([
-            'product_id'      => $this->id,
-            'type'            => $type,
-            'quantity_before' => $before,
-            'quantity_change' => -$qty,
-            'quantity_after'  => $after,
-            'created_by'      => auth()->id(),
-        ], $extra));
+        app(InventoryService::class)->decrement($this, $qty, $type, $extra);
+        $this->refresh();
     }
 
     public function incrementStock(int $qty, string $type = StockAdjustment::TYPE_MANUAL_IN, array $extra = []): void
     {
-        $before = $this->stock_quantity;
-        $after  = $before + $qty;
-
-        $this->update(['stock_quantity' => $after]);
-
-        StockAdjustment::create(array_merge([
-            'product_id'      => $this->id,
-            'type'            => $type,
-            'quantity_before' => $before,
-            'quantity_change' => +$qty,
-            'quantity_after'  => $after,
-            'created_by'      => auth()->id(),
-        ], $extra));
+        app(InventoryService::class)->increment($this, $qty, $type, $extra);
+        $this->refresh();
     }
 
     public function adjustToCount(int $physicalCount, string $notes = ''): void
     {
-        $before = $this->stock_quantity;
-        $change = $physicalCount - $before;
-
-        $this->update(['stock_quantity' => $physicalCount]);
-
-        StockAdjustment::create([
-            'product_id'      => $this->id,
-            'type'            => StockAdjustment::TYPE_STOCKTAKE,
-            'quantity_before' => $before,
-            'quantity_change' => $change,
-            'quantity_after'  => $physicalCount,
-            'notes'           => $notes,
-            'created_by'      => auth()->id(),
-        ]);
+        app(InventoryService::class)->setCount($this, $physicalCount, $notes);
+        $this->refresh();
     }
 }

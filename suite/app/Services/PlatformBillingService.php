@@ -33,7 +33,7 @@ class PlatformBillingService
 
         $tenant->update(['last_billing_date' => now()]);
 
-        $owner = $tenant->users()->where('role', 'owner')->first();
+        $owner = $tenant->owner();
         if ($owner) {
             $owner->notify(new BillingInvoiceCreatedNotification($invoice));
         }
@@ -57,7 +57,7 @@ class PlatformBillingService
         foreach ($newlyOverdue as $invoice) {
             $tenant = $invoice->tenant;
             $tenant->update(['grace_period_ends_at' => now()->addDays((int) (BillingSetting::get('grace_period_days') ?? 5))]);
-            $owner = $tenant->users()->where('role', 'owner')->first();
+            $owner = $tenant->owner();
             if ($owner) {
                 $owner->notify(new BillingGracePeriodStartedNotification($tenant));
             }
@@ -75,7 +75,7 @@ class PlatformBillingService
             // Only send once per day to prevent duplicate warnings from re-runs
             if ($tenant->last_grace_warning_sent_at?->isToday()) continue;
 
-            $owner = $tenant->users()->where('role', 'owner')->first();
+            $owner = $tenant->owner();
             if ($owner) {
                 $owner->notify(new BillingGracePeriodExpiringNotification($tenant, $daysLeft));
                 $tenant->update(['last_grace_warning_sent_at' => now()]);
@@ -93,7 +93,7 @@ class PlatformBillingService
                 'suspended_at'        => now(),
                 'grace_period_ends_at'=> null,
             ]);
-            $owner = $tenant->users()->where('role', 'owner')->first();
+            $owner = $tenant->owner();
             if ($owner) {
                 $owner->notify(new BillingServiceSuspendedNotification());
             }
@@ -133,7 +133,7 @@ class PlatformBillingService
         ]);
 
         if ($wasSuspended) {
-            $owner = $invoice->tenant->users()->where('role', 'owner')->first();
+            $owner = $invoice->tenant->owner();
             if ($owner) {
                 $owner->notify(new BillingServiceReactivatedNotification());
             }

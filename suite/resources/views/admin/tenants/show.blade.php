@@ -133,7 +133,8 @@
                                     <p class="text-xs text-slate-400 truncate">{{ $user->email }}</p>
                                 </div>
                                 <div class="flex items-center gap-1.5 shrink-0">
-                                    <span class="text-xs capitalize {{ $user->role === 'owner' ? 'text-[#D4AF37]' : 'text-slate-500' }}">{{ $user->role }}</span>
+                                    @php $userRole = $user->getRoleNames()->first(); @endphp
+                                    <span class="text-xs capitalize {{ $userRole === 'tenant-owner' ? 'text-[#D4AF37]' : 'text-slate-500' }}">{{ $userRole ? str_replace('-', ' ', $userRole) : '—' }}</span>
                                     <span class="text-xs {{ $user->is_active ? 'text-emerald-400' : 'text-red-400' }}">
                                         {{ $user->is_active ? '● Active' : '● Inactive' }}
                                     </span>

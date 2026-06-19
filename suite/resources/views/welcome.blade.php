@@ -81,7 +81,6 @@
     $all    = \App\Models\PlatformModule::visible()->ordered()->get();
     $active = $all->where('status', 'active');
     $beta   = $all->where('status', 'beta');
-    $soon   = $all->where('status', 'coming_soon');
 
     $icons = [
         'calendar' => 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5',
@@ -123,7 +122,6 @@
                 <a href="#services"              class="hover:text-[#0078D4] transition-colors">Services</a>
                 <a href="#modules"               class="hover:text-[#0078D4] transition-colors">Platform</a>
                 <a href="{{ route('about') }}"   class="hover:text-[#0078D4] transition-colors">About</a>
-                <a href="{{ route('demo.login') }}" class="hover:text-[#0078D4] transition-colors">Live Demo</a>
             </nav>
 
             {{-- Auth --}}
@@ -168,10 +166,6 @@
             <div class="flex flex-col sm:flex-row gap-4 xq-enter" style="--xq-delay:.52s">
                 <a href="{{ route('register') }}" class="xq-shimmer inline-flex items-center justify-center px-8 py-4 text-white font-semibold bg-[#0078D4] hover:bg-[#0065B8] rounded-xl shadow-lg transition-colors">
                     Start Your Journey
-                </a>
-                <a href="{{ route('demo.login') }}" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 font-semibold rounded-xl border border-white/25 hover:border-[#D4AF37] text-white hover:text-[#D4AF37] transition-all duration-300">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-                    Try Live Demo
                 </a>
             </div>
 
@@ -346,38 +340,6 @@
         </div>
         @endif
 
-        @if ($soon->isNotEmpty())
-        <div>
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-                    <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>Coming Soon
-                </span>
-                <span class="text-xs sm:text-sm text-[#2D3748]/50">On the roadmap — request early access</span>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
-                @foreach ($soon as $module)
-                <div class="bg-white/40 rounded-xl border border-gray-100/60 p-5 lg:p-6 flex flex-col">
-                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center mb-4 shrink-0">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icons[$module['icon']] ?? $icons['chart'] }}"/>
-                        </svg>
-                    </div>
-                    <div class="flex items-start justify-between mb-1">
-                        <h3 class="f-mont font-semibold text-sm lg:text-base text-[#002B5B]/50">{{ $module['name'] }}</h3>
-                        <span class="ml-1.5 shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200 font-medium">Soon</span>
-                    </div>
-                    <p class="text-xs sm:text-sm text-[#2D3748]/40 leading-relaxed flex-1">{{ $module['description'] }}</p>
-                    <div class="mt-3 flex items-center justify-between">
-                        <p class="text-xs text-gray-400">Est. <span class="text-gray-500 font-semibold">R{{ number_format($module['price'], 0) }}/mo</span></p>
-                        @if ($module->launch_date)
-                            <span class="text-[10px] text-[#0078D4]/70">{{ $module->launch_date->format('M Y') }}</span>
-                        @endif
-                    </div>
-                </div>
-                @endforeach
-            </div>
-        </div>
-        @endif
     </div>
 </section>
 

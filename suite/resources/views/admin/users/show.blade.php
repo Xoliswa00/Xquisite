@@ -32,14 +32,16 @@
                         <dd>
                             @php
                                 $roleColors = [
-                                    'owner'  => 'bg-purple-500/20 text-purple-300',
-                                    'admin'  => 'bg-blue-500/20 text-blue-300',
-                                    'staff'  => 'bg-emerald-500/20 text-emerald-300',
-                                    'client' => 'bg-slate-500/20 text-slate-300',
+                                    'super-admin'  => 'bg-amber-500/20 text-amber-300',
+                                    'tenant-owner' => 'bg-purple-500/20 text-purple-300',
+                                    'manager'      => 'bg-blue-500/20 text-blue-300',
+                                    'employee'     => 'bg-emerald-500/20 text-emerald-300',
+                                    'client'       => 'bg-slate-500/20 text-slate-300',
                                 ];
+                                $roleName = $user->getRoleNames()->first();
                             @endphp
-                            <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ $roleColors[$user->role] ?? 'bg-slate-700 text-slate-300' }}">
-                                {{ ucfirst($user->role) }}
+                            <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ $roleColors[$roleName] ?? 'bg-slate-700 text-slate-300' }}">
+                                {{ $roleName ? ucfirst(str_replace('-', ' ', $roleName)) : '—' }}
                             </span>
                         </dd>
                     </div>
