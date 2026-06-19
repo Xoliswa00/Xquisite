@@ -16,7 +16,7 @@ class BillingServiceSuspendedNotification extends MailNotification
     {
         return (new MailMessage)
             ->subject('Your account has been suspended')
-            ->line('Your Xquisite Suite account has been suspended due to non-payment.')
+            ->line('Your Xquisite Creation account has been suspended due to non-payment.')
             ->line('Please pay your outstanding invoice to reactivate your account.')
             ->action('View Billing', url('/billing'));
     }
