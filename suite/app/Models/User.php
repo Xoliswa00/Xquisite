@@ -70,7 +70,7 @@ class User extends Authenticatable implements MustVerifyEmail
     // Aliases used throughout new features
     public function isPlatformOwner(): bool
     {
-        return $this->isOwner();
+        return $this->role === 'owner' && $this->tenant_id === null;
     }
 
     public function isClientUser(): bool

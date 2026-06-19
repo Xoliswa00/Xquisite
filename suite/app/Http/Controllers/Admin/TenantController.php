@@ -163,7 +163,7 @@ class TenantController extends Controller
 
     public function resetUserPassword(Tenant $tenant, User $user)
     {
-        abort_if($user->tenant_id !== $tenant->id, 403);
+        abort_if((int) $user->tenant_id !== (int) $tenant->id, 403);
 
         $tempPassword = \Illuminate\Support\Str::password(12);
 
@@ -181,7 +181,7 @@ class TenantController extends Controller
 
     public function toggleUserStatus(Tenant $tenant, User $user)
     {
-        abort_if($user->tenant_id !== $tenant->id, 403);
+        abort_if((int) $user->tenant_id !== (int) $tenant->id, 403);
 
         $user->update(['is_active' => !$user->is_active]);
 
