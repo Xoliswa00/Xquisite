@@ -27,9 +27,10 @@ class Service extends Model
     ];
 
     protected $casts = [
-        'price'          => 'decimal:2',
-        'cost_price'     => 'decimal:2',
-        'price_per_unit' => 'decimal:2',
+        'price'            => 'decimal:2',
+        'cost_price'       => 'decimal:2',
+        'price_per_unit'   => 'decimal:2',
+        'duration_minutes' => 'integer',
     ];
 
     public function isPerHead(): bool   { return $this->pricing_type === 'per_head'; }

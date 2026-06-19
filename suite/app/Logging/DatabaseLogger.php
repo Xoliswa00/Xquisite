@@ -23,6 +23,16 @@ class DatabaseLogger
                 try {
                     $requestId = app()->bound('request_id') ? app('request_id') : null;
                     $levelName = $record->level->name;
+                    $url       = request()->fullUrl();
+                    $path      = request()->path();
+
+                    $source = match (true) {
+                        str_starts_with($path, 'book/')          => 'booking-portal',
+                        str_starts_with($path, 'admin/')         => 'admin',
+                        str_starts_with($path, 'portal/')        => 'client-portal',
+                        str_starts_with($path, 'shop/')          => 'shop',
+                        default                                  => 'suite',
+                    };
 
                     $id = DB::table('system_logs')->insertGetId([
                         'level'      => $levelName,
@@ -31,9 +41,9 @@ class DatabaseLogger
                         'request_id' => $requestId,
                         'user_id'    => \Illuminate\Support\Facades\Auth::id(),
                         'ip_address' => request()->ip(),
-                        'url'        => request()->fullUrl(),
+                        'url'        => $url,
                         'status'     => 'new',
-                        'source'     => 'suite',
+                        'source'     => $source,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);

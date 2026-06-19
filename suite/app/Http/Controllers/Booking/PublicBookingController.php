@@ -39,7 +39,7 @@ class PublicBookingController extends Controller
         $servicesJson = $services->map(fn($s) => [
             'id'               => $s->id,
             'name'             => $s->name,
-            'duration_minutes' => $s->duration_minutes,
+            'duration_minutes' => (int) $s->duration_minutes,
             'price'            => (float) $s->price,
         ])->values();
 
