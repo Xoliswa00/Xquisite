@@ -399,5 +399,10 @@ Route::prefix('q/{quote}')->name('public.quotes.')->group(function () {
 
 Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index']);
 
+// Client-side JS error collector — no auth required, rate-limited
+Route::post('/js-error', [App\Http\Controllers\JsErrorController::class, 'store'])
+    ->middleware('throttle:30,1')
+    ->name('js.error');
+
 
 require __DIR__.'/auth.php';

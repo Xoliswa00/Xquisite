@@ -33,4 +33,49 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
             return redirect()->route('login')->with('status', 'Your session expired. Please sign in again.');
         });
+
+        // Log every exception to the database, including 404s, 403s, and handled errors
+        $exceptions->report(function (\Throwable $e) {
+            try {
+                $path   = request()->path();
+                $source = match (true) {
+                    str_starts_with($path, 'book/')   => 'booking-portal',
+                    str_starts_with($path, 'admin/')  => 'admin',
+                    str_starts_with($path, 'portal/') => 'client-portal',
+                    str_starts_with($path, 'shop/')   => 'shop',
+                    default                           => 'suite',
+                };
+
+                $level = match (true) {
+                    $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException       => 'WARNING',
+                    $e instanceof \Symfony\Component\HttpKernel\Exception\HttpException               => 'WARNING',
+                    $e instanceof \Illuminate\Auth\AuthenticationException                            => 'INFO',
+                    $e instanceof \Illuminate\Validation\ValidationException                         => 'INFO',
+                    $e instanceof \Illuminate\Session\TokenMismatchException                         => 'INFO',
+                    default                                                                          => 'ERROR',
+                };
+
+                \Illuminate\Support\Facades\DB::table('system_logs')->insert([
+                    'level'      => $level,
+                    'message'    => get_class($e) . ': ' . $e->getMessage(),
+                    'context'    => json_encode([
+                        'file'      => $e->getFile(),
+                        'line'      => $e->getLine(),
+                        'exception' => get_class($e),
+                    ]),
+                    'request_id' => app()->bound('request_id') ? app('request_id') : null,
+                    'user_id'    => auth()->id(),
+                    'ip_address' => request()->ip(),
+                    'url'        => request()->fullUrl(),
+                    'status'     => 'new',
+                    'source'     => $source,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } catch (\Throwable) {
+                // Never let logging break the app
+            }
+
+            return false; // let Laravel's default handler also run
+        });
     })->create();
