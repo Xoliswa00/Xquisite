@@ -172,7 +172,7 @@ class TenantController extends Controller
             'require_password_change' => true,
         ]);
 
-        \Illuminate\Support\Facades\Mail::to($user->email)->queue(
+        \Illuminate\Support\Facades\Mail::to($user->email)->send(
             new \App\Mail\PasswordResetByAdminMail($user, $tempPassword)
         );
 
