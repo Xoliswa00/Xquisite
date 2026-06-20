@@ -242,6 +242,8 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
         Route::get('/logs/audit', [LogController::class, 'audit'])->name('logs.audit');
         Route::get('/logs/combined', [LogController::class, 'combined'])->name('logs.combined');
+        Route::post('/logs/bulk', [LogController::class, 'bulkUpdate'])->name('logs.bulk');
+        Route::post('/logs/resolve-all', [LogController::class, 'resolveAll'])->name('logs.resolve-all');
         Route::get('/logs/{log}', [LogController::class, 'show'])->name('logs.show');
         Route::patch('/logs/{log}/status', [LogController::class, 'updateStatus'])->name('logs.status');
             // Platform service catalog + order management
