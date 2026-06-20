@@ -65,6 +65,7 @@ return Application::configure(basePath: dirname(__DIR__))
                         'referrer'   => request()->header('Referer'),
                         'user_agent' => request()->header('User-Agent'),
                         'session_id' => session()->getId(),
+                        'location'   => \App\Support\IpLocation::get(request()->ip()),
                     ]),
                     'request_id' => app()->bound('request_id') ? app('request_id') : null,
                     'user_id'    => auth()->id(),
