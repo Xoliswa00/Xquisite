@@ -403,6 +403,7 @@ Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'inde
 
 // Health check endpoint — used by the monitoring system
 Route::get('/api/health', function () {
+    // DB
     try {
         \Illuminate\Support\Facades\DB::connection()->getPdo();
         $db = true;
@@ -410,13 +411,50 @@ Route::get('/api/health', function () {
         $db = false;
     }
 
-    $status = $db ? 'up' : 'down';
+    // Storage writable
+    try {
+        $testFile = storage_path('framework/.health-check');
+        file_put_contents($testFile, '1');
+        unlink($testFile);
+        $storageWritable = true;
+    } catch (\Throwable) {
+        $storageWritable = false;
+    }
+
+    // File cache read/write
+    try {
+        \Illuminate\Support\Facades\Cache::put('_health', 1, 5);
+        $cache = \Illuminate\Support\Facades\Cache::get('_health') === 1;
+    } catch (\Throwable) {
+        $cache = false;
+    }
+
+    // Disk space
+    $diskTotal    = disk_total_space(base_path());
+    $diskFree     = disk_free_space(base_path());
+    $diskFreeMb   = (int) ($diskFree / 1024 / 1024);
+    $diskUsedPct  = $diskTotal > 0 ? round((($diskTotal - $diskFree) / $diskTotal) * 100, 1) : null;
+
+    // Failed jobs (only meaningful when using DB queue)
+    try {
+        $failedJobs = \Illuminate\Support\Facades\DB::table('failed_jobs')->count();
+    } catch (\Throwable) {
+        $failedJobs = null;
+    }
+
+    $critical = !$db || !$storageWritable;
 
     return response()->json([
-        'status'    => $status,
-        'db'        => $db,
-        'timestamp' => now()->toISOString(),
-    ], $db ? 200 : 503);
+        'status'           => $critical ? 'down' : 'up',
+        'db'               => $db,
+        'storage_writable' => $storageWritable,
+        'cache'            => $cache,
+        'disk_free_mb'     => $diskFreeMb,
+        'disk_used_percent'=> $diskUsedPct,
+        'app_key_set'      => !empty(config('app.key')),
+        'failed_jobs'      => $failedJobs,
+        'timestamp'        => now()->toISOString(),
+    ], $critical ? 503 : 200);
 })->name('health');
 
 // Client-side JS error collector — no auth required, rate-limited
