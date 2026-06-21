@@ -401,6 +401,24 @@ Route::prefix('q/{quote}')->name('public.quotes.')->group(function () {
 
 Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index']);
 
+// Health check endpoint — used by the monitoring system
+Route::get('/api/health', function () {
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $db = true;
+    } catch (\Throwable) {
+        $db = false;
+    }
+
+    $status = $db ? 'up' : 'down';
+
+    return response()->json([
+        'status'    => $status,
+        'db'        => $db,
+        'timestamp' => now()->toISOString(),
+    ], $db ? 200 : 503);
+})->name('health');
+
 // Client-side JS error collector — no auth required, rate-limited
 Route::post('/js-error', [App\Http\Controllers\JsErrorController::class, 'store'])
     ->middleware('throttle:30,1')
