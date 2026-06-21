@@ -34,5 +34,12 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+'monitoring' => [
+    'enabled' => env('MONITORING_ENABLED', false),
+    'url' => env('MONITORING_URL', 'https://xquisite.brightfinance-x.co.za'),
+    'token' => env('MONITORING_TOKEN'),
+],
+
+
 
 ];
