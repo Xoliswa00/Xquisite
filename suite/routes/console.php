@@ -26,3 +26,6 @@ Schedule::command('billing:process-queue')->everyFiveMinutes()->withoutOverlappi
 
 // Cancel abandoned PayFast orders (>30 min) and release their reserved stock.
 Schedule::command('ecommerce:expire-pending-orders')->everyTenMinutes()->withoutOverlapping();
+
+// Ping all active monitored instances every 5 minutes and log health status.
+Schedule::command('instances:check-health')->everyFiveMinutes()->withoutOverlapping();
