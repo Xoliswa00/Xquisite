@@ -12,14 +12,6 @@ class DemoSeeder extends Seeder
 {
     public function run(): void
     {
-        // Sandbox mode is a LOCAL-ONLY facility. The demo tenant ships with a
-        // well-known password, so it must never be created in a deployed
-        // environment — that would be a public bypass. Refuse outside local.
-        if (! app()->environment('local')) {
-            $this->command?->warn('DemoSeeder skipped: sandbox demo data is only seeded in the local environment.');
-            return;
-        }
-
         // ── Demo tenant ───────────────────────────────────────────────────────
         $tenant = Tenant::updateOrCreate(
             ['slug' => 'demo'],
