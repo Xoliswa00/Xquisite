@@ -85,7 +85,7 @@ class BookingNotificationService
         $users = User::query()
             ->where('tenant_id', $staff->tenant_id)
             ->where('is_active', true)
-            ->whereIn('role', ['owner', 'admin', 'staff'])
+            ->whereHas('roles', fn ($q) => $q->whereIn('name', ['tenant-owner', 'manager', 'employee']))
             ->get();
 
         foreach ($users as $user) {
@@ -129,7 +129,7 @@ class BookingNotificationService
         $users = User::query()
             ->where('tenant_id', $tenantId)
             ->where('is_active', true)
-            ->whereIn('role', ['owner', 'admin', 'staff'])
+            ->whereHas('roles', fn ($q) => $q->whereIn('name', ['tenant-owner', 'manager', 'employee']))
             ->get();
 
         foreach ($users as $user) {

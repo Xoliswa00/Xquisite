@@ -78,7 +78,7 @@ class ModuleController extends Controller
             );
         }
 
-        $requesters = $tenant->users()->whereIn('role', ['owner', 'admin'])->get();
+        $requesters = $tenant->users()->whereHas('roles', fn ($q) => $q->whereIn('name', ['tenant-owner', 'manager']))->get();
         $requesters->push(auth()->user());
         $requesters->unique('id')->each(fn ($user) => $user->notify(new ModuleRequestSubmitted($moduleRequest)));
 
