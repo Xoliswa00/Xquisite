@@ -103,6 +103,14 @@
     ];
 @endphp
 
+{{-- ─── Flash messages ────────────────────────────────────────────────────── --}}
+@if(session('error'))
+<div class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-5 py-3 bg-red-600 text-white text-sm font-medium rounded-xl shadow-lg max-w-sm w-full text-center"
+     x-data x-init="setTimeout(() => $el.remove(), 5000)">
+    {{ session('error') }}
+</div>
+@endif
+
 {{-- ─── NAV ──────────────────────────────────────────────────────────────── --}}
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -122,6 +130,7 @@
                 <a href="#services"              class="hover:text-[#0078D4] transition-colors">Services</a>
                 <a href="#modules"               class="hover:text-[#0078D4] transition-colors">Platform</a>
                 <a href="{{ route('about') }}"   class="hover:text-[#0078D4] transition-colors">About</a>
+                <a href="{{ route('demo.login') }}" class="hover:text-[#0078D4] transition-colors">Live Demo</a>
             </nav>
 
             {{-- Auth --}}
@@ -166,6 +175,9 @@
             <div class="flex flex-col sm:flex-row gap-4 xq-enter" style="--xq-delay:.52s">
                 <a href="{{ route('register') }}" class="xq-shimmer inline-flex items-center justify-center px-8 py-4 text-white font-semibold bg-[#0078D4] hover:bg-[#0065B8] rounded-xl shadow-lg transition-colors">
                     Start Your Journey
+                </a>
+                <a href="{{ route('demo.login') }}" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 font-semibold rounded-xl border border-white/25 hover:border-[#D4AF37] text-white hover:text-[#D4AF37] transition-all duration-300">
+                    Try Live Demo
                 </a>
             </div>
 

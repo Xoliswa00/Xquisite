@@ -56,6 +56,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\DemoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -65,6 +66,7 @@ Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
+Route::get('/demo',    [DemoController::class, 'login'])->name('demo.login');
 Route::get('/about',   AboutController::class)->name('about');
 Route::get('/terms',   fn() => view('terms'))->name('terms');
 Route::get('/privacy', fn() => view('privacy'))->name('privacy');
