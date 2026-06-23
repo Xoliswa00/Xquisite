@@ -66,7 +66,8 @@ Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
-Route::get('/demo',    [DemoController::class, 'login'])->name('demo.login');
+Route::get('/demo',    [DemoController::class, 'show'])->name('demo');
+Route::post('/demo',   [DemoController::class, 'login'])->name('demo.login');
 Route::get('/about',   AboutController::class)->name('about');
 Route::get('/terms',   fn() => view('terms'))->name('terms');
 Route::get('/privacy', fn() => view('privacy'))->name('privacy');
@@ -75,6 +76,13 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/user/preference', function (\Illuminate\Http\Request $request) {
+        $request->validate(['key' => 'required|string|max:64', 'value' => 'required|string|max:64']);
+        $prefs = auth()->user()->preferences ?? [];
+        $prefs[$request->key] = $request->value;
+        auth()->user()->update(['preferences' => $prefs]);
+        return response()->noContent();
+    })->name('user.preference');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
