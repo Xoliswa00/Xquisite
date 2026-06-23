@@ -3,6 +3,18 @@
 
     <div class="max-w-2xl space-y-4">
 
+        @if(session('conflict_warning'))
+        <div class="bg-amber-900/20 border border-amber-600/50 rounded-xl p-4 flex items-start gap-3">
+            <svg class="w-5 h-5 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+            </svg>
+            <div>
+                <p class="text-sm font-semibold text-amber-400">Schedule overlap — booking saved</p>
+                <p class="text-xs text-slate-300 mt-0.5">{{ session('conflict_warning') }}</p>
+            </div>
+        </div>
+        @endif
+
         <!-- Unassigned staff alert -->
         @if($appointment->isUnassigned())
         <div class="bg-orange-900/20 border border-orange-700/50 rounded-xl p-4 flex items-center justify-between">

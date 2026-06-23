@@ -11,14 +11,13 @@ use Illuminate\Support\Collection;
 class AvailabilityService
 {
     /**
-     * Check if a staff member is available for a given slot.
-     * Returns an error message string on conflict, or null if available.
+     * Hard stops only — working hours and blocked periods.
+     * Returns an error string, or null if clear.
      */
-    public function check(Staff $staff, Carbon $start, int $duration, ?int $excludeId = null): ?string
+    public function checkHardStop(Staff $staff, Carbon $start, int $duration): ?string
     {
         $end = $start->copy()->addMinutes($duration);
 
-        // 1. Working hours
         $schedule = $staff->schedules()
             ->where('day_of_week', $start->dayOfWeek)
             ->where('is_active', true)
@@ -36,7 +35,6 @@ class AvailabilityService
                 . $workStart->format('H:i') . '–' . $workEnd->format('H:i') . '.';
         }
 
-        // 2. Blocked periods
         $blocked = $staff->blocks()
             ->where('starts_at', '<', $end)
             ->where('ends_at', '>', $start)
@@ -49,7 +47,16 @@ class AvailabilityService
                 . $blocked->ends_at->format('d M H:i') . $reason . '.';
         }
 
-        // 3. Double-booking — PHP-side overlap check (database-agnostic)
+        return null;
+    }
+
+    /**
+     * Returns existing appointments that overlap the given slot (soft conflicts).
+     * Does not block — caller decides what to do with these.
+     */
+    public function getConflicts(Staff $staff, Carbon $start, int $duration, ?int $excludeId = null): Collection
+    {
+        $end      = $start->copy()->addMinutes($duration);
         $dayStart = $start->copy()->startOfDay();
         $dayEnd   = $start->copy()->endOfDay();
 
@@ -57,17 +64,51 @@ class AvailabilityService
             ->whereNotIn('status', ['cancelled', 'no_show'])
             ->whereBetween('scheduled_at', [$dayStart, $dayEnd])
             ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+            ->with('customer')
             ->get();
 
-        foreach ($sameDay as $existing) {
+        return $sameDay->filter(function ($existing) use ($start, $end) {
             $existingEnd = $existing->scheduled_at->copy()->addMinutes($existing->duration_minutes);
-            if ($existing->scheduled_at->lt($end) && $existingEnd->gt($start)) {
-                return "{$staff->name} already has an appointment from "
-                    . $existing->scheduled_at->format('H:i') . ' to ' . $existingEnd->format('H:i') . '.';
-            }
+            return $existing->scheduled_at->lt($end) && $existingEnd->gt($start);
+        })->values();
+    }
+
+    /**
+     * Full hard check (working hours + blocks + double-booking).
+     * Used by the public booking portal where overlaps must be blocked.
+     */
+    public function check(Staff $staff, Carbon $start, int $duration, ?int $excludeId = null): ?string
+    {
+        $hardStop = $this->checkHardStop($staff, $start, $duration);
+        if ($hardStop) {
+            return $hardStop;
+        }
+
+        $conflicts = $this->getConflicts($staff, $start, $duration, $excludeId);
+        if ($conflicts->isNotEmpty()) {
+            $existing    = $conflicts->first();
+            $existingEnd = $existing->scheduled_at->copy()->addMinutes($existing->duration_minutes);
+            return "{$staff->name} already has an appointment from "
+                . $existing->scheduled_at->format('H:i') . ' to ' . $existingEnd->format('H:i') . '.';
         }
 
         return null;
+    }
+
+    /**
+     * Build a human-readable conflict warning string for admin create/update/assign.
+     */
+    public function buildConflictWarning(Staff $staff, Carbon $start, int $duration, Collection $conflicts): string
+    {
+        $newEnd = $start->copy()->addMinutes($duration);
+
+        $details = $conflicts->map(function ($c) use ($start, $newEnd) {
+            $cEnd        = $c->scheduled_at->copy()->addMinutes($c->duration_minutes);
+            $overlapMins = max($start, $c->scheduled_at)->diffInMinutes(min($newEnd, $cEnd));
+            return "{$c->customer->name} ({$c->scheduled_at->format('H:i')}–{$cEnd->format('H:i')}, {$overlapMins} min overlap)";
+        })->join('; ');
+
+        return "Overlap on {$staff->name}'s schedule: {$details}.";
     }
 
     /**
