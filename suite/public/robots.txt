@@ -1,2 +1,8 @@
 User-agent: *
-Disallow:
+Disallow: /dashboard
+Disallow: /admin/
+Disallow: /profile
+Disallow: /api/
+Disallow: /demo
+
+Sitemap: https://xquisite.co.za/sitemap.xml

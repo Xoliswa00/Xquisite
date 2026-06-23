@@ -405,7 +405,7 @@ Route::prefix('q/{quote}')->name('public.quotes.')->group(function () {
 });
 
 
-Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index']);
+Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 
 // Health check endpoint — used by the monitoring system
 Route::get('/api/health', function () {
