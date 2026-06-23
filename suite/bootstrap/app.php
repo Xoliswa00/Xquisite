@@ -58,9 +58,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 \Illuminate\Support\Facades\DB::table('system_logs')->insert([
                     'level'      => $level,
                     'message'    => get_class($e) . ': ' . $e->getMessage(),
+                    'file'       => $e->getFile(),
+                    'line'       => $e->getLine(),
                     'context'    => json_encode([
-                        'file'       => $e->getFile(),
-                        'line'       => $e->getLine(),
                         'exception'  => get_class($e),
                         'referrer'   => request()->header('Referer'),
                         'user_agent' => request()->header('User-Agent'),
@@ -76,10 +76,10 @@ return Application::configure(basePath: dirname(__DIR__))
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-            } catch (\Throwable) {
-                // Never let logging break the app
-            }
 
-            return false; // let Laravel's default handler also run
+                return false; // DB write succeeded — suppress duplicate file logging
+            } catch (\Throwable) {
+                // DB logging failed — fall through so Laravel's file logger still captures it
+            }
         });
     })->create();

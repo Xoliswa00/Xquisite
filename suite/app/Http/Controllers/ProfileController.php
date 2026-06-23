@@ -7,23 +7,19 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
     public function edit(Request $request): View
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        $user   = $request->user();
+        $tenant = $user->tenant;
+
+        return view('profile.edit', compact('user', 'tenant'));
     }
 
-    /**
-     * Update the user's profile information.
-     */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $request->user()->fill($request->validated());
@@ -35,6 +31,43 @@ class ProfileController extends Controller
         $request->user()->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    public function updateBusiness(Request $request): RedirectResponse
+    {
+        $tenant = $request->user()->tenant;
+        abort_unless($tenant, 403);
+
+        $data = $request->validate([
+            'business_name'       => 'required|string|max:100',
+            'slug'                => ['required', 'string', 'min:3', 'max:60', 'regex:/^[a-z0-9][a-z0-9-]*[a-z0-9]$/',
+                                    Rule::unique('tenants', 'slug')->ignore($tenant->id)],
+            'email'               => 'nullable|email|max:100',
+            'phone'               => 'nullable|string|max:30',
+            'address'             => 'nullable|string|max:500',
+            'bank_name'           => 'nullable|string|max:100',
+            'bank_account_type'   => 'nullable|in:cheque,savings',
+            'bank_account_holder' => 'nullable|string|max:100',
+            'bank_account_number' => 'nullable|string|max:50',
+            'bank_branch_code'    => 'nullable|string|max:20',
+        ], [
+            'slug.regex' => 'Slug may only contain lowercase letters, numbers, and hyphens (no leading/trailing hyphens).',
+        ]);
+
+        $tenant->update([
+            'name'                => $data['business_name'],
+            'slug'                => $data['slug'],
+            'email'               => $data['email'] ?? null,
+            'phone'               => $data['phone'] ?? null,
+            'address'             => $data['address'] ?? null,
+            'bank_name'           => $data['bank_name'] ?? null,
+            'bank_account_type'   => $data['bank_account_type'] ?? null,
+            'bank_account_holder' => $data['bank_account_holder'] ?? null,
+            'bank_account_number' => $data['bank_account_number'] ?? null,
+            'bank_branch_code'    => $data['bank_branch_code'] ?? null,
+        ]);
+
+        return Redirect::route('profile.edit')->with('status', 'business-updated');
     }
 
     /**

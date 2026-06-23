@@ -109,7 +109,7 @@
                         {{ $order->statusColour() === 'amber'   ? 'bg-amber-100 text-amber-700' : '' }}
                         {{ $order->statusColour() === 'blue'    ? 'bg-blue-100 text-blue-700' : '' }}
                         {{ $order->statusColour() === 'indigo'  ? 'bg-[#E8F2FA] text-[#0078D4]' : '' }}
-                        {{ $order->statusColour() === 'purple'  ? 'bg-purple-100 text-purple-700' : '' }}
+                        {{ $order->statusColour() === 'purple'  ? 'bg-teal-100 text-teal-700' : '' }}
                         {{ $order->statusColour() === 'emerald' ? 'bg-emerald-100 text-emerald-700' : '' }}
                         {{ $order->statusColour() === 'gray'    ? 'bg-slate-800/50 text-slate-400' : '' }}">
                         {{ $order->statusLabel() }}

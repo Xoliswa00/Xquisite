@@ -87,7 +87,7 @@
                         @php
                             $typeColors = [
                                 'sale'           => 'bg-blue-900/50 text-blue-400 border-blue-800',
-                                'stocktake'      => 'bg-purple-900/50 text-purple-400 border-purple-800',
+                                'stocktake'      => 'bg-[#0078D4]/20 text-[#B8D4F0] border-[#0078D4]/30',
                                 'receive'        => 'bg-emerald-900/50 text-emerald-400 border-emerald-800',
                                 'adjustment_in'  => 'bg-teal-900/50 text-teal-400 border-teal-800',
                                 'adjustment_out' => 'bg-orange-900/50 text-orange-400 border-orange-800',

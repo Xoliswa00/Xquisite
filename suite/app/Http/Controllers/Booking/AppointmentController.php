@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Booking;
 
 use App\Http\Controllers\Controller;
 use App\Mail\AppointmentConfirmationEmail;
+use App\Models\ServiceCombo;
 use App\Modules\Booking\Models\Appointment;
 use App\Modules\Booking\Models\Customer;
 use App\Modules\Booking\Models\Staff;
@@ -14,6 +15,7 @@ use App\Services\Booking\AvailabilityService;
 use App\Services\Notifications\BookingNotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 
@@ -51,11 +53,26 @@ class AppointmentController extends Controller
 
     public function create()
     {
+        $tenantId  = auth()->user()->tenant_id;
         $customers = Customer::where('is_active', true)->orderBy('name')->get();
         $staff     = Staff::where('is_active', true)->orderBy('name')->get();
         $services  = Service::where('is_active', true)->orderBy('name')->get();
+        $combos    = ServiceCombo::with('services')
+            ->where('tenant_id', $tenantId)
+            ->where('is_active', true)
+            ->get()
+            ->filter(fn($c) => $c->isLive())
+            ->map(fn($c) => [
+                'id'            => $c->id,
+                'name'          => $c->name,
+                'combo_price'   => round($c->combo_price, 2),
+                'savings'       => round($c->savings, 2),
+                'service_ids'   => $c->services->pluck('id')->values()->all(),
+                'service_names' => $c->services->pluck('name')->values()->all(),
+            ])
+            ->values();
 
-        return view('appointments.create', compact('customers', 'staff', 'services'));
+        return view('appointments.create', compact('customers', 'staff', 'services', 'combos'));
     }
 
     public function store(Request $request, AvailabilityService $availability, BookingNotificationService $notifications)
@@ -75,15 +92,42 @@ class AppointmentController extends Controller
             'theme_notes'   => 'nullable|string|max:1000',
             'setup_at'      => 'nullable|date',
             'breakdown_at'  => 'nullable|date',
+            'combo_id'          => 'nullable|integer',
+            'duration_override' => 'nullable|integer|min:1|max:1440',
         ]);
 
-        $services = Service::findMany($data['service_ids']);
+        $tenantId         = auth()->user()->tenant_id;
+        $comboIdInput     = $data['combo_id'] ?? null;
+        $durationOverride = isset($data['duration_override']) ? (int) $data['duration_override'] : null;
+        unset($data['combo_id'], $data['duration_override']);
+
+        // Resolve combo and merge its services into the selection
+        $combo      = null;
+        $comboId    = null;
+        $comboPrice = null;
+
+        if ($comboIdInput) {
+            $combo = ServiceCombo::with('services')
+                ->where('tenant_id', $tenantId)
+                ->find($comboIdInput);
+
+            if (!$combo || !$combo->isLive()) {
+                return back()->withInput()->withErrors(['combo_id' => 'This combo deal is no longer available.']);
+            }
+
+            $comboId    = $combo->id;
+            $comboPrice = $combo->combo_price;
+
+            $comboServiceIds     = $combo->services->pluck('id')->map(fn($id) => (string) $id)->all();
+            $data['service_ids'] = array_values(array_unique(array_merge($data['service_ids'], $comboServiceIds)));
+        }
+
+        $services      = Service::findMany($data['service_ids']);
+        $totalDuration = $durationOverride ?? $services->sum('duration_minutes');
 
         if ($services->count() !== count($data['service_ids'])) {
             return back()->withInput()->withErrors(['service_ids' => 'One or more selected services are invalid.']);
         }
-
-        $totalDuration = $services->sum('duration_minutes');
 
         if ($data['staff_id']) {
             $staff = Staff::findOrFail($data['staff_id']);
@@ -97,21 +141,29 @@ class AppointmentController extends Controller
 
         $customer = Customer::findOrFail($data['customer_id']);
 
-        $appointment = Appointment::create([
-            ...$data,
-            'tenant_id'        => $customer->tenant_id ?? auth()->user()->tenant_id,
-            'duration_minutes' => $totalDuration,
-        ]);
+        $appointment = DB::transaction(function () use (
+            $data, $services, $customer, $totalDuration, $comboId, $comboPrice
+        ) {
+            $appt = Appointment::create([
+                ...$data,
+                'tenant_id'        => $customer->tenant_id ?? auth()->user()->tenant_id,
+                'duration_minutes' => $totalDuration,
+                'combo_id'         => $comboId,
+                'combo_price'      => $comboPrice,
+            ]);
 
-        $appointment->services()->sync(
-            $services->mapWithKeys(fn($service, $index) => [
-                $service->id => [
-                    'duration_minutes' => $service->duration_minutes,
-                    'price_at_booking' => $service->price,
-                    'sort_order'       => $index,
-                ],
-            ])->all()
-        );
+            $appt->services()->sync(
+                $services->mapWithKeys(fn($service, $index) => [
+                    $service->id => [
+                        'duration_minutes' => $service->duration_minutes,
+                        'price_at_booking' => $service->price,
+                        'sort_order'       => $index,
+                    ],
+                ])->all()
+            );
+
+            return $appt;
+        });
 
         if (in_array($data['status'], ['confirmed', 'pending'])) {
             $appointment->load(['customer', 'staff', 'services']);
@@ -147,7 +199,68 @@ class AppointmentController extends Controller
         $appointment->load(['customer', 'staff', 'services', 'reminders']);
         $hasPos = auth()->user()->tenant?->hasModule('pos') ?? false;
 
-        return view('appointments.show', compact('appointment', 'hasPos'));
+        $timingConflicts = collect();
+        if ($appointment->actual_duration_minutes && $appointment->staff_id) {
+            $actualEnd = $appointment->scheduled_at->copy()->addMinutes($appointment->actual_duration_minutes);
+            $timingConflicts = Appointment::where('tenant_id', $appointment->tenant_id)
+                ->where('staff_id', $appointment->staff_id)
+                ->where('id', '!=', $appointment->id)
+                ->whereNotIn('status', ['cancelled', 'no_show'])
+                ->where('scheduled_at', '>=', $appointment->scheduled_at)
+                ->where('scheduled_at', '<', $actualEnd)
+                ->with('customer')
+                ->orderBy('scheduled_at')
+                ->get();
+        }
+
+        return view('appointments.show', compact('appointment', 'hasPos', 'timingConflicts'));
+    }
+
+    public function setActualDuration(Request $request, Appointment $appointment)
+    {
+        $request->validate([
+            'actual_duration_minutes' => 'required|integer|min:1|max:1440',
+        ]);
+
+        $appointment->update([
+            'actual_duration_minutes' => $request->actual_duration_minutes,
+        ]);
+
+        return redirect()->route('appointments.show', $appointment)
+            ->with('success', 'Actual duration saved.');
+    }
+
+    public function clientHistory(Request $request)
+    {
+        $request->validate([
+            'customer_id'   => 'required|integer',
+            'service_ids'   => 'required|array',
+            'service_ids.*' => 'integer',
+        ]);
+
+        $tenantId   = auth()->user()->tenant_id;
+        $customerId = (int) $request->customer_id;
+        $serviceIds = array_map('intval', $request->service_ids);
+
+        $history = Appointment::where('tenant_id', $tenantId)
+            ->where('customer_id', $customerId)
+            ->whereNotNull('actual_duration_minutes')
+            ->whereHas('services', fn($q) => $q->whereIn('services.id', $serviceIds))
+            ->get(['actual_duration_minutes', 'duration_minutes']);
+
+        if ($history->count() < 2) {
+            return response()->json(['sufficient_data' => false]);
+        }
+
+        $customer = Customer::find($customerId);
+
+        return response()->json([
+            'sufficient_data' => true,
+            'avg_actual'      => (int) round($history->avg('actual_duration_minutes')),
+            'avg_booked'      => (int) round($history->avg('duration_minutes')),
+            'booking_count'   => $history->count(),
+            'customer_name'   => $customer?->name,
+        ]);
     }
 
     public function edit(Appointment $appointment, AvailabilityService $availability)

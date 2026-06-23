@@ -35,7 +35,7 @@
         <div class="sm:hidden space-y-2">
             @forelse($appointments as $appt)
                 @php
-                    $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','awaiting_payment'=>'amber','cancelled'=>'red','no_show'=>'slate','tentative'=>'purple'];
+                    $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','awaiting_payment'=>'amber','cancelled'=>'red','no_show'=>'slate','tentative'=>'amber'];
                     $c = $colors[$appt->status] ?? 'slate';
                 @endphp
                 <a href="{{ route('appointments.show', $appt) }}"
@@ -81,7 +81,7 @@
                 <tbody class="divide-y divide-slate-700">
                     @forelse($appointments as $appt)
                         @php
-                            $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','awaiting_payment'=>'amber','cancelled'=>'red','no_show'=>'slate','tentative'=>'purple'];
+                            $colors = ['pending'=>'yellow','confirmed'=>'emerald','completed'=>'blue','awaiting_payment'=>'amber','cancelled'=>'red','no_show'=>'slate','tentative'=>'amber'];
                             $c = $colors[$appt->status] ?? 'slate';
                         @endphp
                         <tr class="hover:bg-slate-700/50">

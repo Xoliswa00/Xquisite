@@ -17,11 +17,15 @@ class ServiceController extends Controller
     {
         $tenantId = auth()->user()->tenant_id;
 
-        $query = Service::where('tenant_id', $tenantId)->with('category')->orderBy('name');
+        $query = Service::where('tenant_id', $tenantId)->with('category')
+            ->orderBy('service_category_id')->orderBy('name');
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
-        $services = $query->paginate(15, ['*'], 'services_page')->withQueryString();
+        $services = $query->paginate(200, ['*'], 'services_page')->withQueryString();
+
+        $categories = ServiceCategory::where('tenant_id', $tenantId)
+            ->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
 
         $combos = ServiceCombo::where('tenant_id', $tenantId)
             ->with('services')->latest()->paginate(10, ['*'], 'combos_page');
@@ -31,7 +35,7 @@ class ServiceController extends Controller
 
         $tab = $request->get('tab', 'services');
 
-        return view('services.index', compact('services', 'combos', 'promotions', 'tab'));
+        return view('services.index', compact('services', 'categories', 'combos', 'promotions', 'tab'));
     }
 
     public function create()

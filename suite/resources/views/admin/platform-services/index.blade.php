@@ -34,7 +34,7 @@
                                     {{ $order->statusColour() === 'amber'   ? 'bg-amber-500/20 text-amber-300' : '' }}
                                     {{ $order->statusColour() === 'blue'    ? 'bg-blue-500/20 text-blue-300' : '' }}
                                     {{ $order->statusColour() === 'indigo'  ? 'bg-[#0078D4]/20 text-[#B8D4F0]' : '' }}
-                                    {{ $order->statusColour() === 'purple'  ? 'bg-purple-500/20 text-purple-300' : '' }}
+                                    {{ $order->statusColour() === 'purple'  ? 'bg-teal-900/50 text-teal-300' : '' }}
                                     {{ $order->statusColour() === 'emerald' ? 'bg-emerald-500/20 text-emerald-300' : '' }}
                                     {{ $order->statusColour() === 'gray'    ? 'bg-slate-700 text-slate-400' : '' }}">
                                     {{ $order->statusLabel() }}

@@ -18,8 +18,8 @@
     <div class="absolute inset-0 bg-gradient-to-br from-[#001A3A] via-[#002B5B] to-slate-900"></div>
     {{-- Glowing orbs --}}
     <div class="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#0078D4] opacity-20 blur-3xl"></div>
-    <div class="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-purple-600 opacity-15 blur-3xl"></div>
-    <div class="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-violet-500 opacity-10 blur-3xl"></div>
+    <div class="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-[#0078D4] opacity-10 blur-3xl"></div>
+    <div class="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-[#D4AF37] opacity-8 blur-3xl"></div>
 
     <div class="relative px-7 py-10 sm:px-12 sm:py-14">
         <div class="flex flex-col sm:flex-row sm:items-center gap-6">
@@ -138,7 +138,7 @@
                  : ''">
 
             {{-- Background --}}
-            <div class="absolute inset-0 {{ $isFeat ? 'bg-gradient-to-br from-[#002B5B] via-purple-900 to-[#001A3A]' : 'bg-gradient-to-br from-slate-900 to-[#001A3A]' }}"></div>
+            <div class="absolute inset-0 {{ $isFeat ? 'bg-gradient-to-br from-[#002B5B] via-[#001A3A] to-[#001A3A]' : 'bg-gradient-to-br from-slate-900 to-[#001A3A]' }}"></div>
             <div class="pointer-events-none absolute -top-12 -right-12 w-48 h-48 rounded-full {{ $isFeat ? 'bg-[#0078D4]' : 'bg-[#002B5B]' }} opacity-20 blur-2xl group-hover:opacity-30 transition-opacity"></div>
 
             {{-- Badges --}}
@@ -592,8 +592,8 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3 text-sm text-slate-600">
-                    <div class="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center shrink-0">
-                        <svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    <div class="w-8 h-8 rounded-lg bg-[#0078D4]/10 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4 text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                     </div>
                     <div>
                         <p class="font-semibold text-xs text-slate-700">Reminder before your visit</p>

@@ -11,13 +11,6 @@
                     @csrf
                     <x-form-errors />
 
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Service Name <span class="text-red-400">*</span></label>
-                        <input type="text" name="name" value="{{ old('name') }}" required
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('name') border-red-500 @enderror">
-                        @error('name')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
-                    </div>
-
                     {{-- Category picker --}}
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Category</label>
@@ -35,6 +28,13 @@
                                 @endforeach
                             </select>
                         @endif
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Service Name <span class="text-red-400">*</span></label>
+                        <input type="text" name="name" value="{{ old('name') }}" required
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('name') border-red-500 @enderror">
+                        @error('name')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                     </div>
 
                     <div>
@@ -191,22 +191,36 @@
                 @if($services->isEmpty())
                     <p class="text-xs text-slate-500">No services yet.</p>
                 @else
-                    <ul class="space-y-1 max-h-56 overflow-y-auto pr-1">
-                        @foreach($services as $svc)
-                            <li class="flex items-center gap-2 py-1 border-b border-slate-700/50 last:border-0">
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-xs font-medium text-slate-200 truncate">{{ $svc->name }}</p>
-                                    <p class="text-[10px] text-slate-500">
-                                        {{ $svc->duration_minutes }}min
-                                        @if($svc->category) · {{ $svc->category->icon }} {{ $svc->category->name }} @endif
-                                    </p>
-                                </div>
-                                <span class="shrink-0 text-[10px] px-1.5 py-0.5 rounded {{ $svc->is_active ? 'bg-emerald-900/50 text-emerald-400' : 'bg-slate-700 text-slate-500' }}">
-                                    {{ $svc->is_active ? 'Active' : 'Off' }}
-                                </span>
-                            </li>
+                    @php
+                        $grouped = $services->groupBy(fn($s) => $s->service_category_id ?? 0);
+                        $catMap  = $categories->keyBy('id');
+                    @endphp
+                    <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
+                        @foreach($grouped as $catId => $group)
+                            <div>
+                                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                                    @if($catId && $catMap->has($catId))
+                                        {{ $catMap[$catId]->icon }} {{ $catMap[$catId]->name }}
+                                    @else
+                                        Uncategorised
+                                    @endif
+                                </p>
+                                <ul class="space-y-1">
+                                    @foreach($group as $svc)
+                                        <li class="flex items-center gap-2 py-1 border-b border-slate-700/50 last:border-0">
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-xs font-medium text-slate-200 truncate">{{ $svc->name }}</p>
+                                                <p class="text-[10px] text-slate-500">{{ $svc->duration_minutes }}min</p>
+                                            </div>
+                                            <span class="shrink-0 text-[10px] px-1.5 py-0.5 rounded {{ $svc->is_active ? 'bg-emerald-900/50 text-emerald-400' : 'bg-slate-700 text-slate-500' }}">
+                                                {{ $svc->is_active ? 'Active' : 'Off' }}
+                                            </span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
                         @endforeach
-                    </ul>
+                    </div>
                 @endif
             </div>
 

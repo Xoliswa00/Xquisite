@@ -63,16 +63,47 @@
             animation:xqShimmer 3s ease-in-out 1.8s infinite;
         }
 
-        /* Scroll reveal */
-        .xq-sr { opacity:0;transform:translateY(20px);transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1); }
-        .xq-sr.xq-in { opacity:1;transform:translateY(0); }
+        /* Scroll reveal — scale + fade up */
+        .xq-sr { opacity:0;transform:translateY(22px) scale(0.97);transition:opacity .55s cubic-bezier(.22,1,.36,1),transform .55s cubic-bezier(.22,1,.36,1); }
+        .xq-sr.xq-in { opacity:1;transform:translateY(0) scale(1); }
         .xq-d1 { transition-delay:.07s; }
         .xq-d2 { transition-delay:.15s; }
         .xq-d3 { transition-delay:.23s; }
         .xq-d4 { transition-delay:.31s; }
 
-        /* Card hover lift — applied after xq-sr is cleaned up by JS */
-        .xq-lift:hover { transform:translateY(-4px); }
+        /* ─── Card system — blue→gold sweep + lift ──────────────────────── */
+        .xq-card {
+            position:relative;overflow:hidden;
+            transition:transform 240ms cubic-bezier(.23,1,.32,1),
+                        box-shadow 240ms cubic-bezier(.23,1,.32,1),
+                        border-color 200ms ease;
+        }
+        /* Bottom gradient sweep: blue → gold */
+        .xq-card::after {
+            content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+            background:linear-gradient(90deg,#0078D4 0%,#D4AF37 100%);
+            transform:scaleX(0);transform-origin:left center;
+            transition:transform 340ms cubic-bezier(.23,1,.32,1);
+        }
+        .xq-card:hover { transform:translateY(-4px);box-shadow:0 14px 36px rgba(0,43,91,.11); }
+        .xq-card:hover::after { transform:scaleX(1); }
+        .xq-card:active { transform:translateY(-2px) scale(.99);transition-duration:100ms; }
+
+        /* Icon box: gold ring glow on parent card hover */
+        .xq-icon { transition:background-color 200ms ease,box-shadow 220ms ease; }
+        .xq-card:hover .xq-icon { box-shadow:0 0 0 3px rgba(212,175,55,.28); }
+
+        /* Dark-bg card — blue edge glow replaces the navy shadow */
+        .xq-card.xq-card-dark:hover { box-shadow:0 0 0 1px rgba(0,120,212,.28),0 16px 40px rgba(0,0,0,.32); }
+
+        /* ─── Card child animations (from Emil design pattern) ────────────── */
+        @keyframes xqIconIn  { from{transform:scale(0.65);opacity:0} to{transform:scale(1);opacity:1} }
+        @keyframes xqTitleIn { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:none} }
+        /* Icon pops in first, heading rises 120ms later */
+        .xq-sr .xq-icon      { animation:xqIconIn  .38s cubic-bezier(.23,1,.32,1) .2s  both; animation-play-state:paused; }
+        .xq-sr.xq-in .xq-icon { animation-play-state:running; }
+        .xq-sr .xq-card-title  { animation:xqTitleIn .42s cubic-bezier(.22,1,.36,1) .32s both; animation-play-state:paused; }
+        .xq-sr.xq-in .xq-card-title { animation-play-state:running; }
     </style>
 </head>
 <body class="antialiased text-[#2D3748] bg-white">
@@ -172,16 +203,18 @@
                 Understand Your Why.
             </p>
 
-            <div class="flex flex-col sm:flex-row gap-4 xq-enter" style="--xq-delay:.52s">
-                <a href="{{ route('register') }}" class="xq-shimmer inline-flex items-center justify-center px-8 py-4 text-white font-semibold bg-[#0078D4] hover:bg-[#0065B8] rounded-xl shadow-lg transition-colors">
+            <div class="flex flex-col sm:flex-row gap-3 xq-enter" style="--xq-delay:.52s">
+                <a href="{{ route('register') }}" class="xq-shimmer inline-flex items-center justify-center gap-2 px-8 py-4 text-white font-semibold bg-[#0078D4] hover:bg-[#0065B8] rounded-xl shadow-lg shadow-[#0078D4]/20 transition-colors">
                     Start Your Journey
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                 </a>
-                <a href="{{ route('demo.login') }}" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 font-semibold rounded-xl border border-white/25 hover:border-[#D4AF37] text-white hover:text-[#D4AF37] transition-all duration-300">
+                <a href="{{ route('demo.login') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 font-medium rounded-xl border border-white/20 hover:border-white/40 text-white/70 hover:text-white transition-all duration-200">
+                    <svg class="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     Try Live Demo
                 </a>
             </div>
 
-            <p class="mt-5 text-xs text-white/30 xq-enter" style="--xq-delay:.64s">No credit card required &middot; Resets every 6 hours</p>
+            <p class="mt-4 text-xs text-white/25 xq-enter" style="--xq-delay:.64s">Free to start · No card needed · Demo resets every 6 hours</p>
         </div>
     </div>
 </section>
@@ -195,14 +228,14 @@
                 ['svg' => 'M13 10V3L4 14h7v7l9-11h-7z', 'title' => 'Rapid Delivery', 'body' => 'Modular solutions that deploy fast and scale as your business grows.'],
                 ['svg' => 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z', 'title' => 'Data Intelligence', 'body' => 'Turn operational data into decisions with real-time analytics and dashboards.'],
             ] as $p)
-            <div class="flex items-start gap-4 xq-sr xq-d{{ $loop->iteration }}">
-                <div class="w-10 h-10 bg-[#002B5B] rounded-lg flex items-center justify-center shrink-0">
+            <div class="xq-card bg-white rounded-2xl p-5 border border-gray-100 flex items-start gap-4 xq-sr xq-d{{ $loop->iteration }}">
+                <div class="xq-icon w-10 h-10 bg-[#002B5B] rounded-lg flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="{{ $p['svg'] }}"/>
                     </svg>
                 </div>
                 <div>
-                    <h3 class="f-mont font-semibold mb-1 text-sm sm:text-base text-[#002B5B]">{{ $p['title'] }}</h3>
+                    <h3 class="xq-card-title f-mont font-semibold mb-1 text-sm sm:text-base text-[#002B5B]">{{ $p['title'] }}</h3>
                     <p class="text-sm text-[#2D3748]/70 leading-relaxed">{{ $p['body'] }}</p>
                 </div>
             </div>
@@ -242,13 +275,13 @@
                  'body'  => 'Professional websites, e-commerce stores, and online booking systems that convert.',
                  'items' => ['Business Websites', 'E-Commerce Platforms', 'Online Booking Systems']],
             ] as $svc)
-            <div class="group bg-[#F5F7FA] rounded-2xl p-6 lg:p-8 border border-gray-100 hover:border-[#0078D4]/20 hover:bg-white hover:shadow-lg transition-all xq-sr xq-lift xq-d{{ $loop->iteration }}">
-                <div class="w-12 h-12 bg-[#002B5B] group-hover:bg-[#0078D4] rounded-xl flex items-center justify-center mb-5 shrink-0 transition-colors">
+            <div class="xq-card group bg-[#F5F7FA] rounded-2xl p-6 lg:p-8 border border-gray-100 hover:bg-white xq-sr xq-d{{ $loop->iteration }}">
+                <div class="xq-icon w-12 h-12 bg-[#002B5B] group-hover:bg-[#0078D4] rounded-xl flex items-center justify-center mb-5 shrink-0 transition-colors">
                     <svg class="w-6 h-6 text-[#D4AF37]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="{{ $svc['icon'] }}"/>
                     </svg>
                 </div>
-                <h3 class="f-mont font-bold text-base lg:text-lg mb-2 text-[#002B5B]">{{ $svc['title'] }}</h3>
+                <h3 class="xq-card-title f-mont font-bold text-base lg:text-lg mb-2 text-[#002B5B]">{{ $svc['title'] }}</h3>
                 <p class="text-sm text-[#2D3748]/70 leading-relaxed mb-4">{{ $svc['body'] }}</p>
                 <ul class="space-y-1.5">
                     @foreach($svc['items'] as $item)
@@ -270,9 +303,9 @@
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
                 @foreach ($publicServices->flatten() as $service)
                 @php $cat = $catColors[$service->category] ?? ['label' => ucfirst($service->category), 'tw' => 'text-[#2D3748]']; @endphp
-                <div class="bg-white rounded-xl border border-gray-100 p-5 hover:border-[#0078D4]/30 hover:shadow-sm transition-all flex flex-col">
+                <div class="xq-card bg-white rounded-xl border border-gray-100 p-5 flex flex-col">
                     <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-widest mb-2 {{ $cat['tw'] }}">{{ $cat['label'] }}</p>
-                    <h4 class="f-mont font-semibold text-sm sm:text-base mb-1 text-[#002B5B]">{{ $service->name }}</h4>
+                    <h4 class="xq-card-title f-mont font-semibold text-sm sm:text-base mb-1 text-[#002B5B]">{{ $service->name }}</h4>
                     <p class="text-xs sm:text-sm text-[#2D3748]/70 leading-relaxed flex-1">{{ $service->description }}</p>
                     <p class="mt-3 font-bold text-sm sm:text-base text-[#002B5B]">{{ $service->displayPrice() }}</p>
                 </div>
@@ -288,13 +321,13 @@
 </section>
 
 {{-- ─── PLATFORM MODULES ─────────────────────────────────────────────────── --}}
-<section class="bg-[#F5F7FA] py-16 sm:py-24" id="modules">
+<section class="bg-[#002B5B] py-16 sm:py-24" id="modules">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div class="text-center mb-12 lg:mb-16 xq-sr">
             <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
-            <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-[#002B5B]">Platform Modules</h2>
-            <p class="text-sm sm:text-base text-[#2D3748]/70 max-w-xl mx-auto">
+            <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-white">Platform Modules</h2>
+            <p class="text-sm sm:text-base text-[#B8D4F0] max-w-xl mx-auto">
                 Everything you need to run your business — activate only what fits, expand as you grow.
             </p>
         </div>
@@ -302,22 +335,22 @@
         @if ($active->isNotEmpty())
         <div class="mb-12">
             <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Live Now
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/25 text-emerald-300 text-xs font-semibold">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Live Now
                 </span>
-                <span class="text-xs sm:text-sm text-[#2D3748]/50">Available — activate from your settings</span>
+                <span class="text-xs sm:text-sm text-[#B8D4F0]/60">Available — activate from your settings</span>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
                 @foreach ($active as $module)
-                <div class="group bg-white rounded-xl border border-gray-100 p-5 lg:p-6 hover:border-[#0078D4]/30 hover:shadow-md transition-all flex flex-col xq-sr xq-lift xq-d{{ min($loop->iteration, 4) }}">
-                    <div class="w-10 h-10 bg-[#002B5B] group-hover:bg-[#0078D4] rounded-lg flex items-center justify-center mb-4 shrink-0 transition-colors">
-                        <svg class="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <div class="xq-card xq-card-dark group bg-white/[0.07] rounded-xl border border-white/[0.08] p-5 lg:p-6 flex flex-col xq-sr xq-d{{ min($loop->iteration, 4) }}">
+                    <div class="xq-icon w-10 h-10 bg-[#0078D4] group-hover:bg-[#D4AF37] rounded-lg flex items-center justify-center mb-4 shrink-0 transition-colors">
+                        <svg class="w-5 h-5 text-white group-hover:text-[#002B5B] transition-colors" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icons[$module['icon']] ?? $icons['chart'] }}"/>
                         </svg>
                     </div>
-                    <h3 class="f-mont font-semibold text-sm lg:text-base mb-1 text-[#002B5B]">{{ $module['name'] }}</h3>
-                    <p class="text-xs sm:text-sm text-[#2D3748]/60 leading-relaxed flex-1">{{ $module['description'] }}</p>
-                    <p class="mt-3 text-xs text-gray-400">From <span class="font-semibold text-[#002B5B]">R{{ number_format($module['price'], 0) }}/mo</span></p>
+                    <h3 class="xq-card-title f-mont font-semibold text-sm lg:text-base mb-1 text-white">{{ $module['name'] }}</h3>
+                    <p class="text-xs sm:text-sm text-[#B8D4F0]/70 leading-relaxed flex-1">{{ $module['description'] }}</p>
+                    <p class="mt-3 text-xs text-[#B8D4F0]/40">From <span class="font-semibold text-[#D4AF37]">R{{ number_format($module['price'], 0) }}/mo</span></p>
                 </div>
                 @endforeach
             </div>
@@ -327,25 +360,25 @@
         @if ($beta->isNotEmpty())
         <div class="mb-12">
             <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>In Testing
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/25 text-[#D4AF37] text-xs font-semibold">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"></span>In Testing
                 </span>
-                <span class="text-xs sm:text-sm text-[#2D3748]/50">Launching to all clients soon</span>
+                <span class="text-xs sm:text-sm text-[#B8D4F0]/60">Launching to all clients soon</span>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
                 @foreach ($beta as $module)
-                <div class="bg-white/70 rounded-xl border border-gray-100 p-5 lg:p-6 hover:shadow-sm transition-all flex flex-col xq-sr xq-d{{ min($loop->iteration, 4) }}">
-                    <div class="w-10 h-10 bg-[#002B5B]/60 rounded-lg flex items-center justify-center mb-4 shrink-0">
-                        <svg class="w-5 h-5 text-[#D4AF37]/80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <div class="xq-card xq-card-dark bg-white/[0.04] rounded-xl border border-white/[0.06] p-5 lg:p-6 flex flex-col xq-sr xq-d{{ min($loop->iteration, 4) }}">
+                    <div class="xq-icon w-10 h-10 bg-[#0078D4]/40 rounded-lg flex items-center justify-center mb-4 shrink-0">
+                        <svg class="w-5 h-5 text-[#D4AF37]/60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icons[$module['icon']] ?? $icons['chart'] }}"/>
                         </svg>
                     </div>
                     <div class="flex items-start justify-between mb-1">
-                        <h3 class="f-mont font-semibold text-sm lg:text-base text-[#002B5B]/80">{{ $module['name'] }}</h3>
-                        <span class="ml-1.5 shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 border border-amber-200 font-medium">Beta</span>
+                        <h3 class="xq-card-title f-mont font-semibold text-sm lg:text-base text-white/55">{{ $module['name'] }}</h3>
+                        <span class="ml-1.5 shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-[#D4AF37]/15 text-[#D4AF37]/70 border border-[#D4AF37]/20 font-medium">Beta</span>
                     </div>
-                    <p class="text-xs sm:text-sm text-[#2D3748]/55 leading-relaxed flex-1">{{ $module['description'] }}</p>
-                    <p class="mt-3 text-xs text-gray-400">From <span class="font-semibold text-[#002B5B]/70">R{{ number_format($module['price'], 0) }}/mo</span></p>
+                    <p class="text-xs sm:text-sm text-[#B8D4F0]/45 leading-relaxed flex-1">{{ $module['description'] }}</p>
+                    <p class="mt-3 text-xs text-white/25">From <span class="font-semibold text-[#D4AF37]/55">R{{ number_format($module['price'], 0) }}/mo</span></p>
                 </div>
                 @endforeach
             </div>
@@ -367,7 +400,7 @@
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             @foreach ($testimonials as $review)
-            <div class="bg-[#F5F7FA] rounded-2xl p-5 sm:p-6 flex flex-col xq-sr xq-d{{ ($loop->index % 4) + 1 }} {{ $review->is_featured ? 'ring-2 ring-[#0078D4]/30 border border-[#0078D4]/50' : 'border border-[#E8EBF0]' }}">
+            <div class="xq-card bg-[#F5F7FA] rounded-2xl p-5 sm:p-6 flex flex-col xq-sr xq-d{{ ($loop->index % 4) + 1 }} {{ $review->is_featured ? 'ring-2 ring-[#0078D4]/30 border border-[#0078D4]/50' : 'border border-[#E8EBF0]' }}">
                 <div class="flex items-center gap-0.5 mb-3">
                     @for ($i = 1; $i <= 5; $i++)
                         <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 {{ $i <= $review->rating ? 'text-[#D4AF37]' : 'text-gray-200' }}" fill="currentColor" viewBox="0 0 20 20">
@@ -411,7 +444,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
             @foreach ($plans as $plan)
             @php $f = $plan->is_featured; @endphp
-            <div class="rounded-2xl overflow-hidden flex flex-col xq-sr xq-d{{ $loop->iteration }} {{ $f ? 'bg-[#002B5B] shadow-2xl ring-2 ring-[#D4AF37]/50' : 'bg-white shadow-sm border border-gray-200' }}">
+            <div class="xq-card rounded-2xl flex flex-col xq-sr xq-d{{ $loop->iteration }} {{ $f ? 'bg-[#002B5B] shadow-2xl ring-2 ring-[#D4AF37]/50' : 'bg-white shadow-sm border border-gray-200' }}">
 
                 {{-- Gold accent line on top --}}
                 <div class="h-1 {{ $f ? 'bg-[#D4AF37]' : 'bg-[#0078D4]/25' }}"></div>

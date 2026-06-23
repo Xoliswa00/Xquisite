@@ -9,6 +9,7 @@ use App\Services\Notifications\BookingNotificationService;
 use App\Services\Tenant\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class CustomerPortalController extends Controller
 {
@@ -102,5 +103,37 @@ class CustomerPortalController extends Controller
         Auth::guard('customer')->user()->unreadNotifications->markAsRead();
 
         return back()->with('success', 'All notifications marked as read.');
+    }
+
+    public function uploadPaymentProof(string $slug, Appointment $appointment, Request $request)
+    {
+        $tenant   = $this->resolveTenant($slug);
+        $redirect = $this->requireCustomer($slug);
+        if ($redirect) return $redirect;
+
+        $customer = Auth::guard('customer')->user();
+        abort_if($appointment->customer_id !== $customer->id, 403);
+
+        $request->validate([
+            'payment_proof' => 'required|file|mimes:pdf,jpg,jpeg,png,webp|max:8192',
+        ], [
+            'payment_proof.mimes' => 'Only PDF, JPG, PNG, or WebP files are accepted.',
+            'payment_proof.max'   => 'File must be smaller than 8 MB.',
+        ]);
+
+        // Delete previous upload if one exists
+        if ($appointment->payment_proof_path) {
+            Storage::disk('public')->delete($appointment->payment_proof_path);
+        }
+
+        $file = $request->file('payment_proof');
+        $path = $file->store("payment_proofs/{$tenant->id}/{$appointment->id}", 'public');
+
+        $appointment->update([
+            'payment_proof_path' => $path,
+            'payment_proof_name' => $file->getClientOriginalName(),
+        ]);
+
+        return back()->with('proof_uploaded', true);
     }
 }

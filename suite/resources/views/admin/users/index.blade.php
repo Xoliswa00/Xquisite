@@ -60,7 +60,7 @@
                             @php
                                 $roleColors = [
                                     'super-admin'  => 'bg-amber-500/20 text-amber-300',
-                                    'tenant-owner' => 'bg-purple-500/20 text-purple-300',
+                                    'tenant-owner' => 'bg-[#D4AF37]/15 text-[#D4AF37]',
                                     'manager'      => 'bg-blue-500/20 text-blue-300',
                                     'employee'     => 'bg-emerald-500/20 text-emerald-300',
                                     'client'       => 'bg-slate-500/20 text-slate-300',
@@ -134,7 +134,7 @@
                                 @php
                                     $roleColors = [
                                         'super-admin'  => 'bg-amber-500/20 text-amber-300',
-                                        'tenant-owner' => 'bg-purple-500/20 text-purple-300',
+                                        'tenant-owner' => 'bg-[#D4AF37]/15 text-[#D4AF37]',
                                         'manager'      => 'bg-blue-500/20 text-blue-300',
                                         'employee'     => 'bg-emerald-500/20 text-emerald-300',
                                         'client'       => 'bg-slate-500/20 text-slate-300',

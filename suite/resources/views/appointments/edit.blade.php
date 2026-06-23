@@ -27,7 +27,8 @@
                     </select>
                 </div>
 
-                <div x-data="staffAvailabilityPanel(@json($staffAvailability), '{{ route('appointments.availability', $appointment) }}')" x-init="init()">
+                <script>var initialStaffAvailability = {!! json_encode($staffAvailability, JSON_HEX_TAG) !!};</script>
+                <div x-data="staffAvailabilityPanel(initialStaffAvailability, '{{ route('appointments.availability', $appointment) }}')">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1">Services</label>

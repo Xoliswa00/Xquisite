@@ -30,29 +30,48 @@
         [x-cloak] { display: none !important; }
         @keyframes xqToastIn  { from{opacity:0;transform:translateY(10px) scale(.97)} to{opacity:1;transform:none} }
         @keyframes xqSlideIn  { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:none} }
+        @keyframes xqFadeIn   { from{opacity:0} to{opacity:1} }
 
-        /* Sidebar active nav item — left indicator + subtle glow */
+        /* ── Sidebar active nav item — left indicator + blue glow ── */
         aside nav a.bg-slate-800 {
             border-left: 2px solid #0078D4;
             padding-left: calc(0.75rem - 2px) !important;
-            background-image: linear-gradient(90deg, rgba(0,120,212,.14) 0%, transparent 55%);
+            background-image: linear-gradient(90deg, rgba(0,120,212,.2) 0%, rgba(0,120,212,.04) 50%, transparent 100%);
+            color: white !important;
         }
 
-        /* Sidebar section label */
-        aside nav p.text-\[#D4AF37\] {
-            letter-spacing: .08em;
+        /* ── Sidebar section labels — bolder, more scannable ── */
+        aside nav p.uppercase {
+            font-size: .625rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            opacity: .75;
+            padding-top: .1rem;
         }
 
-        /* Toast entrance */
+        /* ── Sidebar section dividers — more breathing room ── */
+        aside nav .border-t {
+            border-color: rgba(148,163,184,.12) !important;
+            margin-top: .5rem;
+            padding-top: .5rem;
+        }
+
+        /* ── Toast entrance ── */
         .xq-toast { animation: xqToastIn .3s cubic-bezier(.22,1,.36,1) forwards; }
 
-        /* Notification dropdown polish */
+        /* ── Notification dropdown ── */
         [x-show="openNotifications"] {
             animation: xqSlideIn .2s cubic-bezier(.22,1,.36,1) forwards;
         }
 
-        /* Topbar header blur depth */
-        header.sticky { box-shadow: 0 1px 0 rgba(0,120,212,.08), 0 4px 20px rgba(0,0,0,.15); }
+        /* ── Topbar depth ── */
+        header.sticky { box-shadow: 0 1px 0 rgba(0,120,212,.1), 0 4px 24px rgba(0,0,0,.2); }
+
+        /* ── Stat cards — number uses tabular figures ── */
+        .stat-number { font-variant-numeric: tabular-nums; }
+
+        /* ── Flash messages fade in ── */
+        .xq-flash { animation: xqFadeIn .25s ease-out forwards; }
     </style>
 </head>
 
@@ -467,14 +486,17 @@
             </div>
         </nav>
 
-        <div class="px-3 py-4 border-t border-slate-800">
-            <div class="flex items-center gap-3 px-3 py-2">
-                <div class="w-8 h-8 rounded-full bg-[#0078D4] flex items-center justify-center text-xs font-bold">
+        <div class="px-3 py-4 border-t border-slate-800/60">
+            <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-800/40">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#0078D4] to-[#005BA1] flex items-center justify-center text-xs font-bold shrink-0 ring-2 ring-slate-700">
                     {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-white truncate">{{ Auth::user()->name }}</p>
-                    <p class="text-xs text-slate-400 truncate">{{ Auth::user()->email }}</p>
+                    <p class="text-sm font-semibold text-white truncate leading-tight">{{ Auth::user()->name }}</p>
+                    @php $roleName = Auth::user()->getRoleNames()->first(); @endphp
+                    <p class="text-[10px] text-slate-500 truncate mt-0.5">
+                        {{ $roleName ? ucfirst(str_replace('-', ' ', $roleName)) : Auth::user()->email }}
+                    </p>
                 </div>
             </div>
             <a href="{{ route('reviews.create') }}"
@@ -497,15 +519,20 @@
 
         <!-- Top bar (mobile + breadcrumb) -->
         <header class="h-14 flex items-center justify-between px-3 sm:px-6 border-b border-slate-800 bg-slate-900 lg:bg-slate-950/60 lg:backdrop-blur-sm sticky top-0 z-20">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 min-w-0">
                 <button id="sidebar-open-btn" class="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-slate-300 hover:bg-slate-800" aria-label="Open menu">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
-                <div class="text-sm font-semibold text-[#D4AF37]">
-                    @isset($header){{ $header }}@endisset
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm font-semibold text-[#D4AF37] truncate">@isset($header){{ $header }}@endisset</span>
+                    @if(Auth::user()->tenant?->name)
+                        <span class="hidden lg:inline text-slate-700">·</span>
+                        <span class="hidden lg:inline text-xs text-slate-500 truncate">{{ Auth::user()->tenant->name }}</span>
+                    @endif
                 </div>
             </div>
             <div class="flex items-center gap-2">
+                <span class="hidden lg:block text-xs text-slate-600 tabular-nums">{{ now()->format('d M Y') }}</span>
                 <div x-data="{ openNotifications: false }" class="relative">
                     <button type="button" @click="openNotifications = !openNotifications"
                             class="relative inline-flex items-center justify-center p-2 rounded-md text-slate-300 hover:bg-slate-800"
@@ -579,31 +606,42 @@
         <!-- Page Content -->
         <main class="flex-1 p-4 sm:p-6">
             @if(session('success'))
-                <div class="mb-4 px-4 py-3 rounded-lg bg-emerald-900/50 border border-emerald-700 text-emerald-300 text-sm">
+                <div class="xq-flash mb-4 px-4 py-3 rounded-lg bg-emerald-900/50 border border-emerald-700/60 text-emerald-300 text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     {{ session('success') }}
                 </div>
             @endif
             @if(session('error'))
-                <div class="mb-4 px-4 py-3 rounded-lg bg-red-900/50 border border-red-700 text-red-300 text-sm flex items-center justify-between gap-4">
-                    <span>{{ session('error') }}</span>
+                <div class="xq-flash mb-4 px-4 py-3 rounded-lg bg-red-900/50 border border-red-700/60 text-red-300 text-sm flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                        <span>{{ session('error') }}</span>
+                    </div>
                     @if(str_contains(session('error', ''), 'suspended'))
                         <a href="{{ route('billing.index') }}" class="shrink-0 text-xs font-semibold underline hover:no-underline">View Billing →</a>
                     @endif
                 </div>
             @endif
             @if(session('info'))
-                <div class="mb-4 px-4 py-3 rounded-lg bg-[#0078D4]/10 border border-[#0078D4]/30 text-[#0078D4] text-sm">
+                <div class="xq-flash mb-4 px-4 py-3 rounded-lg bg-[#0078D4]/10 border border-[#0078D4]/30 text-[#0078D4] text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     {{ session('info') }}
                 </div>
             @endif
             @if(session('warning'))
-                <div class="mb-4 px-4 py-3 rounded-lg bg-amber-900/30 border border-amber-700 text-amber-300 text-sm">
+                <div class="xq-flash mb-4 px-4 py-3 rounded-lg bg-amber-900/30 border border-amber-700/60 text-amber-300 text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
                     {{ session('warning') }}
                 </div>
             @endif
             {{ $slot }}
         </main>
     </div>
+</div>
+
+{{-- Toast container — referenced by createAppToast() in JS below --}}
+<div id="app-notification-toast-container"
+     class="fixed bottom-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none w-full max-w-sm">
 </div>
 
 <x-whatsapp-button />

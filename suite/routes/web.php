@@ -119,8 +119,10 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         // Staff dashboard (realtime-ready)
         Route::get('staff/dashboard', [\App\Http\Controllers\Booking\StaffDashboardController::class, 'index'])->name('staff.dashboard');
 
+        Route::get('appointments/client-history', [\App\Http\Controllers\Booking\AppointmentController::class, 'clientHistory'])->name('appointments.client-history');
         Route::resource('appointments', AppointmentController::class);
         Route::get('appointments/{appointment}/availability', [\App\Http\Controllers\Booking\AppointmentController::class, 'availability'])->name('appointments.availability');
+        Route::patch('appointments/{appointment}/actual-duration', [\App\Http\Controllers\Booking\AppointmentController::class, 'setActualDuration'])->name('appointments.actual-duration');
         Route::post('appointments/{appointment}/assign', [\App\Http\Controllers\Booking\AppointmentController::class, 'assign'])->name('appointments.assign');
         Route::post('appointments/{appointment}/remind', [\App\Http\Controllers\Booking\AppointmentController::class, 'remind'])->name('appointments.remind');
         Route::post('appointments/{appointment}/mark-paid', [\App\Http\Controllers\Booking\AppointmentController::class, 'markPaid'])->name('appointments.mark-paid');
@@ -318,6 +320,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/business', [ProfileController::class, 'updateBusiness'])->name('profile.business.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
@@ -350,6 +353,7 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
         Route::get('/notifications',                                    [CustomerPortalController::class, 'notifications'])->name('notifications');
         Route::post('/notifications/read-all',                          [CustomerPortalController::class, 'markNotificationsRead'])->name('notifications.read-all');
         Route::patch('/appointments/{appointment}/cancel',              [CustomerPortalController::class, 'cancel'])->name('cancel');
+        Route::post('/appointments/{appointment}/payment-proof',        [CustomerPortalController::class, 'uploadPaymentProof'])->name('payment-proof');
     });
 });
 
