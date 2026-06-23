@@ -115,35 +115,39 @@
                         </div>
 
                         {{-- Service list --}}
-                        <div class="overflow-y-auto max-h-60 p-2">
-                            <template x-for="svc in filteredServices" :key="svc.id">
-                                <button type="button" @click="toggleService(svc.id)"
-                                        class="w-full flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors text-left"
-                                        :class="isSelected(svc.id)
-                                            ? 'bg-[#0078D4]/15 hover:bg-[#0078D4]/25'
-                                            : 'hover:bg-slate-700/70'">
+                        <div class="overflow-y-scroll h-64 sm:h-80 p-2">
+                            <template x-for="(item, idx) in groupedServiceList" :key="item._header ? 'h-' + idx : item.id">
+                                <div>
+                                    {{-- Category header --}}
+                                    <p x-show="item._header"
+                                       x-text="item.label"
+                                       class="px-2 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500"></p>
 
-                                    {{-- Coloured dot indicator --}}
-                                    <span class="shrink-0 w-2 h-2 rounded-full mt-0.5 transition-colors"
-                                          :class="isSelected(svc.id) ? 'bg-[#0078D4]' : 'bg-slate-600'"></span>
+                                    {{-- Service row --}}
+                                    <button x-show="!item._header"
+                                            type="button" @click="toggleService(item.id)"
+                                            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors text-left"
+                                            :class="isSelected(item.id) ? 'bg-[#0078D4]/15 hover:bg-[#0078D4]/25' : 'hover:bg-slate-700/70'">
 
-                                    {{-- Name + meta --}}
-                                    <span class="flex-1 min-w-0">
-                                        <span class="block text-sm font-medium truncate"
-                                              :class="isSelected(svc.id) ? 'text-slate-100' : 'text-slate-300'"
-                                              x-text="svc.name"></span>
-                                        <span class="block text-xs text-slate-500 mt-0.5">
-                                            <span x-text="fmtDur(svc.duration_minutes)"></span>
-                                            &nbsp;·&nbsp;
-                                            R<span x-text="parseFloat(svc.price).toFixed(2)"></span>
+                                        <span class="shrink-0 w-2 h-2 rounded-full mt-0.5 transition-colors"
+                                              :class="isSelected(item.id) ? 'bg-[#0078D4]' : 'bg-slate-600'"></span>
+
+                                        <span class="flex-1 min-w-0">
+                                            <span class="block text-sm font-medium truncate"
+                                                  :class="isSelected(item.id) ? 'text-slate-100' : 'text-slate-300'"
+                                                  x-text="item.name"></span>
+                                            <span class="block text-xs text-slate-500 mt-0.5">
+                                                <span x-text="fmtDur(item.duration_minutes)"></span>
+                                                &nbsp;·&nbsp;
+                                                R<span x-text="parseFloat(item.price).toFixed(2)"></span>
+                                            </span>
                                         </span>
-                                    </span>
 
-                                    {{-- Check icon when selected --}}
-                                    <svg x-show="isSelected(svc.id)" class="shrink-0 w-4 h-4 text-[#0078D4]" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                </button>
+                                        <svg x-show="isSelected(item.id)" class="shrink-0 w-4 h-4 text-[#0078D4]" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </template>
 
                             <p x-show="filteredServices.length === 0"
@@ -375,6 +379,22 @@
             get filteredServices() {
                 const q = this.svcSearch.trim().toLowerCase();
                 return q ? this.allServices.filter(s => s.name.toLowerCase().includes(q)) : this.allServices;
+            },
+            get groupedServiceList() {
+                const groups = {};
+                const order  = [];
+                this.filteredServices.forEach(s => {
+                    const key  = s.service_category_id ?? '__none__';
+                    const name = s.category ? ((s.category.icon ?? '') + ' ' + s.category.name) : 'Uncategorised';
+                    if (!groups[key]) { groups[key] = { label: name.trim(), services: [] }; order.push(key); }
+                    groups[key].services.push(s);
+                });
+                const result = [];
+                order.forEach(key => {
+                    result.push({ _header: true, label: groups[key].label });
+                    groups[key].services.forEach(s => result.push({ _header: false, ...s }));
+                });
+                return result;
             },
             get selectedServices() {
                 return this.allServices.filter(s => this.selectedServiceIds.includes(s.id));

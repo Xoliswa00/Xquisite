@@ -41,9 +41,15 @@
         </form>
     </div>
 
-    <p class="text-center text-sm">
-        <a href="{{ route('book.index', $slug) }}" class="text-slate-400 hover:text-slate-600">&larr; Back to services</a>
-    </p>
+    <div class="text-center space-y-2 text-sm">
+        <p>
+            <a href="{{ route('book.index', $slug) }}" class="text-slate-400 hover:text-slate-600">&larr; Back to services</a>
+        </p>
+        <p class="text-slate-500">
+            Been here before but never logged in?
+            <a href="{{ route('book.claim', $slug) }}" class="text-[#0078D4] hover:underline font-medium">Claim your account &rarr;</a>
+        </p>
+    </div>
 
 </div>
 @endsection

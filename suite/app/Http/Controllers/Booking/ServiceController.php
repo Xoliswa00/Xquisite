@@ -17,8 +17,14 @@ class ServiceController extends Controller
     {
         $tenantId = auth()->user()->tenant_id;
 
+        $allowedSorts = ['name', 'price', 'duration_minutes', 'created_at'];
+        $sort      = in_array($request->sort, $allowedSorts) ? $request->sort : 'name';
+        $direction = $request->direction === 'desc' ? 'desc' : 'asc';
+
         $query = Service::where('tenant_id', $tenantId)->with('category')
-            ->orderBy('service_category_id')->orderBy('name');
+            ->orderBy('service_category_id')
+            ->orderBy($sort, $direction);
+
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
