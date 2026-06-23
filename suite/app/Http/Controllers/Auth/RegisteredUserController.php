@@ -43,7 +43,7 @@ class RegisteredUserController extends Controller
             ? $request->industry_other
             : $request->industry;
 
-        [, $user] = DB::transaction(function () use ($request, $slug, $industry) {
+        [$tenant, $user] = DB::transaction(function () use ($request, $slug, $industry) {
             $tenant = Tenant::create([
                 'name'          => $request->business_name,
                 'slug'          => $slug,
