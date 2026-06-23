@@ -1,3 +1,60 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    /* ── Brand focus ring — replaces Tailwind/Jetstream default indigo/purple ── */
+    *:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px #0f172a, 0 0 0 4px #0078D4;
+    }
+
+    /* ── Button / link press feedback ─────────────────────────────────────────── */
+    button:not([disabled]),
+    a[role="button"],
+    [type="submit"],
+    [type="button"] {
+        transition: background-color 150ms cubic-bezier(0.23,1,0.32,1),
+                    color 150ms cubic-bezier(0.23,1,0.32,1),
+                    border-color 150ms cubic-bezier(0.23,1,0.32,1),
+                    transform 120ms cubic-bezier(0.23,1,0.32,1),
+                    box-shadow 150ms cubic-bezier(0.23,1,0.32,1);
+    }
+    button:not([disabled]):active,
+    [type="submit"]:active,
+    [type="button"]:active {
+        transform: scale(0.97);
+    }
+
+    /* ── Table row hover — fast, not jarring ──────────────────────────────────── */
+    tr {
+        transition: background-color 100ms ease-out;
+    }
+
+    /* ── Sidebar nav transitions ──────────────────────────────────────────────── */
+    aside nav a {
+        transition: background-color 120ms ease-out,
+                    color 120ms ease-out,
+                    border-color 120ms ease-out;
+    }
+
+    /* ── Form inputs — brand focus, not purple ────────────────────────────────── */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+    textarea:focus,
+    select:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #0f172a, 0 0 0 4px rgba(0, 120, 212, 0.7);
+        border-color: #0078D4;
+    }
+
+    /* ── Checkbox / radio — brand color ──────────────────────────────────────── */
+    [type="checkbox"]:checked,
+    [type="radio"]:checked {
+        background-color: #0078D4;
+        border-color: #0078D4;
+    }
+    [type="checkbox"]:focus,
+    [type="radio"]:focus {
+        box-shadow: 0 0 0 2px #0f172a, 0 0 0 4px rgba(0, 120, 212, 0.7);
+    }
+}

@@ -35,7 +35,7 @@
                         <tr class="hover:bg-slate-700/30">
                             <td class="px-4 py-3">
                                 <span class="px-2 py-0.5 rounded text-xs font-bold
-                                    {{ $source === 'billing' ? 'bg-purple-900/60 text-purple-300' : 'bg-slate-700 text-slate-300' }}">
+                                    {{ $source === 'billing' ? 'bg-[#0078D4]/20 text-[#B8D4F0]' : 'bg-slate-700 text-slate-300' }}">
                                     {{ $source }}
                                 </span>
                             </td>

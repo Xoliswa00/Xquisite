@@ -124,7 +124,7 @@
                         'pending'    => 'bg-slate-700 text-slate-300',
                         'paid'       => 'bg-blue-500/20 text-blue-300',
                         'processing' => 'bg-amber-500/20 text-amber-300',
-                        'ready'      => 'bg-purple-500/20 text-purple-300',
+                        'ready'      => 'bg-teal-900/50 text-teal-300',
                         'shipped'    => 'bg-cyan-500/20 text-cyan-300',
                         'delivered'  => 'bg-emerald-500/20 text-emerald-300',
                         'cancelled'  => 'bg-red-500/20 text-red-300',

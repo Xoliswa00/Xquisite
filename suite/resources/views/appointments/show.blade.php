@@ -52,7 +52,7 @@
                     'completed' => 'blue',
                     'cancelled' => 'red',
                     'no_show'   => 'slate',
-                    'tentative' => 'purple',
+                    'tentative' => 'amber',
                     'awaiting_payment' => 'amber',
                 ];
                 $c = $colors[$appointment->status] ?? 'slate';
