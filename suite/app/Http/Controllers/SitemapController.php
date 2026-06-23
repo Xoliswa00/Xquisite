@@ -18,17 +18,30 @@ class SitemapController extends Controller
             ['url' => url('/privacy'),  'priority' => '0.4', 'changefreq' => 'yearly'],
         ];
 
-        // Public booking portals — one per active tenant
-        $booking = Tenant::where('is_active', true)
+        $tenants = Tenant::where('is_active', true)
             ->whereNotNull('slug')
-            ->pluck('slug')
-            ->map(fn($slug) => [
-                'url'        => url("/book/{$slug}"),
+            ->with('activeModules')
+            ->get();
+
+        // Public booking portals — one per active tenant
+        $booking = $tenants->map(fn($t) => [
+            'url'        => url("/book/{$t->slug}"),
+            'priority'   => '0.6',
+            'changefreq' => 'weekly',
+        ])->all();
+
+        // Public storefronts — only tenants with ecommerce module active
+        $shops = $tenants
+            ->filter(fn($t) => $t->hasModule('ecommerce'))
+            ->map(fn($t) => [
+                'url'        => url("/shop/{$t->slug}"),
                 'priority'   => '0.6',
                 'changefreq' => 'weekly',
             ])->all();
 
-        $urls = array_merge($static, $booking);
+        $urls = array_merge($static, $booking, $shops);
+
+        $today = now()->toDateString();
 
         $xml  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
@@ -36,6 +49,7 @@ class SitemapController extends Controller
         foreach ($urls as $entry) {
             $xml .= "  <url>\n";
             $xml .= "    <loc>" . htmlspecialchars($entry['url']) . "</loc>\n";
+            $xml .= "    <lastmod>{$today}</lastmod>\n";
             $xml .= "    <changefreq>{$entry['changefreq']}</changefreq>\n";
             $xml .= "    <priority>{$entry['priority']}</priority>\n";
             $xml .= "  </url>\n";
