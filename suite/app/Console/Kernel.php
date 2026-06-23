@@ -25,6 +25,9 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Illuminate\Support\Facades\Log::error('Instance health check failed');
             });
+            
+            
+            $schedule->job(new \App\Jobs\ReportHealthStatus)->everyFiveMinutes();
     }
 
     /**

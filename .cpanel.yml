@@ -1,0 +1,13 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/brightf8v2r2/repositories/Xquisite/suite/
+    - export PHP=/opt/alt/php84/usr/bin/php
+    - $PHP $DEPLOYPATH/composer.phar install --no-dev --optimize-autoloader --working-dir=$DEPLOYPATH
+    - $PHP $DEPLOYPATH/artisan config:clear
+    - $PHP $DEPLOYPATH/artisan cache:clear
+    - $PHP $DEPLOYPATH/artisan route:clear
+    - $PHP $DEPLOYPATH/artisan view:clear
+    - $PHP $DEPLOYPATH/artisan config:cache
+    - $PHP $DEPLOYPATH/artisan route:cache
+    - $PHP $DEPLOYPATH/artisan migrate --force
