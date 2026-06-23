@@ -30,6 +30,9 @@ class Appointment extends Model
         'combo_price',
         'promo_code',
         'promo_discount',
+        'actual_duration_minutes',
+        'payment_proof_path',
+        'payment_proof_name',
         'headcount',
         'venue',
         'event_type',
@@ -44,8 +47,9 @@ class Appointment extends Model
         'setup_at'         => 'datetime',
         'breakdown_at'     => 'datetime',
         'duration_minutes' => 'integer',
-        'combo_price'      => 'decimal:2',
-        'promo_discount'   => 'decimal:2',
+        'combo_price'             => 'decimal:2',
+        'promo_discount'          => 'decimal:2',
+        'actual_duration_minutes' => 'integer',
     ];
 
     public function isEventBooking(): bool

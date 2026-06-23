@@ -58,97 +58,109 @@
                 @endif
             </form>
 
-            {{-- Mobile cards --}}
-            <div class="sm:hidden space-y-2">
-                @forelse($services as $service)
-                    <a href="{{ route('services.edit', $service) }}"
-                       class="block bg-slate-800 rounded-xl p-4 hover:bg-slate-700/70 transition-colors">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <p class="font-medium text-white text-sm">{{ $service->name }}</p>
-                                @if($service->description)
-                                    <p class="text-xs text-slate-500 mt-0.5 truncate">{{ Str::limit($service->description, 60) }}</p>
-                                @endif
-                            </div>
-                            @if($service->is_active)
-                                <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
-                            @else
-                                <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
-                            @endif
-                        </div>
-                        <div class="flex items-center gap-3 mt-2 text-xs text-slate-400">
-                            <span>{{ $service->duration_minutes }} min</span>
-                            <span>·</span>
-                            <span>R{{ number_format($service->price, 2) }}</span>
-                            @if($service->category)
-                                <span>·</span>
-                                <span>{{ $service->category->icon }} {{ $service->category->name }}</span>
-                            @endif
-                        </div>
-                    </a>
-                @empty
-                    <p class="text-center text-slate-500 py-10 text-sm">
-                        No services yet. <a href="{{ route('services.create') }}" class="text-[#0078D4]">Add one.</a>
-                    </p>
-                @endforelse
-            </div>
+            @php
+                $grouped = $services->getCollection()->groupBy('service_category_id');
+                $catMap  = $categories->keyBy('id');
+            @endphp
 
-            {{-- Desktop table --}}
-            <div class="hidden sm:block bg-slate-800 rounded-xl overflow-hidden overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b border-slate-700 text-slate-400 text-left">
-                            <th class="px-4 py-3 font-medium">Name</th>
-                            <th class="px-4 py-3 font-medium">Category</th>
-                            <th class="px-4 py-3 font-medium">Duration</th>
-                            <th class="px-4 py-3 font-medium">Price</th>
-                            <th class="px-4 py-3 font-medium">Status</th>
-                            <th class="px-4 py-3 font-medium"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-700">
-                        @forelse($services as $service)
-                            <tr class="hover:bg-slate-700/50">
-                                <td class="px-4 py-3">
-                                    <p class="text-white font-medium">{{ $service->name }}</p>
-                                    @if($service->description)
-                                        <p class="text-xs text-slate-500 mt-0.5">{{ Str::limit($service->description, 55) }}</p>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3">
-                                    @if($service->category)
-                                        <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full
-                                            {{ $service->category->colorClass('bg') }} {{ $service->category->colorClass('text') }}">
-                                            {{ $service->category->icon }} {{ $service->category->name }}
-                                        </span>
-                                    @else
-                                        <span class="text-xs text-slate-600">—</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 text-slate-300">{{ $service->duration_minutes }} min</td>
-                                <td class="px-4 py-3 text-slate-300">R{{ number_format($service->price, 2) }}</td>
-                                <td class="px-4 py-3">
-                                    @if($service->is_active)
-                                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
-                                    @else
-                                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 text-right">
-                                    <a href="{{ route('services.edit', $service) }}" class="text-slate-400 hover:text-white text-xs">Edit</a>
-                                </td>
+            @if($services->isEmpty())
+                {{-- Empty state --}}
+                <p class="text-center text-slate-500 py-10 text-sm">
+                    No services yet. <a href="{{ route('services.create') }}" class="text-[#0078D4]">Add one.</a>
+                </p>
+            @else
+
+                {{-- Mobile cards --}}
+                <div class="sm:hidden space-y-4">
+                    @foreach($grouped as $catId => $group)
+                        <div>
+                            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 px-1 mb-1.5">
+                                @if($catId && $catMap->has($catId))
+                                    {{ $catMap[$catId]->icon }} {{ $catMap[$catId]->name }}
+                                @else
+                                    Uncategorised
+                                @endif
+                            </p>
+                            <div class="space-y-2">
+                                @foreach($group as $service)
+                                    <a href="{{ route('services.edit', $service) }}"
+                                       class="block bg-slate-800 rounded-xl p-4 hover:bg-slate-700/70 transition-colors">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="min-w-0">
+                                                <p class="font-medium text-white text-sm">{{ $service->name }}</p>
+                                                @if($service->description)
+                                                    <p class="text-xs text-slate-500 mt-0.5 truncate">{{ Str::limit($service->description, 60) }}</p>
+                                                @endif
+                                            </div>
+                                            @if($service->is_active)
+                                                <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
+                                            @else
+                                                <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center gap-3 mt-2 text-xs text-slate-400">
+                                            <span>{{ $service->duration_minutes }} min</span>
+                                            <span>·</span>
+                                            <span>R{{ number_format($service->price, 2) }}</span>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Desktop table --}}
+                <div class="hidden sm:block bg-slate-800 rounded-xl overflow-hidden overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-700 text-slate-400 text-left">
+                                <th class="px-4 py-3 font-medium">Name</th>
+                                <th class="px-4 py-3 font-medium">Duration</th>
+                                <th class="px-4 py-3 font-medium">Price</th>
+                                <th class="px-4 py-3 font-medium">Status</th>
+                                <th class="px-4 py-3 font-medium"></th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-4 py-10 text-center text-slate-500">
-                                    No services yet. <a href="{{ route('services.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0]">Add one.</a>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-3">{{ $services->appends(['tab' => 'services', 'search' => request('search')])->links() }}</div>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700">
+                            @foreach($grouped as $catId => $group)
+                                <tr class="bg-slate-900/60">
+                                    <td colspan="5" class="px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                        @if($catId && $catMap->has($catId))
+                                            {{ $catMap[$catId]->icon }} {{ $catMap[$catId]->name }}
+                                        @else
+                                            Uncategorised
+                                        @endif
+                                    </td>
+                                </tr>
+                                @foreach($group as $service)
+                                    <tr class="hover:bg-slate-700/50">
+                                        <td class="px-4 py-3">
+                                            <p class="text-white font-medium">{{ $service->name }}</p>
+                                            @if($service->description)
+                                                <p class="text-xs text-slate-500 mt-0.5">{{ Str::limit($service->description, 55) }}</p>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-slate-300">{{ $service->duration_minutes }} min</td>
+                                        <td class="px-4 py-3 text-slate-300">R{{ number_format($service->price, 2) }}</td>
+                                        <td class="px-4 py-3">
+                                            @if($service->is_active)
+                                                <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
+                                            @else
+                                                <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-right">
+                                            <a href="{{ route('services.edit', $service) }}" class="text-slate-400 hover:text-white text-xs">Edit</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+            @endif
         </div>
 
         {{-- ── Combos tab ────────────────────────────────────────────────────── --}}
