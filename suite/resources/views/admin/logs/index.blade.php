@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">System Logs</x-slot>
 
-    <div class="max-w-7xl mx-auto space-y-6"
+    <div class="max-w-7xl mx-auto space-y-5"
          x-data="{
              selected: [],
              allIds: {{ $logs->pluck('id')->toJson() }},
@@ -31,13 +31,13 @@
         </div>
 
         @if(session('success'))
-            <div class="p-4 bg-green-900/30 border border-green-700 text-green-300 rounded-lg text-sm">
+            <div class="p-3 bg-green-900/30 border border-green-700 text-green-300 rounded-lg text-sm">
                 {{ session('success') }}
             </div>
         @endif
 
-        {{-- Auto-filters (no submit button) --}}
-        <form method="GET" id="filter-form" class="flex flex-wrap gap-3 items-center">
+        {{-- Filters --}}
+        <form method="GET" id="filter-form" class="grid grid-cols-2 sm:flex flex-wrap gap-2 items-center">
             <select name="level"
                     class="bg-slate-800 border border-slate-600 text-slate-300 rounded-lg text-sm px-3 py-2"
                     onchange="this.form.submit()">
@@ -66,8 +66,8 @@
             </select>
 
             <input type="text" name="search" value="{{ request('search') }}"
-                   placeholder="Search message…"
-                   class="bg-slate-800 border border-slate-600 text-slate-300 rounded-lg text-sm px-3 py-2 flex-1 min-w-48"
+                   placeholder="Search…"
+                   class="col-span-2 sm:col-span-1 bg-slate-800 border border-slate-600 text-slate-300 rounded-lg text-sm px-3 py-2 sm:flex-1 min-w-0"
                    oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 400)">
 
             @if(request()->hasAny(['level','status','source','search']))
@@ -77,7 +77,6 @@
                 </a>
             @endif
 
-            {{-- Resolve all matching current filters --}}
             <form method="POST" action="{{ route('admin.logs.resolve-all') }}" class="inline"
                   onsubmit="return confirm('Resolve all logs matching current filters?')">
                 @csrf
@@ -91,9 +90,9 @@
             </form>
         </form>
 
-        {{-- Bulk action bar (shown when rows are selected) --}}
+        {{-- Bulk action bar --}}
         <div x-show="selected.length > 0" x-cloak
-             class="flex items-center gap-3 p-3 bg-slate-700 rounded-lg border border-slate-600">
+             class="flex items-center gap-3 p-3 bg-slate-700 rounded-lg border border-slate-600 flex-wrap">
             <span class="text-sm text-slate-300" x-text="selected.length + ' selected'"></span>
             <select x-model="bulkAction"
                     class="bg-slate-800 border border-slate-600 text-slate-300 rounded-lg text-sm px-3 py-1.5">
@@ -121,8 +120,8 @@
             <button @click="selected = []" class="text-slate-400 hover:text-white text-sm ml-auto">Deselect all</button>
         </div>
 
-        {{-- Table --}}
-        <div class="bg-slate-800 rounded-xl overflow-hidden shadow-sm">
+        {{-- ── DESKTOP TABLE ───────────────────────────────────────────── --}}
+        <div class="hidden sm:block bg-slate-800 rounded-xl overflow-hidden shadow-sm">
             <table class="w-full text-sm">
                 <thead class="bg-slate-900/50 border-b border-slate-700">
                     <tr>
@@ -140,28 +139,31 @@
                 </thead>
                 <tbody class="divide-y divide-slate-700">
                     @forelse($logs as $log)
+                        @php
+                            $lc = in_array($log->level, ['ERROR','CRITICAL','ALERT','EMERGENCY'])
+                                ? 'bg-red-900/60 text-red-300'
+                                : ($log->level === 'WARNING' ? 'bg-yellow-900/60 text-yellow-300'
+                                : ($log->level === 'INFO'    ? 'bg-blue-900/60 text-blue-300'
+                                : 'bg-slate-700 text-slate-400'));
+                            $sc = match($log->status) {
+                                'new'         => 'bg-red-900/40 text-red-300',
+                                'acknowledged'=> 'bg-yellow-900/40 text-yellow-300',
+                                'in_progress' => 'bg-blue-900/40 text-blue-300',
+                                default       => 'bg-green-900/40 text-green-300',
+                            };
+                        @endphp
                         <tr class="hover:bg-slate-700/30" :class="selected.includes({{ $log->id }}) ? 'bg-slate-700/50' : ''">
                             <td class="px-4 py-3">
                                 <input type="checkbox" class="rounded bg-slate-700 border-slate-600 text-[#0078D4]"
                                        :value="{{ $log->id }}" x-model="selected">
                             </td>
                             <td class="px-4 py-3">
-                                <span class="px-2 py-0.5 rounded text-xs font-bold
-                                    @if(in_array($log->level, ['ERROR','CRITICAL','ALERT','EMERGENCY'])) bg-red-900/60 text-red-300
-                                    @elseif($log->level === 'WARNING') bg-yellow-900/60 text-yellow-300
-                                    @elseif($log->level === 'INFO') bg-blue-900/60 text-blue-300
-                                    @else bg-slate-700 text-slate-400 @endif">
-                                    {{ $log->level }}
-                                </span>
+                                <span class="px-2 py-0.5 rounded text-xs font-bold {{ $lc }}">{{ $log->level }}</span>
                             </td>
                             <td class="px-4 py-3 text-slate-200 max-w-xs truncate">{{ $log->message }}</td>
                             <td class="px-4 py-3 text-slate-400 text-xs">{{ $log->source }}</td>
                             <td class="px-4 py-3">
-                                <span class="px-2 py-0.5 rounded text-xs
-                                    @if($log->status === 'new') bg-red-900/40 text-red-300
-                                    @elseif($log->status === 'acknowledged') bg-yellow-900/40 text-yellow-300
-                                    @elseif($log->status === 'in_progress') bg-blue-900/40 text-blue-300
-                                    @else bg-green-900/40 text-green-300 @endif">
+                                <span class="px-2 py-0.5 rounded text-xs {{ $sc }}">
                                     {{ ucfirst(str_replace('_', ' ', $log->status)) }}
                                 </span>
                             </td>
@@ -180,6 +182,51 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- ── MOBILE CARDS ────────────────────────────────────────────── --}}
+        <div class="block sm:hidden space-y-2">
+            @forelse($logs as $log)
+                @php
+                    $lc = in_array($log->level, ['ERROR','CRITICAL','ALERT','EMERGENCY'])
+                        ? 'bg-red-900/60 text-red-300'
+                        : ($log->level === 'WARNING' ? 'bg-yellow-900/60 text-yellow-300'
+                        : ($log->level === 'INFO'    ? 'bg-blue-900/60 text-blue-300'
+                        : 'bg-slate-700 text-slate-400'));
+                    $sc = match($log->status) {
+                        'new'         => 'bg-red-900/40 text-red-300',
+                        'acknowledged'=> 'bg-yellow-900/40 text-yellow-300',
+                        'in_progress' => 'bg-blue-900/40 text-blue-300',
+                        default       => 'bg-green-900/40 text-green-300',
+                    };
+                @endphp
+                <div class="bg-slate-800 rounded-xl px-4 py-3 space-y-2"
+                     :class="selected.includes({{ $log->id }}) ? 'ring-1 ring-[#0078D4]' : ''">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <input type="checkbox" class="rounded bg-slate-700 border-slate-600 text-[#0078D4] shrink-0"
+                                   :value="{{ $log->id }}" x-model="selected">
+                            <span class="px-2 py-0.5 rounded text-xs font-bold {{ $lc }}">{{ $log->level }}</span>
+                            <span class="px-2 py-0.5 rounded text-xs {{ $sc }}">
+                                {{ ucfirst(str_replace('_', ' ', $log->status)) }}
+                            </span>
+                        </div>
+                        <span class="text-slate-500 text-xs whitespace-nowrap shrink-0">
+                            {{ $log->created_at->format('d M H:i') }}
+                        </span>
+                    </div>
+                    <p class="text-slate-200 text-sm leading-snug line-clamp-2">{{ $log->message }}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500 text-xs">{{ $log->source }}</span>
+                        <a href="{{ route('admin.logs.show', $log) }}"
+                           class="text-[#0078D4] hover:text-[#B8D4F0] text-xs font-medium">View &rarr;</a>
+                    </div>
+                </div>
+            @empty
+                <div class="bg-slate-800 rounded-xl px-4 py-10 text-center text-slate-500 text-sm">
+                    No logs found.
+                </div>
+            @endforelse
         </div>
 
         <div>{{ $logs->links() }}</div>
