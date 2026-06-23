@@ -47,14 +47,34 @@
 
         {{-- ── Services tab ─────────────────────────────────────────────────── --}}
         <div x-show="tab==='services'" x-cloak>
-            <form method="GET" class="flex gap-2 mb-3">
+            <form method="GET" class="flex flex-wrap gap-2 mb-3 items-center">
                 <input type="hidden" name="tab" value="services">
+
+                {{-- Search --}}
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Search services…"
-                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 flex-1 sm:flex-none sm:w-48 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 flex-1 min-w-0 sm:w-48 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+
+                {{-- Sort by --}}
+                <select name="sort" onchange="this.form.submit()"
+                        class="bg-slate-800 border border-slate-700 text-slate-300 text-sm rounded-lg px-3 py-2">
+                    <option value="name"          {{ request('sort','name') === 'name'           ? 'selected' : '' }}>Name</option>
+                    <option value="price"         {{ request('sort') === 'price'                 ? 'selected' : '' }}>Price</option>
+                    <option value="duration_minutes" {{ request('sort') === 'duration_minutes'   ? 'selected' : '' }}>Duration</option>
+                    <option value="created_at"    {{ request('sort') === 'created_at'            ? 'selected' : '' }}>Date added</option>
+                </select>
+
+                {{-- Direction toggle --}}
+                <a href="{{ request()->fullUrlWithQuery(['direction' => request('direction','asc') === 'asc' ? 'desc' : 'asc']) }}"
+                   class="bg-slate-800 border border-slate-700 text-slate-300 text-sm rounded-lg px-3 py-2 hover:bg-slate-700 whitespace-nowrap"
+                   title="Toggle sort direction">
+                    @if(request('direction') === 'desc') ↓ Desc @else ↑ Asc @endif
+                </a>
+
                 <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg text-slate-200">Search</button>
-                @if(request('search'))
-                    <a href="{{ route('services.index') }}" class="text-sm px-4 py-2 rounded-lg text-slate-400 hover:text-white">Clear</a>
+
+                @if(request()->hasAny(['search','sort','direction']))
+                    <a href="{{ route('services.index', ['tab' => 'services']) }}" class="text-sm px-3 py-2 rounded-lg text-slate-400 hover:text-white">Clear</a>
                 @endif
             </form>
 

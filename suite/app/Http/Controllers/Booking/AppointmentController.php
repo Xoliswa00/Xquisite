@@ -129,13 +129,19 @@ class AppointmentController extends Controller
             return back()->withInput()->withErrors(['service_ids' => 'One or more selected services are invalid.']);
         }
 
+        $conflictWarning = null;
         if ($data['staff_id']) {
-            $staff = Staff::findOrFail($data['staff_id']);
-            $start = Carbon::parse($data['scheduled_at']);
-            $error = $availability->check($staff, $start, $totalDuration);
+            $staff    = Staff::findOrFail($data['staff_id']);
+            $start    = Carbon::parse($data['scheduled_at']);
+            $hardStop = $availability->checkHardStop($staff, $start, $totalDuration);
 
-            if ($error) {
-                return back()->withInput()->withErrors(['scheduled_at' => $error]);
+            if ($hardStop) {
+                return back()->withInput()->withErrors(['scheduled_at' => $hardStop]);
+            }
+
+            $conflicts = $availability->getConflicts($staff, $start, $totalDuration);
+            if ($conflicts->isNotEmpty()) {
+                $conflictWarning = $availability->buildConflictWarning($staff, $start, $totalDuration, $conflicts);
             }
         }
 
@@ -190,8 +196,11 @@ class AppointmentController extends Controller
 
         $notifications->notifyAppointmentCreated($appointment);
 
-        return redirect()->route('appointments.index')
-            ->with('success', 'Appointment booked successfully.');
+        $redirect = $conflictWarning
+            ? redirect()->route('appointments.show', $appointment)->with('conflict_warning', $conflictWarning)
+            : redirect()->route('appointments.index')->with('success', 'Appointment booked successfully.');
+
+        return $redirect;
     }
 
     public function show(Appointment $appointment)
@@ -349,13 +358,19 @@ class AppointmentController extends Controller
             $data['staff_id'] = null;
         }
 
+        $conflictWarning = null;
         if (!$slotChanged && !$durationChanged && $data['staff_id']) {
-            $staff = Staff::findOrFail($data['staff_id']);
-            $start = Carbon::parse($data['scheduled_at']);
-            $error = $availability->check($staff, $start, $totalDuration, $appointment->id);
+            $staff    = Staff::findOrFail($data['staff_id']);
+            $start    = Carbon::parse($data['scheduled_at']);
+            $hardStop = $availability->checkHardStop($staff, $start, $totalDuration);
 
-            if ($error) {
-                return back()->withInput()->withErrors(['staff_id' => $error]);
+            if ($hardStop) {
+                return back()->withInput()->withErrors(['staff_id' => $hardStop]);
+            }
+
+            $conflicts = $availability->getConflicts($staff, $start, $totalDuration, $appointment->id);
+            if ($conflicts->isNotEmpty()) {
+                $conflictWarning = $availability->buildConflictWarning($staff, $start, $totalDuration, $conflicts);
             }
         }
 
@@ -385,11 +400,13 @@ class AppointmentController extends Controller
             $durationChanged ? 'duration changed' : null,
         ]));
 
+        $successMsg = $slotChanged || $durationChanged
+            ? 'Appointment rescheduled. Staff assignment cleared — please assign a staff member.'
+            : 'Appointment updated.';
+
         return redirect()->route('appointments.show', $appointment)
-            ->with('success', $slotChanged || $durationChanged
-                ? 'Appointment rescheduled. Staff assignment cleared — please assign a staff member.'
-                : 'Appointment updated.'
-            );
+            ->with('success', $successMsg)
+            ->with('conflict_warning', $conflictWarning);
     }
 
     public function assign(Request $request, Appointment $appointment, AvailabilityService $availability, BookingNotificationService $notifications)
@@ -398,12 +415,19 @@ class AppointmentController extends Controller
             'staff_id' => 'required|exists:staff,id',
         ]);
 
-        $staff = Staff::findOrFail($data['staff_id']);
-        $error = $availability->check($staff, $appointment->scheduled_at, $appointment->duration_minutes, $appointment->id);
+        $staff    = Staff::findOrFail($data['staff_id']);
+        $start    = $appointment->scheduled_at;
+        $duration = $appointment->duration_minutes;
+        $hardStop = $availability->checkHardStop($staff, $start, $duration);
 
-        if ($error) {
-            return back()->withErrors(['staff_id' => $error]);
+        if ($hardStop) {
+            return back()->withErrors(['staff_id' => $hardStop]);
         }
+
+        $conflicts       = $availability->getConflicts($staff, $start, $duration, $appointment->id);
+        $conflictWarning = $conflicts->isNotEmpty()
+            ? $availability->buildConflictWarning($staff, $start, $duration, $conflicts)
+            : null;
 
         $appointment->update([
             'staff_id' => $staff->id,
@@ -413,7 +437,8 @@ class AppointmentController extends Controller
         $notifications->notifyAppointmentAssigned($appointment);
 
         return redirect()->route('appointments.show', $appointment)
-            ->with('success', "{$staff->name} assigned. Appointment confirmed.");
+            ->with('success', "{$staff->name} assigned. Appointment confirmed.")
+            ->with('conflict_warning', $conflictWarning);
     }
 
     public function calendar(?string $date = null)

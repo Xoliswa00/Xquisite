@@ -100,7 +100,10 @@
 </main>
 
 <footer class="border-t border-slate-100 py-6 text-center text-xs text-slate-400">
-    Powered by <a href="/" target="_blank" rel="noopener" class="font-semibold text-slate-500 hover:text-[#0078D4] transition-colors">Xquisite</a>
+    <a href="{{ url('/') }}" class="inline-flex items-center justify-center gap-2 hover:opacity-80 transition-opacity">
+        <img src="/img/android-icon-96x96.png" alt="Xquisite Creations" class="h-5 w-5 object-contain rounded">
+        <span>Powered by <span class="font-semibold text-slate-500">Xquisite Creations</span></span>
+    </a>
 </footer>
 
 @stack('scripts')

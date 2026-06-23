@@ -336,6 +336,11 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
         Route::post('/login',             [CustomerAuthController::class, 'login'])->name('login.post');
         Route::get('/register',           [CustomerAuthController::class, 'showRegister'])->name('register');
         Route::post('/register',          [CustomerAuthController::class, 'register'])->name('register.post');
+        // Account claim — for manually-added customers who want to set up their own login
+        Route::get('/claim',              [CustomerAuthController::class, 'showClaim'])->name('claim');
+        Route::post('/claim',             [CustomerAuthController::class, 'lookupByPhone'])->name('claim.lookup');
+        Route::get('/claim/setup',        [CustomerAuthController::class, 'showClaimSetup'])->name('claim.setup');
+        Route::post('/claim/setup',       [CustomerAuthController::class, 'completeClaimSetup'])->name('claim.complete');
     });
 
     // ── Requires customer auth ────────────────────────────────────────────────
