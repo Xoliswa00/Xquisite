@@ -11,6 +11,15 @@ use Illuminate\Support\Facades\Request;
 
 class DemoController extends Controller
 {
+    public function show()
+    {
+        if (auth()->check()) {
+            return redirect()->route('dashboard');
+        }
+
+        return view('demo');
+    }
+
     public function login(): RedirectResponse
     {
         $key = 'demo-login:' . Request::ip();

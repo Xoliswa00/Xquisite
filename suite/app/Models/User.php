@@ -24,6 +24,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'tenant_id',
         'is_active',
         'require_password_change',
+        'preferences',
     ];
 
     protected $hidden = [
@@ -34,10 +35,11 @@ class User extends Authenticatable implements MustVerifyEmail
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
+            'email_verified_at'       => 'datetime',
+            'password'                => 'hashed',
             'require_password_change' => 'boolean',
-            'is_active' => 'boolean',
+            'is_active'               => 'boolean',
+            'preferences'             => 'array',
         ];
     }
 

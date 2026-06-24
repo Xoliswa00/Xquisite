@@ -96,6 +96,15 @@ class DashboardController extends Controller
         ];
         $onboardingComplete = collect($onboarding)->every(fn($v) => $v === true);
 
+        // Profile completeness — fields clients and the system need
+        $profileChecks = [
+            ['key' => 'phone',    'label' => 'Business phone number',   'filled' => !empty($tenant->phone)],
+            ['key' => 'logo',     'label' => 'Business logo',            'filled' => !empty($tenant->logo_url)],
+            ['key' => 'address',  'label' => 'Business address',         'filled' => !empty($tenant->address)],
+            ['key' => 'banking',  'label' => 'Banking details',          'filled' => !empty($tenant->bank_name) && !empty($tenant->bank_account_number)],
+        ];
+        $profileComplete = collect($profileChecks)->every(fn($c) => $c['filled']);
+
         return view('dashboard', compact(
             'hasPos',
             'todayCount',
@@ -112,6 +121,8 @@ class DashboardController extends Controller
             'completedCount',
             'awaitingTotal',
             'awaitingCount',
+            'profileChecks',
+            'profileComplete',
         ));
     }
 

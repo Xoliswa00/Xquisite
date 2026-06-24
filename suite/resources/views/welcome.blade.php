@@ -161,7 +161,7 @@
                 <a href="#services"              class="hover:text-[#0078D4] transition-colors">Services</a>
                 <a href="#modules"               class="hover:text-[#0078D4] transition-colors">Platform</a>
                 <a href="{{ route('about') }}"   class="hover:text-[#0078D4] transition-colors">About</a>
-                <a href="{{ route('demo.login') }}" class="hover:text-[#0078D4] transition-colors">Live Demo</a>
+                <a href="{{ route('demo') }}" class="hover:text-[#0078D4] transition-colors">Live Demo</a>
             </nav>
 
             {{-- Auth --}}
@@ -208,7 +208,7 @@
                     Start Your Journey
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                 </a>
-                <a href="{{ route('demo.login') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 font-medium rounded-xl border border-white/20 hover:border-white/40 text-white/70 hover:text-white transition-all duration-200">
+                <a href="{{ route('demo') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 font-medium rounded-xl border border-white/20 hover:border-white/40 text-white/70 hover:text-white transition-all duration-200">
                     <svg class="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     Try Live Demo
                 </a>

@@ -603,10 +603,139 @@
             </div>
         </div>
 
+        {{-- ── LOCATION ── --}}
+        @if($tenant->address)
+        <div class="bg-white rounded-2xl border border-slate-100 px-5 py-4">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Find Us</p>
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-[#0078D4]/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg class="w-4 h-4 text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold text-slate-700">{{ $tenant->name }}</p>
+                    <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">{{ $tenant->address }}</p>
+                    <a href="https://maps.google.com?q={{ urlencode($tenant->address) }}"
+                       target="_blank" rel="noopener"
+                       class="inline-flex items-center gap-1 mt-2 text-xs text-[#0078D4] hover:underline font-medium">
+                        Open in Maps
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- ── BANKING DETAILS ── --}}
+        @if($tenant->bank_name && $tenant->bank_account_number)
+        <div class="bg-white rounded-2xl border border-slate-100 px-5 py-4"
+             x-data="{ copied: false }">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Payment Details</p>
+            <div class="space-y-2.5">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs text-slate-400">Bank</span>
+                    <span class="text-xs font-semibold text-slate-700">{{ $tenant->bank_name }}</span>
+                </div>
+                @if($tenant->bank_account_holder)
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs text-slate-400">Account Holder</span>
+                    <span class="text-xs font-semibold text-slate-700">{{ $tenant->bank_account_holder }}</span>
+                </div>
+                @endif
+                @if($tenant->bank_account_type)
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs text-slate-400">Account Type</span>
+                    <span class="text-xs font-semibold text-slate-700">{{ ucfirst($tenant->bank_account_type) }}</span>
+                </div>
+                @endif
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs text-slate-400">Account No.</span>
+                    <span class="text-xs font-semibold text-slate-700 font-mono">{{ $tenant->bank_account_number }}</span>
+                </div>
+                @if($tenant->bank_branch_code)
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs text-slate-400">Branch Code</span>
+                    <span class="text-xs font-semibold text-slate-700 font-mono">{{ $tenant->bank_branch_code }}</span>
+                </div>
+                @endif
+            </div>
+            <button type="button"
+                    @click="navigator.clipboard.writeText('{{ $tenant->bank_account_number }}').then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                    class="mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border text-xs font-semibold transition-all"
+                    :class="copied ? 'border-emerald-300 bg-emerald-50 text-emerald-600' : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"/></svg>
+                <span x-text="copied ? 'Copied!' : 'Copy account number'"></span>
+            </button>
+        </div>
+        @endif
+
     </div>
 </div>{{-- end sidebar --}}
 
 </div>{{-- end two-column --}}
+
+{{-- ── MOBILE: Location + Banking (below services, hidden on desktop) ────── --}}
+@if($tenant->address || ($tenant->bank_name && $tenant->bank_account_number))
+<div class="lg:hidden mt-10 grid sm:grid-cols-2 gap-4">
+
+    @if($tenant->address)
+    <div class="bg-white rounded-2xl border border-slate-100 p-5">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Find Us</p>
+        <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[#0078D4]/10 flex items-center justify-center shrink-0 mt-0.5">
+                <svg class="w-4 h-4 text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-xs font-semibold text-slate-700">{{ $tenant->name }}</p>
+                <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">{{ $tenant->address }}</p>
+                <a href="https://maps.google.com?q={{ urlencode($tenant->address) }}"
+                   target="_blank" rel="noopener"
+                   class="inline-flex items-center gap-1 mt-2 text-xs text-[#0078D4] hover:underline font-medium">
+                    Open in Maps
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                </a>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($tenant->bank_name && $tenant->bank_account_number)
+    <div class="bg-white rounded-2xl border border-slate-100 p-5"
+         x-data="{ copiedM: false }">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Payment Details</p>
+        <div class="space-y-2">
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-slate-400">Bank</span>
+                <span class="text-xs font-semibold text-slate-700">{{ $tenant->bank_name }}</span>
+            </div>
+            @if($tenant->bank_account_holder)
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-slate-400">Holder</span>
+                <span class="text-xs font-semibold text-slate-700">{{ $tenant->bank_account_holder }}</span>
+            </div>
+            @endif
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-slate-400">Account No.</span>
+                <span class="text-xs font-semibold text-slate-700 font-mono">{{ $tenant->bank_account_number }}</span>
+            </div>
+            @if($tenant->bank_branch_code)
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-slate-400">Branch Code</span>
+                <span class="text-xs font-semibold text-slate-700 font-mono">{{ $tenant->bank_branch_code }}</span>
+            </div>
+            @endif
+        </div>
+        <button type="button"
+                @click="navigator.clipboard.writeText('{{ $tenant->bank_account_number }}').then(() => { copiedM = true; setTimeout(() => copiedM = false, 2000) })"
+                class="mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border text-xs font-semibold transition-all"
+                :class="copiedM ? 'border-emerald-300 bg-emerald-50 text-emerald-600' : 'border-slate-200 text-slate-500 hover:border-slate-300'">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"/></svg>
+            <span x-text="copiedM ? 'Copied!' : 'Copy account number'"></span>
+        </button>
+    </div>
+    @endif
+
+</div>
+@endif
 
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 {{-- MOBILE BOTTOM BAR                                                          --}}
