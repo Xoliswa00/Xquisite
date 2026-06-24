@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Booking;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AppointmentConfirmationEmail;
 use App\Models\Promotion;
 use App\Models\ServiceCombo;
 use App\Modules\Booking\Models\Appointment;
@@ -14,6 +15,7 @@ use App\Services\Tenant\TenantContext;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class PublicBookingController extends Controller
 {
@@ -280,6 +282,20 @@ class PublicBookingController extends Controller
         }
 
         $notifications->notifyAppointmentCreated($appointment, route('book.success', [$slug, $appointment]));
+
+        // Confirmation email to the customer
+        $appointment->load(['customer', 'services']);
+        if ($customer->email) {
+            Mail::to($customer->email)
+                ->queue(new AppointmentConfirmationEmail($appointment, recipient: 'customer'));
+        }
+
+        // Notify the tenant owner so they see the new self-booking
+        $tenantOwnerEmail = $tenant->owner()?->email;
+        if ($tenantOwnerEmail) {
+            Mail::to($tenantOwnerEmail)
+                ->queue(new AppointmentConfirmationEmail($appointment, recipient: 'booker'));
+        }
 
         session()->forget('pending_booking');
 

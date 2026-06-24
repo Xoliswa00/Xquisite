@@ -25,9 +25,14 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Illuminate\Support\Facades\Log::error('Instance health check failed');
             });
-            
-            
-            $schedule->job(new \App\Jobs\ReportHealthStatus)->everyFiveMinutes();
+
+        $schedule->job(new \App\Jobs\ReportHealthStatus)->everyFiveMinutes();
+
+        // Send appointment reminder emails that are due
+        $schedule->command('booking:send-reminders')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**
