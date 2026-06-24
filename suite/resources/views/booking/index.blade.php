@@ -306,21 +306,35 @@
             $classes  = \App\Models\ServiceCategory::colorClasses()[$cat->color] ?? [];
             $dotClass = $classes['dot']  ?? 'bg-slate-400';
         @endphp
-        <div class="mb-8">
-            {{-- Category header --}}
-            <div class="flex items-center gap-3 mb-3.5">
-                <div class="w-1 h-7 rounded-full {{ $dotClass }}"></div>
+        <div class="mb-6" x-data="{ open: true }">
+            {{-- Category header (tap to collapse) --}}
+            <div class="flex items-center gap-3 mb-3 cursor-pointer select-none" @click="open = !open">
+                <div class="w-1 h-7 rounded-full {{ $dotClass }} transition-opacity" :class="open ? 'opacity-100' : 'opacity-40'"></div>
                 <span class="text-base font-bold text-slate-900">{{ $cat->icon }} {{ $cat->name }}</span>
                 <span class="text-xs text-slate-400 font-medium bg-slate-100 px-2 py-0.5 rounded-full">
                     {{ $catServices->count() }}
                 </span>
+                <svg class="w-4 h-4 text-slate-400 ml-auto transition-transform duration-200" :class="open ? '' : '-rotate-90'"
+                     fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
             </div>
 
-            <div class="grid sm:grid-cols-2 gap-3">
+            <div x-show="open" x-cloak class="grid sm:grid-cols-2 gap-3">
                 @foreach($catServices as $service)
-                <button type="button"
+                @php
+                    $desc      = $service->description ?? '';
+                    $descLines = $desc ? array_values(array_filter(array_map('trim', explode("\n", $desc)))) : [];
+                    $isList    = count($descLines) > 1 && collect($descLines)->every(fn($l) => preg_match('/^[-*•·]|\d+[.)]\s/', $l));
+                    $listItems = $isList ? array_map(fn($l) => trim(preg_replace('/^[-*•·]\s*|\d+[.)]\s*/', '', $l)), $descLines) : [];
+                    $isLong    = $desc && (strlen($desc) > 100 || count($descLines) > 2);
+                    $needsMore = $isLong || count($listItems) > 2;
+                @endphp
+                <div role="button" tabindex="0"
                         @click="toggle({{ $service->id }})"
-                        class="group relative text-left w-full rounded-2xl border bg-white p-4 transition-all duration-200 overflow-hidden"
+                        @keydown.enter.stop="toggle({{ $service->id }})"
+                        @keydown.space.prevent.stop="toggle({{ $service->id }})"
+                        class="group relative text-left w-full rounded-2xl border bg-white p-4 cursor-pointer transition-all duration-200 overflow-hidden select-none"
                         :class="selected.includes({{ $service->id }})
                             ? 'border-[#0078D4] bg-[#F0F7FF]/80 ring-2 ring-[#0078D4] ring-offset-1 shadow-lg shadow-[#E8F2FA]'
                             : 'border-slate-200 hover:border-slate-300 hover:shadow-md hover:bg-slate-50/50'">
@@ -349,8 +363,43 @@
                            :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
                             {{ $service->name }}
                         </p>
-                        @if($service->description)
-                            <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">{{ $service->description }}</p>
+                        @if($desc)
+                        <div x-data="{ open: false }" class="mt-1">
+                            {{-- Collapsed --}}
+                            <div x-show="!open">
+                                @if($isList)
+                                    <ul class="text-xs text-slate-400 leading-relaxed space-y-0.5 list-disc list-inside">
+                                        @foreach(array_slice($listItems, 0, 2) as $item)
+                                            <li>{{ $item }}</li>
+                                        @endforeach
+                                        @if(count($listItems) > 2)
+                                            <li class="list-none pl-4 text-slate-300">+{{ count($listItems) - 2 }} more…</li>
+                                        @endif
+                                    </ul>
+                                @else
+                                    <p class="text-xs text-slate-400 leading-relaxed line-clamp-2">{{ $desc }}</p>
+                                @endif
+                            </div>
+                            {{-- Expanded --}}
+                            <div x-show="open" x-cloak>
+                                @if($isList)
+                                    <ul class="text-xs text-slate-400 leading-relaxed space-y-0.5 list-disc list-inside">
+                                        @foreach($listItems as $item)
+                                            <li>{{ $item }}</li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    <p class="text-xs text-slate-400 leading-relaxed whitespace-pre-line">{{ $desc }}</p>
+                                @endif
+                            </div>
+                            @if($needsMore)
+                            <button type="button" @click.stop="open = !open"
+                                    class="mt-1 flex items-center gap-1 text-xs text-[#0078D4] font-medium hover:underline focus:outline-none">
+                                <span x-text="open ? 'Show less' : 'Read more'"></span>
+                                <svg class="w-3 h-3 transition-transform duration-200" :class="open ? '-rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            @endif
+                        </div>
                         @endif
                         <div class="flex items-center justify-between mt-3.5">
                             <div class="flex items-center gap-1.5 text-xs text-slate-400">
@@ -363,7 +412,7 @@
                             </p>
                         </div>
                     </div>
-                </button>
+                </div>
                 @endforeach
             </div>
         </div>
@@ -371,19 +420,33 @@
 
         {{-- Uncategorised --}}
         @if($uncategorised->isNotEmpty())
-        <div class="mb-8">
+        <div class="mb-6" x-data="{ open: true }">
             @if($categorised->isNotEmpty())
-            <div class="flex items-center gap-3 mb-3.5">
-                <div class="w-1 h-7 rounded-full bg-slate-400"></div>
+            <div class="flex items-center gap-3 mb-3 cursor-pointer select-none" @click="open = !open">
+                <div class="w-1 h-7 rounded-full bg-slate-400 transition-opacity" :class="open ? 'opacity-100' : 'opacity-40'"></div>
                 <span class="text-base font-bold text-slate-900">Other Services</span>
                 <span class="text-xs text-slate-400 font-medium bg-slate-100 px-2 py-0.5 rounded-full">{{ $uncategorised->count() }}</span>
+                <svg class="w-4 h-4 text-slate-400 ml-auto transition-transform duration-200" :class="open ? '' : '-rotate-90'"
+                     fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
             </div>
             @endif
-            <div class="grid sm:grid-cols-2 gap-3">
+            <div x-show="open" x-cloak class="grid sm:grid-cols-2 gap-3">
                 @foreach($uncategorised as $service)
-                <button type="button"
+                @php
+                    $desc      = $service->description ?? '';
+                    $descLines = $desc ? array_values(array_filter(array_map('trim', explode("\n", $desc)))) : [];
+                    $isList    = count($descLines) > 1 && collect($descLines)->every(fn($l) => preg_match('/^[-*•·]|\d+[.)]\s/', $l));
+                    $listItems = $isList ? array_map(fn($l) => trim(preg_replace('/^[-*•·]\s*|\d+[.)]\s*/', '', $l)), $descLines) : [];
+                    $isLong    = $desc && (strlen($desc) > 100 || count($descLines) > 2);
+                    $needsMore = $isLong || count($listItems) > 2;
+                @endphp
+                <div role="button" tabindex="0"
                         @click="toggle({{ $service->id }})"
-                        class="group relative text-left w-full rounded-2xl border bg-white p-4 transition-all duration-200 overflow-hidden"
+                        @keydown.enter.stop="toggle({{ $service->id }})"
+                        @keydown.space.prevent.stop="toggle({{ $service->id }})"
+                        class="group relative text-left w-full rounded-2xl border bg-white p-4 cursor-pointer transition-all duration-200 overflow-hidden select-none"
                         :class="selected.includes({{ $service->id }})
                             ? 'border-[#0078D4] bg-[#F0F7FF]/80 ring-2 ring-[#0078D4] ring-offset-1 shadow-lg shadow-[#E8F2FA]'
                             : 'border-slate-200 hover:border-slate-300 hover:shadow-md hover:bg-slate-50/50'">
@@ -409,8 +472,41 @@
                            :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
                             {{ $service->name }}
                         </p>
-                        @if($service->description)
-                            <p class="text-xs text-slate-400 mt-1 line-clamp-2">{{ $service->description }}</p>
+                        @if($desc)
+                        <div x-data="{ open: false }" class="mt-1">
+                            <div x-show="!open">
+                                @if($isList)
+                                    <ul class="text-xs text-slate-400 leading-relaxed space-y-0.5 list-disc list-inside">
+                                        @foreach(array_slice($listItems, 0, 2) as $item)
+                                            <li>{{ $item }}</li>
+                                        @endforeach
+                                        @if(count($listItems) > 2)
+                                            <li class="list-none pl-4 text-slate-300">+{{ count($listItems) - 2 }} more…</li>
+                                        @endif
+                                    </ul>
+                                @else
+                                    <p class="text-xs text-slate-400 leading-relaxed line-clamp-2">{{ $desc }}</p>
+                                @endif
+                            </div>
+                            <div x-show="open" x-cloak>
+                                @if($isList)
+                                    <ul class="text-xs text-slate-400 leading-relaxed space-y-0.5 list-disc list-inside">
+                                        @foreach($listItems as $item)
+                                            <li>{{ $item }}</li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    <p class="text-xs text-slate-400 leading-relaxed whitespace-pre-line">{{ $desc }}</p>
+                                @endif
+                            </div>
+                            @if($needsMore)
+                            <button type="button" @click.stop="open = !open"
+                                    class="mt-1 flex items-center gap-1 text-xs text-[#0078D4] font-medium hover:underline focus:outline-none">
+                                <span x-text="open ? 'Show less' : 'Read more'"></span>
+                                <svg class="w-3 h-3 transition-transform duration-200" :class="open ? '-rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            @endif
+                        </div>
                         @endif
                         <div class="flex items-center justify-between mt-3.5">
                             <div class="flex items-center gap-1.5 text-xs text-slate-400">
@@ -423,7 +519,7 @@
                             </p>
                         </div>
                     </div>
-                </button>
+                </div>
                 @endforeach
             </div>
         </div>

@@ -93,15 +93,20 @@
                 {{-- Mobile cards --}}
                 <div class="sm:hidden space-y-4">
                     @foreach($grouped as $catId => $group)
-                        <div>
-                            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 px-1 mb-1.5">
-                                @if($catId && $catMap->has($catId))
-                                    {{ $catMap[$catId]->icon }} {{ $catMap[$catId]->name }}
-                                @else
-                                    Uncategorised
-                                @endif
-                            </p>
-                            <div class="space-y-2">
+                        <div x-data="{ open: true }">
+                            <button type="button" @click="open = !open"
+                                    class="flex items-center gap-2 w-full text-left px-1 mb-1.5 group">
+                                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 flex-1">
+                                    @if($catId && $catMap->has($catId))
+                                        {{ $catMap[$catId]->icon }} {{ $catMap[$catId]->name }}
+                                    @else
+                                        Uncategorised
+                                    @endif
+                                    <span class="text-slate-600 font-normal normal-case ml-1">({{ $group->count() }})</span>
+                                </p>
+                                <svg class="w-3.5 h-3.5 text-slate-600 transition-transform duration-200" :class="open ? '' : '-rotate-90'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div x-show="open" x-cloak class="space-y-2">
                                 @foreach($group as $service)
                                     <a href="{{ route('services.edit', $service) }}"
                                        class="block bg-slate-800 rounded-xl p-4 hover:bg-slate-700/70 transition-colors">
@@ -131,7 +136,13 @@
                 </div>
 
                 {{-- Desktop table --}}
-                <div class="hidden sm:block bg-slate-800 rounded-xl overflow-hidden overflow-x-auto">
+                @php
+                    $tableOpenInit = $grouped->keys()
+                        ->mapWithKeys(fn($k) => [(string)($k ?? 'null') => true])
+                        ->toJson();
+                @endphp
+                <div class="hidden sm:block bg-slate-800 rounded-xl overflow-hidden overflow-x-auto"
+                     x-data="{ open: {{ $tableOpenInit }} }">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-slate-700 text-slate-400 text-left">
@@ -144,17 +155,27 @@
                         </thead>
                         <tbody class="divide-y divide-slate-700">
                             @foreach($grouped as $catId => $group)
-                                <tr class="bg-slate-900/60">
-                                    <td colspan="5" class="px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                                        @if($catId && $catMap->has($catId))
-                                            {{ $catMap[$catId]->icon }} {{ $catMap[$catId]->name }}
-                                        @else
-                                            Uncategorised
-                                        @endif
+                            @php $catKey = (string)($catId ?? 'null'); @endphp
+                                <tr class="bg-slate-900/60 cursor-pointer hover:bg-slate-900/80 select-none"
+                                    @click="open['{{ $catKey }}'] = !open['{{ $catKey }}']">
+                                    <td colspan="5" class="px-4 py-2.5">
+                                        <div class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                            @if($catId && $catMap->has($catId))
+                                                {{ $catMap[$catId]->icon }} {{ $catMap[$catId]->name }}
+                                            @else
+                                                Uncategorised
+                                            @endif
+                                            <span class="text-slate-600 font-normal normal-case ml-0.5">({{ $group->count() }})</span>
+                                            <svg class="w-3.5 h-3.5 text-slate-600 ml-auto transition-transform duration-150"
+                                                 :class="open['{{ $catKey }}'] ? '' : '-rotate-90'"
+                                                 fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                        </div>
                                     </td>
                                 </tr>
                                 @foreach($group as $service)
-                                    <tr class="hover:bg-slate-700/50">
+                                    <tr class="hover:bg-slate-700/50" x-show="open['{{ $catKey }}']" x-cloak>
                                         <td class="px-4 py-3">
                                             <p class="text-white font-medium">{{ $service->name }}</p>
                                             @if($service->description)

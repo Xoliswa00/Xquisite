@@ -51,7 +51,9 @@
 
             {{-- Date picker --}}
             <div>
-                <label for="date" class="block text-sm font-medium text-slate-700 mb-2">Date</label>
+                <label for="date" class="block text-sm font-medium text-slate-700 mb-2">
+                    @if($isMultiDay) Start Date @else Date @endif
+                </label>
                 <input type="date"
                        id="date"
                        name="date"
@@ -62,6 +64,17 @@
                               focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
             </div>
 
+            @if($isMultiDay)
+            {{-- Multi-day: show calculated end date, no time picker --}}
+            <input type="hidden" name="scheduled_at" id="scheduled_at_hidden"
+                   value="{{ $appointment->scheduled_at->toDateString() }}T09:00:00">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 space-y-1">
+                <p class="text-sm text-slate-600">
+                    End date (approx): <strong id="end_date_display" class="text-slate-900">—</strong>
+                </p>
+                <p class="text-xs text-slate-400">{{ $totalDays }}-day engagement. The exact schedule will be confirmed by the team.</p>
+            </div>
+            @else
             {{-- Time slot picker --}}
             <div>
                 <label for="time_slot" class="block text-sm font-medium text-slate-700 mb-2">Available Times</label>
@@ -75,6 +88,7 @@
                 <p id="slots-loading" class="text-xs text-slate-400 mt-1 hidden">Loading available times…</p>
                 <p id="slots-empty"   class="text-xs text-red-500 mt-1 hidden">No slots available on this date.</p>
             </div>
+            @endif
 
             {{-- Notes --}}
             <div>
@@ -106,12 +120,34 @@
 </div>
 
 <script>
-    const dateInput    = document.getElementById('date');
-    const slotSelect   = document.getElementById('time_slot');
-    const loadingMsg   = document.getElementById('slots-loading');
-    const emptyMsg     = document.getElementById('slots-empty');
-    const serviceIds   = {!! $appointment->services->pluck('id')->toJson() !!};
-    const currentSlot  = "{{ old('scheduled_at', $appointment->scheduled_at->format('Y-m-d H:i')) }}";
+    const dateInput  = document.getElementById('date');
+    const serviceIds = {!! $appointment->services->pluck('id')->toJson() !!};
+
+    @if($isMultiDay)
+    // Multi-day: sync date → hidden scheduled_at, compute end date display
+    const scheduledHidden = document.getElementById('scheduled_at_hidden');
+    const endDateDisplay  = document.getElementById('end_date_display');
+    const totalDays = {{ $totalDays }};
+
+    function updateMultiDayFields() {
+        if (!dateInput.value) return;
+        scheduledHidden.value = dateInput.value + 'T09:00:00';
+        const d = new Date(dateInput.value + 'T00:00:00');
+        d.setDate(d.getDate() + totalDays - 1);
+        endDateDisplay.textContent = d.toLocaleDateString('en-ZA', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+    }
+
+    dateInput.addEventListener('change', updateMultiDayFields);
+    updateMultiDayFields();
+
+    @else
+    // Normal booking: load time slots
+    const slotSelect  = document.getElementById('time_slot');
+    const loadingMsg  = document.getElementById('slots-loading');
+    const emptyMsg    = document.getElementById('slots-empty');
+    const currentSlot = "{{ old('scheduled_at', $appointment->scheduled_at->format('Y-m-d H:i')) }}";
 
     async function fetchSlots(date) {
         slotSelect.innerHTML = '';
@@ -121,8 +157,8 @@
         try {
             const params = new URLSearchParams({ date });
             serviceIds.forEach(id => params.append('service_ids[]', id));
-            const res    = await fetch(`{{ route('book.slots', $slug) }}?${params}`);
-            const data   = await res.json();
+            const res  = await fetch(`{{ route('book.slots', $slug) }}?${params}`);
+            const data = await res.json();
 
             loadingMsg.classList.add('hidden');
 
@@ -146,7 +182,7 @@
         if (dateInput.value) fetchSlots(dateInput.value);
     });
 
-    // Load slots for the pre-selected date on page load
     if (dateInput.value) fetchSlots(dateInput.value);
+    @endif
 </script>
 @endsection

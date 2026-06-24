@@ -46,9 +46,9 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1">Duration (minutes) <span class="text-red-400">*</span></label>
-                            <input type="number" name="duration_minutes" value="{{ old('duration_minutes', 60) }}" min="5" max="2880" required
+                            <input type="number" name="duration_minutes" value="{{ old('duration_minutes', 60) }}" min="5" max="43200" required
                                    class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('duration_minutes') border-red-500 @enderror">
-                            <p class="text-xs text-slate-500 mt-0.5">480 = 8 hrs</p>
+                            <p class="text-xs text-slate-500 mt-0.5">e.g. 480 = 8 hrs · 7200 = 5 days</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1">Pricing Type</label>
