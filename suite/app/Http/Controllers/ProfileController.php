@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -68,6 +69,27 @@ class ProfileController extends Controller
         ]);
 
         return Redirect::route('profile.edit')->with('status', 'business-updated');
+    }
+
+    public function updateLogo(Request $request): RedirectResponse
+    {
+        $tenant = $request->user()->tenant;
+        abort_unless($tenant, 403);
+
+        $request->validate([
+            'logo' => 'required|image|mimes:jpeg,jpg,png,webp,svg|max:2048',
+        ]);
+
+        // Delete old logo if stored in our storage (not an external URL)
+        if ($tenant->logo_url && str_starts_with($tenant->logo_url, '/storage/')) {
+            $old = str_replace('/storage/', 'public/', $tenant->logo_url);
+            Storage::delete($old);
+        }
+
+        $path = $request->file('logo')->store("public/logos/{$tenant->id}");
+        $tenant->update(['logo_url' => Storage::url($path)]);
+
+        return Redirect::route('profile.edit')->with('status', 'logo-updated');
     }
 
     /**

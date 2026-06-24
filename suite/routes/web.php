@@ -329,6 +329,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/business', [ProfileController::class, 'updateBusiness'])->name('profile.business.update');
+    Route::post('/profile/logo', [ProfileController::class, 'updateLogo'])->name('profile.logo.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 

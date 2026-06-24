@@ -6,7 +6,7 @@
     <div class="max-w-5xl space-y-6">
 
         {{-- Flash messages --}}
-        @foreach(['profile-updated' => 'Account details saved.', 'business-updated' => 'Business profile saved.', 'password-updated' => 'Password updated.'] as $key => $msg)
+        @foreach(['profile-updated' => 'Account details saved.', 'business-updated' => 'Business profile saved.', 'password-updated' => 'Password updated.', 'logo-updated' => 'Business logo updated.'] as $key => $msg)
             @if(session('status') === $key)
                 <div class="flex items-center gap-3 rounded-xl bg-emerald-900/30 border border-emerald-700/50 px-4 py-3 text-sm text-emerald-400">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
@@ -108,9 +108,56 @@
             <form id="send-verification" method="POST" action="{{ route('verification.send') }}" class="hidden">@csrf</form>
         </div>
 
-        {{-- ── 2. BUSINESS DETAILS ────────────────────────────────────────── --}}
+        {{-- ── 2. BUSINESS LOGO ─────────────────────────────────────────── --}}
         @if($tenant)
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25"
+        <div id="logo" class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25">
+            <div class="border-b border-slate-800 px-8 py-6 bg-gradient-to-r from-slate-800/80 to-transparent">
+                <h2 class="text-xl font-semibold text-slate-100 tracking-tight">Business Logo</h2>
+                <p class="mt-1 text-sm text-slate-400">Displayed on your booking portal, invoices, and client-facing pages.</p>
+            </div>
+            <form method="POST" action="{{ route('profile.logo.update') }}" enctype="multipart/form-data" class="px-8 py-6">
+                @csrf
+                <div class="flex items-center gap-6">
+                    {{-- Current logo preview --}}
+                    <div class="shrink-0">
+                        @if($tenant->logo_url)
+                            <img src="{{ $tenant->logo_url }}" alt="Business logo"
+                                 class="w-20 h-20 rounded-xl object-cover border border-slate-700 bg-slate-800">
+                        @else
+                            <div class="w-20 h-20 rounded-xl border-2 border-dashed border-slate-700 bg-slate-800/60 flex items-center justify-center">
+                                <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
+                            </div>
+                        @endif
+                    </div>
+                    {{-- Upload input --}}
+                    <div class="flex-1 space-y-3" x-data="{ fileName: '' }">
+                        <label class="block text-sm font-medium text-slate-300">
+                            {{ $tenant->logo_url ? 'Replace logo' : 'Upload logo' }}
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-sm text-slate-300 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                Choose file
+                            </span>
+                            <span class="text-sm text-slate-400" x-text="fileName || 'No file selected'"></span>
+                            <input type="file" name="logo" accept="image/*" class="sr-only"
+                                   @change="fileName = $event.target.files[0]?.name || ''">
+                        </label>
+                        <p class="text-xs text-slate-500">JPEG, PNG, WebP or SVG · Max 2 MB</p>
+                        @error('logo')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+                    </div>
+                    <button type="submit"
+                            class="shrink-0 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#0078D4] hover:bg-[#0065B8] text-white transition">
+                        Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+        @endif
+
+        {{-- ── 3. BUSINESS DETAILS ────────────────────────────────────────── --}}
+        @if($tenant)
+        <div id="business-details" class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25"
              x-data="businessForm(
                  '{{ old('business_name', $tenant->name ?? '') }}',
                  '{{ old('slug', $tenant->slug ?? '') }}'
@@ -241,7 +288,7 @@
         </div>
 
         {{-- ── 3. BANKING DETAILS ─────────────────────────────────────────── --}}
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25"
+        <div id="banking" class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25"
              x-data="bankForm('{{ old('bank_name', $tenant->bank_name ?? '') }}')">
             <div class="border-b border-slate-800 px-8 py-6 bg-gradient-to-r from-slate-800/80 to-transparent">
                 <h2 class="text-xl font-semibold text-slate-100 tracking-tight">Banking Details</h2>

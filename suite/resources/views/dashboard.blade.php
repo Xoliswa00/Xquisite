@@ -80,6 +80,44 @@
             </div>
         @endif
 
+        {{-- Profile completeness --}}
+        @if(!$profileComplete)
+            <div class="bg-slate-800 rounded-xl border border-amber-700/30 shadow-lg shadow-amber-950/20 overflow-hidden">
+                <div class="px-5 py-4 border-b border-amber-700/20 bg-gradient-to-r from-amber-500/8 to-transparent flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center shrink-0">
+                            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-amber-300">Complete your profile</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">Clients and payment flows need this information</p>
+                        </div>
+                    </div>
+                    <span class="text-xs text-amber-400 font-semibold bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 shrink-0">
+                        {{ collect($profileChecks)->filter(fn($c) => $c['filled'])->count() }}/{{ count($profileChecks) }} done
+                    </span>
+                </div>
+                <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    @php
+                        $profileAnchors = ['phone' => 'business-details', 'logo' => 'logo', 'address' => 'business-details', 'banking' => 'banking'];
+                    @endphp
+                    @foreach($profileChecks as $check)
+                        <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg {{ $check['filled'] ? 'opacity-45' : 'bg-slate-700/40' }}">
+                            <div class="w-5 h-5 rounded-full shrink-0 flex items-center justify-center {{ $check['filled'] ? 'bg-emerald-600' : 'border-2 border-amber-700/60' }}">
+                                @if($check['filled'])
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                @endif
+                            </div>
+                            <span class="text-sm {{ $check['filled'] ? 'line-through text-slate-500' : 'text-slate-300' }} flex-1">{{ $check['label'] }}</span>
+                            @if(!$check['filled'])
+                                <a href="{{ route('profile.edit') }}#{{ $profileAnchors[$check['key']] }}" class="text-xs text-amber-400 hover:text-amber-300 shrink-0">Fix →</a>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         {{-- ── Revenue anchor ── --}}
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {{-- Collected this month --}}
