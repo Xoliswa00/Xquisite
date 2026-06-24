@@ -25,7 +25,8 @@
 
                 <div>
                     <x-input-label value="Description" />
-                    <textarea name="description" rows="2" class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-[#0078D4] focus:border-[#0078D4]">{{ old('description', $category->description ?? '') }}</textarea>
+                    <textarea name="description" rows="2" class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-[#0078D4] focus:border-[#0078D4] @error('description') border-red-500 @enderror">{{ old('description', $category->description ?? '') }}</textarea>
+                    <x-input-error :messages="$errors->get('description')" />
                 </div>
 
                 {{-- Color grid --}}
@@ -42,11 +43,13 @@
                             </label>
                         @endforeach
                     </div>
+                    <x-input-error :messages="$errors->get('color')" class="mt-1" />
                 </div>
 
                 <div>
                     <x-input-label value="Sort Order" />
                     <x-text-input name="sort_order" type="number" min="0" class="mt-1 w-full" value="{{ old('sort_order', $category->sort_order ?? 0) }}" />
+                    <x-input-error :messages="$errors->get('sort_order')" />
                 </div>
 
                 <label class="flex items-center gap-2 cursor-pointer">

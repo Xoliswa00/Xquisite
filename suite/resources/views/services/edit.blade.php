@@ -15,33 +15,56 @@
                 @csrf
                 @method('PATCH')
 
+                <x-form-errors />
+
+                {{-- Category --}}
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Category</label>
+                    <select name="service_category_id"
+                            class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('service_category_id') border-red-500 @enderror">
+                        <option value="">— No category —</option>
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}" {{ old('service_category_id', $service->service_category_id) == $cat->id ? 'selected' : '' }}>
+                                {{ $cat->icon ? $cat->icon . ' ' : '' }}{{ $cat->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('service_category_id')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Name --}}
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Service Name <span class="text-red-400">*</span></label>
                     <input type="text" name="name" value="{{ old('name', $service->name) }}" required
-                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('name') border-red-500 @enderror">
+                    @error('name')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                 </div>
 
+                {{-- Description --}}
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Description</label>
                     <textarea name="description" rows="3"
-                              class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">{{ old('description', $service->description) }}</textarea>
+                              class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('description') border-red-500 @enderror">{{ old('description', $service->description) }}</textarea>
+                    @error('description')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Duration (minutes)</label>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Duration (minutes) <span class="text-red-400">*</span></label>
                         <input type="number" name="duration_minutes" value="{{ old('duration_minutes', $service->duration_minutes) }}" min="5" max="2880" required
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('duration_minutes') border-red-500 @enderror">
+                        @error('duration_minutes')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                         <p class="text-xs text-slate-500 mt-0.5">For full-day events use 480+</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Pricing Type</label>
                         <select name="pricing_type" id="edit_pricing_type"
-                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('pricing_type') border-red-500 @enderror">
                             <option value="flat"     {{ old('pricing_type', $service->pricing_type) === 'flat'     ? 'selected' : '' }}>Flat rate</option>
                             <option value="per_head" {{ old('pricing_type', $service->pricing_type) === 'per_head' ? 'selected' : '' }}>Per person / per head</option>
                             <option value="per_unit" {{ old('pricing_type', $service->pricing_type) === 'per_unit' ? 'selected' : '' }}>Per unit</option>
                         </select>
+                        @error('pricing_type')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
@@ -50,18 +73,21 @@
                         <label class="block text-sm font-medium text-slate-300 mb-1">Flat Price (R)</label>
                         <input type="number" name="price" id="selling_price" value="{{ old('price', $service->price) }}" min="0" step="0.01"
                                @input="sellingPrice = $event.target.valueAsNumber || 0"
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('price') border-red-500 @enderror">
+                        @error('price')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div id="edit-unit-price" style="display:none">
                         <label class="block text-sm font-medium text-slate-300 mb-1">Price Per Person / Unit (R)</label>
                         <input type="number" name="price_per_unit" value="{{ old('price_per_unit', $service->price_per_unit) }}" min="0" step="0.01"
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('price_per_unit') border-red-500 @enderror">
+                        @error('price_per_unit')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div id="edit-unit-label" style="display:none">
                         <label class="block text-sm font-medium text-slate-300 mb-1">Unit Label</label>
                         <input type="text" name="unit_label" value="{{ old('unit_label', $service->unit_label) }}"
                                placeholder="per pax / per table"
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('unit_label') border-red-500 @enderror">
+                        @error('unit_label')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">
@@ -71,7 +97,8 @@
                         <input type="number" name="cost_price" id="cost_price_field" value="{{ old('cost_price', $service->cost_price) }}" min="0" step="0.01"
                                @input="costPrice = $event.target.valueAsNumber || 0"
                                placeholder="0.00"
-                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                               class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('cost_price') border-red-500 @enderror">
+                        @error('cost_price')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                         <p class="mt-1 text-xs"
                            x-show="costPrice > 0 && sellingPrice > 0"
                            :class="sellingPrice >= costPrice ? 'text-emerald-400' : 'text-red-400'">
@@ -149,11 +176,12 @@
                             </div>
                         </template>
                     </div>
+                    @error('bundles')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                 </div>
                 @endif
 
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
-                    <button type="submit" class="w-full sm:w-auto bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-6 py-2 rounded-lg">Save Changes</button>
+                    <button type="submit" class="w-full sm:w-auto bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-6 py-2 rounded-lg">Save Changes</button>
                     <a href="{{ route('services.index') }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>
                 </div>
             </form>

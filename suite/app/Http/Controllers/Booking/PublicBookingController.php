@@ -33,7 +33,7 @@ class PublicBookingController extends Controller
         $services = Service::where('is_active', true)
             ->whereHas('staff', fn($q) => $q->where('is_active', true))
             ->with('category')
-            ->orderBy('name')
+            ->orderBy('created_at')
             ->get();
 
         $bookableIds  = $services->pluck('id');
@@ -354,7 +354,7 @@ class PublicBookingController extends Controller
 
         $services = Service::where('is_active', true)
             ->whereHas('staff', fn($q) => $q->where('is_active', true))
-            ->orderBy('name')
+            ->orderBy('created_at')
             ->get();
 
         return view('booking.edit', compact('tenant', 'appointment', 'slug', 'services'));

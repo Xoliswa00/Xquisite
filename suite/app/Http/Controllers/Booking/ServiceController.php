@@ -18,7 +18,7 @@ class ServiceController extends Controller
         $tenantId = auth()->user()->tenant_id;
 
         $allowedSorts = ['name', 'price', 'duration_minutes', 'created_at'];
-        $sort      = in_array($request->sort, $allowedSorts) ? $request->sort : 'name';
+        $sort      = in_array($request->sort, $allowedSorts) ? $request->sort : 'created_at';
         $direction = $request->direction === 'desc' ? 'desc' : 'asc';
 
         $query = Service::where('tenant_id', $tenantId)->with('category')
@@ -88,10 +88,13 @@ class ServiceController extends Controller
 
     public function edit(Service $service)
     {
+        $tenantId     = auth()->user()->tenant_id;
         $hasInventory = auth()->user()->tenant?->hasModule('pos');
         $products     = $hasInventory ? $this->productList() : collect();
+        $categories   = ServiceCategory::where('tenant_id', $tenantId)
+            ->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
         $service->load('serviceProducts');
-        return view('services.edit', compact('service', 'products', 'hasInventory'));
+        return view('services.edit', compact('service', 'products', 'categories', 'hasInventory'));
     }
 
     public function update(Request $request, Service $service)
