@@ -25,8 +25,14 @@
         </div>
 
         <!-- Assign staff form -->
-        <div class="bg-slate-800 rounded-xl p-5">
-            <p class="text-sm font-medium text-slate-300 mb-3">Assign Staff Member</p>
+        <div class="bg-slate-800 rounded-xl overflow-hidden shadow-lg shadow-orange-950/30 border border-orange-800/20">
+            <div class="px-5 py-3 border-b border-orange-800/20 bg-gradient-to-r from-orange-500/8 to-transparent flex items-center gap-2">
+                <div class="w-5 h-5 rounded-md bg-orange-500/20 border border-orange-500/25 flex items-center justify-center">
+                    <svg class="w-3 h-3 text-orange-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+                </div>
+                <p class="text-sm font-semibold text-white">Assign Staff Member</p>
+            </div>
+            <div class="p-5">
             <form method="POST" action="{{ route('appointments.assign', $appointment) }}" class="flex gap-3 flex-wrap">
                 @csrf
                 @if($errors->has('staff_id'))
@@ -41,7 +47,7 @@
                         ->get();
                 @endphp
                 <select name="staff_id" required
-                        class="bg-slate-700 border-slate-600 text-slate-200 rounded-lg text-sm flex-1">
+                        class="bg-slate-700 border border-slate-600 text-slate-200 rounded-lg text-sm flex-1">
                     <option value="">Select staff member…</option>
                     @foreach($assignableStaff as $member)
                         <option value="{{ $member->id }}">{{ $member->name }}{{ $member->role ? ' — ' . $member->role : '' }}</option>
@@ -52,11 +58,12 @@
                     Assign &amp; Confirm
                 </button>
             </form>
+            </div>{{-- /p-5 --}}
         </div>
         @endif
 
         <!-- Detail card -->
-        <div class="bg-slate-800 rounded-xl p-6 space-y-4">
+        <div class="bg-slate-800 rounded-xl overflow-hidden shadow-xl shadow-black/30 border border-slate-700/50">
             @php
                 $colors = [
                     'pending'   => 'yellow',
@@ -69,7 +76,8 @@
                 ];
                 $c = $colors[$appointment->status] ?? 'slate';
             @endphp
-            <div class="flex items-center justify-between gap-2 flex-wrap">
+            {{-- Card header band --}}
+            <div class="px-6 py-4 border-b border-slate-700 bg-gradient-to-r from-{{ $c }}-900/20 to-transparent flex items-center justify-between gap-2 flex-wrap">
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-{{ $c }}-900/50 text-{{ $c }}-400 border border-{{ $c }}-800">
                         {{ ucfirst(str_replace('_', ' ', $appointment->status)) }}
@@ -88,8 +96,9 @@
                 </div>
                 <a href="{{ route('appointments.edit', $appointment) }}"
                    class="shrink-0 text-sm bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg">Edit</a>
-            </div>
+            </div>{{-- /header band --}}
 
+            <div class="p-6 space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
                     <p class="text-slate-400">Customer</p>
@@ -350,6 +359,7 @@
                 </div>
             </div>
             @endif
+            </div>{{-- /p-6 body --}}
         </div>
 
         {{-- Timing conflict warning --}}

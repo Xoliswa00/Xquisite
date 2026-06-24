@@ -21,10 +21,10 @@
             </a>
         </div>
 
-        {{-- Trial banner — only shown when on trial AND no modules have been activated yet --}}
+        {{-- Trial banner --}}
         @if(Auth::user()->tenant?->isOnTrial())
             @php $daysLeft = (int) now()->diffInDays(Auth::user()->tenant->trial_ends_at, false); @endphp
-            <div class="flex items-center justify-between px-5 py-3 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-sm">
+            <div class="flex items-center justify-between px-5 py-3 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-sm shadow-md shadow-[#D4AF37]/5">
                 <div class="flex items-center gap-2">
                     <svg class="w-4 h-4 text-[#D4AF37] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span class="text-[#D4AF37]">
@@ -43,15 +43,15 @@
 
         {{-- Onboarding checklist --}}
         @if(!$onboardingComplete)
-            <div class="bg-slate-800 rounded-xl p-5 border border-[#0078D4]/20">
-                <div class="flex items-start justify-between mb-4">
+            <div class="bg-slate-800 rounded-xl border border-[#0078D4]/20 shadow-lg shadow-[#0078D4]/8 overflow-hidden">
+                <div class="px-5 py-4 border-b border-[#0078D4]/15 bg-gradient-to-r from-[#0078D4]/10 to-transparent flex items-center justify-between">
                     <div>
                         <h3 class="text-sm font-semibold text-[#D4AF37]">Get started with Xquisite</h3>
                         <p class="text-xs text-slate-400 mt-0.5">Complete these steps to get your business running</p>
                     </div>
-                    <span class="text-xs text-[#0078D4] font-medium">{{ collect($onboarding)->filter()->count() }}/{{ count($onboarding) }} done</span>
+                    <span class="text-xs text-[#0078D4] font-semibold bg-[#0078D4]/10 px-2.5 py-1 rounded-full border border-[#0078D4]/20">{{ collect($onboarding)->filter()->count() }}/{{ count($onboarding) }} done</span>
                 </div>
-                <div class="space-y-2">
+                <div class="p-5 space-y-2">
                     @php
                         $steps = [
                             ['has_service',     'Add your first service',    'services.create'],
@@ -80,97 +80,137 @@
             </div>
         @endif
 
-        {{-- ── Revenue anchor — the number that matters most ── --}}
+        {{-- ── Revenue anchor ── --}}
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {{-- Collected this month — hero card --}}
-            <div class="bg-slate-800 rounded-xl p-5 border border-emerald-800/40 relative overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-emerald-900/20 to-transparent pointer-events-none"></div>
-                <div class="relative">
-                    <p class="text-xs text-slate-400 uppercase tracking-wide tracking-wider">Revenue this month</p>
-                    <p class="stat-number text-4xl font-bold text-emerald-400 mt-2 leading-none">R{{ number_format($completedRevenue, 2) }}</p>
+            {{-- Collected this month --}}
+            <div class="bg-slate-800 rounded-xl border border-emerald-800/40 relative overflow-hidden shadow-lg shadow-emerald-950/40">
+                <div class="absolute inset-0 bg-gradient-to-br from-emerald-900/25 to-transparent pointer-events-none"></div>
+                <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/60 to-transparent"></div>
+                <div class="relative p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg>
+                        </div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider">Revenue this month</p>
+                    </div>
+                    <p class="stat-number text-4xl font-bold text-emerald-400 leading-none">R{{ number_format($completedRevenue, 2) }}</p>
                     <p class="text-xs text-slate-500 mt-2">{{ $completedCount }} completed {{ Str::plural('appointment', $completedCount) }}</p>
                 </div>
             </div>
+
             {{-- Outstanding --}}
-            <div class="{{ $awaitingCount > 0 ? 'bg-amber-900/25 border-amber-700/50' : 'bg-slate-800 border-slate-800' }} rounded-xl p-5 border">
-                <p class="text-xs {{ $awaitingCount > 0 ? 'text-amber-400' : 'text-slate-400' }} uppercase tracking-wide tracking-wider">Outstanding</p>
-                <p class="stat-number text-4xl font-bold {{ $awaitingCount > 0 ? 'text-amber-300' : 'text-slate-600' }} mt-2 leading-none">R{{ number_format($awaitingTotal, 2) }}</p>
-                <p class="text-xs text-slate-500 mt-2">
-                    {{ $awaitingCount }} {{ Str::plural('appointment', $awaitingCount) }} awaiting payment
-                    @if($awaitingCount > 0)
-                        · <a href="{{ route('appointments.index', ['status' => 'awaiting_payment']) }}" class="text-amber-400 hover:text-amber-300">View →</a>
-                    @endif
-                </p>
+            <div class="{{ $awaitingCount > 0 ? 'bg-amber-900/25 border-amber-700/50 shadow-amber-950/40' : 'bg-slate-800 border-slate-700/50 shadow-black/20' }} rounded-xl border relative overflow-hidden shadow-lg">
+                <div class="absolute top-0 left-0 right-0 h-0.5 {{ $awaitingCount > 0 ? 'bg-gradient-to-r from-amber-500/60 to-transparent' : 'bg-gradient-to-r from-slate-600/40 to-transparent' }}"></div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-6 h-6 rounded-lg {{ $awaitingCount > 0 ? 'bg-amber-500/20 border-amber-500/30' : 'bg-slate-700 border-slate-600' }} border flex items-center justify-center">
+                            <svg class="w-3.5 h-3.5 {{ $awaitingCount > 0 ? 'text-amber-400' : 'text-slate-500' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                        </div>
+                        <p class="text-xs {{ $awaitingCount > 0 ? 'text-amber-400' : 'text-slate-400' }} uppercase tracking-wider">Outstanding</p>
+                    </div>
+                    <p class="stat-number text-4xl font-bold {{ $awaitingCount > 0 ? 'text-amber-300' : 'text-slate-600' }} leading-none">R{{ number_format($awaitingTotal, 2) }}</p>
+                    <p class="text-xs text-slate-500 mt-2">
+                        {{ $awaitingCount }} {{ Str::plural('appointment', $awaitingCount) }} awaiting payment
+                        @if($awaitingCount > 0)
+                            · <a href="{{ route('appointments.index', ['status' => 'awaiting_payment']) }}" class="text-amber-400 hover:text-amber-300">View →</a>
+                        @endif
+                    </p>
+                </div>
             </div>
+
             {{-- Total billed --}}
-            <div class="bg-slate-800 rounded-xl p-5 border border-slate-800">
-                <p class="text-xs text-slate-400 uppercase tracking-wide tracking-wider">Total billed</p>
-                <p class="stat-number text-4xl font-bold text-white mt-2 leading-none">R{{ number_format($completedRevenue + $awaitingTotal, 2) }}</p>
-                <p class="text-xs text-slate-500 mt-2">
-                    <span class="text-emerald-500">R{{ number_format($completedRevenue, 2) }}</span> collected
-                    @if($awaitingTotal > 0)
-                        · <span class="text-amber-400">R{{ number_format($awaitingTotal, 2) }}</span> pending
-                    @endif
-                </p>
+            <div class="bg-slate-800 rounded-xl border border-slate-700/50 relative overflow-hidden shadow-lg shadow-black/20">
+                <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#0078D4]/40 to-transparent"></div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-6 h-6 rounded-lg bg-[#0078D4]/15 border border-[#0078D4]/20 flex items-center justify-center">
+                            <svg class="w-3.5 h-3.5 text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
+                        </div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wider">Total billed</p>
+                    </div>
+                    <p class="stat-number text-4xl font-bold text-white leading-none">R{{ number_format($completedRevenue + $awaitingTotal, 2) }}</p>
+                    <p class="text-xs text-slate-500 mt-2">
+                        <span class="text-emerald-500">R{{ number_format($completedRevenue, 2) }}</span> collected
+                        @if($awaitingTotal > 0)
+                            · <span class="text-amber-400">R{{ number_format($awaitingTotal, 2) }}</span> pending
+                        @endif
+                    </p>
+                </div>
             </div>
         </div>
 
         {{-- ── Operational stats ── --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <a href="{{ route('appointments.index', ['date' => today()->toDateString()]) }}"
-               class="bg-slate-800 hover:bg-slate-700/70 rounded-xl p-4 transition-colors group">
+               class="bg-slate-800 hover:bg-slate-700/70 rounded-xl p-4 transition-all shadow-md shadow-black/20 border border-slate-700/50 border-t-2 border-t-[#0078D4]/40 group">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-xs text-slate-400 uppercase tracking-wider">Today</p>
-                    <svg class="w-4 h-4 text-slate-600 group-hover:text-[#0078D4] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <div class="w-7 h-7 rounded-lg bg-[#0078D4]/10 border border-[#0078D4]/15 flex items-center justify-center group-hover:bg-[#0078D4]/20 transition-colors">
+                        <svg class="w-3.5 h-3.5 text-[#0078D4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
                 </div>
                 <p class="stat-number text-3xl font-bold text-white">{{ $todayCount }}</p>
                 <p class="text-xs text-slate-500 mt-1">{{ Str::plural('booking', $todayCount) }}</p>
             </a>
+
             <a href="{{ route('customers.index') }}"
-               class="bg-slate-800 hover:bg-slate-700/70 rounded-xl p-4 transition-colors group">
+               class="bg-slate-800 hover:bg-slate-700/70 rounded-xl p-4 transition-all shadow-md shadow-black/20 border border-slate-700/50 border-t-2 border-t-[#D4AF37]/40 group">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-xs text-slate-400 uppercase tracking-wider">Customers</p>
-                    <svg class="w-4 h-4 text-slate-600 group-hover:text-[#0078D4] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4h-3m-4 6H7a4 4 0 01-4-4v-2a4 4 0 014-4h1m4 0a4 4 0 100-8 4 4 0 000 8z"/></svg>
+                    <div class="w-7 h-7 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/15 flex items-center justify-center group-hover:bg-[#D4AF37]/20 transition-colors">
+                        <svg class="w-3.5 h-3.5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4h-3m-4 6H7a4 4 0 01-4-4v-2a4 4 0 014-4h1m4 0a4 4 0 100-8 4 4 0 000 8z"/></svg>
+                    </div>
                 </div>
                 <p class="stat-number text-3xl font-bold text-white">{{ $totalCustomers }}</p>
                 <p class="text-xs text-slate-500 mt-1">total</p>
             </a>
+
             <a href="{{ route('staff.index') }}"
-               class="bg-slate-800 hover:bg-slate-700/70 rounded-xl p-4 transition-colors group">
+               class="bg-slate-800 hover:bg-slate-700/70 rounded-xl p-4 transition-all shadow-md shadow-black/20 border border-slate-700/50 border-t-2 border-t-emerald-500/40 group">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-xs text-slate-400 uppercase tracking-wider">Staff</p>
-                    <svg class="w-4 h-4 text-slate-600 group-hover:text-[#0078D4] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    </div>
                 </div>
                 <p class="stat-number text-3xl font-bold text-white">{{ $activeStaff }}</p>
                 <p class="text-xs text-slate-500 mt-1">active</p>
             </a>
+
             @if($hasPos)
             <a href="{{ route('stock.reorder-alerts') }}"
-               class="{{ $reorderCount > 0 ? 'bg-amber-900/30 border border-amber-700/50' : 'bg-slate-800' }} hover:bg-slate-700/70 rounded-xl p-4 transition-colors group">
+               class="{{ $reorderCount > 0 ? 'bg-amber-900/30 border-amber-700/50 border-t-amber-500/60' : 'bg-slate-800 border-slate-700/50 border-t-slate-600/40' }} hover:bg-slate-700/70 rounded-xl p-4 transition-all shadow-md shadow-black/20 border border-t-2 group">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-xs {{ $reorderCount > 0 ? 'text-amber-400' : 'text-slate-400' }} uppercase tracking-wider">Reorder</p>
-                    <svg class="w-4 h-4 {{ $reorderCount > 0 ? 'text-amber-500' : 'text-slate-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <div class="w-7 h-7 rounded-lg {{ $reorderCount > 0 ? 'bg-amber-500/20 border-amber-500/30' : 'bg-slate-700 border-slate-600' }} border flex items-center justify-center">
+                        <svg class="w-3.5 h-3.5 {{ $reorderCount > 0 ? 'text-amber-400' : 'text-slate-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
                 </div>
                 <p class="stat-number text-3xl font-bold {{ $reorderCount > 0 ? 'text-amber-300' : 'text-slate-600' }}">{{ $reorderCount }}</p>
                 <p class="text-xs text-slate-500 mt-1">{{ $reorderCount > 0 ? 'need restocking' : 'all stocked' }}</p>
             </a>
             @else
             <a href="{{ route('services.index') }}"
-               class="bg-slate-800 hover:bg-slate-700/70 rounded-xl p-4 transition-colors group">
+               class="bg-slate-800 hover:bg-slate-700/70 rounded-xl p-4 transition-all shadow-md shadow-black/20 border border-slate-700/50 border-t-2 border-t-purple-500/40 group">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-xs text-slate-400 uppercase tracking-wider">Services</p>
-                    <svg class="w-4 h-4 text-slate-600 group-hover:text-[#0078D4] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    <div class="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/15 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                        <svg class="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </div>
                 </div>
                 <p class="stat-number text-3xl font-bold text-white">{{ $activeServices }}</p>
                 <p class="text-xs text-slate-500 mt-1">active</p>
             </a>
             @endif
+
             @can('manage-tenants')
                 <a href="{{ route('admin.module-requests.index') }}"
-                   class="{{ $pendingModuleRequests > 0 ? 'bg-[#0078D4]/10 border border-[#0078D4]/30' : 'bg-slate-800' }} hover:bg-slate-700/70 rounded-xl p-4 transition-colors group">
+                   class="{{ $pendingModuleRequests > 0 ? 'bg-[#0078D4]/10 border-[#0078D4]/30 border-t-[#0078D4]/60' : 'bg-slate-800 border-slate-700/50 border-t-slate-600/40' }} hover:bg-slate-700/70 rounded-xl p-4 transition-all shadow-md shadow-black/20 border border-t-2 group">
                     <div class="flex items-center justify-between mb-3">
                         <p class="text-xs text-slate-400 uppercase tracking-wider">Requests</p>
-                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        <div class="w-7 h-7 rounded-lg bg-[#0078D4]/10 border border-[#0078D4]/15 flex items-center justify-center">
+                            <svg class="w-3.5 h-3.5 text-[#0078D4]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        </div>
                     </div>
                     <p class="stat-number text-3xl font-bold {{ $pendingModuleRequests > 0 ? 'text-[#0078D4]' : 'text-white' }}">{{ $pendingModuleRequests }}</p>
                     <p class="text-xs text-slate-500 mt-1">pending</p>
@@ -180,15 +220,20 @@
 
         <div class="grid lg:grid-cols-2 gap-6">
 
-            <!-- Today's schedule -->
-            <div class="bg-slate-800 rounded-xl overflow-hidden">
-                <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
-                    <h3 class="text-sm font-medium text-slate-300">Today's Schedule</h3>
-                    <a href="{{ route('appointments.create') }}" class="text-xs text-[#0078D4] hover:text-[#0065B8]">+ New</a>
+            {{-- Today's schedule --}}
+            <div class="bg-slate-800 rounded-xl overflow-hidden shadow-xl shadow-black/25 border border-slate-700/50">
+                <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between bg-gradient-to-r from-[#0078D4]/10 to-transparent">
+                    <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 rounded-md bg-[#0078D4]/20 border border-[#0078D4]/25 flex items-center justify-center">
+                            <svg class="w-3 h-3 text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-white">Today's Schedule</h3>
+                    </div>
+                    <a href="{{ route('appointments.create') }}" class="text-xs text-[#0078D4] hover:text-[#0065B8] font-medium">+ New</a>
                 </div>
                 @forelse($upcomingToday as $appt)
-                    <div class="px-4 py-3 border-b border-slate-700/50 flex items-center gap-3">
-                        <div class="text-xs text-slate-400 w-12 shrink-0">{{ $appt->scheduled_at->format('H:i') }}</div>
+                    <div class="px-4 py-3 border-b border-slate-700/50 flex items-center gap-3 hover:bg-slate-700/30 transition-colors">
+                        <div class="text-xs text-slate-400 w-12 shrink-0 font-mono">{{ $appt->scheduled_at->format('H:i') }}</div>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm text-white font-medium truncate">{{ $appt->customer->name }}</p>
                             <p class="text-xs text-slate-400 truncate">{{ $appt->services->pluck('name')->join(', ') ?: '—' }} · {{ $appt->staff?->name ?? 'Unassigned' }}</p>
@@ -203,15 +248,20 @@
                 @endforelse
             </div>
 
-            <!-- Recent activity -->
-            <div class="bg-slate-800 rounded-xl overflow-hidden">
-                <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
-                    <h3 class="text-sm font-medium text-slate-300">Recent Bookings</h3>
-                    <a href="{{ route('appointments.index') }}" class="text-xs text-[#0078D4] hover:text-[#0065B8]">View all →</a>
+            {{-- Recent bookings --}}
+            <div class="bg-slate-800 rounded-xl overflow-hidden shadow-xl shadow-black/25 border border-slate-700/50">
+                <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between bg-gradient-to-r from-[#D4AF37]/8 to-transparent">
+                    <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 rounded-md bg-[#D4AF37]/15 border border-[#D4AF37]/20 flex items-center justify-center">
+                            <svg class="w-3 h-3 text-[#D4AF37]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-white">Recent Bookings</h3>
+                    </div>
+                    <a href="{{ route('appointments.index') }}" class="text-xs text-[#0078D4] hover:text-[#0065B8] font-medium">View all →</a>
                 </div>
                 @forelse($recentAppointments as $appt)
                     <a href="{{ route('appointments.show', $appt) }}"
-                       class="px-4 py-3 border-b border-slate-700/50 flex items-center gap-3 hover:bg-slate-700/50 block">
+                       class="px-4 py-3 border-b border-slate-700/50 flex items-center gap-3 hover:bg-slate-700/30 transition-colors block">
                         <div class="flex-1 min-w-0">
                             <p class="text-sm text-white truncate">{{ $appt->customer->name }}</p>
                             <p class="text-xs text-slate-400 truncate">{{ $appt->services->pluck('name')->join(', ') ?: '—' }} · {{ $appt->scheduled_at->format('d M, H:i') }}</p>
@@ -227,6 +277,7 @@
                     </div>
                 @endforelse
             </div>
+
         </div>
 
     </div>

@@ -16,8 +16,8 @@
         @endforeach
 
         {{-- ── 1. YOUR ACCOUNT ─────────────────────────────────────────── --}}
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-            <div class="border-b border-slate-800 px-8 py-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25">
+            <div class="border-b border-slate-800 px-8 py-6 bg-gradient-to-r from-slate-800/80 to-transparent">
                 <h2 class="text-xl font-semibold text-slate-100 tracking-tight">Your Account</h2>
                 <p class="mt-1 text-sm text-slate-400">Your personal login details for this platform.</p>
             </div>
@@ -110,12 +110,12 @@
 
         {{-- ── 2. BUSINESS DETAILS ────────────────────────────────────────── --}}
         @if($tenant)
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden"
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25"
              x-data="businessForm(
                  '{{ old('business_name', $tenant->name ?? '') }}',
                  '{{ old('slug', $tenant->slug ?? '') }}'
              )">
-            <div class="border-b border-slate-800 px-8 py-6">
+            <div class="border-b border-slate-800 px-8 py-6 bg-gradient-to-r from-slate-800/80 to-transparent">
                 <h2 class="text-xl font-semibold text-slate-100 tracking-tight">Business Details</h2>
                 <p class="mt-1 text-sm text-slate-400">What clients see on your booking portal and invoices.</p>
             </div>
@@ -241,9 +241,9 @@
         </div>
 
         {{-- ── 3. BANKING DETAILS ─────────────────────────────────────────── --}}
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden"
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25"
              x-data="bankForm('{{ old('bank_name', $tenant->bank_name ?? '') }}')">
-            <div class="border-b border-slate-800 px-8 py-6">
+            <div class="border-b border-slate-800 px-8 py-6 bg-gradient-to-r from-slate-800/80 to-transparent">
                 <h2 class="text-xl font-semibold text-slate-100 tracking-tight">Banking Details</h2>
                 <p class="mt-1 text-sm text-slate-400">Used on invoices and proof-of-payment requests sent to clients.</p>
             </div>
@@ -339,8 +339,8 @@
         @endif
 
         {{-- ── 4. CHANGE PASSWORD ──────────────────────────────────────────── --}}
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-            <div class="border-b border-slate-800 px-8 py-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25">
+            <div class="border-b border-slate-800 px-8 py-6 bg-gradient-to-r from-slate-800/80 to-transparent">
                 <h2 class="text-xl font-semibold text-slate-100 tracking-tight">Change Password</h2>
                 <p class="mt-1 text-sm text-slate-400">Use a strong password you don't use elsewhere.</p>
             </div>
@@ -398,9 +398,9 @@
         </div>
 
         {{-- ── 5. DANGER ZONE ──────────────────────────────────────────────── --}}
-        <div class="bg-red-950/20 border border-red-900/40 rounded-2xl overflow-hidden"
+        <div class="bg-red-950/20 border border-red-900/40 rounded-2xl overflow-hidden shadow-xl shadow-red-950/20"
              x-data="{ open: false, password: '' }">
-            <div class="border-b border-red-900/30 px-8 py-6">
+            <div class="border-b border-red-900/30 px-8 py-6 bg-gradient-to-r from-red-900/20 to-transparent">
                 <h2 class="text-xl font-semibold text-red-400 tracking-tight">Danger Zone</h2>
                 <p class="mt-1 text-sm text-slate-400">Permanent actions that cannot be undone.</p>
             </div>
