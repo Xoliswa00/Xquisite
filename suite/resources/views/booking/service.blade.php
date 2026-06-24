@@ -89,8 +89,9 @@
         <p class="text-xs text-slate-400 mt-1">Click the calendar icon or type your date to see available times.</p>
     </div>
 
-    {{-- Step 2: time --}}
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4" x-show="selectedDate" x-cloak>
+    {{-- Step 2: time (normal bookings) --}}
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4"
+         x-show="selectedDate && !isMultiDay" x-cloak>
         <h2 class="text-base font-semibold text-slate-900">2. Choose a time</h2>
 
         <p x-show="loading" class="text-sm text-slate-400 py-4">Checking availability&hellip;</p>
@@ -112,6 +113,28 @@
                 </button>
             </template>
         </div>
+    </div>
+
+    {{-- Step 2: booking period (multi-day services) --}}
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4"
+         x-show="selectedDate && isMultiDay" x-cloak>
+        <h2 class="text-base font-semibold text-slate-900">2. Your booking period</h2>
+        <div class="flex items-center gap-4 flex-wrap">
+            <div>
+                <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Start date</p>
+                <p class="font-semibold text-slate-900" x-text="formatDate(selectedDate)"></p>
+            </div>
+            <svg class="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+            <div>
+                <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-0.5">End date (approx)</p>
+                <p class="font-semibold text-slate-900" x-text="endDate"></p>
+            </div>
+        </div>
+        <p class="text-xs text-slate-400 bg-slate-50 rounded-xl px-4 py-2.5">
+            This is a {{ $totalDays }}-day engagement. The exact schedule will be confirmed with you by the team after booking.
+        </p>
     </div>
 
     {{-- Proceed --}}
@@ -145,15 +168,25 @@ function slotPicker() {
         selectedSlot: null,
         slots: [],
         loading: false,
+        isMultiDay: {{ $isMultiDay ? 'true' : 'false' }},
+        totalDays: {{ $totalDays }},
+        endDate: '',
         minDate: new Date().toISOString().split('T')[0],
 
         async loadSlots() {
             if (!this.selectedDate) return;
+
+            if (this.isMultiDay) {
+                // For multi-day: no time slots needed — just record start-of-day and show range
+                this.selectedSlot = this.selectedDate + 'T09:00:00';
+                this.endDate      = this.calcEndDate();
+                return;
+            }
+
             this.loading      = true;
             this.selectedSlot = null;
             this.slots        = [];
             try {
-                // Pass all service IDs so the backend can calculate combined duration
                 const params = new URLSearchParams({ date: this.selectedDate });
                 @foreach($services as $service)
                     params.append('service_ids[]', {{ $service->id }});
@@ -168,6 +201,21 @@ function slotPicker() {
                 this.slots = [];
             }
             this.loading = false;
+        },
+
+        calcEndDate() {
+            if (!this.selectedDate || !this.totalDays) return '';
+            const d = new Date(this.selectedDate + 'T00:00:00');
+            d.setDate(d.getDate() + this.totalDays - 1);
+            return this.formatDate(d.toISOString().split('T')[0]);
+        },
+
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('en-ZA', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            });
         },
     };
 }

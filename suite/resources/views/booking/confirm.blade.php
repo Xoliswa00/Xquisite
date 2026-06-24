@@ -91,13 +91,22 @@
 
             {{-- Date & time --}}
             <div>
-                <p class="text-slate-400 text-xs uppercase font-semibold">Date &amp; Time</p>
-                <p class="font-semibold text-slate-900 mt-1">{{ $slot->format('l, d F Y') }}</p>
-                <p class="text-slate-500">
-                    {{ $slot->format('H:i') }}
-                    &ndash;
-                    {{ $slot->copy()->addMinutes($services->sum('duration_minutes'))->format('H:i') }}
-                </p>
+                @if($isMultiDay)
+                    <p class="text-slate-400 text-xs uppercase font-semibold">Booking Period</p>
+                    <p class="font-semibold text-slate-900 mt-1">{{ $slot->format('l, d F Y') }}</p>
+                    <p class="text-slate-500">
+                        to {{ $slot->copy()->addDays($totalDays - 1)->format('l, d F Y') }}
+                    </p>
+                    <p class="text-xs text-slate-400 mt-0.5">{{ $totalDays }} days · schedule confirmed by team</p>
+                @else
+                    <p class="text-slate-400 text-xs uppercase font-semibold">Date &amp; Time</p>
+                    <p class="font-semibold text-slate-900 mt-1">{{ $slot->format('l, d F Y') }}</p>
+                    <p class="text-slate-500">
+                        {{ $slot->format('H:i') }}
+                        &ndash;
+                        {{ $slot->copy()->addMinutes($services->sum('duration_minutes'))->format('H:i') }}
+                    </p>
+                @endif
             </div>
 
         </div>

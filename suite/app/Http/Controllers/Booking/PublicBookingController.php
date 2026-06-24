@@ -83,9 +83,12 @@ class PublicBookingController extends Controller
                 ->withErrors(['service_ids' => 'Please select at least one service.']);
         }
 
-        $combo = $this->detectCombo($request->input('combo_id'), $services->pluck('id')->all());
+        $combo         = $this->detectCombo($request->input('combo_id'), $services->pluck('id')->all());
+        $totalDuration = $services->sum('duration_minutes');
+        $isMultiDay    = $totalDuration >= 1440;
+        $totalDays     = $isMultiDay ? (int) ceil($totalDuration / 1440) : 0;
 
-        return view('booking.service', compact('tenant', 'slug', 'services', 'combo'));
+        return view('booking.service', compact('tenant', 'slug', 'services', 'combo', 'isMultiDay', 'totalDays'));
     }
 
     /** AJAX — return available slots for selected services + date */
@@ -120,15 +123,20 @@ class PublicBookingController extends Controller
     {
         $tenant = $this->resolveTenant($slug);
 
+        $services      = Service::findMany($request->input('service_ids', []));
+        $totalDuration = $services->sum('duration_minutes');
+        $isMultiDay    = $totalDuration >= 1440;
+        $totalDays     = $isMultiDay ? (int) ceil($totalDuration / 1440) : 0;
+
         $request->validate([
             'service_ids'   => 'required|array|min:1',
             'service_ids.*' => 'exists:services,id',
-            'scheduled_at'  => 'required|date|after:now',
+            'scheduled_at'  => $isMultiDay
+                ? 'required|date|after_or_equal:today'
+                : 'required|date|after:now',
         ]);
 
-        $services = Service::findMany($request->input('service_ids'));
-        $slot     = Carbon::parse($request->scheduled_at);
-
+        $slot  = Carbon::parse($request->scheduled_at);
         $combo = $this->detectCombo($request->input('combo_id'), $services->pluck('id')->all());
 
         session(['pending_booking' => [
@@ -139,7 +147,7 @@ class PublicBookingController extends Controller
 
         $customer = auth('customer')->user();
 
-        return view('booking.confirm', compact('tenant', 'services', 'slot', 'slug', 'customer', 'combo'));
+        return view('booking.confirm', compact('tenant', 'services', 'slot', 'slug', 'customer', 'combo', 'isMultiDay', 'totalDays'));
     }
 
     /** AJAX — validate a promo code against the pending booking session */
@@ -201,16 +209,19 @@ class PublicBookingController extends Controller
         $serviceIds    = $services->pluck('id')->all();
         $totalDuration = $services->sum('duration_minutes');
         $start         = Carbon::parse($pending['scheduled_at']);
+        $isMultiDay    = $totalDuration >= 1440;
 
-        // Verify the combined slot is still available
-        $slots          = $availability->availableSlotsForDuration($totalDuration, $start->copy()->startOfDay(), $serviceIds);
-        $stillAvailable = $slots->contains(fn($s) => $s->format('Y-m-d H:i') === $start->format('Y-m-d H:i'));
+        // Slot availability check only applies to same-day bookings (multi-day have no fixed slots)
+        if (!$isMultiDay) {
+            $slots          = $availability->availableSlotsForDuration($totalDuration, $start->copy()->startOfDay(), $serviceIds);
+            $stillAvailable = $slots->contains(fn($s) => $s->format('Y-m-d H:i') === $start->format('Y-m-d H:i'));
 
-        if (!$stillAvailable) {
-            session()->forget('pending_booking');
-            return redirect()->route('book.service', $slug)
-                ->with('service_ids', $pending['service_ids'])
-                ->withErrors(['slot' => 'That time slot is no longer available. Please choose another.']);
+            if (!$stillAvailable) {
+                session()->forget('pending_booking');
+                return redirect()->route('book.service', $slug)
+                    ->with('service_ids', $pending['service_ids'])
+                    ->withErrors(['slot' => 'That time slot is no longer available. Please choose another.']);
+            }
         }
 
         $notes = $request->validate(['notes' => 'nullable|string|max:1000'])['notes'] ?? null;
@@ -321,19 +332,25 @@ class PublicBookingController extends Controller
         abort_if(auth('customer')->id() !== $appointment->customer_id, 403);
         abort_if(!in_array($appointment->status, ['pending', 'confirmed']), 422, 'This appointment cannot be modified.');
 
+        $totalDuration = $appointment->services->sum('duration_minutes');
+        $isMultiDay    = $totalDuration >= 1440;
+
         $request->validate([
-            'scheduled_at' => 'required|date|after:now',
+            'scheduled_at' => $isMultiDay
+                ? 'required|date|after_or_equal:today'
+                : 'required|date|after:now',
         ]);
 
-        $start         = Carbon::parse($request->scheduled_at);
-        $totalDuration = $appointment->services->sum('duration_minutes');
-        $serviceIds    = $appointment->services->pluck('id')->all();
+        $start      = Carbon::parse($request->scheduled_at);
+        $serviceIds = $appointment->services->pluck('id')->all();
 
-        $slots          = $availability->availableSlotsForDuration($totalDuration, $start->copy()->startOfDay(), $serviceIds);
-        $stillAvailable = $slots->contains(fn($s) => $s->format('Y-m-d H:i') === $start->format('Y-m-d H:i'));
+        if (!$isMultiDay) {
+            $slots          = $availability->availableSlotsForDuration($totalDuration, $start->copy()->startOfDay(), $serviceIds);
+            $stillAvailable = $slots->contains(fn($s) => $s->format('Y-m-d H:i') === $start->format('Y-m-d H:i'));
 
-        if (!$stillAvailable) {
-            return back()->withErrors(['scheduled_at' => 'That time slot is no longer available. Please choose another.']);
+            if (!$stillAvailable) {
+                return back()->withErrors(['scheduled_at' => 'That time slot is no longer available. Please choose another.']);
+            }
         }
 
         $appointment->update(['scheduled_at' => $start]);
@@ -352,12 +369,16 @@ class PublicBookingController extends Controller
 
         $appointment->load('services');
 
+        $totalDuration = $appointment->services->sum('duration_minutes');
+        $isMultiDay    = $totalDuration >= 1440;
+        $totalDays     = $isMultiDay ? (int) ceil($totalDuration / 1440) : 0;
+
         $services = Service::where('is_active', true)
             ->whereHas('staff', fn($q) => $q->where('is_active', true))
             ->orderBy('created_at')
             ->get();
 
-        return view('booking.edit', compact('tenant', 'appointment', 'slug', 'services'));
+        return view('booking.edit', compact('tenant', 'appointment', 'slug', 'services', 'isMultiDay', 'totalDays'));
     }
 
     /**
