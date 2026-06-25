@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <h1 class="text-xl font-semibold text-[#D4AF37]">Account & Settings</h1>
     </x-slot>
@@ -159,8 +159,8 @@
         @if($tenant)
         <div id="business-details" class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25"
              x-data="businessForm(
-                 '{{ old('business_name', $tenant->name ?? '') }}',
-                 '{{ old('slug', $tenant->slug ?? '') }}'
+                 @js(old('business_name', $tenant->name ?? '')),
+                 @js(old('slug', $tenant->slug ?? ''))
              )">
             <div class="border-b border-slate-800 px-8 py-6 bg-gradient-to-r from-slate-800/80 to-transparent">
                 <h2 class="text-xl font-semibold text-slate-100 tracking-tight">Business Details</h2>
@@ -289,7 +289,7 @@
 
         {{-- ── 3. BANKING DETAILS ─────────────────────────────────────────── --}}
         <div id="banking" class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25"
-             x-data="bankForm('{{ old('bank_name', $tenant->bank_name ?? '') }}')">
+             x-data="bankForm(@js(old('bank_name', $tenant->bank_name ?? '')))">
             <div class="border-b border-slate-800 px-8 py-6 bg-gradient-to-r from-slate-800/80 to-transparent">
                 <h2 class="text-xl font-semibold text-slate-100 tracking-tight">Banking Details</h2>
                 <p class="mt-1 text-sm text-slate-400">Used on invoices and proof-of-payment requests sent to clients.</p>
@@ -593,7 +593,7 @@
     function bankForm(initialBank) {
         return {
             bankName: initialBank,
-            branchCode: "{{ old('bank_branch_code', optional($tenant)->bank_branch_code ?? '') }}",
+            branchCode: @json(old('bank_branch_code', optional($tenant)->bank_branch_code ?? '')),
 
             onBankChange() {
                 const code = SA_BRANCH_CODES[this.bankName];
