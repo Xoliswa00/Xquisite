@@ -388,6 +388,65 @@
     </div>
 </section>
 
+{{-- ─── COMING SOON ────────────────────────────────────────────────────── --}}
+@php $comingSoon = \App\Models\PlatformModule::comingSoon()->visible()->ordered()->get(); @endphp
+@if($comingSoon->isNotEmpty())
+<section class="bg-[#001A3A] py-16 sm:py-24 relative overflow-hidden">
+    <div class="absolute inset-0 xq-grid opacity-30 pointer-events-none"></div>
+    <div class="xq-orb xq-orb-gold" style="opacity:.35"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+        <div class="text-center mb-12 xq-sr">
+            <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
+            <span class="inline-block px-3 py-1 rounded-full text-[10px] f-mont font-bold uppercase tracking-widest bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 mb-5">
+                What's Next
+            </span>
+            <h2 class="f-mont text-3xl sm:text-4xl font-bold text-white mb-4">Coming Soon to the Platform</h2>
+            <p class="text-sm sm:text-base text-[#B8D4F0]/60 max-w-xl mx-auto leading-relaxed">
+                We build what your business actually needs — here's what's already in the pipeline.
+            </p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            @foreach($comingSoon as $module)
+            <div class="xq-sr xq-d{{ ($loop->index % 4) + 1 }} group bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4
+                        hover:border-[#D4AF37]/30 hover:bg-white/[.07] transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center
+                                group-hover:bg-[#D4AF37]/20 transition-colors">
+                        <svg class="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icons[$module->icon] ?? $icons['chart'] }}"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] font-bold f-mont uppercase tracking-widest text-[#D4AF37]
+                                 bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-2.5 py-1 rounded-full">
+                        Soon
+                    </span>
+                </div>
+                <div class="flex-1">
+                    <p class="font-bold text-white f-mont text-sm mb-2 leading-snug">{{ $module->name }}</p>
+                    <p class="text-xs text-[#B8D4F0]/50 leading-relaxed">{{ $module->description }}</p>
+                </div>
+                @if($module->price)
+                <p class="text-xs text-white/25">
+                    From <span class="font-semibold text-[#D4AF37]/60">R{{ number_format($module->price, 0) }}/mo</span>
+                </p>
+                @endif
+            </div>
+            @endforeach
+        </div>
+
+        <p class="text-center mt-10 text-xs text-white/25">
+            Want early access?
+            <a href="{{ route('register') }}" class="text-[#D4AF37]/60 hover:text-[#D4AF37] underline underline-offset-2 transition-colors">
+                Sign up now
+            </a>
+            and we'll notify you when these go live.
+        </p>
+    </div>
+</section>
+@endif
+
 {{-- ─── TESTIMONIALS ─────────────────────────────────────────────────────── --}}
 @php $testimonials = \App\Models\Review::public()->limit(6)->get(); @endphp
 @if ($testimonials->isNotEmpty())
