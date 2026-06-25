@@ -9,12 +9,18 @@ class NotificationController extends Controller
 {
     public function index(Request $request)
     {
-        $notifications = $request->user()
-            ->notifications()
-            ->latest()
-            ->paginate(30);
+        $filter = $request->query('filter', 'all');
 
-        return view('notifications.index', compact('notifications'));
+        $query = $request->user()->notifications()->latest();
+
+        if ($filter === 'unread') {
+            $query->whereNull('read_at');
+        }
+
+        $notifications = $query->paginate(25)->withQueryString();
+        $unreadCount   = $request->user()->unreadNotifications()->count();
+
+        return view('notifications.index', compact('notifications', 'unreadCount', 'filter'));
     }
 
     public function markRead(Request $request, string $id): RedirectResponse
