@@ -25,70 +25,74 @@
 @endphp
 
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between" x-data>
+    <x-slot name="header">Calendar</x-slot>
 
-            <div class="flex items-center gap-3">
-                <h1 class="text-xl font-semibold text-[#D4AF37]">Calendar</h1>
+    {{-- ── Calendar nav card ──────────────────────────────────────────────── --}}
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-4 mb-5" x-data>
+        <div class="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
 
-                {{-- Week nav --}}
-                <div class="flex items-center gap-1">
-                    <a href="{{ route('appointments.calendar', $prev) }}"
-                       class="p-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    </a>
-                    <span class="text-sm text-slate-300 px-2 tabular-nums">
-                        {{ $days->first()->format('d M') }} – {{ $days->last()->format('d M Y') }}
-                    </span>
-                    <a href="{{ route('appointments.calendar', $next) }}"
-                       class="p-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </a>
-                    <a href="{{ route('appointments.calendar') }}"
-                       class="ml-1 text-xs px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition">Today</a>
-                </div>
+            {{-- Week range + prev / next / today --}}
+            <div class="flex items-center gap-1">
+                <a href="{{ route('appointments.calendar', $prev) }}"
+                   class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </a>
+                <span class="flex-1 text-center sm:flex-initial sm:px-2 text-sm font-semibold text-slate-200 tabular-nums">
+                    {{ $days->first()->format('d M') }} – {{ $days->last()->format('d M Y') }}
+                </span>
+                <a href="{{ route('appointments.calendar', $next) }}"
+                   class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="{{ route('appointments.calendar') }}"
+                   class="shrink-0 text-xs px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition">
+                    Today
+                </a>
             </div>
 
-            <div class="flex items-center gap-3">
+            {{-- Controls: unassigned badge + view toggle + new booking --}}
+            <div class="flex items-center gap-2 justify-between sm:justify-end">
                 @if($unassigned > 0)
                     <a href="{{ route('appointments.index', ['status' => 'unassigned']) }}"
                        class="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-orange-900/40 border border-orange-700 text-orange-400 rounded-lg hover:bg-orange-900/60 transition">
-                        <span class="font-bold">{{ $unassigned }}</span> unassigned
+                        <span class="font-bold">{{ $unassigned }}</span>
+                        <span class="hidden sm:inline">unassigned</span>
+                        <svg class="w-3.5 h-3.5 sm:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
                     </a>
                 @endif
 
-                {{-- View toggle --}}
                 <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg p-0.5"
                      x-data="{ v: $store.calView.mode }"
                      x-init="$watch('$store.calView.mode', val => v = val)">
                     <button @click="$store.calView.set('grid')"
                             :class="v === 'grid' ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-slate-200'"
-                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition"
+                            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition"
                             title="Week grid">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/>
                         </svg>
-                        Week
+                        <span class="hidden sm:inline">Week</span>
                     </button>
                     <button @click="$store.calView.set('cards')"
                             :class="v === 'cards' ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-slate-200'"
-                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition"
+                            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition"
                             title="Day cards">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
                         </svg>
-                        Day
+                        <span class="hidden sm:inline">Day</span>
                     </button>
                 </div>
 
-                <a href="{{ route('appointments.index') }}" class="text-xs text-slate-400 hover:text-white transition">List view</a>
+                <a href="{{ route('appointments.index') }}" class="hidden sm:block text-xs text-slate-400 hover:text-white transition">List view</a>
+
                 <a href="{{ route('appointments.create') }}"
-                   class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg transition">
-                    + New Booking
+                   class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition whitespace-nowrap">
+                    + New
                 </a>
             </div>
         </div>
-    </x-slot>
+    </div>
 
     {{-- ── Alpine store + both views ─────────────────────────────────────── --}}
     <div x-data="{
@@ -127,7 +131,7 @@
                 <div class="min-w-[900px]">
 
                     {{-- Day headers --}}
-                    <div class="grid grid-cols-8 border-b border-slate-700 sticky top-0 bg-slate-900 z-10">
+                    <div class="grid grid-cols-8 border-b border-slate-700 sticky top-14 bg-slate-900 z-10">
                         <div class="py-3 px-2 text-xs text-slate-500 font-medium"></div>
                         @foreach($days as $day)
                             <div class="py-3 px-2 text-center {{ $day->isToday() ? 'bg-[#001A3A]/30' : '' }}">
@@ -174,7 +178,7 @@
             </div>
 
             {{-- Legend --}}
-            <div class="mt-4 flex items-center gap-4 text-xs text-slate-500">
+            <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500">
                 <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-orange-900/60 border border-orange-700/50"></span>Unassigned</span>
                 <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-700/80 border border-slate-600/50"></span>Pending</span>
                 <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-900/60 border border-emerald-700/50"></span>Confirmed</span>
@@ -197,7 +201,7 @@
                                     : d.today
                                         ? 'border-[#0078D4]/40 text-[#0078D4]'
                                         : 'border-slate-700 hover:border-slate-500'"
-                                class="flex flex-col items-center px-3 py-2.5 rounded-xl border transition flex-1 min-w-0">
+                                class="flex flex-col items-center px-1.5 sm:px-3 py-2 sm:py-2.5 rounded-xl border transition flex-1 min-w-0">
                             <span class="text-[10px] font-bold uppercase tracking-wide mb-1"
                                   :class="selectedDay === d.date ? 'text-blue-200' : 'text-slate-500'"
                                   x-text="d.label"></span>
@@ -343,7 +347,11 @@
     <script>
     document.addEventListener('alpine:init', () => {
         Alpine.store('calView', {
-            mode: localStorage.getItem('xq-cal-view') || '{{ $savedView }}',
+            mode: (() => {
+                const saved = localStorage.getItem('xq-cal-view');
+                if (!saved && window.innerWidth < 640) return 'cards';
+                return saved || @json($savedView);
+            })(),
             prefUrl: '{{ route('user.preference') }}',
             csrfToken: document.querySelector('meta[name="csrf-token"]')?.content,
 
