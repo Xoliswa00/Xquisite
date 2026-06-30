@@ -3,11 +3,13 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use App\Http\Middleware\CheckBlockedIp;
 use App\Http\Middleware\DemoModeMiddleware;
 use App\Http\Middleware\EnsureModuleActive;
 use App\Http\Middleware\RequestTrackingMiddleware;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\EnforcePasswordChange;
+use App\Http\Middleware\SecurityHeaders;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,11 +18,20 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(prepend: [
+            CheckBlockedIp::class,
+        ]);
+
         $middleware->web(append: [
             RequestTrackingMiddleware::class,
             ResolveTenant::class,
             DemoModeMiddleware::class,
             \App\Http\Middleware\CheckCompanySuspension::class,
+            SecurityHeaders::class,
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
+            '/js-error',
         ]);
 
         $middleware->alias([

@@ -24,11 +24,11 @@ class CheckInstancesHealth extends Command
         $this->info('Checking health of ' . $instances->count() . ' instance(s)...');
 
         foreach ($instances as $instance) {
-            CheckInstanceHealth::dispatch($instance);
-            $this->line("✓ Queued health check for: {$instance->name}");
+            CheckInstanceHealth::dispatchSync($instance);
+            $this->line("✓ Checked: {$instance->name}");
         }
 
-        $this->info('All health checks queued successfully.');
+        $this->info('All health checks complete.');
         return Command::SUCCESS;
     }
 }

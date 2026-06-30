@@ -296,6 +296,14 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     // Instance Monitoring (owner-level admin)
     Route::middleware('can:manage-tenants')->group(function () {
         Route::resource('monitoring', MonitoringController::class);
+
+        // Security — Blocked IPs
+        Route::prefix('security')->name('admin.')->group(function () {
+            Route::get('blocked-ips', [\App\Http\Controllers\Admin\BlockedIpController::class, 'index'])->name('blocked-ips.index');
+            Route::post('blocked-ips', [\App\Http\Controllers\Admin\BlockedIpController::class, 'store'])->name('blocked-ips.store');
+            Route::delete('blocked-ips/{blockedIp}', [\App\Http\Controllers\Admin\BlockedIpController::class, 'destroy'])->name('blocked-ips.destroy');
+            Route::delete('blocked-ips-purge', [\App\Http\Controllers\Admin\BlockedIpController::class, 'purgeExpired'])->name('blocked-ips.purge');
+        });
     });
 
     // Settings — self-serve module management
@@ -477,7 +485,8 @@ Route::get('/api/health', function () {
     ], $critical ? 503 : 200);
 })->name('health');
 
-// Client-side JS error collector — no auth required, rate-limited
+// Client-side JS error collector — no auth, CSRF-exempt, CORS-enabled for cross-project beacons
+Route::options('/js-error', [App\Http\Controllers\JsErrorController::class, 'preflight']);
 Route::post('/js-error', [App\Http\Controllers\JsErrorController::class, 'store'])
     ->middleware('throttle:30,1')
     ->name('js.error');
