@@ -5,13 +5,17 @@ namespace App\Jobs;
 use App\Models\MonitoredInstance;
 use App\Models\InstanceAlert;
 use App\Models\HealthCheckLog;
+use App\Notifications\InstanceDownNotification;
+use App\Notifications\InstanceUpNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class CheckInstanceHealth implements ShouldQueue
 {
@@ -52,9 +56,17 @@ class CheckInstanceHealth implements ShouldQueue
         }
     }
 
+    private function notifyAdmin(object $notification): void
+    {
+        $email = config('app.admin_email', config('mail.from.address'));
+        if ($email) {
+            Notification::route('mail', $email)->notify($notification);
+        }
+    }
+
     private function handleHealthSuccess(array $data, int $responseTime): void
     {
-        $isUp = $data['status'] ?? 'up' === 'up';
+        $isUp = ($data['status'] ?? 'down') === 'up';
 
         HealthCheckLog::create([
             'monitored_instance_id' => $this->instance->id,
@@ -81,7 +93,6 @@ class CheckInstanceHealth implements ShouldQueue
                     ->where('is_resolved', false)
                     ->each(fn(InstanceAlert $alert) => $alert->resolve());
 
-                // Create recovery alert
                 InstanceAlert::create([
                     'monitored_instance_id' => $this->instance->id,
                     'type' => 'up',
@@ -89,6 +100,8 @@ class CheckInstanceHealth implements ShouldQueue
                     'message' => 'Instance recovered at ' . now()->format('Y-m-d H:i:s'),
                     'is_resolved' => false,
                 ]);
+
+                $this->notifyAdmin(new InstanceUpNotification($this->instance));
             }
         } else {
             $this->handleDownInstance();
@@ -123,11 +136,12 @@ class CheckInstanceHealth implements ShouldQueue
             'last_error_at' => now(),
         ]);
 
-        if ($wasUp || !InstanceAlert::where('monitored_instance_id', $this->instance->id)
+        $alreadyAlerted = InstanceAlert::where('monitored_instance_id', $this->instance->id)
             ->where('type', 'down')
             ->where('is_resolved', false)
-            ->exists()) {
-            
+            ->exists();
+
+        if ($wasUp || !$alreadyAlerted) {
             InstanceAlert::create([
                 'monitored_instance_id' => $this->instance->id,
                 'type' => 'down',
@@ -137,9 +151,12 @@ class CheckInstanceHealth implements ShouldQueue
             ]);
 
             Log::warning('Instance down', [
-                'instance_id' => $this->instance->id,
+                'instance_id'   => $this->instance->id,
                 'instance_name' => $this->instance->name,
             ]);
+
+            $lastError = $this->instance->last_error_message;
+            $this->notifyAdmin(new InstanceDownNotification($this->instance, $lastError));
         }
     }
 }

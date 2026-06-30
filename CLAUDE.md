@@ -55,10 +55,39 @@ After completing any of the following, add one line: *"Want an 8-agent review of
 
 ## Project: Xquisite Creations Suite
 
-Laravel + Jetstream SaaS platform. Multi-tenant. Key areas:
+Laravel 11 + Blade + Alpine.js SaaS platform. Multi-tenant. Key areas:
 - `suite/app/` — Laravel app (Controllers, Models, Services, Notifications)
-- `suite/resources/views/` — Blade templates
+- `suite/resources/views/` — Blade templates (dark slate, Creative Tim design language)
 - `suite/database/` — Migrations, seeders
 - Platform billing, tenant modules, monitoring
+
+### Live modules (as of 2026-06-26)
+| Module | Key routes |
+|--------|-----------|
+| Bookings | `appointments.*`, `appointments.calendar`, `customers.*`, `staff.*` |
+| POS | `pos.*`, `products.*`, `stock.*`, `purchase-orders.*`, `rental-orders.*` |
+| E-commerce | `orders.*`, `store.settings*` |
+| Property Management | `properties.*`, `renters.*`, `leases.*`, `rent-payments.*`, `maintenance.*` |
+| Client Messaging | `clients.*`, `portal.*` |
+| Platform Billing | `billing.*`, `admin.billing.*` |
+
+### Branch → Environment
+| Branch | Environment |
+|--------|------------|
+| `dev` | Development — all work goes here |
+| `main` | Production — xquisite.brightfinance-x.co.za (cPanel, PHP 8.4, LiteSpeed) |
+
+### Design tokens (never deviate)
+- Primary blue: `#0078D4`
+- Gold accent: `#D4AF37`
+- Dark navy: `#002B5B`
+- Background: `bg-slate-900` / `bg-slate-950`
+- Card surface: `bg-slate-900 border border-slate-800 rounded-xl`
+
+### Pending actions
+- Upload `/img/og-image.jpg` (1200×630) for WhatsApp/OG preview
+- Fix slug `Misstee-Beauty-Studio` → lowercase in DB
+- PayFast card payment integration (deferred)
+- Post-appointment review request feature (not yet built)
 
 When referencing code, always use clickable markdown links: `[filename.php](path/to/file.php)`.

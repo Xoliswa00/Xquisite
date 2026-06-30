@@ -57,6 +57,9 @@ return [
     // Base domain used for tenant subdomains (e.g. {slug}.xquisite.co.za)
     'domain' => env('APP_DOMAIN', 'xquisite.co.za'),
 
+    // Admin alert email — receives instance down/up and critical system alerts
+    'admin_email' => env('ADMIN_EMAIL', env('MAIL_FROM_ADDRESS')),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
