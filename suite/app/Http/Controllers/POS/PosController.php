@@ -29,13 +29,16 @@ class PosController extends Controller
             }
 
             foreach ($appointment->services as $service) {
+                $qty            = $service->pivot->quantity ?? 1;
+                $priceAtBooking = (float) ($service->pivot->price_at_booking ?? $service->calculatePrice($qty));
+
                 $preloadItems[] = [
                     'id'         => $service->id,
                     'type'       => 'service',
                     'name'       => $service->name,
-                    'unit_price' => (float) ($service->pivot->price_at_booking ?? $service->price),
-                    'qty'        => 1,
-                    'subtotal'   => (float) ($service->pivot->price_at_booking ?? $service->price),
+                    'unit_price' => $qty > 0 ? $priceAtBooking / $qty : $priceAtBooking,
+                    'qty'        => $qty,
+                    'subtotal'   => $priceAtBooking,
                 ];
             }
 

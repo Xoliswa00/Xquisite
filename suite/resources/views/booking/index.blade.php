@@ -408,9 +408,22 @@
                             </div>
                             <p class="font-bold text-slate-900 text-sm"
                                :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
-                                R{{ number_format($service->price, 2) }}
+                                {{ $service->priceLabel() }}
                             </p>
                         </div>
+                        @if($service->pricing_type !== 'flat')
+                        <div x-show="selected.includes({{ $service->id }})" x-cloak
+                             @click.stop class="flex items-center justify-between mt-2.5 pt-2.5 border-t border-slate-100">
+                            <span class="text-xs text-slate-500">{{ $service->unit_label ?? ($service->pricing_type === 'per_head' ? 'guests' : 'units') }}</span>
+                            <div class="flex items-center gap-2">
+                                <button type="button" @click="setQty({{ $service->id }}, (quantities[{{ $service->id }}] || 1) - 1)"
+                                        class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold">&minus;</button>
+                                <span class="w-5 text-center text-sm font-semibold text-slate-900" x-text="quantities[{{ $service->id }}] || 1"></span>
+                                <button type="button" @click="setQty({{ $service->id }}, (quantities[{{ $service->id }}] || 1) + 1)"
+                                        class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold">+</button>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
                 @endforeach
@@ -515,9 +528,22 @@
                             </div>
                             <p class="font-bold text-slate-900 text-sm"
                                :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
-                                R{{ number_format($service->price, 2) }}
+                                {{ $service->priceLabel() }}
                             </p>
                         </div>
+                        @if($service->pricing_type !== 'flat')
+                        <div x-show="selected.includes({{ $service->id }})" x-cloak
+                             @click.stop class="flex items-center justify-between mt-2.5 pt-2.5 border-t border-slate-100">
+                            <span class="text-xs text-slate-500">{{ $service->unit_label ?? ($service->pricing_type === 'per_head' ? 'guests' : 'units') }}</span>
+                            <div class="flex items-center gap-2">
+                                <button type="button" @click="setQty({{ $service->id }}, (quantities[{{ $service->id }}] || 1) - 1)"
+                                        class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold">&minus;</button>
+                                <span class="w-5 text-center text-sm font-semibold text-slate-900" x-text="quantities[{{ $service->id }}] || 1"></span>
+                                <button type="button" @click="setQty({{ $service->id }}, (quantities[{{ $service->id }}] || 1) + 1)"
+                                        class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold">+</button>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
                 @endforeach
@@ -585,12 +611,15 @@
                                     <template x-if="selectedCombo && selectedCombo.serviceIds.includes(id)">
                                         <span class="text-xs text-[#0078D4] font-bold bg-[#E8F2FA] px-1.5 py-0.5 rounded-full">combo</span>
                                     </template>
+                                    <template x-if="services.find(s => s.id === id)?.pricing_type !== 'flat'">
+                                        <span class="text-xs text-slate-400" x-text="'· ' + (quantities[id] || 1) + ' ' + services.find(s => s.id === id)?.unit_label"></span>
+                                    </template>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 shrink-0 mt-0.5">
                                 <p class="text-sm font-bold"
                                    :class="selectedCombo && selectedCombo.serviceIds.includes(id) ? 'text-slate-400 line-through text-xs' : 'text-slate-700'"
-                                   x-text="'R' + (services.find(s => s.id === id)?.price || 0).toLocaleString('en-ZA', {minimumFractionDigits:2})"></p>
+                                   x-text="'R' + ((services.find(s => s.id === id)?.price || 0) * (quantities[id] || 1)).toLocaleString('en-ZA', {minimumFractionDigits:2})"></p>
                                 <button type="button" @click="toggle(id)"
                                         x-show="!(selectedCombo && selectedCombo.serviceIds.includes(id))"
                                         class="w-5 h-5 rounded-full bg-slate-200 hover:bg-red-100 text-slate-400 hover:text-red-500 flex items-center justify-center transition-colors shrink-0">
@@ -618,7 +647,7 @@
                     <template x-if="selectedCombo && selected.some(id => !selectedCombo.serviceIds.includes(id))">
                         <div class="flex justify-between text-xs text-slate-500 px-1">
                             <span>Add-on services</span>
-                            <span x-text="'R' + selected.filter(id => !selectedCombo.serviceIds.includes(id)).reduce((s, id) => { const sv = services.find(x => x.id === id); return s + (sv ? sv.price : 0); }, 0).toLocaleString('en-ZA', {minimumFractionDigits:2})"></span>
+                            <span x-text="'R' + selected.filter(id => !selectedCombo.serviceIds.includes(id)).reduce((s, id) => { const sv = services.find(x => x.id === id); return s + (sv ? sv.price * (quantities[id] || 1) : 0); }, 0).toLocaleString('en-ZA', {minimumFractionDigits:2})"></span>
                         </div>
                     </template>
                     {{-- Full price strikethrough (only when saving something) --}}
@@ -648,6 +677,9 @@
                     <form method="GET" :action="'{{ route('book.service', $slug) }}'">
                         <template x-for="id in selected" :key="id">
                             <input type="hidden" name="service_ids[]" :value="id">
+                        </template>
+                        <template x-for="id in selected" :key="'qty-' + id">
+                            <input type="hidden" :name="'quantities[' + id + ']'" :value="quantities[id] || 1">
                         </template>
                         <input type="hidden" name="combo_id" :value="selectedComboId || ''">
                         <button type="submit"
@@ -875,6 +907,9 @@
             <template x-for="id in selected" :key="id">
                 <input type="hidden" name="service_ids[]" :value="id">
             </template>
+            <template x-for="id in selected" :key="'qty-' + id">
+                <input type="hidden" :name="'quantities[' + id + ']'" :value="quantities[id] || 1">
+            </template>
             <input type="hidden" name="combo_id" :value="selectedComboId || ''">
             <button type="submit"
                     class="shrink-0 bg-[#0078D4] hover:bg-[#0078D4] active:scale-95 text-white font-bold px-5 py-3 rounded-xl transition-all shadow-lg shadow-[#B8D4F0] flex items-center gap-2 text-sm whitespace-nowrap">
@@ -892,6 +927,7 @@
 function servicePicker() {
     return {
         selected: [],
+        quantities: {},
         selectedCombo: null,
         selectedComboId: null,
         comboDeal: null,
@@ -907,7 +943,17 @@ function servicePicker() {
                 return;
             }
             const idx = this.selected.indexOf(id);
-            if (idx === -1) { this.selected.push(id); } else { this.selected.splice(idx, 1); }
+            if (idx === -1) {
+                this.selected.push(id);
+                if (!this.quantities[id]) this.quantities[id] = 1;
+            } else {
+                this.selected.splice(idx, 1);
+            }
+            this.recalculate();
+        },
+
+        setQty(id, qty) {
+            this.quantities[id] = Math.max(1, qty);
             this.recalculate();
         },
 
@@ -953,9 +999,10 @@ function servicePicker() {
             this.selected.forEach(id => {
                 const s = this.services.find(s => s.id === id);
                 if (s) {
+                    const lineTotal = s.price * (this.quantities[id] || 1);
                     mins  += s.duration_minutes;
-                    full  += s.price;
-                    if (!comboIds.includes(id)) extrasCost += s.price;
+                    full  += lineTotal;
+                    if (!comboIds.includes(id)) extrasCost += lineTotal;
                 }
             });
 

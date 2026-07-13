@@ -70,7 +70,8 @@
                         </div>
                         <div id="unit-price-fields" style="display:none">
                             <label class="block text-sm font-medium text-slate-300 mb-1">Price Per Person / Unit (R)</label>
-                            <input type="number" name="price_per_unit" value="{{ old('price_per_unit') }}" min="0" step="0.01"
+                            <input type="number" name="price_per_unit" id="price_per_unit_field" value="{{ old('price_per_unit') }}" min="0" step="0.01"
+                                   @input="sellingPrice = $event.target.valueAsNumber || 0"
                                    placeholder="e.g. 150.00"
                                    class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                         </div>

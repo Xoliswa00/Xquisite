@@ -126,7 +126,7 @@
                                         <div class="flex items-center gap-3 mt-2 text-xs text-slate-400">
                                             <span>{{ $service->duration_minutes }} min</span>
                                             <span>·</span>
-                                            <span>R{{ number_format($service->price, 2) }}</span>
+                                            <span>{{ $service->priceLabel() }}</span>
                                         </div>
                                     </a>
                                 @endforeach
@@ -183,7 +183,7 @@
                                             @endif
                                         </td>
                                         <td class="px-4 py-3 text-slate-300">{{ $service->duration_minutes }} min</td>
-                                        <td class="px-4 py-3 text-slate-300">R{{ number_format($service->price, 2) }}</td>
+                                        <td class="px-4 py-3 text-slate-300">{{ $service->priceLabel() }}</td>
                                         <td class="px-4 py-3">
                                             @if($service->is_active)
                                                 <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
