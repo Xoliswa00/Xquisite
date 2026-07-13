@@ -128,11 +128,11 @@
                             $comboModel      = \App\Models\ServiceCombo::with('services')->find($appointment->combo_id);
                             $comboServiceIds = $comboModel ? $comboModel->services->pluck('id')->all() : [];
                         }
-                        $fullTotal   = $appointment->services->sum(fn($s) => $s->pivot->price_at_booking ?? $s->price);
+                        $fullTotal   = $appointment->services->sum(fn($s) => $s->pivot->price_at_booking ?? $s->calculatePrice($s->pivot->quantity ?? 1));
                         $extrasCost  = $appointment->combo_price
                             ? $appointment->services
                                 ->filter(fn($s) => !in_array($s->id, $comboServiceIds))
-                                ->sum(fn($s) => $s->pivot->price_at_booking ?? $s->price)
+                                ->sum(fn($s) => $s->pivot->price_at_booking ?? $s->calculatePrice($s->pivot->quantity ?? 1))
                             : 0;
                         $grandTotal  = $appointment->combo_price
                             ? (float)$appointment->combo_price + $extrasCost
@@ -148,20 +148,27 @@
                     <p class="text-slate-400 mb-2">Services</p>
                     <div class="divide-y divide-slate-700">
                         @foreach($appointment->services as $service)
-                            @php $inCombo = in_array($service->id, $comboServiceIds); @endphp
+                            @php
+                                $inCombo = in_array($service->id, $comboServiceIds);
+                                $qty     = $service->pivot->quantity ?? 1;
+                                $price   = $service->pivot->price_at_booking ?? $service->calculatePrice($qty);
+                            @endphp
                             <div class="flex items-center justify-between py-2">
                                 <div class="flex items-center gap-2">
                                     <span class="text-white font-medium">{{ $service->name }}</span>
                                     @if($inCombo)
                                         <span class="text-xs bg-[#001A3A]/60 text-[#B8D4F0] font-bold px-2 py-0.5 rounded-full border border-[#002B5B]/60">combo</span>
                                     @endif
+                                    @if($service->pricing_type !== 'flat')
+                                        <span class="text-xs text-slate-500">&times; {{ $qty }} {{ $service->unit_label ?? ($service->pricing_type === 'per_head' ? 'guests' : 'units') }}</span>
+                                    @endif
                                 </div>
                                 <span class="text-slate-400 text-xs">
                                     {{ $service->pivot->duration_minutes ?? $service->duration_minutes }} min
                                     @if($inCombo && $appointment->combo_price)
-                                        &nbsp;<span class="line-through opacity-40">R{{ number_format($service->pivot->price_at_booking ?? $service->price, 2) }}</span>
+                                        &nbsp;<span class="line-through opacity-40">R{{ number_format($price, 2) }}</span>
                                     @else
-                                        &nbsp;· R{{ number_format($service->pivot->price_at_booking ?? $service->price, 2) }}
+                                        &nbsp;· R{{ number_format($price, 2) }}
                                     @endif
                                 </span>
                             </div>

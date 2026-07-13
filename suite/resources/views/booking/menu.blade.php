@@ -128,7 +128,7 @@
                                                 <p class="text-sm text-slate-400 mt-1 line-clamp-2">{{ $service->description }}</p>
                                             @endif
                                             <div class="flex items-center justify-between mt-3">
-                                                <span class="font-bold text-white">R{{ number_format($service->price, 2) }}</span>
+                                                <span class="font-bold text-white">{{ $service->priceLabel() }}</span>
                                                 <div class="flex items-center gap-2">
                                                     @if($service->duration_minutes)
                                                         <span class="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">{{ $service->duration_minutes }}min</span>

@@ -69,11 +69,11 @@ class DashboardController extends Controller
                 'pendingModuleRequests' => ModuleRequest::pending()->count(),
                 'completedRevenue'      => $completedThisMonth->sum(function ($appt) {
                     if ($appt->sale) return (float) $appt->sale->total;
-                    return $appt->services->sum(fn($s) => (float)($s->pivot->price_at_booking ?? $s->price));
+                    return $appt->services->sum(fn($s) => (float)($s->pivot->price_at_booking ?? $s->calculatePrice($s->pivot->quantity ?? 1)));
                 }),
                 'completedCount'        => $completedThisMonth->count(),
                 'awaitingTotal'         => $awaitingAppts->sum(fn($appt) =>
-                    $appt->services->sum(fn($s) => (float)($s->pivot->price_at_booking ?? $s->price))
+                    $appt->services->sum(fn($s) => (float)($s->pivot->price_at_booking ?? $s->calculatePrice($s->pivot->quantity ?? 1)))
                 ),
                 'awaitingCount'         => $awaitingAppts->count(),
             ];

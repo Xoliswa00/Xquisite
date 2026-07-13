@@ -33,8 +33,8 @@
     @php
         $comboServiceIds = $combo ? $combo->services->pluck('id')->all() : [];
         $extraServices   = $combo ? $services->filter(fn($s) => !in_array($s->id, $comboServiceIds)) : collect();
-        $extrasCost      = $extraServices->sum('price');
-        $grandTotal      = $combo ? $combo->combo_price + $extrasCost : $services->sum('price');
+        $extrasCost      = $extraServices->sum(fn($s) => $s->calculatePrice($quantities[$s->id] ?? 1));
+        $grandTotal      = $combo ? $combo->combo_price + $extrasCost : $services->sum(fn($s) => $s->calculatePrice($quantities[$s->id] ?? 1));
     @endphp
     <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
         <div class="grid grid-cols-2 gap-4 text-sm">
@@ -44,20 +44,26 @@
                 <p class="text-slate-400 text-xs uppercase font-semibold mb-2">Services</p>
                 <div class="divide-y divide-slate-100">
                     @foreach($services as $service)
-                        @php $inCombo = $combo && in_array($service->id, $comboServiceIds); @endphp
+                        @php
+                            $inCombo = $combo && in_array($service->id, $comboServiceIds);
+                            $qty     = $quantities[$service->id] ?? 1;
+                        @endphp
                         <div class="flex items-center justify-between py-2">
                             <div class="flex items-center gap-2">
                                 <span class="font-medium text-slate-900">{{ $service->name }}</span>
                                 @if($inCombo)
                                     <span class="text-xs bg-[#E8F2FA] text-[#002B5B] font-bold px-2 py-0.5 rounded-full">combo</span>
                                 @endif
+                                @if($service->pricing_type !== 'flat')
+                                    <span class="text-xs text-slate-400">&times; {{ $qty }} {{ $service->unit_label ?? ($service->pricing_type === 'per_head' ? 'guests' : 'units') }}</span>
+                                @endif
                             </div>
                             <span class="text-slate-500">
                                 {{ $service->duration_minutes }} min
                                 @if($inCombo)
-                                    &middot; <span class="line-through text-xs">R{{ number_format($service->price, 2) }}</span>
+                                    &middot; <span class="line-through text-xs">R{{ number_format($service->calculatePrice($qty), 2) }}</span>
                                 @else
-                                    &middot; R{{ number_format($service->price, 2) }}
+                                    &middot; R{{ number_format($service->calculatePrice($qty), 2) }}
                                 @endif
                             </span>
                         </div>

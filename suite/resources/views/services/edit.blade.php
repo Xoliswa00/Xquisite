@@ -78,7 +78,8 @@
                     </div>
                     <div id="edit-unit-price" style="display:none">
                         <label class="block text-sm font-medium text-slate-300 mb-1">Price Per Person / Unit (R)</label>
-                        <input type="number" name="price_per_unit" value="{{ old('price_per_unit', $service->price_per_unit) }}" min="0" step="0.01"
+                        <input type="number" name="price_per_unit" id="price_per_unit_field" value="{{ old('price_per_unit', $service->price_per_unit) }}" min="0" step="0.01"
+                               @input="sellingPrice = $event.target.valueAsNumber || 0"
                                class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('price_per_unit') border-red-500 @enderror">
                         @error('price_per_unit')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                     </div>
@@ -203,7 +204,9 @@ function bundleManager(existing, products) {
     return {
         rows: (existing || []).map(b => ({ product_id: b.product_id, quantity: b.quantity })),
         products: products,
-        sellingPrice: parseFloat(document.getElementById('selling_price')?.value) || 0,
+        sellingPrice: parseFloat((document.getElementById('edit_pricing_type')?.value === 'flat'
+            ? document.getElementById('selling_price')?.value
+            : document.getElementById('price_per_unit_field')?.value)) || 0,
         costPrice: parseFloat(document.getElementById('cost_price_field')?.value) || 0,
         addRow() { this.rows.push({ product_id: '', quantity: 1 }); },
         removeRow(i) { this.rows.splice(i, 1); },

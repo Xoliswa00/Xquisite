@@ -92,14 +92,17 @@ class AppointmentController extends Controller
             'theme_notes'   => 'nullable|string|max:1000',
             'setup_at'      => 'nullable|date',
             'breakdown_at'  => 'nullable|date',
-            'combo_id'          => 'nullable|integer',
-            'duration_override' => 'nullable|integer|min:1|max:1440',
+            'combo_id'              => 'nullable|integer',
+            'duration_override'     => 'nullable|integer|min:1|max:1440',
+            'service_quantities'    => 'nullable|array',
+            'service_quantities.*'  => 'nullable|integer|min:1',
         ]);
 
         $tenantId         = auth()->user()->tenant_id;
         $comboIdInput     = $data['combo_id'] ?? null;
         $durationOverride = isset($data['duration_override']) ? (int) $data['duration_override'] : null;
-        unset($data['combo_id'], $data['duration_override']);
+        $quantities       = $data['service_quantities'] ?? [];
+        unset($data['combo_id'], $data['duration_override'], $data['service_quantities']);
 
         // Resolve combo and merge its services into the selection
         $combo      = null;
@@ -148,7 +151,7 @@ class AppointmentController extends Controller
         $customer = Customer::findOrFail($data['customer_id']);
 
         $appointment = DB::transaction(function () use (
-            $data, $services, $customer, $totalDuration, $comboId, $comboPrice
+            $data, $services, $quantities, $customer, $totalDuration, $comboId, $comboPrice
         ) {
             $appt = Appointment::create([
                 ...$data,
@@ -162,7 +165,8 @@ class AppointmentController extends Controller
                 $services->mapWithKeys(fn($service, $index) => [
                     $service->id => [
                         'duration_minutes' => $service->duration_minutes,
-                        'price_at_booking' => $service->price,
+                        'price_at_booking' => $service->calculatePrice($quantities[$service->id] ?? 1),
+                        'quantity'         => $quantities[$service->id] ?? 1,
                         'sort_order'       => $index,
                     ],
                 ])->all()
@@ -379,19 +383,25 @@ class AppointmentController extends Controller
             'duration_minutes' => $totalDuration,
         ]);
 
-        // Re-sync services, preserving price snapshots for unchanged ones
+        // Re-sync services, preserving price snapshots and quantities for unchanged ones
         $existingPivots = $appointment->services->keyBy('id');
 
         $appointment->services()->sync(
-            $services->mapWithKeys(fn($service, $index) => [
-                $service->id => [
-                    'duration_minutes' => $service->duration_minutes,
-                    // Keep original price snapshot if this service was already on the appointment
-                    'price_at_booking' => $existingPivots->get($service->id)?->pivot->price_at_booking
-                                          ?? $service->price,
-                    'sort_order'       => $index,
-                ],
-            ])->all()
+            $services->mapWithKeys(function ($service, $index) use ($existingPivots) {
+                $existingPivot = $existingPivots->get($service->id)?->pivot;
+                $qty           = $existingPivot->quantity ?? 1;
+
+                return [
+                    $service->id => [
+                        'duration_minutes' => $service->duration_minutes,
+                        // Keep original price snapshot if this service was already on the appointment
+                        'price_at_booking' => $existingPivot?->price_at_booking
+                                              ?? $service->calculatePrice($qty),
+                        'quantity'         => $qty,
+                        'sort_order'       => $index,
+                    ],
+                ];
+            })->all()
         );
 
         $notifications->notifyAppointmentUpdated($appointment, array_filter([
@@ -481,11 +491,11 @@ class AppointmentController extends Controller
             $combo = \App\Models\ServiceCombo::with('services')->find($appointment->combo_id);
             $comboServiceIds = $combo ? $combo->services->pluck('id')->all() : [];
         }
-        $fullTotal  = $appointment->services->sum(fn($s) => (float)($s->pivot->price_at_booking ?? $s->price));
+        $fullTotal  = $appointment->services->sum(fn($s) => (float)($s->pivot->price_at_booking ?? $s->calculatePrice($s->pivot->quantity ?? 1)));
         $extrasCost = $appointment->combo_price
             ? $appointment->services
                 ->filter(fn($s) => !in_array($s->id, $comboServiceIds))
-                ->sum(fn($s) => (float)($s->pivot->price_at_booking ?? $s->price))
+                ->sum(fn($s) => (float)($s->pivot->price_at_booking ?? $s->calculatePrice($s->pivot->quantity ?? 1)))
             : 0;
         $amountDue = $appointment->combo_price
             ? (float)$appointment->combo_price + $extrasCost
