@@ -84,7 +84,7 @@ class Appointment extends Model
 public function service(): BelongsToMany
 {
     return $this->belongsToMany(Service::class, 'appointment_services')
-                ->withPivot(['duration_minutes', 'price_at_booking', 'sort_order'])
+                ->withPivot(['duration_minutes', 'price_at_booking', 'quantity', 'sort_order'])
                 ->withTimestamps()
                 ->orderByPivot('sort_order');
 }
@@ -92,7 +92,7 @@ public function service(): BelongsToMany
 public function services(): BelongsToMany
 {
     return $this->belongsToMany(Service::class, 'appointment_services')
-                ->withPivot(['duration_minutes', 'price_at_booking', 'sort_order'])
+                ->withPivot(['duration_minutes', 'price_at_booking', 'quantity', 'sort_order'])
                 ->withTimestamps()
                 ->orderByPivot('sort_order');
 }

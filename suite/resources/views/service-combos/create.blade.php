@@ -78,7 +78,7 @@
                                             <p class="text-xs text-slate-500">{{ $service->category->icon }} {{ $service->category->name }}</p>
                                         @endif
                                     </div>
-                                    <span class="text-sm text-slate-400 shrink-0">R{{ number_format($service->price, 2) }}</span>
+                                    <span class="text-sm text-slate-400 shrink-0">{{ $service->priceLabel() }}</span>
                                 </label>
                             @endforeach
                         </div>

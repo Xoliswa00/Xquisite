@@ -6,8 +6,14 @@
             <form method="POST" action="{{ route('appointments.store') }}" class="space-y-5"
                   x-data="bookingForm(
                       @js($combos),
-                      @js($services->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'duration_minutes' => $s->duration_minutes, 'price' => (float)$s->price])->values()),
-                      @js(array_map('intval', old('service_ids', [])))
+                      @js($services->map(fn($s) => [
+                          'id' => $s->id, 'name' => $s->name, 'duration_minutes' => $s->duration_minutes,
+                          'price' => (float) $s->calculatePrice(),
+                          'pricing_type' => $s->pricing_type,
+                          'unit_label' => $s->unit_label ?? ($s->pricing_type === 'per_head' ? 'guests' : 'units'),
+                      ])->values()),
+                      @js(array_map('intval', old('service_ids', []))),
+                      @js(collect(old('service_quantities', []))->mapWithKeys(fn($v, $k) => [(int) $k => max(1, (int) $v)])->all())
                   )">
                 @csrf
 
@@ -85,6 +91,15 @@
                         <template x-for="svc in selectedServices" :key="svc.id">
                             <span class="inline-flex items-center gap-1 bg-[#001A3A] border border-[#002B5B] text-[#B8D4F0] text-xs font-medium px-2.5 py-1 rounded-full">
                                 <span x-text="svc.name"></span>
+                                <template x-if="svc.pricing_type !== 'flat'">
+                                    <span class="flex items-center gap-1 ml-1 bg-[#002B5B]/60 rounded-full px-1">
+                                        <button type="button" @click="setQty(svc.id, (quantities[svc.id] || 1) - 1)"
+                                                class="w-4 h-4 flex items-center justify-center text-[#6EA8D4] hover:text-white leading-none">&minus;</button>
+                                        <span class="w-4 text-center" x-text="quantities[svc.id] || 1"></span>
+                                        <button type="button" @click="setQty(svc.id, (quantities[svc.id] || 1) + 1)"
+                                                class="w-4 h-4 flex items-center justify-center text-[#6EA8D4] hover:text-white leading-none">+</button>
+                                    </span>
+                                </template>
                                 <button type="button" @click="removeService(svc.id)"
                                         class="ml-0.5 text-[#6EA8D4] hover:text-white leading-none">&times;</button>
                             </span>
@@ -172,6 +187,9 @@
                     {{-- Hidden inputs for form submission --}}
                     <template x-for="id in selectedServiceIds" :key="id">
                         <input type="hidden" name="service_ids[]" :value="id">
+                    </template>
+                    <template x-for="id in selectedServiceIds" :key="'qty-' + id">
+                        <input type="hidden" :name="'service_quantities[' + id + ']'" :value="quantities[id] || 1">
                     </template>
 
                     @error('service_ids')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
@@ -367,14 +385,19 @@
     </div>
 
     <script>
-    function bookingForm(combos, allServices, oldServiceIds) {
+    function bookingForm(combos, allServices, oldServiceIds, oldQuantities) {
         return {
             // ── Services dropdown ─────────────────────────────────────────────
             allServices,
             selectedServiceIds: oldServiceIds,
+            quantities: oldQuantities || {},
             svcOpen: false,
             svcSearch: '',
             customerId: '{{ old("customer_id", "") }}',
+
+            setQty(id, qty) {
+                this.quantities[id] = Math.max(1, qty);
+            },
 
             get filteredServices() {
                 const q = this.svcSearch.trim().toLowerCase();
@@ -405,16 +428,19 @@
                 return h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
             },
             get summaryPrice() {
-                const total = this.selectedServices.reduce((n, s) => n + parseFloat(s.price || 0), 0);
+                const total = this.selectedServices.reduce((n, s) => n + parseFloat(s.price || 0) * (this.quantities[s.id] || 1), 0);
                 return total.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             },
 
             isSelected(id) { return this.selectedServiceIds.includes(id); },
 
             toggleService(id) {
-                this.isSelected(id)
-                    ? (this.selectedServiceIds = this.selectedServiceIds.filter(i => i !== id))
-                    : this.selectedServiceIds.push(id);
+                if (this.isSelected(id)) {
+                    this.selectedServiceIds = this.selectedServiceIds.filter(i => i !== id);
+                } else {
+                    this.selectedServiceIds.push(id);
+                    if (!this.quantities[id]) this.quantities[id] = 1;
+                }
             },
 
             removeService(id) {
@@ -442,6 +468,7 @@
                 if (!combo) return;
                 combo.service_ids.forEach(id => {
                     if (!this.selectedServiceIds.includes(id)) this.selectedServiceIds.push(id);
+                    if (!this.quantities[id]) this.quantities[id] = 1;
                 });
             },
 

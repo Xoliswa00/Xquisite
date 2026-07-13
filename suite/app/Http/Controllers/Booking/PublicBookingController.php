@@ -42,7 +42,9 @@ class PublicBookingController extends Controller
             'id'               => $s->id,
             'name'             => $s->name,
             'duration_minutes' => (int) $s->duration_minutes,
-            'price'            => (float) $s->price,
+            'price'            => (float) $s->calculatePrice(),
+            'pricing_type'     => $s->pricing_type,
+            'unit_label'       => $s->unit_label ?? ($s->pricing_type === 'per_head' ? 'guests' : 'units'),
         ])->values();
 
         // Only combos whose every service is bookable right now
@@ -83,12 +85,13 @@ class PublicBookingController extends Controller
                 ->withErrors(['service_ids' => 'Please select at least one service.']);
         }
 
+        $quantities    = $this->normalizeQuantities($request->input('quantities', []), $services);
         $combo         = $this->detectCombo($request->input('combo_id'), $services->pluck('id')->all());
         $totalDuration = $services->sum('duration_minutes');
         $isMultiDay    = $totalDuration >= 1440;
         $totalDays     = $isMultiDay ? (int) ceil($totalDuration / 1440) : 0;
 
-        return view('booking.service', compact('tenant', 'slug', 'services', 'combo', 'isMultiDay', 'totalDays'));
+        return view('booking.service', compact('tenant', 'slug', 'services', 'combo', 'isMultiDay', 'totalDays', 'quantities'));
     }
 
     /** AJAX — return available slots for selected services + date */
@@ -136,6 +139,8 @@ class PublicBookingController extends Controller
                 : 'required|date|after:now',
         ]);
 
+        $quantities = $this->normalizeQuantities($request->input('quantities', []), $services);
+
         $slot  = Carbon::parse($request->scheduled_at);
         $combo = $this->detectCombo($request->input('combo_id'), $services->pluck('id')->all());
 
@@ -143,11 +148,12 @@ class PublicBookingController extends Controller
             'service_ids'  => $request->input('service_ids'),
             'scheduled_at' => $request->scheduled_at,
             'combo_id'     => $combo?->id,
+            'quantities'   => $quantities,
         ]]);
 
         $customer = auth('customer')->user();
 
-        return view('booking.confirm', compact('tenant', 'services', 'slot', 'slug', 'customer', 'combo', 'isMultiDay', 'totalDays'));
+        return view('booking.confirm', compact('tenant', 'services', 'slot', 'slug', 'customer', 'combo', 'isMultiDay', 'totalDays', 'quantities'));
     }
 
     /** AJAX — validate a promo code against the pending booking session */
@@ -172,8 +178,9 @@ class PublicBookingController extends Controller
             return response()->json(['valid' => false, 'message' => 'Invalid or expired promo code.']);
         }
 
-        $services = Service::findMany($pending['service_ids'] ?? []);
-        $total    = (float) $services->sum('price');
+        $services   = Service::findMany($pending['service_ids'] ?? []);
+        $quantities = $pending['quantities'] ?? [];
+        $total      = (float) $services->sum(fn($s) => $s->calculatePrice($quantities[$s->id] ?? 1));
         $discount = $promo->discount_type === 'percentage'
             ? round($total * $promo->discount_value / 100, 2)
             : min((float) $promo->discount_value, $total);
@@ -206,6 +213,7 @@ class PublicBookingController extends Controller
         }
 
         $services      = Service::findMany($pending['service_ids']);
+        $quantities    = $pending['quantities'] ?? [];
         $serviceIds    = $services->pluck('id')->all();
         $totalDuration = $services->sum('duration_minutes');
         $start         = Carbon::parse($pending['scheduled_at']);
@@ -236,7 +244,7 @@ class PublicBookingController extends Controller
         $promoDiscount = null;
 
         $appointment = DB::transaction(function () use (
-            $combo, $request, $services, $tenant, $customer, $start,
+            $combo, $request, $services, $quantities, $tenant, $customer, $start,
             $totalDuration, $notes, $comboId, $comboPrice, &$promoCode, &$promoDiscount
         ) {
             if (!$combo && $request->filled('promo_code')) {
@@ -249,7 +257,7 @@ class PublicBookingController extends Controller
                     ->first();
 
                 if ($promo && $promo->isLive() && in_array($promo->applies_to, ['all', 'services'])) {
-                    $baseTotal     = (float) $services->sum('price');
+                    $baseTotal     = (float) $services->sum(fn($s) => $s->calculatePrice($quantities[$s->id] ?? 1));
                     $promoDiscount = $promo->discount_type === 'percentage'
                         ? round($baseTotal * $promo->discount_value / 100, 2)
                         : min((float) $promo->discount_value, $baseTotal);
@@ -279,7 +287,8 @@ class PublicBookingController extends Controller
                 $services->mapWithKeys(fn($service, $index) => [
                     $service->id => [
                         'duration_minutes' => $service->duration_minutes,
-                        'price_at_booking' => $service->price,
+                        'price_at_booking' => $service->calculatePrice($quantities[$service->id] ?? 1),
+                        'quantity'         => $quantities[$service->id] ?? 1,
                         'sort_order'       => $index,
                     ],
                 ])->all()
@@ -379,6 +388,17 @@ class PublicBookingController extends Controller
             ->get();
 
         return view('booking.edit', compact('tenant', 'appointment', 'slug', 'services', 'isMultiDay', 'totalDays'));
+    }
+
+    /**
+     * Clamp each selected service's requested quantity to a minimum of 1.
+     * Flat-rate services ignore quantity in calculatePrice(), so it's harmless to keep one for them too.
+     */
+    private function normalizeQuantities(array $raw, \Illuminate\Support\Collection $services): array
+    {
+        return $services->mapWithKeys(fn($service) => [
+            $service->id => max(1, (int) ($raw[$service->id] ?? 1)),
+        ])->all();
     }
 
     /**
