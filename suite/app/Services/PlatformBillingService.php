@@ -16,9 +16,14 @@ class PlatformBillingService
 {
     public function generateInvoice(Tenant $tenant): PlatformInvoice
     {
-        $amount = $tenant->monthlyTotal();
         $start  = now()->startOfMonth()->toDateString();
         $end    = now()->endOfMonth()->toDateString();
+
+        if ($tenant->platformInvoices()->where('billing_period_start', $start)->exists()) {
+            throw new \RuntimeException("Tenant #{$tenant->id} already has an invoice for the billing period starting {$start}.");
+        }
+
+        $amount = $tenant->monthlyTotal();
 
         $invoice = PlatformInvoice::create([
             'tenant_id'            => $tenant->id,
@@ -105,14 +110,35 @@ class PlatformBillingService
         $startOfMonth = now()->startOfMonth()->toDateString();
 
         return Tenant::where('is_active', true)
+            ->where('is_demo', false)
             ->whereNull('suspended_at')
             ->where(function ($q) {
                 $q->whereNull('trial_ends_at')
                   ->orWhere('trial_ends_at', '<', now());
             })
+            ->whereHas('activeModules')
             ->whereDoesntHave('platformInvoices', function ($q) use ($startOfMonth) {
                 $q->where('billing_period_start', $startOfMonth);
             })
+            ->with('activeModules.platformModule')
+            ->get();
+    }
+
+    /**
+     * Active tenants past trial with no active module — would previously have
+     * been billed a flat/incorrect amount by mistake; now excluded from billing
+     * entirely. Surfaced here so admins notice them instead of them going silent.
+     */
+    public function tenantsActiveWithNoModules(): Collection
+    {
+        return Tenant::where('is_active', true)
+            ->where('is_demo', false)
+            ->whereNull('suspended_at')
+            ->where(function ($q) {
+                $q->whereNull('trial_ends_at')
+                  ->orWhere('trial_ends_at', '<', now());
+            })
+            ->whereDoesntHave('activeModules')
             ->get();
     }
 

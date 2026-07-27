@@ -74,12 +74,36 @@
                             </div>
                             <div class="flex items-center gap-4 shrink-0">
                                 <span class="text-sm text-slate-300">
-                                    R{{ number_format(\App\Models\Tenant::planAmount($tenant->plan ?? 'basic'), 2) }}
-                                    <span class="text-xs text-slate-500 ml-1">{{ ucfirst($tenant->plan ?? 'basic') }}</span>
+                                    R{{ number_format($tenant->monthlyTotal(), 2) }}
+                                    <span class="text-xs text-slate-500 ml-1">{{ $tenant->activeModules->count() }} module{{ $tenant->activeModules->count() === 1 ? '' : 's' }}</span>
                                 </span>
                                 <a href="{{ route('admin.billing.show', ['tenant' => $tenant->id]) }}"
                                    class="text-xs px-3 py-1 border border-slate-700 text-slate-300 hover:bg-slate-700 rounded-lg">Manage</a>
                             </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        {{-- Active tenants with no active module — not billed, but worth an admin's attention --}}
+        @if($noModuleTenants->isNotEmpty())
+            <div class="bg-slate-900 border border-amber-800/50 rounded-2xl overflow-hidden">
+                <div class="px-5 py-3 border-b border-slate-800 flex items-center gap-3">
+                    <p class="font-semibold text-white">Active, No Modules — Not Being Billed</p>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-medium">
+                        {{ $noModuleTenants->count() }} tenant{{ $noModuleTenants->count() === 1 ? '' : 's' }}
+                    </span>
+                </div>
+                <div class="divide-y divide-slate-800">
+                    @foreach($noModuleTenants as $tenant)
+                        <div class="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-slate-800/30">
+                            <div class="min-w-0">
+                                <p class="font-medium text-white text-sm">{{ $tenant->name }}</p>
+                                <p class="text-xs text-slate-400">{{ $tenant->email }}</p>
+                            </div>
+                            <a href="{{ route('admin.billing.show', ['tenant' => $tenant->id]) }}"
+                               class="text-xs px-3 py-1 border border-slate-700 text-slate-300 hover:bg-slate-700 rounded-lg shrink-0">Manage</a>
                         </div>
                     @endforeach
                 </div>

@@ -35,7 +35,7 @@ class GeneratePlatformInvoices extends Command
                     $t->id,
                     $t->name,
                     $t->plan ?? 'basic',
-                    'R' . number_format(\App\Models\Tenant::planAmount($t->plan ?? 'basic'), 2),
+                    'R' . number_format($t->monthlyTotal(), 2),
                 ])
             );
             return self::SUCCESS;
