@@ -119,8 +119,11 @@ class Tenant extends Model
 
     public function monthlyTotal(): float
     {
-        return $this->activeModules()->with('platformModule')->get()
-            ->sum(fn (TenantModule $tm) => $tm->monthly_price);
+        $modules = $this->relationLoaded('activeModules')
+            ? $this->activeModules
+            : $this->activeModules()->with('platformModule')->get();
+
+        return $modules->sum(fn (TenantModule $tm) => $tm->monthly_price);
     }
 
     public function platformInvoices()
@@ -134,15 +137,6 @@ class Tenant extends Model
     }
 
     // ── Billing helpers ────────────────────────────────────────
-
-    public static function planAmount(string $plan): float
-    {
-        return match ($plan) {
-            'premium'    => 599.00,
-            'enterprise' => 1299.00,
-            default      => 299.00,  // basic
-        };
-    }
 
     public function isInGrace(): bool
     {

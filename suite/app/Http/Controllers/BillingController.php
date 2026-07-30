@@ -57,10 +57,11 @@ class BillingController extends Controller
             'unpaid_rev' => PlatformInvoice::whereIn('status', ['unpaid', 'overdue'])->sum('amount'),
         ];
 
-        $dueTenants = $this->billing->tenantsDueForBilling();
-        $queueCount = BillingQueue::pendingCount();
+        $dueTenants     = $this->billing->tenantsDueForBilling();
+        $noModuleTenants = $this->billing->tenantsActiveWithNoModules();
+        $queueCount     = BillingQueue::pendingCount();
 
-        return view('billing.admin.index', compact('tenants', 'stats', 'dueTenants', 'queueCount'));
+        return view('billing.admin.index', compact('tenants', 'stats', 'dueTenants', 'noModuleTenants', 'queueCount'));
     }
 
     public function adminShow(Tenant $tenant)
@@ -252,7 +253,11 @@ class BillingController extends Controller
     {
         abort_unless(auth()->user()->isSystemAdmin(), 403);
 
-        $invoice = $this->billing->generateInvoice($tenant);
+        try {
+            $invoice = $this->billing->generateInvoice($tenant);
+        } catch (\RuntimeException $e) {
+            return redirect()->route('admin.billing.show', ['tenant' => $tenant->id])->with('error', $e->getMessage());
+        }
 
         return redirect()->route('admin.billing.show', ['tenant' => $tenant->id])->with('success', "Invoice {$invoice->invoice_number} generated.");
     }
