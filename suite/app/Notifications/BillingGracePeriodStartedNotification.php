@@ -19,7 +19,7 @@ class BillingGracePeriodStartedNotification extends MailNotification
     {
         $days = $this->tenant->graceDaysLeft();
         return (new MailMessage)
-            ->subject('Grace Period Started â€” Action Required')
+            ->subject('Grace Period Started — Action Required')
             ->line("Your platform invoice is overdue. You have a {$days}-day grace period to make payment before your account is suspended.")
             ->action('Pay Now', url('/billing'));
     }

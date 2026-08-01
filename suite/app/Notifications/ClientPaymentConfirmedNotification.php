@@ -17,7 +17,7 @@ class ClientPaymentConfirmedNotification extends MailNotification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Payment Confirmed â€” R' . number_format($this->amount, 2))
+            ->subject('Payment Confirmed — R' . number_format($this->amount, 2))
             ->line("Your payment of R" . number_format($this->amount, 2) . " has been confirmed.")
             ->line("Reference: {$this->reference}")
             ->action('View Portal', url('/portal/dashboard'));

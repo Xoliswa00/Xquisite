@@ -75,7 +75,7 @@
                 {{-- Delete --}}
                 <div class="px-5 pb-4 border-t border-slate-700 pt-3">
                     <form method="POST" action="{{ route('admin.plans.destroy', $plan) }}"
-                          onsubmit="return confirm('Delete {{ $plan->name }} plan?')">
+                          onsubmit="return confirm('Delete ' + {{ \Illuminate\Support\Js::from($plan->name) }} + ' plan?')">
                         @csrf @method('DELETE')
                         <button type="submit" class="text-xs text-red-400 hover:text-red-300 transition-colors">Delete plan</button>
                     </form>

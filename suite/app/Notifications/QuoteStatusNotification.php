@@ -18,7 +18,7 @@ class QuoteStatusNotification extends MailNotification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("Quote {$this->quote->reference} â€” {$this->event}")
+            ->subject("Quote {$this->quote->reference} — {$this->event}")
             ->line("Quote {$this->quote->reference} has been {$this->event}.")
             ->action('View Quote', url('/quotes/' . $this->quote->id));
     }

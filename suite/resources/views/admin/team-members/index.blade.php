@@ -58,7 +58,7 @@
                         <a href="{{ route('admin.team-members.edit', $member) }}"
                            class="text-xs text-[#0078D4] hover:text-[#0065B8] font-medium transition-colors">Edit</a>
                         <form method="POST" action="{{ route('admin.team-members.destroy', $member) }}"
-                              onsubmit="return confirm('Remove {{ $member->name }} from the team?')">
+                              onsubmit="return confirm('Remove ' + {{ \Illuminate\Support\Js::from($member->name) }} + ' from the team?')">
                             @csrf @method('DELETE')
                             <button type="submit" class="text-xs text-red-400 hover:text-red-300 font-medium transition-colors">Remove</button>
                         </form>

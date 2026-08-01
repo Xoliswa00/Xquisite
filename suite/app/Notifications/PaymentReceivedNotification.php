@@ -17,7 +17,7 @@ class PaymentReceivedNotification extends MailNotification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Payment Received â€” R' . number_format($this->amount, 2))
+            ->subject('Payment Received — R' . number_format($this->amount, 2))
             ->line("A payment of R" . number_format($this->amount, 2) . " was recorded.")
             ->line("Reference: {$this->reference}")
             ->action('View Payment Plans', url('/payment-plans'));

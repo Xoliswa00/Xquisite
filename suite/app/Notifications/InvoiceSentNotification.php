@@ -26,7 +26,7 @@ class InvoiceSentNotification extends MailNotification
     {
         return [
             'title'   => "Invoice {$this->invoiceRef} sent",
-            'message' => "Sent to {$this->clientName} â€” R" . number_format($this->amount, 2),
+            'message' => "Sent to {$this->clientName} — R" . number_format($this->amount, 2),
             'url'     => '/quotes',
             'icon'    => 'invoice',
         ];
