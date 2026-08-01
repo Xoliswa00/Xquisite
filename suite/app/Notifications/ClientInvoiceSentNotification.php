@@ -17,7 +17,7 @@ class ClientInvoiceSentNotification extends MailNotification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("Invoice {$this->invoiceRef} â€” R" . number_format($this->amount, 2))
+            ->subject("Invoice {$this->invoiceRef} — R" . number_format($this->amount, 2))
             ->line("You have received invoice {$this->invoiceRef} for R" . number_format($this->amount, 2) . ".")
             ->action('View Portal', url('/portal/dashboard'));
     }
@@ -26,7 +26,7 @@ class ClientInvoiceSentNotification extends MailNotification
     {
         return [
             'title'   => "Invoice {$this->invoiceRef}",
-            'message' => 'R' . number_format($this->amount, 2) . ' â€” please review and pay.',
+            'message' => 'R' . number_format($this->amount, 2) . ' — please review and pay.',
             'url'     => '/portal/dashboard',
             'icon'    => 'invoice',
         ];

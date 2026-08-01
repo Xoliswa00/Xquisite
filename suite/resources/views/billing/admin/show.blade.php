@@ -15,7 +15,7 @@
                         <button class="text-sm px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg">Reactivate</button>
                     </form>
                 @else
-                    <form method="POST" action="{{ route('admin.billing.suspend', ['tenant' => $tenant->id]) }}" onsubmit="return confirm('Suspend {{ $tenant->name }}?')">
+                    <form method="POST" action="{{ route('admin.billing.suspend', ['tenant' => $tenant->id]) }}" onsubmit="return confirm('Suspend ' + {{ \Illuminate\Support\Js::from($tenant->name) }} + '?')">
                         @csrf
                         <button class="text-sm px-4 py-2 bg-red-800 hover:bg-red-700 text-white rounded-lg">Suspend</button>
                     </form>

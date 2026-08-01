@@ -18,7 +18,7 @@ class ClientQuoteSentNotification extends MailNotification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("You have a new quote â€” {$this->quote->reference}")
+            ->subject("You have a new quote — {$this->quote->reference}")
             ->line("A new quote \"{$this->quote->title}\" for R" . number_format($this->quote->total, 2) . " has been sent to you.")
             ->action('View Portal', url('/portal/dashboard'));
     }
@@ -27,7 +27,7 @@ class ClientQuoteSentNotification extends MailNotification
     {
         return [
             'title'   => "New quote: {$this->quote->reference}",
-            'message' => "\"{$this->quote->title}\" â€” R" . number_format($this->quote->total, 2),
+            'message' => "\"{$this->quote->title}\" — R" . number_format($this->quote->total, 2),
             'url'     => '/portal/dashboard',
             'icon'    => 'quote',
         ];
