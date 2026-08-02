@@ -113,6 +113,15 @@
                             <label class="block text-xs font-medium text-slate-300 mb-1.5">Phone</label>
                             <input type="text" name="company_phone" value="{{ old('company_phone', $settings['company_phone'] ?? '') }}" class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0078D4]" placeholder="+27 11 000 0000">
                         </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Registration Number</label>
+                            <input type="text" name="company_registration" value="{{ old('company_registration', $settings['company_registration'] ?? '') }}" class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0078D4]" placeholder="2024/123456/07">
+                            <p class="text-xs text-slate-500 mt-1">Company registration (CIPC) number, shown in the invoice footer.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Website</label>
+                            <input type="text" name="company_website" value="{{ old('company_website', $settings['company_website'] ?? '') }}" class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0078D4]" placeholder="www.xquisite.co.za">
+                        </div>
                         <div class="sm:col-span-2">
                             <label class="block text-xs font-medium text-slate-300 mb-1.5">Address</label>
                             <textarea name="company_address" rows="2" class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0078D4]" placeholder="123 Main Street, Sandton, Johannesburg, 2196">{{ old('company_address', $settings['company_address'] ?? '') }}</textarea>

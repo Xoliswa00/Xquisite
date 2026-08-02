@@ -50,6 +50,12 @@ class PlatformInvoice extends Model
         return max(0, now()->startOfDay()->diffInDays($this->due_date->startOfDay(), false) * -1);
     }
 
+    /** Signed days until due_date: positive = days remaining, 0 = due today, negative = days overdue. */
+    public function getDaysUntilDueAttribute(): int
+    {
+        return now()->startOfDay()->diffInDays($this->due_date->copy()->startOfDay(), false);
+    }
+
     public function getStatusBadgeAttribute(): array
     {
         if ($this->isAwaitingConfirmation()) {
