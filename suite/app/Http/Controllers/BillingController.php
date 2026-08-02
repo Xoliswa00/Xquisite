@@ -339,6 +339,8 @@ class BillingController extends Controller
             'company_email'        => 'nullable|email|max:100',
             'company_phone'        => 'nullable|string|max:30',
             'company_vat'          => 'nullable|string|max:30',
+            'company_registration' => 'nullable|string|max:40',
+            'company_website'      => 'nullable|string|max:100',
             'bank_name'            => 'nullable|string|max:60',
             'bank_account_name'    => 'nullable|string|max:100',
             'bank_account_number'  => 'nullable|string|max:30',
@@ -358,6 +360,7 @@ class BillingController extends Controller
         }
 
         $companyKeys = ['company_name', 'company_address', 'company_email', 'company_phone', 'company_vat',
+                        'company_registration', 'company_website',
                         'bank_name', 'bank_account_name', 'bank_account_number', 'bank_branch_code',
                         'whatsapp_number', 'whatsapp_message'];
         foreach ($companyKeys as $key) {
