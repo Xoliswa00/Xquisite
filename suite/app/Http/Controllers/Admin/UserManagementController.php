@@ -104,7 +104,7 @@ class UserManagementController extends Controller
     public function show(User $user): View
     {
         Gate::authorize('manage-staff');
-        $this->ensureOwnersTenant($user);
+        Gate::authorize('view', $user);
 
         return view('admin.users.show', compact('user'));
     }
@@ -115,7 +115,7 @@ class UserManagementController extends Controller
     public function edit(User $user): View
     {
         Gate::authorize('manage-staff');
-        $this->ensureOwnersTenant($user);
+        Gate::authorize('update', $user);
 
         $permissions = Permission::orderBy('name')->get();
 
@@ -128,7 +128,7 @@ class UserManagementController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         Gate::authorize('manage-staff');
-        $this->ensureOwnersTenant($user);
+        Gate::authorize('update', $user);
 
         // Can't edit owner
         if ($user->isOwner()) {
@@ -168,7 +168,7 @@ class UserManagementController extends Controller
     public function deactivate(Request $request, User $user): RedirectResponse
     {
         Gate::authorize('manage-staff');
-        $this->ensureOwnersTenant($user);
+        Gate::authorize('update', $user);
 
         if ($user->isOwner()) {
             abort(403, 'Cannot deactivate owner account.');
@@ -186,7 +186,7 @@ class UserManagementController extends Controller
     public function activate(Request $request, User $user): RedirectResponse
     {
         Gate::authorize('manage-staff');
-        $this->ensureOwnersTenant($user);
+        Gate::authorize('update', $user);
 
         $user->update(['is_active' => true]);
 
@@ -200,7 +200,7 @@ class UserManagementController extends Controller
     public function resetPassword(Request $request, User $user): RedirectResponse
     {
         Gate::authorize('manage-staff');
-        $this->ensureOwnersTenant($user);
+        Gate::authorize('update', $user);
 
         if ($user->isOwner()) {
             abort(403, 'Cannot reset owner password.');
@@ -222,9 +222,11 @@ class UserManagementController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         Gate::authorize('manage-staff');
-        $this->ensureOwnersTenant($user);
 
+        // Checked before the policy so the friendly message wins over the
+        // policy's generic 403 (UserPolicy::delete() also excludes owners).
         abort_if($user->isOwner(), 403, 'Cannot delete an owner account.');
+        Gate::authorize('delete', $user);
 
         $user->delete(); // soft delete — data preserved
 
@@ -247,15 +249,5 @@ class UserManagementController extends Controller
 
         return redirect()->route('admin.users.show', $user)
             ->with('success', "{$user->name}'s account has been restored.");
-    }
-
-    /**
-     * Ensure user belongs to owner's tenant.
-     */
-    private function ensureOwnersTenant(User $user): void
-    {
-        if ($user->tenant_id !== auth()->user()->tenant_id) {
-            abort(403);
-        }
     }
 }

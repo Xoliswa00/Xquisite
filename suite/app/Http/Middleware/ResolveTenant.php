@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -25,25 +26,18 @@ class ResolveTenant
             $tenantId = Auth::user()->tenant_id;
         }
 
-        // 2. Subdomain detection — {slug}.xquisite.co.za
+        // 2. Subdomain detection — {slug}.xquisite.co.za. Resolved even when
+        // step 1 already found a tenant, so a disagreement between "who the
+        // session belongs to" and "which subdomain is being visited" can be
+        // detected rather than silently overridden.
+        $subdomainTenantId = $this->resolveSubdomainTenantId($request);
+
         if (!$tenantId) {
-            $host      = $request->getHost();
-            $appDomain = config('app.domain', 'xquisite.co.za');
-
-            if (str_ends_with($host, '.' . $appDomain)) {
-                $subdomain = substr($host, 0, -strlen('.' . $appDomain));
-
-                if ($subdomain && $subdomain !== 'www') {
-                    $tenant = Tenant::where('subdomain', $subdomain)
-                        ->orWhere('slug', $subdomain)
-                        ->where('is_active', true)
-                        ->first();
-
-                    if ($tenant) {
-                        $tenantId = $tenant->id;
-                    }
-                }
-            }
+            $tenantId = $subdomainTenantId;
+        } elseif ($subdomainTenantId && $subdomainTenantId !== $tenantId) {
+            // Precedence is unchanged (the authenticated user's own tenant
+            // wins) — this only makes an existing implicit rule observable.
+            $this->logTenantMismatch($request, $tenantId, $subdomainTenantId);
         }
 
         // 3. Custom domain detection
@@ -71,5 +65,68 @@ class ResolveTenant
         }
 
         return $next($request);
+    }
+
+    private function resolveSubdomainTenantId(Request $request): ?int
+    {
+        $host      = $request->getHost();
+        $appDomain = config('app.domain', 'xquisite.co.za');
+
+        if (!str_ends_with($host, '.' . $appDomain)) {
+            return null;
+        }
+
+        $subdomain = substr($host, 0, -strlen('.' . $appDomain));
+
+        if (!$subdomain || $subdomain === 'www') {
+            return null;
+        }
+
+        $tenant = Tenant::where('subdomain', $subdomain)
+            ->orWhere('slug', $subdomain)
+            ->where('is_active', true)
+            ->first();
+
+        return $tenant?->id;
+    }
+
+    /**
+     * A session cookie leaking across tenant subdomains (e.g. a misconfigured
+     * SESSION_DOMAIN in production) would look exactly like this: an
+     * authenticated user whose own tenant differs from the subdomain they're
+     * visiting. Precedence still favours the user's own tenant — this only
+     * makes the disagreement observable instead of silent.
+     */
+    private function logTenantMismatch(Request $request, int $ownTenantId, int $subdomainTenantId): void
+    {
+        if ($request->hasSession() && $request->session()->get('tenant_mismatch_logged') === $subdomainTenantId) {
+            return;
+        }
+
+        try {
+            DB::table('system_logs')->insert([
+                'level'      => 'WARNING',
+                'message'    => "ResolveTenant: authenticated user's tenant ({$ownTenantId}) differs from visited subdomain's tenant ({$subdomainTenantId})",
+                'context'    => json_encode([
+                    'user_id'             => Auth::id(),
+                    'own_tenant_id'       => $ownTenantId,
+                    'subdomain_tenant_id' => $subdomainTenantId,
+                    'host'                => $request->getHost(),
+                ]),
+                'user_id'    => Auth::id(),
+                'ip_address' => $request->ip(),
+                'url'        => $request->fullUrl(),
+                'status'     => 'new',
+                'source'     => 'suite',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Throwable) {
+            // Never let logging break the request
+        }
+
+        if ($request->hasSession()) {
+            $request->session()->put('tenant_mismatch_logged', $subdomainTenantId);
+        }
     }
 }

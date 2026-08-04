@@ -8,11 +8,27 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>[x-cloak] { display: none !important; }</style>
 </head>
 
 <body class="font-sans antialiased bg-slate-950 text-slate-100 h-screen overflow-hidden">
 
-<div x-data="pos()" class="h-screen flex flex-col">
+<script>window.POS_TENANT_ID = {{ $tenantId }};</script>
+
+<!-- Skeleton shown until Alpine hydrates; removed by x-init below -->
+<div id="pos-skeleton" class="h-screen flex flex-col animate-pulse">
+    <div class="h-14 bg-slate-900 border-b border-slate-800 shrink-0"></div>
+    <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
+        <div class="flex-1 p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 content-start">
+            @for ($i = 0; $i < 8; $i++)
+                <div class="bg-slate-800 rounded-xl h-24"></div>
+            @endfor
+        </div>
+        <div class="md:w-96 md:shrink-0 h-[45vh] md:h-auto bg-slate-900"></div>
+    </div>
+</div>
+
+<div x-data="pos()" x-cloak x-init="document.getElementById('pos-skeleton')?.remove(); init()" class="h-screen flex flex-col">
 
     <!-- Header bar -->
     <header class="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 shrink-0">
@@ -24,9 +40,42 @@
                     Appointment #{{ $appointment->id }} · {{ $appointment->customer->name }}
                 </span>
             @endif
+            <template x-if="offlineQueue.length > 0">
+                <span class="text-xs px-2 py-0.5 rounded-full border"
+                      :class="offlineQueue.length >= 5 ? 'bg-red-900/50 text-red-300 border-red-800' : 'bg-amber-900/50 text-amber-300 border-amber-800'">
+                    <span x-text="offlineQueue.length"></span> sale<span x-show="offlineQueue.length !== 1">s</span> saved offline — syncing…
+                </span>
+            </template>
+            <template x-if="needsAttention.length > 0">
+                <span class="text-xs px-2 py-0.5 rounded-full bg-red-900/50 text-red-300 border border-red-800">
+                    <span x-text="needsAttention.length"></span> need<span x-show="needsAttention.length === 1">s</span> attention
+                </span>
+            </template>
         </div>
         <a href="{{ route('pos.sales.index') }}" class="text-sm text-slate-400 hover:text-white">Sales History →</a>
     </header>
+
+    <!-- Recovered cart banner -->
+    <div x-show="showRecoveryBanner" x-cloak class="bg-[#001A3A]/60 border-b border-[#002B5B] px-6 py-2 flex items-center justify-between text-sm">
+        <span class="text-[#B8D4F0]">Recovered an unsaved cart from <span x-text="recoveredAt"></span>.</span>
+        <div class="flex gap-2">
+            <button @click="restoreCart()" class="bg-[#0078D4] hover:bg-[#0068BD] text-white px-3 py-1 rounded-lg text-xs">Restore</button>
+            <button @click="discardRecoveredCart()" class="text-slate-400 hover:text-white px-3 py-1 text-xs">Discard</button>
+        </div>
+    </div>
+
+    <!-- Needs-attention panel -->
+    <div x-show="needsAttention.length > 0" x-cloak class="bg-red-950/50 border-b border-red-900 px-6 py-2 space-y-1">
+        <template x-for="(entry, index) in needsAttention" :key="entry.queuedAt">
+            <div class="flex items-center justify-between text-xs">
+                <span class="text-red-300">
+                    Offline sale from <span x-text="new Date(entry.queuedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})"></span>
+                    failed to sync: <span x-text="entry.error"></span>
+                </span>
+                <button @click="dismissAttentionItem(index)" class="text-slate-400 hover:text-white shrink-0 ml-2">Dismiss</button>
+            </div>
+        </template>
+    </div>
 
     <!-- Main split layout -->
     <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
@@ -139,6 +188,7 @@
                                         </p>
                                     </div>
                                     <button @click="removeItem(index)"
+                                            aria-label="Remove item"
                                             class="text-slate-600 hover:text-red-400 text-lg leading-none shrink-0 mt-1">×</button>
                                 </div>
 
@@ -146,9 +196,11 @@
                                 <div class="flex items-center justify-between mt-2">
                                     <div class="flex items-center gap-2">
                                         <button @click="updateQty(index, item.qty - 1)"
+                                                aria-label="Decrease quantity"
                                                 class="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-sm flex items-center justify-center">−</button>
                                         <span class="text-sm w-6 text-center" x-text="item.qty"></span>
                                         <button @click="updateQty(index, item.qty + 1)"
+                                                aria-label="Increase quantity"
                                                 class="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-sm flex items-center justify-center">+</button>
                                     </div>
                                     <p class="text-sm font-bold text-white">
@@ -208,26 +260,18 @@
                           placeholder="Notes (optional)"
                           class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4] resize-none"></textarea>
 
-                <!-- Checkout button -->
-                <form id="checkout-form" method="POST" action="{{ route('pos.checkout') }}">
-                    @csrf
-                    @if($appointment)
-                        <input type="hidden" name="appointment_id" value="{{ $appointment->id }}">
-                        <input type="hidden" name="customer_id" value="{{ $appointment->customer_id }}">
-                    @endif
-                    <input type="hidden" name="payment_method" x-bind:value="paymentMethod">
-                    <input type="hidden" name="discount" x-bind:value="discount">
-                    <input type="hidden" name="notes" x-bind:value="notes">
-                    <div id="items-container"></div>
+                <!-- Checkout error -->
+                <p x-show="checkoutError" x-cloak x-text="checkoutError" class="text-xs text-red-400"></p>
 
-                    <button type="button"
-                            @click="submitCheckout()"
-                            :disabled="items.length === 0"
-                            :class="items.length === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-emerald-500'"
-                            class="w-full bg-emerald-600 text-white font-semibold py-3 rounded-xl text-sm transition-colors">
-                        Process Payment · R<span x-text="total.toFixed(2)"></span>
-                    </button>
-                </form>
+                <!-- Checkout button -->
+                <button type="button"
+                        @click="submitCheckout()"
+                        :disabled="items.length === 0 || submitting"
+                        :class="(items.length === 0 || submitting) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-emerald-500'"
+                        class="w-full bg-emerald-600 text-white font-semibold py-3 rounded-xl text-sm transition-colors">
+                    <span x-show="!submitting">Process Payment · R<span x-text="total.toFixed(2)"></span></span>
+                    <span x-show="submitting" x-cloak>Processing…</span>
+                </button>
             </div>
         </div>
     </div>
@@ -244,6 +288,48 @@ function pos() {
         items: @json($preloadItems),
         allProducts: @json($products),
         suggestions: @json($serviceSuggestions),
+        appointmentId: {{ $appointment?->id ?? 'null' }},
+        customerId: {{ $appointment?->customer_id ?? 'null' }},
+
+        tenantId: window.POS_TENANT_ID,
+        idempotencyKey: null,
+        submitting: false,
+        checkoutError: null,
+        offlineQueue: [],
+        needsAttention: [],
+        showRecoveryBanner: false,
+        recoveredAt: null,
+        _recovered: null,
+        _syncing: false,
+        _autosaveTimer: null,
+
+        init() {
+            this.idempotencyKey = crypto.randomUUID();
+            this.loadQueueFromStorage();
+            this.maybeOfferCartRecovery();
+            this.watchCartForAutosave();
+
+            window.addEventListener('online', () => this.trySyncQueue());
+            navigator.serviceWorker?.addEventListener('message', (e) => {
+                if (e.data?.type === 'pos-sync-trigger') this.trySyncQueue();
+            });
+            setInterval(() => {
+                if (navigator.onLine && this.offlineQueue.length > 0) this.trySyncQueue();
+            }, 20000);
+
+            if (navigator.onLine && this.offlineQueue.length > 0) this.trySyncQueue();
+
+            if ('serviceWorker' in navigator) {
+                // Scoped to /pos only — sw.js lives at the root so it CAN
+                // control the whole origin, but this app has no other
+                // offline-capable pages, so keep its footprint to this one.
+                navigator.serviceWorker.register('/sw.js', { scope: '/pos' }).catch(() => {});
+            }
+        },
+
+        cartStorageKey() { return `pos_cart_${this.tenantId}`; },
+        queueStorageKey() { return `pos_offline_queue_${this.tenantId}`; },
+        attentionStorageKey() { return `pos_needs_attention_${this.tenantId}`; },
 
         get categories() {
             return [...new Set(this.allProducts.map(p => p.category))].filter(Boolean).sort();
@@ -293,31 +379,224 @@ function pos() {
             this.items[index].subtotal = this.items[index].unit_price * qty;
         },
 
-        submitCheckout() {
-            if (this.items.length === 0) return;
+        // ── Cart autosave / recovery ──────────────────────────────────
+        watchCartForAutosave() {
+            this.$watch('items', () => this.scheduleAutosave());
+            this.$watch('discount', () => this.scheduleAutosave());
+            this.$watch('paymentMethod', () => this.scheduleAutosave());
+            this.$watch('notes', () => this.scheduleAutosave());
+        },
 
-            const container = document.getElementById('items-container');
-            container.innerHTML = '';
+        scheduleAutosave() {
+            clearTimeout(this._autosaveTimer);
+            this._autosaveTimer = setTimeout(() => this.autosaveCart(), 400);
+        },
 
-            this.items.forEach((item, i) => {
-                const fields = {
-                    [`items[${i}][type]`]:  item.type,
-                    [`items[${i}][id]`]:    item.id,
-                    [`items[${i}][name]`]:  item.name,
-                    [`items[${i}][price]`]: item.unit_price,
-                    [`items[${i}][qty]`]:   item.qty,
-                };
-                Object.entries(fields).forEach(([name, value]) => {
-                    const inp = document.createElement('input');
-                    inp.type  = 'hidden';
-                    inp.name  = name;
-                    inp.value = value;
-                    container.appendChild(inp);
+        autosaveCart() {
+            if (this.items.length === 0) {
+                localStorage.removeItem(this.cartStorageKey());
+                return;
+            }
+            try {
+                localStorage.setItem(this.cartStorageKey(), JSON.stringify({
+                    items: this.items,
+                    discount: this.discount,
+                    paymentMethod: this.paymentMethod,
+                    notes: this.notes,
+                    idempotencyKey: this.idempotencyKey,
+                    savedAt: Date.now(),
+                }));
+            } catch (e) {
+                // Storage full/unavailable — the sale stays safe in memory,
+                // it just won't survive a refresh.
+            }
+        },
+
+        maybeOfferCartRecovery() {
+            if (this.items.length > 0) return; // preloaded from an appointment — don't override
+            const raw = localStorage.getItem(this.cartStorageKey());
+            if (!raw) return;
+            try {
+                const saved = JSON.parse(raw);
+                if (saved.items?.length > 0) {
+                    this._recovered = saved;
+                    this.showRecoveryBanner = true;
+                    this.recoveredAt = new Date(saved.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+            } catch (e) {}
+        },
+
+        restoreCart() {
+            if (!this._recovered) return;
+            this.items = this._recovered.items;
+            this.discount = this._recovered.discount;
+            this.paymentMethod = this._recovered.paymentMethod;
+            this.notes = this._recovered.notes;
+            this.idempotencyKey = this._recovered.idempotencyKey;
+            this.showRecoveryBanner = false;
+        },
+
+        discardRecoveredCart() {
+            localStorage.removeItem(this.cartStorageKey());
+            this.showRecoveryBanner = false;
+        },
+
+        // ── Checkout ───────────────────────────────────────────────────
+        buildPayload() {
+            return {
+                idempotency_key: this.idempotencyKey,
+                items: this.items.map(i => ({ type: i.type, id: i.id, name: i.name, price: i.unit_price, qty: i.qty })),
+                payment_method: this.paymentMethod,
+                discount: this.discount,
+                notes: this.notes,
+                appointment_id: this.appointmentId,
+                customer_id: this.customerId,
+            };
+        },
+
+        async submitCheckout() {
+            if (this.items.length === 0 || this.submitting) return;
+            this.submitting = true;
+            this.checkoutError = null;
+
+            const payload = this.buildPayload();
+
+            try {
+                const result = await this.postCheckout(payload);
+                this.onCheckoutSuccess(result);
+            } catch (err) {
+                if (err.offline) {
+                    this.queueOffline(payload);
+                } else {
+                    this.checkoutError = err.message || 'Something went wrong. Please try again.';
+                }
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        async postCheckout(payload) {
+            if (!navigator.onLine) {
+                const e = new Error('offline'); e.offline = true; throw e;
+            }
+
+            let response;
+            try {
+                response = await fetch('{{ route('pos.checkout') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(payload),
                 });
-            });
+            } catch (networkErr) {
+                const e = new Error('offline'); e.offline = true; throw e;
+            }
 
-            document.getElementById('checkout-form').submit();
-        }
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                // Session/CSRF expired mid-replay (redirected to login), or an
+                // unexpected HTML error page — not something to silently retry.
+                throw new Error('Your session may have expired. Please refresh and sign in again.');
+            }
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Could not process this sale.');
+            }
+
+            return data;
+        },
+
+        onCheckoutSuccess(result) {
+            this.items = [];
+            this.discount = 0;
+            this.notes = '';
+            localStorage.removeItem(this.cartStorageKey());
+            this.idempotencyKey = crypto.randomUUID();
+            window.location.href = result.receipt_url;
+        },
+
+        // ── Offline queue / background sync ─────────────────────────────
+        loadQueueFromStorage() {
+            try {
+                this.offlineQueue = JSON.parse(localStorage.getItem(this.queueStorageKey()) || '[]');
+                this.needsAttention = JSON.parse(localStorage.getItem(this.attentionStorageKey()) || '[]');
+            } catch (e) {
+                this.offlineQueue = [];
+                this.needsAttention = [];
+            }
+        },
+
+        saveQueueToStorage() {
+            localStorage.setItem(this.queueStorageKey(), JSON.stringify(this.offlineQueue));
+            localStorage.setItem(this.attentionStorageKey(), JSON.stringify(this.needsAttention));
+        },
+
+        queueOffline(payload) {
+            this.offlineQueue.push({ payload, queuedAt: Date.now() });
+            this.saveQueueToStorage();
+            this.requestBackgroundSync();
+
+            // This sale is "done" from the cashier's perspective — clear the
+            // active cart so they can start the next one.
+            this.items = [];
+            this.discount = 0;
+            this.notes = '';
+            localStorage.removeItem(this.cartStorageKey());
+            this.idempotencyKey = crypto.randomUUID();
+        },
+
+        // Best-effort: not supported in Safari/iOS, which is why the online
+        // listener + interval poll above are the primary sync triggers and
+        // this is purely a bonus for browsers that support waking a closed
+        // tab's worker to sync sooner.
+        requestBackgroundSync() {
+            navigator.serviceWorker?.ready
+                .then((registration) => registration.sync?.register('pos-sync-offline-queue'))
+                .catch(() => {});
+        },
+
+        async trySyncQueue() {
+            if (this._syncing || this.offlineQueue.length === 0) return;
+            this._syncing = true;
+
+            const queue = [...this.offlineQueue];
+            const stillQueued = [];
+
+            for (let i = 0; i < queue.length; i++) {
+                const entry = queue[i];
+                try {
+                    await this.postCheckout(entry.payload);
+                    // success — dropped from the queue, nothing to do
+                } catch (err) {
+                    if (err.offline) {
+                        // Network dropped again mid-sync — keep this and
+                        // every remaining entry queued, try again later.
+                        stillQueued.push(entry, ...queue.slice(i + 1));
+                        break;
+                    }
+                    // A real server-side rejection (e.g. insufficient stock,
+                    // since someone else may have sold the last unit while
+                    // this sale was offline) — needs a human, not another
+                    // silent retry.
+                    this.needsAttention.push({ ...entry, error: err.message });
+                }
+            }
+
+            this.offlineQueue = stillQueued;
+            this.saveQueueToStorage();
+            this._syncing = false;
+        },
+
+        dismissAttentionItem(index) {
+            this.needsAttention.splice(index, 1);
+            this.saveQueueToStorage();
+        },
     };
 }
 </script>

@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class PromotionController extends Controller
 {
@@ -34,7 +35,10 @@ class PromotionController extends Controller
         $data = $request->validate([
             'name'           => 'required|string|max:150',
             'description'    => 'nullable|string|max:1000',
-            'code'           => 'required|string|max:50|unique:promotions,code',
+            'code'           => [
+                'required', 'string', 'max:50',
+                Rule::unique('promotions')->where(fn ($q) => $q->where('tenant_id', $this->tenantId())),
+            ],
             'discount_type'  => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric|min:0',
             'applies_to'     => 'required|in:all,services,products',
@@ -65,7 +69,12 @@ class PromotionController extends Controller
         $data = $request->validate([
             'name'           => 'required|string|max:150',
             'description'    => 'nullable|string|max:1000',
-            'code'           => 'required|string|max:50|unique:promotions,code,' . $promotion->id,
+            'code'           => [
+                'required', 'string', 'max:50',
+                Rule::unique('promotions')
+                    ->where(fn ($q) => $q->where('tenant_id', $this->tenantId()))
+                    ->ignore($promotion->id),
+            ],
             'discount_type'  => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric|min:0',
             'applies_to'     => 'required|in:all,services,products',

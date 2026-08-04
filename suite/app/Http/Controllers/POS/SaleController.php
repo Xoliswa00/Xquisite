@@ -3,11 +3,18 @@
 namespace App\Http\Controllers\POS;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Booking\Models\Appointment;
+use App\Modules\POS\Models\Product;
 use App\Modules\POS\Models\Sale;
+use App\Modules\POS\Models\StockAdjustment;
+use App\Modules\POS\Services\InventoryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SaleController extends Controller
 {
+    public function __construct(private readonly InventoryService $inventory) {}
+
     public function index(Request $request)
     {
         $query = Sale::with(['customer', 'items'])
@@ -44,16 +51,44 @@ class SaleController extends Controller
         return view('pos.sales.show', compact('sale'));
     }
 
+    public function downloadPdf(Sale $sale)
+    {
+        $sale->load(['items', 'customer', 'appointment.staff']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pos.sales.receipt-pdf', ['sale' => $sale]);
+
+        return $pdf->download('receipt-' . $sale->reference . '.pdf');
+    }
+
     public function void(Sale $sale)
     {
         if ($sale->status === 'paid') {
-            $sale->update(['status' => 'voided']);
+            DB::transaction(function () use ($sale) {
+                $sale->load('items');
 
-            // Unlink appointment
-            if ($sale->appointment_id) {
-                \App\Modules\Booking\Models\Appointment::where('id', $sale->appointment_id)
-                    ->update(['pos_order_id' => null, 'status' => 'confirmed']);
-            }
+                foreach ($sale->items as $item) {
+                    if ($item->item_type !== 'product') {
+                        continue;
+                    }
+
+                    $product = Product::find($item->item_id);
+
+                    if ($product && $product->track_stock) {
+                        $this->inventory->increment($product, $item->quantity, StockAdjustment::TYPE_MANUAL_IN, [
+                            'notes' => "Restored from voided sale {$sale->reference}",
+                            'sale_id' => $sale->id,
+                        ]);
+                    }
+                }
+
+                $sale->update(['status' => 'voided']);
+
+                // Unlink appointment
+                if ($sale->appointment_id) {
+                    Appointment::where('id', $sale->appointment_id)
+                        ->update(['pos_order_id' => null, 'status' => 'confirmed']);
+                }
+            });
         }
 
         return redirect()->route('pos.sales.show', $sale)

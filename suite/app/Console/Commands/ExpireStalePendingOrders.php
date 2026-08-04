@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Modules\Ecommerce\Models\Order;
 use App\Modules\Ecommerce\Services\OrderService;
+use App\Services\Tenant\TenantContext;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -18,6 +19,13 @@ class ExpireStalePendingOrders extends Command
 
     public function handle(OrderService $orders): int
     {
+        // Order is HasTenant-scoped. This command intentionally spans every
+        // tenant's stale orders in one run, relying on the global scope's
+        // fail-open behavior when no tenant context is set — a fresh console
+        // process already starts with none, but clear explicitly so that
+        // reliance is a documented decision rather than an accident.
+        TenantContext::clear();
+
         $minutes = (int) $this->option('minutes');
         $cutoff  = now()->subMinutes($minutes);
 

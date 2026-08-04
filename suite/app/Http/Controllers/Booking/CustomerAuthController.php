@@ -55,7 +55,10 @@ class CustomerAuthController extends Controller
 
         $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:customers,email',
+            'email'    => [
+                'required', 'email',
+                Rule::unique('customers')->where(fn ($q) => $q->where('tenant_id', $tenant->id)),
+            ],
             'phone'    => 'nullable|string|max:50',
             'password' => 'required|string|min:8|confirmed',
         ]);
@@ -140,7 +143,12 @@ class CustomerAuthController extends Controller
         $customer = Customer::where('tenant_id', $tenant->id)->findOrFail($customerId);
 
         $request->validate([
-            'email'                 => ['required', 'email', Rule::unique('customers', 'email')->ignore($customer->id)],
+            'email'                 => [
+                'required', 'email',
+                Rule::unique('customers')
+                    ->where(fn ($q) => $q->where('tenant_id', $tenant->id))
+                    ->ignore($customer->id),
+            ],
             'password'              => 'required|string|min:8|confirmed',
         ]);
 

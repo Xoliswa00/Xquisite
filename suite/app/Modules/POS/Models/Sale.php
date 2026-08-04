@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\HasTenant;
 use App\Modules\Booking\Models\Appointment;
 use App\Modules\Booking\Models\Customer;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class Sale extends Model
 {
@@ -14,6 +16,7 @@ class Sale extends Model
     protected $fillable = [
         'tenant_id',
         'reference',
+        'idempotency_key',
         'appointment_id',
         'customer_id',
         'status',
@@ -62,23 +65,35 @@ class Sale extends Model
 
     public function markLaybyComplete(): void
     {
-        // Deduct stock for all product items now that layby is fully paid
-        foreach ($this->items as $item) {
-            if ($item->item_type === 'product') {
-                $product = Product::find($item->item_id);
-                $product?->decrementStock($item->quantity, 'layby_complete', [
-                    'sale_id'   => $this->id,
-                    'reference' => $this->reference,
-                ]);
+        DB::transaction(function () {
+            // Deduct stock for all product items now that layby is fully paid
+            foreach ($this->items as $item) {
+                if ($item->item_type === 'product') {
+                    $product = Product::find($item->item_id);
+                    $product?->decrementStock($item->quantity, 'layby_complete', [
+                        'sale_id'   => $this->id,
+                        'reference' => $this->reference,
+                    ]);
+                }
             }
-        }
 
-        $this->update(['status' => 'paid', 'paid_at' => now()]);
+            $this->update(['status' => 'paid', 'paid_at' => now()]);
+        });
     }
 
+    /**
+     * Temporary, always-unique placeholder for the initial insert (satisfies
+     * the unique `reference` column without a max(id)+1 race). Call
+     * assignSequentialReference() immediately after create() to swap in the
+     * real SAL-00042 form once the row's own id exists.
+     */
     public static function generateReference(): string
     {
-        $last = static::max('id') ?? 0;
-        return 'SAL-' . str_pad($last + 1, 5, '0', STR_PAD_LEFT);
+        return 'SAL-PENDING-' . (string) Str::uuid();
+    }
+
+    public function assignSequentialReference(): void
+    {
+        $this->update(['reference' => 'SAL-' . str_pad((string) $this->id, 5, '0', STR_PAD_LEFT)]);
     }
 }

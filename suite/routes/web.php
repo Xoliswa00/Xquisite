@@ -153,6 +153,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::prefix('pos/sales')->name('pos.sales.')->group(function () {
             Route::get('/', [SaleController::class, 'index'])->name('index');
             Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
+            Route::get('/{sale}/pdf', [SaleController::class, 'downloadPdf'])->name('pdf');
             Route::post('/{sale}/void', [SaleController::class, 'void'])->name('void');
         });
 

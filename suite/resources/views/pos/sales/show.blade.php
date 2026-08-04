@@ -1,6 +1,15 @@
 <x-app-layout>
     <x-slot name="header">Receipt · {{ $sale->reference }}</x-slot>
 
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #receipt, #receipt * { visibility: visible; }
+            #receipt { position: absolute; top: 0; left: 0; width: 100%; background: #fff !important; color: #000 !important; }
+            #receipt * { background: transparent !important; color: #000 !important; border-color: #999 !important; }
+        }
+    </style>
+
     <div class="max-w-lg space-y-4">
 
         <!-- Receipt card -->
@@ -115,6 +124,10 @@
                     class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">
                 Print Receipt
             </button>
+            <a href="{{ route('pos.sales.pdf', $sale) }}"
+               class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">
+                Download PDF
+            </a>
             @if($sale->status === 'paid')
                 <form method="POST" action="{{ route('pos.sales.void', $sale) }}"
                       onsubmit="return confirm('Void this sale?')">

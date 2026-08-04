@@ -45,28 +45,36 @@ class DashboardController extends Controller
         $hasPos  = $user->tenant?->hasModule('pos') ?? false;
         $tenantId = $user->tenant_id;
 
-        // Cache aggregate counts per tenant — 60 seconds
-        $stats = Cache::remember("tenant-dashboard-stats:{$tenantId}", 60, function () use ($hasPos) {
+        // Cache aggregate counts per tenant — 60 seconds. Each query below
+        // explicitly filters by tenant_id in addition to the ambient
+        // HasTenant global scope: this closure's result is cached under a
+        // tenant_id-keyed key, so an accidental cross-tenant read here
+        // (e.g. if ever invoked with no active TenantContext) would cache
+        // one tenant's data under another's key. Defense in depth.
+        $stats = Cache::remember("tenant-dashboard-stats:{$tenantId}", 60, function () use ($hasPos, $tenantId) {
             $completedThisMonth = Appointment::with(['services', 'sale'])
+                ->where('tenant_id', $tenantId)
                 ->where('status', 'completed')
                 ->whereMonth('scheduled_at', now()->month)
                 ->whereYear('scheduled_at', now()->year)
                 ->get();
 
             $awaitingAppts = Appointment::with('services')
+                ->where('tenant_id', $tenantId)
                 ->where('status', 'awaiting_payment')
                 ->get();
 
             return [
-                'todayCount'            => Appointment::today()->count(),
-                'totalCustomers'        => Customer::count(),
-                'activeStaff'           => Staff::where('is_active', true)->count(),
-                'activeServices'        => Service::where('is_active', true)->count(),
-                'reorderCount'          => $hasPos ? Product::where('track_stock', true)
+                'todayCount'            => Appointment::today()->where('tenant_id', $tenantId)->count(),
+                'totalCustomers'        => Customer::where('tenant_id', $tenantId)->count(),
+                'activeStaff'           => Staff::where('tenant_id', $tenantId)->where('is_active', true)->count(),
+                'activeServices'        => Service::where('tenant_id', $tenantId)->where('is_active', true)->count(),
+                'reorderCount'          => $hasPos ? Product::where('tenant_id', $tenantId)
+                    ->where('track_stock', true)
                     ->where('reorder_level', '>', 0)
                     ->whereColumn('stock_quantity', '<=', 'reorder_level')
                     ->count() : 0,
-                'pendingModuleRequests' => ModuleRequest::pending()->count(),
+                'pendingModuleRequests' => ModuleRequest::where('tenant_id', $tenantId)->pending()->count(),
                 'completedRevenue'      => $completedThisMonth->sum(function ($appt) {
                     if ($appt->sale) return (float) $appt->sale->total;
                     return $appt->services->sum(fn($s) => (float)($s->pivot->price_at_booking ?? $s->calculatePrice($s->pivot->quantity ?? 1)));
