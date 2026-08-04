@@ -44,6 +44,10 @@ use App\Http\Controllers\Property\MaintenanceController;
 use App\Http\Controllers\Property\RenterAuthController;
 use App\Http\Controllers\Property\RenterPortalController;
 use App\Http\Controllers\Admin\PlatformModuleController;
+use App\Http\Controllers\Admin\TemplateController as AdminTemplateController;
+use App\Http\Controllers\Website\TemplateCatalogController;
+use App\Http\Controllers\Website\BrandingController;
+use App\Http\Controllers\Website\PublicSiteController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\NotificationController;
@@ -59,12 +63,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DemoController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    if (request()->user() !== null) {
-        return redirect()->route('dashboard');
-    }
-    return view('welcome');
-})->name('welcome');
+Route::get('/', [PublicSiteController::class, 'root'])->name('welcome');
 
 Route::get('/demo',    [DemoController::class, 'show'])->name('demo');
 Route::post('/demo',   [DemoController::class, 'login'])->name('demo.login');
@@ -197,6 +196,18 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::get('/store/settings', [StoreSettingsController::class, 'edit'])->name('store.settings')->middleware('module:ecommerce');
     Route::patch('/store/settings', [StoreSettingsController::class, 'update'])->name('store.settings.update')->middleware('module:ecommerce');
 
+    // Website template marketplace
+    Route::prefix('website')->name('website.')->group(function () {
+        Route::get('/templates', [TemplateCatalogController::class, 'index'])->name('templates.index');
+        Route::get('/templates/{template}', [TemplateCatalogController::class, 'show'])->name('templates.show');
+        Route::post('/templates/{template}/activate', [TemplateCatalogController::class, 'activate'])->name('templates.activate');
+
+        Route::get('/branding', [BrandingController::class, 'edit'])->name('branding.edit');
+        Route::patch('/branding', [BrandingController::class, 'update'])->name('branding.update');
+        Route::post('/branding/favicon', [BrandingController::class, 'favicon'])->name('branding.favicon');
+        Route::post('/branding/hero-image', [BrandingController::class, 'heroImage'])->name('branding.hero-image');
+    });
+
     // Property management module
     Route::middleware('module:property_management')->group(function () {
         Route::resource('properties', PropertyController::class);
@@ -284,6 +295,10 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             // Platform module registry
             Route::resource('platform-modules', PlatformModuleController::class)->except(['show', 'destroy']);
             Route::patch('platform-modules/{platformModule}/status', [PlatformModuleController::class, 'updateStatus'])->name('platform-modules.status');
+
+            // Website template catalog
+            Route::resource('templates', AdminTemplateController::class)->except(['show', 'destroy']);
+            Route::patch('templates/{template}/status', [AdminTemplateController::class, 'updateStatus'])->name('templates.status');
         });
 
         // User management (for tenant owners to manage their staff)
@@ -395,6 +410,11 @@ Route::prefix('rent/{slug}')->name('rent.')->group(function () {
         Route::get('/maintenance',  [RenterPortalController::class, 'maintenance'])->name('maintenance');
         Route::post('/maintenance', [RenterPortalController::class, 'submitMaintenance'])->name('maintenance.submit');
     });
+});
+
+// Public tenant website (path fallback for tenants without a subdomain/custom domain)
+Route::prefix('site/{slug}')->name('site.')->group(function () {
+    Route::get('/', [PublicSiteController::class, 'show'])->name('index');
 });
 
 // Public storefront (no auth)

@@ -54,6 +54,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     str_starts_with($path, 'admin/')  => 'admin',
                     str_starts_with($path, 'portal/') => 'client-portal',
                     str_starts_with($path, 'shop/')   => 'shop',
+                    str_starts_with($path, 'site/')   => 'public-site',
                     default                           => 'suite',
                 };
 
