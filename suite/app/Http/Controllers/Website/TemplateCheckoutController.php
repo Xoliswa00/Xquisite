@@ -46,10 +46,9 @@ class TemplateCheckoutController extends Controller
             $payfast     = new PayFastService();
             $paymentData = $payfast->buildTemplatePurchaseData($purchase, $tenant->slug, $request->user()->name, $request->user()->email);
 
-            return view('website.templates.payfast-redirect', [
+            return view('shop.payfast-redirect', [
                 'paymentUrl'  => $payfast->getPaymentUrl(),
                 'paymentData' => $paymentData,
-                'template'    => $template,
             ]);
         } catch (\Throwable $e) {
             Log::error('Template PayFast handoff failed', [

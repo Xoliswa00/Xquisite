@@ -22,6 +22,11 @@ class TemplateSeeder extends Seeder
                 'default_primary_color'   => '#1B727B',
                 'default_secondary_color' => '#416467',
                 'default_accent_color'    => '#EDB400',
+                'version'     => '1.0.0',
+                'author'      => 'Xquisite',
+                'supports_theme_toggle' => false,
+                'modules_supported' => [],
+                'changelog'   => [['version' => '1.0.0', 'date' => '2026-08-04', 'notes' => 'Initial release.']],
             ],
             [
                 'key'         => 'eat-restaurant',
@@ -34,6 +39,14 @@ class TemplateSeeder extends Seeder
                 'default_primary_color'   => '#CC580C',
                 'default_secondary_color' => '#333333',
                 'default_accent_color'    => '#F39C12',
+                'version'     => '1.1.0',
+                'author'      => 'Xquisite',
+                'supports_theme_toggle' => true,
+                'modules_supported' => ['booking', 'pos'],
+                'changelog'   => [
+                    ['version' => '1.1.0', 'date' => '2026-08-05', 'notes' => 'Added custom About photo, tenant-uploadable gallery, and Font Awesome icon fixes.'],
+                    ['version' => '1.0.0', 'date' => '2026-08-04', 'notes' => 'Initial release.'],
+                ],
             ],
             [
                 'key'         => 'add-life-fitness',
@@ -46,6 +59,14 @@ class TemplateSeeder extends Seeder
                 'default_primary_color'   => '#F9690E',
                 'default_secondary_color' => '#2C8CB3',
                 'default_accent_color'    => '#2CAAB3',
+                'version'     => '1.1.0',
+                'author'      => 'Xquisite',
+                'supports_theme_toggle' => true,
+                'modules_supported' => ['booking'],
+                'changelog'   => [
+                    ['version' => '1.1.0', 'date' => '2026-08-05', 'notes' => 'Added custom About photo and tenant-uploadable gallery.'],
+                    ['version' => '1.0.0', 'date' => '2026-08-04', 'notes' => 'Initial release.'],
+                ],
             ],
             [
                 'key'         => 'aroma-beauty-spa',
@@ -58,6 +79,14 @@ class TemplateSeeder extends Seeder
                 'default_primary_color'   => '#3B8838',
                 'default_secondary_color' => '#2C8CB3',
                 'default_accent_color'    => '#71DE6C',
+                'version'     => '1.1.0',
+                'author'      => 'Xquisite',
+                'supports_theme_toggle' => true,
+                'modules_supported' => ['booking'],
+                'changelog'   => [
+                    ['version' => '1.1.0', 'date' => '2026-08-05', 'notes' => 'Added custom About photo, tenant-uploadable gallery, and Font Awesome icon fixes.'],
+                    ['version' => '1.0.0', 'date' => '2026-08-04', 'notes' => 'Initial release.'],
+                ],
             ],
             [
                 'key'         => 'lovely-wedding',
@@ -70,6 +99,14 @@ class TemplateSeeder extends Seeder
                 'default_primary_color'   => '#ED5441',
                 'default_secondary_color' => '#AD0C98',
                 'default_accent_color'    => '#49B5E7',
+                'version'     => '1.1.0',
+                'author'      => 'Xquisite',
+                'supports_theme_toggle' => true,
+                'modules_supported' => ['booking', 'client_messaging'],
+                'changelog'   => [
+                    ['version' => '1.1.0', 'date' => '2026-08-05', 'notes' => 'Added custom About photo and tenant-uploadable gallery.'],
+                    ['version' => '1.0.0', 'date' => '2026-08-04', 'notes' => 'Initial release.'],
+                ],
             ],
         ];
 
