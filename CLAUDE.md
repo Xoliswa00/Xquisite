@@ -81,14 +81,21 @@ Laravel 11 + Blade + Alpine.js SaaS platform. Multi-tenant. Key areas:
 - Primary blue: `#0078D4`
 - Gold accent: `#D4AF37`
 - Dark navy: `#002B5B`
-- Background: `bg-slate-900` / `bg-slate-950`
-- Card surface: `bg-slate-900 border border-slate-800 rounded-xl`
+- The dashboard supports light + dark mode (light is the default on first visit; toggle lives in the sidebar footer). Use the semantic tokens below, not raw slate classes — they resolve to light or dark automatically via CSS vars + Tailwind's `dark:` class strategy (`tailwind.config.js` → `darkMode: 'class'`, vars defined in `resources/css/app.css`):
+  - Backgrounds: `bg-app` (page) / `bg-panel` (sidebar/topbar/cards) / `bg-panel-2` (nested surface, hover, active nav item)
+  - Text: `text-ink` (primary) / `text-ink-muted` (secondary) / `text-ink-faint` (meta/timestamps)
+  - Borders: `border-line` / `border-line-2` (stronger)
+  - Reserve literal `bg-slate-*`/`text-white`/`text-slate-*` classes only for text/icons sitting on top of a colored button, badge, or photo overlay — those must stay fixed in both themes, never tokenized.
+  - Public tenant marketing sites (`resources/views/site-templates/*.blade.php`, rendered via `<x-site-layout>`) have their own separate, non-Tailwind-registered token set (`--site-bg`, `--site-surface`, `--site-text`, etc., used as `bg-[var(--site-bg)]`) and their own toggle/localStorage key (`xq-site-theme`) — independent of the dashboard's `theme` key so a tenant's own site preview never inherits their dashboard preference.
+  - `pos/terminal.blade.php` is intentionally excluded from theming and stays fixed-dark (kiosk/POS convention).
+  - As of 2026-08-04 the shell (`layouts/app.blade.php`), shared UI atoms, and 3 representative pages (`dashboard.blade.php`, `customers/index.blade.php`, `services/create.blade.php`) are fully migrated to these tokens; the remaining page-level views still need a pass (safe to migrate a page at a time using the same token map — see git history around 2026-08-04 for the exact class-swap pattern used).
 
 ### Pending actions
 - Upload `/img/og-image.jpg` (1200×630) for WhatsApp/OG preview
 - Fix slug `Misstee-Beauty-Studio` → lowercase in DB
 - PayFast card payment integration (deferred)
 - Post-appointment review request feature (not yet built)
+- Continue the light/dark token migration across remaining dashboard pages (bookings, POS non-terminal views, billing, property, messaging, admin)
 
 When referencing code, always use clickable markdown links: `[filename.php](path/to/file.php)`.
 

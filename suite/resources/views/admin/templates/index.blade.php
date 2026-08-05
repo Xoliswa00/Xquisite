@@ -4,7 +4,13 @@
     <div class="space-y-8">
 
         <div class="flex items-center justify-between gap-4 flex-wrap">
-            <h1 class="text-xl font-bold text-[#D4AF37]">Website Templates</h1>
+            <div>
+                <h1 class="text-xl font-bold text-[#D4AF37]">Website Templates</h1>
+                <p class="mt-1 text-sm text-slate-400 max-w-2xl">
+                    This is the catalog tenants pick from at <span class="font-mono text-xs text-slate-300">/website/templates</span>.
+                    Archiving hides a template from new activations without breaking sites already using it; Hide/Unhide controls whether it's shown in the catalog at all.
+                </p>
+            </div>
             <a href="{{ route('admin.templates.create') }}"
                class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg font-medium transition-colors">
                 + Add Template
@@ -28,6 +34,8 @@
                 <div class="bg-slate-800 rounded-xl border border-slate-700 divide-y divide-slate-700 overflow-hidden">
                     @foreach ($group as $template)
                     <div class="flex items-center gap-4 px-5 py-4 hover:bg-slate-700/30 transition-colors">
+
+                        <x-template-preview :template="$template" ratio="aspect-video" class="w-28 shrink-0 hidden sm:block border border-slate-700" />
 
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">

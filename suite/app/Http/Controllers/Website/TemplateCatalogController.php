@@ -16,9 +16,10 @@ class TemplateCatalogController extends Controller
         abort_unless($tenant, 403);
 
         $templates = Template::visible()->active()->ordered()->get();
-        $activeTemplateKey = $tenant->activeTemplate?->template_key;
+        $activeTemplate = $tenant->activeTemplate?->template;
+        $categories = $templates->pluck('category')->unique()->filter()->values();
 
-        return view('website.templates.index', compact('templates', 'activeTemplateKey'));
+        return view('website.templates.index', compact('tenant', 'templates', 'activeTemplate', 'categories'));
     }
 
     public function show(Request $request, Template $template): View

@@ -241,6 +241,11 @@ class Tenant extends Model
         return $this->hasOne(TenantBranding::class);
     }
 
+    public function siteVisits()
+    {
+        return $this->hasMany(SiteVisit::class);
+    }
+
     public function activateTemplate(string $templateKey, ?int $activatedBy = null): TenantTemplate
     {
         return DB::transaction(function () use ($templateKey, $activatedBy) {

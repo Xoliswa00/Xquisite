@@ -48,6 +48,7 @@ use App\Http\Controllers\Admin\TemplateController as AdminTemplateController;
 use App\Http\Controllers\Website\TemplateCatalogController;
 use App\Http\Controllers\Website\BrandingController;
 use App\Http\Controllers\Website\PublicSiteController;
+use App\Http\Controllers\Website\SiteAnalyticsController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\NotificationController;
@@ -201,6 +202,8 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::get('/templates', [TemplateCatalogController::class, 'index'])->name('templates.index');
         Route::get('/templates/{template}', [TemplateCatalogController::class, 'show'])->name('templates.show');
         Route::post('/templates/{template}/activate', [TemplateCatalogController::class, 'activate'])->name('templates.activate');
+
+        Route::get('/analytics', [SiteAnalyticsController::class, 'index'])->name('analytics');
 
         Route::get('/branding', [BrandingController::class, 'edit'])->name('branding.edit');
         Route::patch('/branding', [BrandingController::class, 'update'])->name('branding.update');
@@ -416,6 +419,9 @@ Route::prefix('rent/{slug}')->name('rent.')->group(function () {
 Route::prefix('site/{slug}')->name('site.')->group(function () {
     Route::get('/', [PublicSiteController::class, 'show'])->name('index');
 });
+
+// Live sample-data preview of a catalog template (used for thumbnails on the welcome page and dashboard)
+Route::get('/template-preview/{key}', [PublicSiteController::class, 'preview'])->name('template.preview');
 
 // Public storefront (no auth)
 Route::prefix('shop/{tenantSlug}')->name('shop.')->group(function () {

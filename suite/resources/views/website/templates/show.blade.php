@@ -11,15 +11,10 @@
 
     <div class="max-w-3xl space-y-6">
 
-        <div class="aspect-video bg-slate-900 rounded-xl border border-slate-700 flex items-center justify-center overflow-hidden">
-            @if ($template->preview_image_url)
-                <img src="{{ $template->preview_image_url }}" alt="{{ $template->name }}" class="w-full h-full object-cover">
-            @else
-                <div class="w-20 h-20 rounded-lg bg-[#0078D4]/20 flex items-center justify-center">
-                    <span class="text-3xl font-bold text-[#0078D4]">{{ strtoupper(substr($template->name, 0, 1)) }}</span>
-                </div>
-            @endif
-        </div>
+        <x-template-preview :template="$template" ratio="aspect-video" class="border border-slate-700" />
+        <p class="text-xs text-slate-500 -mt-2">
+            Live preview with sample content — your actual site will show your business name, logo, and colors once activated.
+        </p>
 
         <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
             <div class="flex items-center gap-2 flex-wrap mb-2">

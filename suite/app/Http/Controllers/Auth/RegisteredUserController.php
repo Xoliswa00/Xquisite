@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\WelcomeNewUserMail;
+use App\Models\Template;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\NewTenantRegistered;
@@ -22,7 +23,19 @@ class RegisteredUserController extends Controller
 {
     public function create(): View
     {
-        return view('auth.register');
+        $templates = Template::visible()->active()->ordered()->get();
+
+        // Loosely maps the registration "industry" options to a template
+        // category, so step 2 can pre-select the closest-matching tab.
+        $industryCategoryMap = [
+            'salon' => 'beauty-spa', 'spa' => 'beauty-spa', 'barbershop' => 'beauty-spa',
+            'beauty' => 'beauty-spa', 'nail' => 'beauty-spa', 'massage' => 'beauty-spa',
+            'fitness' => 'fitness',
+            'hospitality' => 'restaurant',
+            'events' => 'wedding-events',
+        ];
+
+        return view('auth.register', compact('templates', 'industryCategoryMap'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -35,6 +48,7 @@ class RegisteredUserController extends Controller
             'phone'         => ['nullable', 'string', 'max:30'],
             'email'         => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password'      => ['required', 'confirmed', Rules\Password::defaults()],
+            'template_key'  => ['nullable', 'string', 'exists:templates,key'],
         ]);
 
         $slug = $this->uniqueSlug($request->business_name);
@@ -43,7 +57,11 @@ class RegisteredUserController extends Controller
             ? $request->industry_other
             : $request->industry;
 
-        [$tenant, $user] = DB::transaction(function () use ($request, $slug, $industry) {
+        $template = $request->filled('template_key')
+            ? Template::where('key', $request->template_key)->where('is_active', true)->where('is_visible', true)->first()
+            : null;
+
+        [$tenant, $user] = DB::transaction(function () use ($request, $slug, $industry, $template) {
             $tenant = Tenant::create([
                 'name'          => $request->business_name,
                 'slug'          => $slug,
@@ -65,6 +83,11 @@ class RegisteredUserController extends Controller
 
             $user->assignRole('tenant-owner');
 
+            if ($template && $template->isFree()) {
+                $tenant->activateTemplate($template->key, $user->id);
+                $tenant->branding()->create([]);
+            }
+
             return [$tenant, $user];
         });
 
@@ -78,6 +101,11 @@ class RegisteredUserController extends Controller
         );
 
         Auth::login($user);
+
+        if ($template && $template->isFree()) {
+            return redirect()->route('website.branding.edit')
+                ->with('success', "Welcome! {$template->name} is now live — let's add your branding.");
+        }
 
         return redirect()->route('dashboard');
     }

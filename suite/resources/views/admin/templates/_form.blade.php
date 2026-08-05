@@ -87,6 +87,32 @@
         </div>
     </div>
 
+    {{-- Default colors --}}
+    <div>
+        <label class="block text-sm font-medium text-slate-300 mb-1">Default Colors</label>
+        <p class="mb-2 text-xs text-slate-500">Shown until a tenant sets their own branding colors. Leave blank to fall back to Xquisite's default blue/navy/gold.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <span class="block text-xs text-slate-400 mb-1">Primary</span>
+                <input type="text" name="default_primary_color" value="{{ old('default_primary_color', $template->default_primary_color ?? '') }}"
+                       placeholder="#0078D4" maxlength="7"
+                       class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+            </div>
+            <div>
+                <span class="block text-xs text-slate-400 mb-1">Secondary</span>
+                <input type="text" name="default_secondary_color" value="{{ old('default_secondary_color', $template->default_secondary_color ?? '') }}"
+                       placeholder="#002B5B" maxlength="7"
+                       class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+            </div>
+            <div>
+                <span class="block text-xs text-slate-400 mb-1">Accent</span>
+                <input type="text" name="default_accent_color" value="{{ old('default_accent_color', $template->default_accent_color ?? '') }}"
+                       placeholder="#D4AF37" maxlength="7"
+                       class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+            </div>
+        </div>
+    </div>
+
     {{-- Sort Order --}}
     <div class="w-full sm:w-1/3">
         <label class="block text-sm font-medium text-slate-300 mb-1">Sort Order</label>
