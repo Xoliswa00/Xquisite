@@ -89,7 +89,11 @@ class TemplateCatalogController extends Controller
         if (! $template->isPlaceholder() && ! $tenant->canActivateRealTemplate()) {
             $tenant->update(['preferred_template_key' => $template->key]);
 
-            return redirect()->route('website.templates.index')->with('info',
+            $target = $request->boolean('from_wizard')
+                ? redirect()->route('website.setup.show')
+                : redirect()->route('website.templates.index');
+
+            return $target->with('info',
                 "{$template->name} is saved as your pick — it unlocks the moment you're off your free trial. " .
                 'Your site stays on the free Coming Soon page until then.'
             );
@@ -108,6 +112,11 @@ class TemplateCatalogController extends Controller
 
         if (! $tenant->branding) {
             $tenant->branding()->create([]);
+        }
+
+        if ($request->boolean('from_wizard')) {
+            return redirect()->route('website.setup.show')
+                ->with('success', "{$template->name} is now live.");
         }
 
         if (! $hadTemplateBefore) {

@@ -112,6 +112,7 @@
                 @elseif ($template->isFree())
                     <form method="POST" action="{{ route('website.templates.activate', $template) }}">
                         @csrf
+                        <input type="hidden" name="from_wizard" value="{{ request()->boolean('from_wizard') ? 1 : 0 }}">
                         <button type="submit" class="px-5 py-2 {{ $locked ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-[#0078D4] hover:bg-[#0078D4]/90 text-white' }} text-sm rounded-lg font-medium transition-colors">
                             {{ $locked ? 'Reserve — Unlocks on a Paid Plan' : 'Activate This Template' }}
                         </button>
@@ -119,6 +120,7 @@
                 @elseif ($hasPurchased)
                     <form method="POST" action="{{ route('website.templates.activate', $template) }}">
                         @csrf
+                        <input type="hidden" name="from_wizard" value="{{ request()->boolean('from_wizard') ? 1 : 0 }}">
                         <button type="submit" class="px-5 py-2 bg-[#0078D4] hover:bg-[#0078D4]/90 text-white text-sm rounded-lg font-medium transition-colors">
                             Activate (Already Purchased)
                         </button>

@@ -46,7 +46,7 @@ class BrandingController extends Controller
 
         $tenant->branding()->updateOrCreate(['tenant_id' => $tenant->id], $data);
 
-        return Redirect::route('website.branding.edit')->with('success', 'Branding updated.');
+        return Redirect::back()->with('success', 'Branding updated.');
     }
 
     public function favicon(Request $request): RedirectResponse

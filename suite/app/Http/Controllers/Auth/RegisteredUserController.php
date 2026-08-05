@@ -116,17 +116,17 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         if ($template && $template->isPlaceholder()) {
-            return redirect()->route('website.branding.edit')
-                ->with('success', "Welcome! {$template->name} is now live — let's add your branding.");
+            return redirect()->route('website.setup.show')
+                ->with('success', "Welcome! {$template->name} is now live — let's finish setting up your site.");
         }
 
         if ($template) {
-            return redirect()->route('website.branding.edit')
+            return redirect()->route('website.setup.show')
                 ->with('info', "Welcome! Your site is live with a free Coming Soon page for now — we've saved "
                     . "{$template->name} as your pick, ready to activate the moment you're on a paid plan.");
         }
 
-        return redirect()->route('dashboard');
+        return redirect()->route('website.setup.show');
     }
 
     private function uniqueSlug(string $name): string

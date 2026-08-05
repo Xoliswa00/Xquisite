@@ -48,6 +48,7 @@ use App\Http\Controllers\Admin\TemplateController as AdminTemplateController;
 use App\Http\Controllers\Website\TemplateCatalogController;
 use App\Http\Controllers\Website\TemplateCheckoutController;
 use App\Http\Controllers\Website\TemplateReviewController;
+use App\Http\Controllers\Website\SetupWizardController;
 use App\Http\Controllers\Website\BrandingController;
 use App\Http\Controllers\Website\PublicSiteController;
 use App\Http\Controllers\Website\SiteAnalyticsController;
@@ -217,6 +218,13 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::post('/branding/about-image', [BrandingController::class, 'aboutImage'])->name('branding.about-image');
         Route::post('/branding/gallery-image', [BrandingController::class, 'galleryImageStore'])->name('branding.gallery-image.store');
         Route::delete('/branding/gallery-image/{index}', [BrandingController::class, 'galleryImageDestroy'])->name('branding.gallery-image.destroy');
+
+        // Website Setup Wizard
+        Route::get('/setup/{step?}', [SetupWizardController::class, 'show'])->name('setup.show');
+        Route::post('/setup/business-type', [SetupWizardController::class, 'updateBusinessType'])->name('setup.business-type');
+        Route::post('/setup/subdomain', [SetupWizardController::class, 'updateSubdomain'])->name('setup.subdomain');
+        Route::post('/setup/custom-domain', [SetupWizardController::class, 'updateCustomDomain'])->name('setup.custom-domain');
+        Route::get('/setup-preview', [PublicSiteController::class, 'previewOwn'])->name('setup.preview-own');
     });
 
     // Property management module

@@ -41,6 +41,8 @@
             </div>
         @endif
 
+        <x-website-setup-banner />
+
         {{-- Onboarding checklist --}}
         @if(!$onboardingComplete)
             <div class="bg-panel-2 rounded-xl border border-[#0078D4]/20 shadow-lg shadow-[#0078D4]/8 overflow-hidden">

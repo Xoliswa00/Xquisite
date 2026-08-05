@@ -79,6 +79,27 @@ class PublicSiteController extends Controller
         return view('welcome');
     }
 
+    /**
+     * Preview the authenticated tenant's own in-progress branding against
+     * their chosen (not-yet-active) template — unlike preview(), this uses
+     * the tenant's REAL data, not demo content, so the Website Setup Wizard's
+     * Preview step actually shows what they've built so far.
+     */
+    public function previewOwn(Request $request): View
+    {
+        $tenant = $request->user()->tenant;
+        abort_unless($tenant, 403);
+
+        $templateKey = $tenant->preferred_template_key ?? $tenant->activeTemplate?->template_key;
+        abort_unless($templateKey, 404, 'Choose a template first.');
+
+        $template = Template::where('key', $templateKey)->firstOrFail();
+        $branding = $tenant->branding ?? new TenantBranding(['tenant_id' => $tenant->id]);
+        $branding->setRelation('tenant', $tenant);
+
+        return view($template->blade_view, compact('tenant', 'branding', 'template'));
+    }
+
     public function show(string $slug): View
     {
         $tenant = Tenant::where('slug', strtolower($slug))->where('is_active', true)->firstOrFail();

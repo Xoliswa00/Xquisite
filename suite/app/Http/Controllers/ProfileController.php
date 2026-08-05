@@ -89,7 +89,7 @@ class ProfileController extends Controller
         $path = $request->file('logo')->store("public/logos/{$tenant->id}");
         $tenant->update(['logo_url' => Storage::url($path)]);
 
-        return Redirect::route('profile.edit')->with('status', 'logo-updated');
+        return Redirect::back()->with('status', 'logo-updated');
     }
 
     /**
