@@ -2,6 +2,7 @@
 
 namespace App\Services\Payment;
 
+use App\Models\TemplatePurchase;
 use App\Modules\Ecommerce\Models\Order;
 use Illuminate\Http\Request;
 
@@ -44,6 +45,35 @@ class PayFastService
             'amount'        => number_format((float) $order->total, 2, '.', ''),
             'item_name'     => 'Order ' . $order->reference,
             'item_description' => $order->items->count() . ' item(s)',
+        ];
+
+        $data['signature'] = $this->sign($data);
+
+        return $data;
+    }
+
+    /**
+     * Same shape as buildPaymentData() but for a one-off template purchase
+     * rather than an e-commerce Order — kept as a separate method (not an
+     * overload) so the existing shop checkout path is never touched.
+     */
+    public function buildTemplatePurchaseData(TemplatePurchase $purchase, string $tenantSlug, string $buyerName, string $buyerEmail): array
+    {
+        $nameParts = explode(' ', trim($buyerName) !== '' ? $buyerName : 'Xquisite Customer', 2);
+
+        $data = [
+            'merchant_id'   => $this->merchantId,
+            'merchant_key'  => $this->merchantKey,
+            'return_url'    => route('website.templates.payfast.return', $tenantSlug),
+            'cancel_url'    => route('website.templates.payfast.cancel', $tenantSlug),
+            'notify_url'    => route('website.templates.payfast.notify', $tenantSlug),
+            'name_first'    => $nameParts[0],
+            'name_last'     => $nameParts[1] ?? '-',
+            'email_address' => $buyerEmail,
+            'm_payment_id'  => $purchase->reference,
+            'amount'        => number_format((float) $purchase->amount, 2, '.', ''),
+            'item_name'     => 'Website template: ' . $purchase->template_key,
+            'item_description' => 'One-time purchase — ' . $purchase->template_key,
         ];
 
         $data['signature'] = $this->sign($data);

@@ -46,9 +46,12 @@ use App\Http\Controllers\Property\RenterPortalController;
 use App\Http\Controllers\Admin\PlatformModuleController;
 use App\Http\Controllers\Admin\TemplateController as AdminTemplateController;
 use App\Http\Controllers\Website\TemplateCatalogController;
+use App\Http\Controllers\Website\TemplateCheckoutController;
+use App\Http\Controllers\Website\TemplateReviewController;
 use App\Http\Controllers\Website\BrandingController;
 use App\Http\Controllers\Website\PublicSiteController;
 use App\Http\Controllers\Website\SiteAnalyticsController;
+use App\Http\Controllers\Admin\TemplateReviewController as AdminTemplateReviewController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\NotificationController;
@@ -202,6 +205,8 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::get('/templates', [TemplateCatalogController::class, 'index'])->name('templates.index');
         Route::get('/templates/{template}', [TemplateCatalogController::class, 'show'])->name('templates.show');
         Route::post('/templates/{template}/activate', [TemplateCatalogController::class, 'activate'])->name('templates.activate');
+        Route::post('/templates/{template}/checkout', [TemplateCheckoutController::class, 'checkout'])->name('templates.checkout');
+        Route::post('/templates/{template}/reviews', [TemplateReviewController::class, 'store'])->name('templates.reviews.store');
 
         Route::get('/analytics', [SiteAnalyticsController::class, 'index'])->name('analytics');
 
@@ -305,6 +310,11 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             // Website template catalog
             Route::resource('templates', AdminTemplateController::class)->except(['show', 'destroy']);
             Route::patch('templates/{template}/status', [AdminTemplateController::class, 'updateStatus'])->name('templates.status');
+            Route::post('templates/{template}/refresh-scores', [AdminTemplateController::class, 'refreshScores'])->name('templates.refresh-scores');
+
+            // Template review moderation
+            Route::get('/template-reviews', [AdminTemplateReviewController::class, 'index'])->name('template-reviews.index');
+            Route::patch('/template-reviews/{templateReview}/status', [AdminTemplateReviewController::class, 'updateStatus'])->name('template-reviews.status');
         });
 
         // User management (for tenant owners to manage their staff)
@@ -446,6 +456,14 @@ Route::prefix('shop/{tenantSlug}')->name('shop.')->group(function () {
     Route::post('/payfast/notify', [CheckoutController::class, 'payfastNotify'])->name('payfast.notify')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     Route::get('/payfast/return', [CheckoutController::class, 'payfastReturn'])->name('payfast.return');
     Route::get('/payfast/cancel', [CheckoutController::class, 'payfastCancel'])->name('payfast.cancel');
+});
+
+// PayFast callbacks for premium website-template purchases (unauthenticated — PayFast's
+// server calls notify directly, no session available; mirrors the shop.payfast.* group above)
+Route::prefix('website-template-purchase/{tenantSlug}')->name('website.templates.payfast.')->group(function () {
+    Route::post('/notify', [TemplateCheckoutController::class, 'payfastNotify'])->name('notify')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+    Route::get('/return', [TemplateCheckoutController::class, 'payfastReturn'])->name('return');
+    Route::get('/cancel', [TemplateCheckoutController::class, 'payfastCancel'])->name('cancel');
 });
 
 // ─── Public quote acceptance (no auth) ───────────────────────────────────────

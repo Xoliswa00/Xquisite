@@ -51,6 +51,17 @@
                                 @endif
                             </div>
                             <p class="text-xs text-slate-400 mt-0.5 truncate">{{ $template->description }}</p>
+                            <div class="flex items-center gap-3 mt-1 text-[11px] text-slate-500">
+                                <span class="font-mono">v{{ $template->version }}</span>
+                                <span class="text-amber-400">{{ $template->starsHtml() }}</span>
+                                @if ($template->rating_count)
+                                    <span>({{ $template->rating_count }})</span>
+                                @endif
+                                <span>{{ $template->activeCustomersCount() }} using it</span>
+                                @if ($template->speed_score || $template->seo_score || $template->accessibility_score)
+                                    <span>Speed {{ $template->speed_score ?? '—' }} · SEO {{ $template->seo_score ?? '—' }} · A11y {{ $template->accessibility_score ?? '—' }}</span>
+                                @endif
+                            </div>
                         </div>
 
                         <div class="hidden sm:flex items-center gap-6 text-sm text-slate-400 shrink-0">

@@ -40,6 +40,10 @@ return [
     'token' => env('MONITORING_TOKEN'),
 ],
 
+'pagespeed' => [
+    'key' => env('PAGESPEED_API_KEY'),
+],
+
 
 
 ];

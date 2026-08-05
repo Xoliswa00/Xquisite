@@ -4,22 +4,59 @@ namespace App\Http\Controllers\Website;
 
 use App\Http\Controllers\Controller;
 use App\Models\Template;
+use App\Models\TemplatePurchase;
+use App\Models\TemplateReview;
+use App\Models\TenantTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TemplateCatalogController extends Controller
 {
+    private const SORTS = ['featured', 'newest', 'popular', 'price_low', 'price_high', 'rating', 'updated'];
+
     public function index(Request $request): View
     {
         $tenant = $request->user()->tenant;
         abort_unless($tenant, 403);
 
-        $templates = Template::visible()->active()->ordered()->get();
-        $activeTemplate = $tenant->activeTemplate?->template;
-        $categories = $templates->pluck('category')->unique()->filter()->values();
+        $sort = in_array($request->query('sort'), self::SORTS, true) ? $request->query('sort') : 'featured';
+        $price = in_array($request->query('price'), ['free', 'premium'], true) ? $request->query('price') : null;
+        $category = $request->query('category');
+        $darkModeOnly = $request->boolean('dark_mode');
 
-        return view('website.templates.index', compact('tenant', 'templates', 'activeTemplate', 'categories'));
+        $query = Template::visible()->active();
+
+        if ($price === 'free') {
+            $query->free();
+        } elseif ($price === 'premium') {
+            $query->premium();
+        }
+
+        if ($category) {
+            $query->where('category', $category);
+        }
+
+        if ($darkModeOnly) {
+            $query->where('supports_theme_toggle', true);
+        }
+
+        $query = match ($sort) {
+            'newest'     => $query->newest(),
+            'popular'    => $query->popular(),
+            'price_low'  => $query->orderByRaw("price_type = 'free' desc")->orderBy('price'),
+            'price_high' => $query->orderByRaw("price_type = 'free' asc")->orderByDesc('price'),
+            'rating'     => $query->topRated(),
+            'updated'    => $query->recentlyUpdated(),
+            default      => $query->featuredFirst(),
+        };
+
+        $templates = $query->get();
+        $activeTemplate = $tenant->activeTemplate?->template;
+        $categories = Template::visible()->active()->pluck('category')->unique()->filter()->values();
+        $purchasedKeys = TemplatePurchase::where('tenant_id', $tenant->id)->where('status', 'paid')->pluck('template_key');
+
+        return view('website.templates.index', compact('tenant', 'templates', 'activeTemplate', 'categories', 'sort', 'price', 'category', 'darkModeOnly', 'purchasedKeys'));
     }
 
     public function show(Request $request, Template $template): View
@@ -29,8 +66,15 @@ class TemplateCatalogController extends Controller
         abort_unless($template->is_visible && $template->is_active, 404);
 
         $activeTemplateKey = $tenant->activeTemplate?->template_key;
+        $hasPurchased = $template->isPremium() && TemplatePurchase::where('tenant_id', $tenant->id)
+            ->where('template_key', $template->key)->where('status', 'paid')->exists();
+        $canReview = TenantTemplate::where('tenant_id', $tenant->id)
+            ->where('template_key', $template->key)->exists();
+        $myReview = TemplateReview::where('tenant_id', $tenant->id)
+            ->where('template_key', $template->key)->first();
+        $reviews = $template->reviews()->approved()->latest()->with('tenant')->take(20)->get();
 
-        return view('website.templates.show', compact('template', 'activeTemplateKey'));
+        return view('website.templates.show', compact('template', 'activeTemplateKey', 'hasPurchased', 'canReview', 'myReview', 'reviews'));
     }
 
     public function activate(Request $request, Template $template): RedirectResponse
@@ -38,7 +82,13 @@ class TemplateCatalogController extends Controller
         $tenant = $request->user()->tenant;
         abort_unless($tenant, 403);
         abort_unless($template->is_active && $template->is_visible, 404);
-        abort_unless($template->isFree(), 403, 'Paid templates are coming soon.');
+
+        if ($template->isPremium()) {
+            $hasPurchased = TemplatePurchase::where('tenant_id', $tenant->id)
+                ->where('template_key', $template->key)->where('status', 'paid')->exists();
+
+            abort_unless($hasPurchased, 403, 'Purchase this template before activating it.');
+        }
 
         $hadTemplateBefore = $tenant->activeTemplate()->exists();
 
