@@ -18,6 +18,9 @@
                 <div class="rounded-lg overflow-hidden border border-line bg-white" style="height: 70vh;">
                     <iframe src="{{ route('website.setup.preview-own') }}" class="w-full h-full border-0" loading="lazy"></iframe>
                 </div>
+                <a href="{{ route('website.editor.edit') }}" class="inline-block text-sm text-[#0078D4] hover:text-[#B8D4F0]">
+                    Open the full website editor →
+                </a>
             @else
                 <p class="text-sm text-ink-faint">Choose a template first to see a preview.</p>
                 <a href="{{ route('website.setup.show', ['step' => 'template']) }}" class="inline-block text-sm text-[#0078D4] hover:text-[#B8D4F0]">Choose a template →</a>

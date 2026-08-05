@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Website;
 
 use App\Http\Controllers\Controller;
+use App\Services\Website\TenantSectionSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -46,6 +47,12 @@ class BrandingController extends Controller
 
         $tenant->branding()->updateOrCreate(['tenant_id' => $tenant->id], $data);
 
+        foreach (['description', 'contact_email', 'contact_phone', 'whatsapp_number', 'socials', 'business_hours'] as $field) {
+            if (array_key_exists($field, $data)) {
+                TenantSectionSeeder::syncBrandingFieldToSections($tenant, $field, $data[$field]);
+            }
+        }
+
         return Redirect::back()->with('success', 'Branding updated.');
     }
 
@@ -86,7 +93,9 @@ class BrandingController extends Controller
         }
 
         $path = $request->file('hero_image')->store("public/branding/{$tenant->id}");
-        $branding->update(['hero_image_url' => Storage::url($path)]);
+        $url = Storage::url($path);
+        $branding->update(['hero_image_url' => $url]);
+        TenantSectionSeeder::syncBrandingFieldToSections($tenant, 'hero_image_url', $url);
 
         return Redirect::route('website.branding.edit')->with('success', 'Hero image updated.');
     }
@@ -107,7 +116,9 @@ class BrandingController extends Controller
         }
 
         $path = $request->file('about_image')->store("public/branding/{$tenant->id}");
-        $branding->update(['about_image_url' => Storage::url($path)]);
+        $url = Storage::url($path);
+        $branding->update(['about_image_url' => $url]);
+        TenantSectionSeeder::syncBrandingFieldToSections($tenant, 'about_image_url', $url);
 
         return Redirect::route('website.branding.edit')->with('success', 'About photo updated.');
     }
@@ -131,6 +142,7 @@ class BrandingController extends Controller
         $path = $request->file('gallery_image')->store("public/branding/{$tenant->id}/gallery");
         $gallery[] = Storage::url($path);
         $branding->update(['gallery_images' => $gallery]);
+        TenantSectionSeeder::syncBrandingFieldToSections($tenant, 'gallery_images', $gallery);
 
         return Redirect::route('website.branding.edit')->with('success', 'Gallery photo added.');
     }
@@ -152,7 +164,9 @@ class BrandingController extends Controller
         }
 
         unset($gallery[$index]);
-        $branding->update(['gallery_images' => array_values($gallery)]);
+        $gallery = array_values($gallery);
+        $branding->update(['gallery_images' => $gallery]);
+        TenantSectionSeeder::syncBrandingFieldToSections($tenant, 'gallery_images', $gallery);
 
         return Redirect::route('website.branding.edit')->with('success', 'Gallery photo removed.');
     }

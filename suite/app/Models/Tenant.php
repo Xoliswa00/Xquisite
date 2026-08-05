@@ -253,6 +253,11 @@ class Tenant extends Model
         return $this->hasOne(TenantBranding::class);
     }
 
+    public function pageSections()
+    {
+        return $this->hasMany(TenantPageSection::class);
+    }
+
     public function siteVisits()
     {
         return $this->hasMany(SiteVisit::class);

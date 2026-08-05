@@ -52,6 +52,8 @@ use App\Http\Controllers\Website\SetupWizardController;
 use App\Http\Controllers\Website\BrandingController;
 use App\Http\Controllers\Website\PublicSiteController;
 use App\Http\Controllers\Website\SiteAnalyticsController;
+use App\Http\Controllers\Website\NewsletterSignupController;
+use App\Http\Controllers\Website\PageEditorController;
 use App\Http\Controllers\Admin\TemplateReviewController as AdminTemplateReviewController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\MonitoringController;
@@ -225,6 +227,18 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::post('/setup/subdomain', [SetupWizardController::class, 'updateSubdomain'])->name('setup.subdomain');
         Route::post('/setup/custom-domain', [SetupWizardController::class, 'updateCustomDomain'])->name('setup.custom-domain');
         Route::get('/setup-preview', [PublicSiteController::class, 'previewOwn'])->name('setup.preview-own');
+
+        // Visual page builder
+        Route::get('/editor/preview', [PublicSiteController::class, 'editorPreview'])->name('editor.preview');
+        Route::prefix('editor')->name('editor.')->group(function () {
+            Route::get('/', [PageEditorController::class, 'edit'])->name('edit');
+            Route::post('/sections', [PageEditorController::class, 'store'])->name('sections.store');
+            Route::patch('/sections/reorder', [PageEditorController::class, 'reorder'])->name('sections.reorder');
+            Route::patch('/sections/{section}', [PageEditorController::class, 'update'])->name('sections.update');
+            Route::patch('/sections/{section}/visibility', [PageEditorController::class, 'toggleVisibility'])->name('sections.visibility');
+            Route::post('/sections/{section}/duplicate', [PageEditorController::class, 'duplicate'])->name('sections.duplicate');
+            Route::delete('/sections/{section}', [PageEditorController::class, 'destroy'])->name('sections.destroy');
+        });
     });
 
     // Property management module
@@ -443,6 +457,9 @@ Route::prefix('site/{slug}')->name('site.')->group(function () {
 
 // Live sample-data preview of a catalog template (used for thumbnails on the welcome page and dashboard)
 Route::get('/template-preview/{key}', [PublicSiteController::class, 'preview'])->name('template.preview');
+
+// Public newsletter signup (no auth) — posted from the Newsletter section on a tenant's site
+Route::post('/newsletter-signup/{tenantSlug}', [NewsletterSignupController::class, 'store'])->name('newsletter.store');
 
 // Public storefront (no auth)
 Route::prefix('shop/{tenantSlug}')->name('shop.')->group(function () {

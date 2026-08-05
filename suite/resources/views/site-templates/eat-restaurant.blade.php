@@ -47,7 +47,7 @@
             x-data="{ slide: 0, slides: [
                     { img: '{{ $branding->hero_image_url ?? $assetBase . '/img/slide1.jpg' }}', title: 'Good food, good company', sub: 'Fresh dishes made daily, served with a smile' },
                     { img: '{{ $assetBase }}/img/slide2.jpg', title: 'Made from scratch', sub: 'Real ingredients, honest cooking, no shortcuts' },
-                    { img: '{{ $assetBase }}/img/slide3.jpg', title: 'A table always waiting', sub: "Book ahead or walk in — we'll find you a seat" },
+                    { img: '{{ $assetBase }}/img/slide3.jpg', title: 'A table always waiting', sub: 'Book ahead or walk in — we\'ll find you a seat' },
                 ] }"
             x-init="setInterval(() => slide = (slide + 1) % slides.length, 5000)"
         >

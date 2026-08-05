@@ -8,8 +8,10 @@ use App\Models\Template;
 use App\Models\Tenant;
 use App\Models\TenantBranding;
 use App\Services\Tenant\TenantContext;
+use App\Services\Website\TenantSectionSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class PublicSiteController extends Controller
@@ -24,12 +26,13 @@ class PublicSiteController extends Controller
         $template = Template::where('key', $key)->firstOrFail();
 
         $demoContent = [
-            'coming-soon'    => ['name' => 'Grandure Studio', 'description' => 'We are putting the finishing touches on something special.'],
-            'restaurant'     => ['name' => 'Eat & Chat', 'description' => 'Fresh ingredients, honest cooking, and a warm room to enjoy it in.'],
-            'fitness'        => ['name' => 'Add Life Fitness', 'description' => 'A friendly neighbourhood fitness studio built around real results.'],
-            'beauty-spa'     => ['name' => 'Aroma Beauty & Spa', 'description' => 'A calm space to slow down and be looked after.'],
-            'wedding-events' => ['name' => 'Lovely Weddings & Events', 'description' => "We plan the day you've been dreaming of, down to the last detail."],
-        ][$template->category] ?? ['name' => 'Sample Business', 'description' => 'A short description of your business goes here.'];
+            'grandure-coming-soon' => ['name' => 'Grandure Studio', 'description' => 'We are putting the finishing touches on something special.'],
+            'eat-restaurant'       => ['name' => 'Eat & Chat', 'description' => 'Fresh ingredients, honest cooking, and a warm room to enjoy it in.'],
+            'add-life-fitness'     => ['name' => 'Add Life Fitness', 'description' => 'A friendly neighbourhood fitness studio built around real results.'],
+            'aroma-beauty-spa'     => ['name' => 'Aroma Beauty & Spa', 'description' => 'A calm space to slow down and be looked after.'],
+            'beauty-salon'         => ['name' => 'Beauty Salon', 'description' => 'Cut, colour, and style — crafted around what actually suits you.'],
+            'lovely-wedding'       => ['name' => 'Lovely Weddings & Events', 'description' => "We plan the day you've been dreaming of, down to the last detail."],
+        ][$template->key] ?? ['name' => 'Sample Business', 'description' => 'A short description of your business goes here.'];
 
         $tenant = new Tenant([
             'name'    => $demoContent['name'],
@@ -50,7 +53,10 @@ class PublicSiteController extends Controller
         ]);
         $branding->setRelation('tenant', $tenant);
 
-        return view($template->blade_view, compact('tenant', 'branding', 'template'));
+        $sections = $this->resolveSections(null, $template);
+        $editing = false;
+
+        return view($template->blade_view, compact('tenant', 'branding', 'template', 'sections', 'editing'));
     }
 
     /**
@@ -87,6 +93,22 @@ class PublicSiteController extends Controller
      */
     public function previewOwn(Request $request): View
     {
+        return $this->renderOwn($request, editing: false);
+    }
+
+    /**
+     * Same as previewOwn(), but flags the render as editing — used only by
+     * the visual editor's live-preview iframe, which needs the per-section
+     * hover toolbar and hidden-section indicators that public rendering
+     * must never show.
+     */
+    public function editorPreview(Request $request): View
+    {
+        return $this->renderOwn($request, editing: true);
+    }
+
+    private function renderOwn(Request $request, bool $editing): View
+    {
         $tenant = $request->user()->tenant;
         abort_unless($tenant, 403);
 
@@ -97,7 +119,9 @@ class PublicSiteController extends Controller
         $branding = $tenant->branding ?? new TenantBranding(['tenant_id' => $tenant->id]);
         $branding->setRelation('tenant', $tenant);
 
-        return view($template->blade_view, compact('tenant', 'branding', 'template'));
+        $sections = $this->resolveSections($tenant, $template);
+
+        return view($template->blade_view, compact('tenant', 'branding', 'template', 'sections', 'editing'));
     }
 
     public function show(string $slug): View
@@ -120,6 +144,33 @@ class PublicSiteController extends Controller
 
         SiteVisit::record($tenant, request()->path());
 
-        return view($template->blade_view, compact('tenant', 'branding', 'template'));
+        $sections = $this->resolveSections($tenant, $template);
+        $editing = false;
+
+        return view($template->blade_view, compact('tenant', 'branding', 'template', 'sections', 'editing'));
+    }
+
+    /**
+     * Resolves the ordered, page-builder sections for a render. A real
+     * persisted tenant gets seeded (idempotently) from their template's
+     * preset the first time they have none, then their real rows. A
+     * placeholder template (Coming Soon) or a not-yet-persisted demo tenant
+     * (the marketplace's fake-tenant preview) never touches the database —
+     * the former has no preset at all, the latter gets non-persisted,
+     * in-memory rows built straight from the preset.
+     */
+    private function resolveSections(?Tenant $tenant, Template $template): Collection
+    {
+        if ($template->isPlaceholder()) {
+            return collect();
+        }
+
+        if ($tenant && $tenant->exists) {
+            TenantSectionSeeder::seedForTenant($tenant, $template);
+
+            return $tenant->pageSections()->ordered()->get();
+        }
+
+        return TenantSectionSeeder::virtualSectionsFor($template);
     }
 }

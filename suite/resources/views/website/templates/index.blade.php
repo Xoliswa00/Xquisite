@@ -57,8 +57,12 @@
                         Analytics
                     </a>
                     <a href="{{ route('website.branding.edit') }}"
+                       class="px-4 py-2 rounded-lg border border-slate-700 text-slate-200 text-sm font-medium hover:border-slate-500 transition-colors">
+                        Colors &amp; Fonts
+                    </a>
+                    <a href="{{ route('website.editor.edit') }}"
                        class="px-4 py-2 rounded-lg bg-[#0078D4] hover:bg-[#0078D4]/90 text-white text-sm font-medium transition-colors">
-                        Edit Branding
+                        Edit Website
                     </a>
                 </div>
             </div>

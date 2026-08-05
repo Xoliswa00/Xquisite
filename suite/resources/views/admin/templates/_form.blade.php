@@ -50,7 +50,7 @@
         <div>
             <label class="block text-sm font-medium text-slate-300 mb-1">Blade View <span class="text-red-400">*</span></label>
             <input type="text" name="blade_view" value="{{ old('blade_view', $template->blade_view ?? '') }}"
-                   placeholder="site-templates.eat-restaurant"
+                   placeholder="site-templates.sections-page"
                    class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#0078D4] @error('blade_view') border-red-500 @enderror">
             <p class="mt-1 text-xs text-slate-500">Dot-notation view path that renders this template.</p>
         </div>
