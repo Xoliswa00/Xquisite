@@ -28,6 +28,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family={{ $googleFamilies }}&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    {{-- v4 compatibility shim — the templates use several Font Awesome 4-era icon names
+         (fa-smile-o, fa-cutlery, fa-institution, fa-bar-chart, fa-glass, etc.) that
+         don't resolve against all.min.css alone in FA6. --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/v4-shims.min.css">
 
     @if($branding->favicon_url)
         <link rel="shortcut icon" href="{{ $branding->favicon_url }}">

@@ -209,6 +209,9 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::patch('/branding', [BrandingController::class, 'update'])->name('branding.update');
         Route::post('/branding/favicon', [BrandingController::class, 'favicon'])->name('branding.favicon');
         Route::post('/branding/hero-image', [BrandingController::class, 'heroImage'])->name('branding.hero-image');
+        Route::post('/branding/about-image', [BrandingController::class, 'aboutImage'])->name('branding.about-image');
+        Route::post('/branding/gallery-image', [BrandingController::class, 'galleryImageStore'])->name('branding.gallery-image.store');
+        Route::delete('/branding/gallery-image/{index}', [BrandingController::class, 'galleryImageDestroy'])->name('branding.gallery-image.destroy');
     });
 
     // Property management module

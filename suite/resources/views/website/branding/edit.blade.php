@@ -16,6 +16,10 @@
             <div class="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">{{ session('success') }}</div>
         @endif
 
+        @if (session('error'))
+            <div class="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{{ session('error') }}</div>
+        @endif
+
         @if ($errors->any())
             <div class="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm space-y-1">
                 @foreach ($errors->all() as $error) <p>{{ $error }}</p> @endforeach
@@ -272,6 +276,74 @@
                 </div>
                 <button type="submit" class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4]/90 text-white text-sm rounded-lg font-medium transition-colors">Upload</button>
             </form>
+        </div>
+
+        <div x-show="step === 3" x-cloak class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+            <h3 class="text-sm font-semibold text-slate-100 mb-4">About Photo</h3>
+            <form method="POST" action="{{ route('website.branding.about-image') }}" enctype="multipart/form-data" class="flex items-center gap-6">
+                @csrf
+                <div class="shrink-0">
+                    @if($branding->about_image_url)
+                        <img src="{{ $branding->about_image_url }}" alt="About photo" class="w-24 h-16 rounded-lg object-cover border border-slate-700 bg-slate-900">
+                    @else
+                        <div class="w-24 h-16 rounded-lg border-2 border-dashed border-slate-700 bg-slate-900/60"></div>
+                    @endif
+                </div>
+                <div class="flex-1 space-y-2" x-data="{ fileName: '' }">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-sm text-slate-300 transition">
+                            Choose file
+                        </span>
+                        <span class="text-sm text-slate-400" x-text="fileName || 'No file selected'"></span>
+                        <input type="file" name="about_image" accept="image/*" class="sr-only" @change="fileName = $event.target.files[0]?.name || ''">
+                    </label>
+                    <p class="text-xs text-slate-500">JPEG, PNG or WebP · Max 4 MB. Shown next to your business description on the About section.</p>
+                    @error('about_image')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+                </div>
+                <button type="submit" class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4]/90 text-white text-sm rounded-lg font-medium transition-colors">Upload</button>
+            </form>
+        </div>
+
+        <div x-show="step === 3" x-cloak class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+            <h3 class="text-sm font-semibold text-slate-100 mb-1">Gallery Photos</h3>
+            <p class="text-xs text-slate-500 mb-4">Add up to 8 of your own photos to replace the template's stock gallery.</p>
+
+            @php $gallery = $branding->gallery_images ?? []; @endphp
+            @if(count($gallery))
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                    @foreach($gallery as $i => $url)
+                        <div class="relative group">
+                            <img src="{{ $url }}" alt="Gallery photo" class="w-full h-24 rounded-lg object-cover border border-slate-700 bg-slate-900">
+                            <form method="POST" action="{{ route('website.branding.gallery-image.destroy', $i) }}" class="absolute top-1 right-1">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" aria-label="Remove photo"
+                                        class="w-6 h-6 rounded-full bg-slate-950/80 text-slate-300 hover:text-red-400 hover:bg-slate-950 flex items-center justify-center text-xs transition-colors">
+                                    &times;
+                                </button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            @if(count($gallery) < 8)
+                <form method="POST" action="{{ route('website.branding.gallery-image.store') }}" enctype="multipart/form-data" class="flex items-center gap-6">
+                    @csrf
+                    <div class="flex-1 space-y-2" x-data="{ fileName: '' }">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-sm text-slate-300 transition">
+                                Choose file
+                            </span>
+                            <span class="text-sm text-slate-400" x-text="fileName || 'No file selected'"></span>
+                            <input type="file" name="gallery_image" accept="image/*" class="sr-only" @change="fileName = $event.target.files[0]?.name || ''">
+                        </label>
+                        <p class="text-xs text-slate-500">JPEG, PNG or WebP · Max 4 MB · {{ 8 - count($gallery) }} slot{{ 8 - count($gallery) === 1 ? '' : 's' }} left.</p>
+                        @error('gallery_image')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+                    </div>
+                    <button type="submit" class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4]/90 text-white text-sm rounded-lg font-medium transition-colors">Add photo</button>
+                </form>
+            @endif
         </div>
 
     </div>

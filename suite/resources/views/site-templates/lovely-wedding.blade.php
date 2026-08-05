@@ -2,6 +2,8 @@
     $assetBase = asset('site-templates/lovely-wedding');
     $socials = $branding->socials ?? [];
     $heroImage = $branding->hero_image_url ?? $assetBase . '/img/main2.jpg';
+    $aboutImage = $branding->about_image_url ?? $assetBase . '/img/about2.png';
+    $customGallery = !empty($branding->gallery_images) ? array_values($branding->gallery_images) : null;
 @endphp
 <x-site-layout :tenant="$tenant" :branding="$branding" :template="$template">
 
@@ -9,8 +11,8 @@
 
         {{-- Nav --}}
         <header class="sticky top-0 z-40 border-b border-[var(--site-border)] bg-[var(--site-nav-bg)] backdrop-blur">
-            <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-                <a href="#hero_section" class="flex items-center gap-2">
+            <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+                <a href="#hero_section" class="flex shrink-0 items-center gap-2">
                     @if($tenant->logo_url)
                         <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}" class="h-9 w-auto object-contain">
                     @else
@@ -25,7 +27,7 @@
                     <a href="#team" class="transition hover:text-[var(--tenant-primary)]">Our Team</a>
                     <a href="#contact" class="transition hover:text-[var(--tenant-primary)]">Contact</a>
                 </nav>
-                <button @click="mobileNavOpen = !mobileNavOpen" class="text-[var(--site-text)] md:hidden" aria-label="Toggle navigation">
+                <button @click="mobileNavOpen = !mobileNavOpen" class="shrink-0 text-[var(--site-text)] md:hidden" aria-label="Toggle navigation">
                     <i class="fa" :class="mobileNavOpen ? 'fa-times' : 'fa-bars'"></i>
                 </button>
             </div>
@@ -53,7 +55,7 @@
         {{-- About --}}
         <section id="aboutUs" class="scroll-mt-16 bg-[var(--site-surface)] py-20">
             <div class="mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 md:grid-cols-2 md:items-center">
-                <img src="{{ $assetBase }}/img/about2.png" alt="{{ $tenant->name }}" class="rounded-xl">
+                <img src="{{ $aboutImage }}" alt="{{ $tenant->name }}" class="rounded-xl">
                 <div>
                     <h3 class="font-display text-2xl font-bold text-[var(--site-text)]">About Us</h3>
                     <p class="mt-4 text-[var(--site-text-muted)]">{{ $branding->description ?? 'Tell your customers about your business — add a description in your website branding settings.' }}</p>
@@ -95,7 +97,10 @@
         </section>
 
         {{-- Gallery --}}
-        <section id="gallery" class="scroll-mt-16 bg-[var(--site-surface)] py-20" x-data="{ open: false, active: null, images: [1,2,3,4,5,6,7,8].map(n => '{{ $assetBase }}/img/portfolio_pic' + n + '.jpg') }">
+        @php
+            $galleryImages = $customGallery ?? collect(range(1, 8))->map(fn ($n) => "{$assetBase}/img/portfolio_pic{$n}.jpg")->all();
+        @endphp
+        <section id="gallery" class="scroll-mt-16 bg-[var(--site-surface)] py-20" x-data="{ open: false, active: null, images: {{ \Illuminate\Support\Js::from($galleryImages) }} }">
             <div class="mx-auto max-w-6xl px-4 sm:px-6">
                 <div class="text-center">
                     <h2 class="font-display text-3xl font-bold text-[var(--site-text)]">Photo Gallery</h2>

@@ -90,4 +90,70 @@ class BrandingController extends Controller
 
         return Redirect::route('website.branding.edit')->with('success', 'Hero image updated.');
     }
+
+    public function aboutImage(Request $request): RedirectResponse
+    {
+        $tenant = $request->user()->tenant;
+        abort_unless($tenant, 403);
+
+        $request->validate([
+            'about_image' => 'required|image|mimes:jpeg,jpg,png,webp|max:4096',
+        ]);
+
+        $branding = $tenant->branding ?? $tenant->branding()->create([]);
+
+        if ($branding->about_image_url && str_starts_with($branding->about_image_url, '/storage/')) {
+            Storage::delete(str_replace('/storage/', 'public/', $branding->about_image_url));
+        }
+
+        $path = $request->file('about_image')->store("public/branding/{$tenant->id}");
+        $branding->update(['about_image_url' => Storage::url($path)]);
+
+        return Redirect::route('website.branding.edit')->with('success', 'About photo updated.');
+    }
+
+    public function galleryImageStore(Request $request): RedirectResponse
+    {
+        $tenant = $request->user()->tenant;
+        abort_unless($tenant, 403);
+
+        $branding = $tenant->branding ?? $tenant->branding()->create([]);
+        $gallery = $branding->gallery_images ?? [];
+
+        if (count($gallery) >= 8) {
+            return Redirect::route('website.branding.edit')->with('error', 'You can have up to 8 gallery photos — remove one before adding another.');
+        }
+
+        $request->validate([
+            'gallery_image' => 'required|image|mimes:jpeg,jpg,png,webp|max:4096',
+        ]);
+
+        $path = $request->file('gallery_image')->store("public/branding/{$tenant->id}/gallery");
+        $gallery[] = Storage::url($path);
+        $branding->update(['gallery_images' => $gallery]);
+
+        return Redirect::route('website.branding.edit')->with('success', 'Gallery photo added.');
+    }
+
+    public function galleryImageDestroy(Request $request, int $index): RedirectResponse
+    {
+        $tenant = $request->user()->tenant;
+        abort_unless($tenant, 403);
+
+        $branding = $tenant->branding;
+        abort_unless($branding, 404);
+
+        $gallery = $branding->gallery_images ?? [];
+        abort_unless(array_key_exists($index, $gallery), 404);
+
+        $url = $gallery[$index];
+        if (str_starts_with($url, '/storage/')) {
+            Storage::delete(str_replace('/storage/', 'public/', $url));
+        }
+
+        unset($gallery[$index]);
+        $branding->update(['gallery_images' => array_values($gallery)]);
+
+        return Redirect::route('website.branding.edit')->with('success', 'Gallery photo removed.');
+    }
 }

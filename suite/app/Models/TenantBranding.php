@@ -12,6 +12,8 @@ class TenantBranding extends Model
         'tenant_id',
         'favicon_url',
         'hero_image_url',
+        'about_image_url',
+        'gallery_images',
         'primary_color',
         'secondary_color',
         'accent_color',
@@ -28,6 +30,7 @@ class TenantBranding extends Model
     protected $casts = [
         'socials'        => 'array',
         'business_hours' => 'array',
+        'gallery_images' => 'array',
     ];
 
     public function tenant()
