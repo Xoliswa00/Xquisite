@@ -33,9 +33,12 @@ class RegisteredUserController extends Controller
             'fitness' => 'fitness',
             'hospitality' => 'restaurant',
             'events' => 'wedding-events',
+            'coming_soon' => 'coming-soon',
         ];
 
-        return view('auth.register', compact('templates', 'industryCategoryMap'));
+        $placeholderKeys = $templates->filter->isPlaceholder()->pluck('key')->values();
+
+        return view('auth.register', compact('templates', 'industryCategoryMap', 'placeholderKeys'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -83,9 +86,19 @@ class RegisteredUserController extends Controller
 
             $user->assignRole('tenant-owner');
 
-            if ($template && $template->isFree()) {
+            // New tenants always start on trial, and real industry templates are
+            // a paid-plan feature — the Coming Soon page is the one exception.
+            if ($template && $template->isPlaceholder()) {
                 $tenant->activateTemplate($template->key, $user->id);
                 $tenant->branding()->create([]);
+            } elseif ($template) {
+                $tenant->update(['preferred_template_key' => $template->key]);
+
+                $comingSoon = Template::where('category', 'coming-soon')->where('is_active', true)->first();
+                if ($comingSoon) {
+                    $tenant->activateTemplate($comingSoon->key, $user->id);
+                    $tenant->branding()->create([]);
+                }
             }
 
             return [$tenant, $user];
@@ -102,9 +115,15 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        if ($template && $template->isFree()) {
+        if ($template && $template->isPlaceholder()) {
             return redirect()->route('website.branding.edit')
                 ->with('success', "Welcome! {$template->name} is now live — let's add your branding.");
+        }
+
+        if ($template) {
+            return redirect()->route('website.branding.edit')
+                ->with('info', "Welcome! Your site is live with a free Coming Soon page for now — we've saved "
+                    . "{$template->name} as your pick, ready to activate the moment you're on a paid plan.");
         }
 
         return redirect()->route('dashboard');

@@ -28,6 +28,7 @@ class Tenant extends Model
         'vat_number',
         'plan',
         'industry',
+        'preferred_template_key',
         'logo_url',
         'shipping_enabled',
         'shipping_type',
@@ -209,6 +210,17 @@ class Tenant extends Model
     public function isOnTrial(): bool
     {
         return $this->trial_ends_at && $this->trial_ends_at->isFuture();
+    }
+
+    /**
+     * Real (non-placeholder) website templates are a paid-plan feature — a
+     * trial tenant only ever gets the free Coming Soon page. Matches the
+     * existing "don't do the paid thing during trial" convention used for
+     * module billing (see Settings\ModuleController::store()).
+     */
+    public function canActivateRealTemplate(): bool
+    {
+        return ! $this->isOnTrial();
     }
 
     public function getStorefrontUrlAttribute(): string

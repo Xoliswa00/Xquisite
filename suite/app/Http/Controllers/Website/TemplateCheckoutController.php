@@ -22,6 +22,14 @@ class TemplateCheckoutController extends Controller
         abort_unless($template->is_active && $template->is_visible, 404);
         abort_unless($template->isPremium(), 400, 'This template is free — activate it directly from the catalog.');
 
+        if (! $tenant->canActivateRealTemplate()) {
+            $tenant->update(['preferred_template_key' => $template->key]);
+
+            return redirect()->route('website.templates.index')->with('info',
+                "{$template->name} is saved as your pick — you can buy and activate it once you're off your free trial."
+            );
+        }
+
         // Already paid for this template — go straight to activation instead
         // of charging again.
         $paid = TemplatePurchase::where('tenant_id', $tenant->id)

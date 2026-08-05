@@ -132,6 +132,16 @@ class Template extends Model
         return ! $this->isFree();
     }
 
+    /**
+     * The always-free placeholder page (currently just Grandure) — distinct
+     * from isFree()/isComingSoon() above, which are about per-template price,
+     * not category. This is the one template a trial tenant can always use.
+     */
+    public function isPlaceholder(): bool
+    {
+        return $this->category === 'coming-soon';
+    }
+
     public function activeCustomersCount(): int
     {
         return $this->attributes['active_customers_count']

@@ -15,15 +15,21 @@
             industry: '{{ old('industry') }}',
             templateKey: '{{ old('template_key') }}',
             categoryFor: {!! \Illuminate\Support\Js::from($industryCategoryMap) !!},
+            placeholderKeys: {!! \Illuminate\Support\Js::from($placeholderKeys) !!},
             filter: 'all',
             get suggestedCategory() { return this.categoryFor[this.industry] ?? null; },
+            get isPlaceholderPick() { return this.placeholderKeys.includes(this.templateKey); },
         }"
         x-init="$watch('industry', value => { filter = categoryFor[value] ?? 'all' })"
     >
         <div class="mb-8">
             <h1 class="text-2xl font-bold text-[#D4AF37]" style="font-family:'Montserrat',sans-serif" x-text="step === 1 ? 'Create your account' : 'Choose your website'"></h1>
             <p class="text-sm text-[#2D3748]/60 mt-1" x-show="step === 1">14-day free trial &middot; No credit card required</p>
-            <p class="text-sm text-[#2D3748]/60 mt-1" x-show="step === 2" x-cloak>Optional — pick a free template now, or do this later from your dashboard.</p>
+            <p class="text-sm text-[#2D3748]/60 mt-1" x-show="step === 2" x-cloak>
+                Optional — browse and pick your industry's template now, or do this later from your dashboard.
+                Your free trial includes a live Coming Soon page either way; a real industry site unlocks once you're on a paid plan
+                — pick one now and it's saved as your reservation, ready to switch on.
+            </p>
         </div>
 
         <form method="POST" action="{{ route('register') }}" class="space-y-4">
@@ -57,6 +63,7 @@
                         <option value="technology">Technology</option>
                         <option value="retail">Retail</option>
                         <option value="property">Property Management</option>
+                        <option value="coming_soon">Not ready yet — just need a Coming Soon page</option>
                         <option value="other">Other</option>
                     </select>
                 </div>
@@ -155,6 +162,11 @@
                             <div class="min-w-0 flex-1">
                                 <p class="text-sm font-semibold text-[#002B5B] truncate">{{ $t->name }}</p>
                                 <p class="text-xs text-gray-500 truncate">{{ $t->description }}</p>
+                                @if ($t->isPlaceholder())
+                                    <p class="text-[11px] text-emerald-600 font-medium mt-0.5">Free — live instantly</p>
+                                @else
+                                    <p class="text-[11px] text-[#0078D4] font-medium mt-0.5">Unlocks on a paid plan</p>
+                                @endif
                             </div>
                             <div class="w-5 h-5 rounded-full border-2 shrink-0"
                                  :class="templateKey === '{{ $t->key }}' ? 'border-[#0078D4] bg-[#0078D4]' : 'border-gray-300'"></div>
@@ -168,7 +180,7 @@
                     </button>
                     <button type="submit" data-loading="Creating your account…"
                             class="flex-1 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold py-3 rounded-xl text-sm transition-colors">
-                        <span x-text="templateKey ? 'Create Account & Launch Site' : 'Create Account (Skip Website)'"></span>
+                        <span x-text="!templateKey ? 'Create Account (Skip Website)' : (isPlaceholderPick ? 'Create Account & Launch Site' : 'Create Account & Reserve This Template')"></span>
                     </button>
                 </div>
             </div>

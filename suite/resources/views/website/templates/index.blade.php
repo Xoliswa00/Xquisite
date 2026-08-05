@@ -178,6 +178,11 @@
                             </div>
                         </div>
 
+                        @php $locked = !$template->isPlaceholder() && !$canActivateReal; @endphp
+                        @if ($locked && $tenant->preferred_template_key === $template->key)
+                            <p class="text-[11px] text-[#0078D4] mb-1">✓ Saved as your pick — unlocks on a paid plan</p>
+                        @endif
+
                         @if ($isActive)
                             <button type="button" disabled class="mt-3 w-full px-4 py-2 bg-slate-700 text-slate-400 text-sm rounded-lg font-medium cursor-not-allowed">
                                 Currently Active
@@ -185,8 +190,8 @@
                         @elseif ($template->isFree())
                             <form method="POST" action="{{ route('website.templates.activate', $template) }}" class="mt-3">
                                 @csrf
-                                <button type="submit" class="w-full px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4]/90 text-white text-sm rounded-lg font-medium transition-colors">
-                                    {{ $activeTemplate ? 'Switch to This' : 'Activate' }}
+                                <button type="submit" class="w-full px-4 py-2 {{ $locked ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-[#0078D4] hover:bg-[#0078D4]/90 text-white' }} text-sm rounded-lg font-medium transition-colors">
+                                    {{ $locked ? 'Reserve — Unlocks on a Paid Plan' : ($activeTemplate ? 'Switch to This' : 'Activate') }}
                                 </button>
                             </form>
                         @elseif ($hasPurchased)
@@ -199,8 +204,8 @@
                         @else
                             <form method="POST" action="{{ route('website.templates.checkout', $template) }}" class="mt-3">
                                 @csrf
-                                <button type="submit" class="w-full px-4 py-2 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-slate-900 text-sm rounded-lg font-semibold transition-colors">
-                                    Buy for R{{ number_format($template->price ?? 0, 0) }}
+                                <button type="submit" class="w-full px-4 py-2 {{ $locked ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-slate-900 font-semibold' }} text-sm rounded-lg font-medium transition-colors">
+                                    {{ $locked ? 'Reserve — Unlocks on a Paid Plan' : 'Buy for R' . number_format($template->price ?? 0, 0) }}
                                 </button>
                             </form>
                         @endif

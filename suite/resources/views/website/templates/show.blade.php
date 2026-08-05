@@ -103,6 +103,8 @@
                     @endif
                 </span>
 
+                @php $locked = !$template->isPlaceholder() && !$canActivateReal; @endphp
+
                 @if ($isActive)
                     <button type="button" disabled class="px-5 py-2 bg-slate-700 text-slate-400 text-sm rounded-lg font-medium cursor-not-allowed">
                         Currently Active
@@ -110,8 +112,8 @@
                 @elseif ($template->isFree())
                     <form method="POST" action="{{ route('website.templates.activate', $template) }}">
                         @csrf
-                        <button type="submit" class="px-5 py-2 bg-[#0078D4] hover:bg-[#0078D4]/90 text-white text-sm rounded-lg font-medium transition-colors">
-                            Activate This Template
+                        <button type="submit" class="px-5 py-2 {{ $locked ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-[#0078D4] hover:bg-[#0078D4]/90 text-white' }} text-sm rounded-lg font-medium transition-colors">
+                            {{ $locked ? 'Reserve — Unlocks on a Paid Plan' : 'Activate This Template' }}
                         </button>
                     </form>
                 @elseif ($hasPurchased)
@@ -124,12 +126,18 @@
                 @else
                     <form method="POST" action="{{ route('website.templates.checkout', $template) }}">
                         @csrf
-                        <button type="submit" class="px-5 py-2 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-slate-900 text-sm rounded-lg font-semibold transition-colors">
-                            Buy for R{{ number_format($template->price ?? 0, 0) }}
+                        <button type="submit" class="px-5 py-2 {{ $locked ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-slate-900 font-semibold' }} text-sm rounded-lg font-medium transition-colors">
+                            {{ $locked ? 'Reserve — Unlocks on a Paid Plan' : 'Buy for R' . number_format($template->price ?? 0, 0) }}
                         </button>
                     </form>
                 @endif
             </div>
+
+            @if ($locked && $isPreferredPick)
+                <p class="mt-2 text-xs text-[#0078D4]">✓ Saved as your pick — it'll be ready to activate the moment you're on a paid plan.</p>
+            @elseif ($locked)
+                <p class="mt-2 text-xs text-slate-500">Real industry templates unlock once you're off your free trial — Coming Soon stays free the whole time.</p>
+            @endif
         </div>
 
         {{-- Update history --}}

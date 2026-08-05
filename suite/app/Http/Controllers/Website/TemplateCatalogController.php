@@ -55,8 +55,9 @@ class TemplateCatalogController extends Controller
         $activeTemplate = $tenant->activeTemplate?->template;
         $categories = Template::visible()->active()->pluck('category')->unique()->filter()->values();
         $purchasedKeys = TemplatePurchase::where('tenant_id', $tenant->id)->where('status', 'paid')->pluck('template_key');
+        $canActivateReal = $tenant->canActivateRealTemplate();
 
-        return view('website.templates.index', compact('tenant', 'templates', 'activeTemplate', 'categories', 'sort', 'price', 'category', 'darkModeOnly', 'purchasedKeys'));
+        return view('website.templates.index', compact('tenant', 'templates', 'activeTemplate', 'categories', 'sort', 'price', 'category', 'darkModeOnly', 'purchasedKeys', 'canActivateReal'));
     }
 
     public function show(Request $request, Template $template): View
@@ -73,8 +74,10 @@ class TemplateCatalogController extends Controller
         $myReview = TemplateReview::where('tenant_id', $tenant->id)
             ->where('template_key', $template->key)->first();
         $reviews = $template->reviews()->approved()->latest()->with('tenant')->take(20)->get();
+        $canActivateReal = $tenant->canActivateRealTemplate();
+        $isPreferredPick = $tenant->preferred_template_key === $template->key;
 
-        return view('website.templates.show', compact('template', 'activeTemplateKey', 'hasPurchased', 'canReview', 'myReview', 'reviews'));
+        return view('website.templates.show', compact('template', 'activeTemplateKey', 'hasPurchased', 'canReview', 'myReview', 'reviews', 'canActivateReal', 'isPreferredPick'));
     }
 
     public function activate(Request $request, Template $template): RedirectResponse
@@ -82,6 +85,15 @@ class TemplateCatalogController extends Controller
         $tenant = $request->user()->tenant;
         abort_unless($tenant, 403);
         abort_unless($template->is_active && $template->is_visible, 404);
+
+        if (! $template->isPlaceholder() && ! $tenant->canActivateRealTemplate()) {
+            $tenant->update(['preferred_template_key' => $template->key]);
+
+            return redirect()->route('website.templates.index')->with('info',
+                "{$template->name} is saved as your pick — it unlocks the moment you're off your free trial. " .
+                'Your site stays on the free Coming Soon page until then.'
+            );
+        }
 
         if ($template->isPremium()) {
             $hasPurchased = TemplatePurchase::where('tenant_id', $tenant->id)
