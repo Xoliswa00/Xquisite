@@ -2,7 +2,15 @@
 
 @section('content')
 <div class="space-y-6">
-    <h1 class="text-2xl font-bold text-slate-900">My Lease</h1>
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-slate-900">My Lease</h1>
+        @if($activeLease)
+            <a href="{{ route('rent.lease.download', $slug) }}"
+               class="px-4 py-2 bg-slate-900 hover:bg-slate-700 text-white text-sm rounded-lg font-medium">
+                Download Agreement
+            </a>
+        @endif
+    </div>
 
     @if(!$activeLease)
         <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-amber-800">

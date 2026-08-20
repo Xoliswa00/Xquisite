@@ -13,6 +13,8 @@
             </div>
             <div class="flex gap-2">
                 <a href="{{ route('leases.index') }}" class="text-sm text-slate-400 hover:text-white">&larr; Leases</a>
+                <a href="{{ route('leases.agreement', $lease) }}"
+                   class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg">Download Agreement</a>
                 @if($lease->status === 'pending')
                     <a href="{{ route('leases.edit', $lease) }}"
                        class="px-3 py-2 bg-[#002B5B] hover:bg-[#0078D4] text-white text-sm rounded-lg">Edit</a>

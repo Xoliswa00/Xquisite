@@ -7,23 +7,40 @@
     'secondDate' => null,
     'statusLabel' => null,       // e.g. "Paid", "Overdue"
     'statusVariant' => null,     // 'positive' | 'negative' | null (neutral)
+
+    // Override masthead identity — used for documents issued BY a Suite tenant
+    // to their own customer (e.g. a property manager's lease/receipt to a
+    // renter), where BillingSetting (Xquisite's own identity) would be wrong.
+    // Leave all null to keep the default Xquisite-branded masthead.
+    'companyName' => null,
+    'companyAddr' => null,
+    'companyReg' => null,
+    'companyVat' => null,
+    'companyEmail' => null,
+    'companyPhone' => null,
+    'logoAbsolutePath' => null,
 ])
 
 @php
-    $companyName  = \App\Models\BillingSetting::get('company_name') ?: config('app.name');
-    $companyAddr  = \App\Models\BillingSetting::get('company_address');
-    $companyReg   = \App\Models\BillingSetting::get('company_registration');
-    $companyVat   = \App\Models\BillingSetting::get('company_vat');
-    $companyEmail = \App\Models\BillingSetting::get('company_email');
-    $companyPhone = \App\Models\BillingSetting::get('company_phone');
+    $usingOverride = $companyName !== null;
 
-    // Logo is optional — company_logo_path is a path relative to storage/app/public
-    // (same convention as Tenant::logo_url's upload target). Resolved to an
-    // absolute local path since dompdf needs that for reliable image embedding
-    // (remote/URL images require enable_remote, which stays off). Falls back to
-    // text-only masthead if no logo is configured or the file is missing.
-    $logoRelativePath = \App\Models\BillingSetting::get('company_logo_path');
-    $logoAbsolutePath = $logoRelativePath ? storage_path('app/public/' . ltrim($logoRelativePath, '/')) : null;
+    if (! $usingOverride) {
+        $companyName  = \App\Models\BillingSetting::get('company_name') ?: config('app.name');
+        $companyAddr  = \App\Models\BillingSetting::get('company_address');
+        $companyReg   = \App\Models\BillingSetting::get('company_registration');
+        $companyVat   = \App\Models\BillingSetting::get('company_vat');
+        $companyEmail = \App\Models\BillingSetting::get('company_email');
+        $companyPhone = \App\Models\BillingSetting::get('company_phone');
+
+        // Logo is optional — company_logo_path is a path relative to storage/app/public
+        // (same convention as Tenant::logo_url's upload target). Resolved to an
+        // absolute local path since dompdf needs that for reliable image embedding
+        // (remote/URL images require enable_remote, which stays off). Falls back to
+        // text-only masthead if no logo is configured or the file is missing.
+        $logoRelativePath = \App\Models\BillingSetting::get('company_logo_path');
+        $logoAbsolutePath = $logoRelativePath ? storage_path('app/public/' . ltrim($logoRelativePath, '/')) : null;
+    }
+
     $hasLogo = $logoAbsolutePath && file_exists($logoAbsolutePath);
 
     // Footer labels are uppercased to match the "metadata" type treatment

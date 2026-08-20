@@ -41,6 +41,12 @@
                             @else bg-slate-100 text-slate-600 @endif">
                             {{ ucfirst($payment->status) }}
                         </span>
+                        @if($payment->amount_paid > 0)
+                            <a href="{{ route('rent.payments.receipt', [$slug, $payment->id]) }}"
+                               class="block mt-1 text-xs text-slate-500 hover:text-slate-900 underline">
+                                Receipt
+                            </a>
+                        @endif
                     </div>
                 </div>
                 @endforeach

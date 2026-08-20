@@ -5,13 +5,19 @@
                 <h2 class="text-2xl font-bold text-[#D4AF37]">Payment &mdash; {{ $rentPayment->period }}</h2>
                 <a href="{{ route('rent-payments.index') }}" class="text-sm text-slate-400 hover:text-white">&larr; Back to Payments</a>
             </div>
-            <span class="px-2 py-0.5 rounded text-xs font-medium
-                @if($rentPayment->status === 'paid') bg-emerald-900/40 text-emerald-400
-                @elseif($rentPayment->status === 'partial') bg-yellow-900/40 text-yellow-400
-                @elseif($rentPayment->status === 'overdue') bg-red-900/40 text-red-400
-                @else bg-slate-700 text-slate-400 @endif">
-                {{ ucfirst($rentPayment->status) }}
-            </span>
+            <div class="flex items-center gap-3">
+                @if($rentPayment->amount_paid > 0)
+                    <a href="{{ route('rent-payments.receipt', $rentPayment) }}"
+                       class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg">Download Receipt</a>
+                @endif
+                <span class="px-2 py-0.5 rounded text-xs font-medium
+                    @if($rentPayment->status === 'paid') bg-emerald-900/40 text-emerald-400
+                    @elseif($rentPayment->status === 'partial') bg-yellow-900/40 text-yellow-400
+                    @elseif($rentPayment->status === 'overdue') bg-red-900/40 text-red-400
+                    @else bg-slate-700 text-slate-400 @endif">
+                    {{ ucfirst($rentPayment->status) }}
+                </span>
+            </div>
         </div>
     </x-slot>
 

@@ -88,6 +88,10 @@
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route('rent-payments.show', $payment) }}"
                                        class="text-[#0078D4] hover:text-[#B8D4F0] text-xs">View</a>
+                                    @if($payment->amount_paid > 0)
+                                        <a href="{{ route('rent-payments.receipt', $payment) }}"
+                                           class="text-slate-400 hover:text-slate-200 text-xs">Receipt</a>
+                                    @endif
                                     @if($payment->status !== 'paid')
                                         <a href="{{ route('rent-payments.record', $payment) }}"
                                            class="text-emerald-400 hover:text-emerald-300 text-xs">Record</a>

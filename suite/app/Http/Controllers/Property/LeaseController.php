@@ -96,6 +96,16 @@ class LeaseController extends Controller
         return view('property.leases.show', compact('lease'));
     }
 
+    public function downloadAgreement(Lease $lease)
+    {
+        $lease->load(['property', 'unit', 'renter']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('property.leases.lease-agreement-pdf', compact('lease'));
+        $pdf->getDomPDF()->addInfo('Title', 'Lease Agreement — ' . $lease->renter?->name);
+
+        return $pdf->download('lease-agreement-' . $lease->id . '.pdf');
+    }
+
     public function edit(Lease $lease)
     {
         abort_if($lease->status !== 'pending', 403, 'Only pending leases can be edited in full. Use Terminate to end an active lease.');

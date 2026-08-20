@@ -32,6 +32,18 @@ class RentPaymentController extends Controller
         return view('property.payments.show', compact('rentPayment'));
     }
 
+    public function downloadReceipt(RentPayment $rentPayment)
+    {
+        abort_if($rentPayment->amount_paid <= 0, 422, 'No payment has been recorded for this period yet.');
+
+        $rentPayment->load(['lease.property', 'unit.property', 'renter']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('property.payments.receipt-pdf', compact('rentPayment'));
+        $pdf->getDomPDF()->addInfo('Title', 'Payment Receipt — ' . $rentPayment->periodLabel());
+
+        return $pdf->download('receipt-' . $rentPayment->id . '.pdf');
+    }
+
     public function record(Request $request, RentPayment $rentPayment)
     {
         $validated = $request->validate([

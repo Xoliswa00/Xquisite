@@ -52,6 +52,38 @@ class RenterPortalController extends Controller
         return view('property.portal.lease', compact('tenant', 'slug', 'renter', 'activeLease'));
     }
 
+    public function downloadLease(string $slug)
+    {
+        $tenant = $this->resolveTenant($slug);
+        if ($r = $this->requireRenter($slug)) return $r;
+
+        $renter = Auth::guard('renter')->user();
+        $lease  = $renter->activeLease?->load(['property', 'unit', 'renter']);
+        abort_if(!$lease, 404, 'No active lease found.');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('property.leases.lease-agreement-pdf', compact('lease'));
+        $pdf->getDomPDF()->addInfo('Title', 'Lease Agreement — ' . $renter->name);
+
+        return $pdf->download('lease-agreement-' . $lease->id . '.pdf');
+    }
+
+    public function downloadReceipt(string $slug, int $paymentId)
+    {
+        $tenant = $this->resolveTenant($slug);
+        if ($r = $this->requireRenter($slug)) return $r;
+
+        $renter = Auth::guard('renter')->user();
+        $rentPayment = RentPayment::where('renter_id', $renter->id)->findOrFail($paymentId);
+        abort_if($rentPayment->amount_paid <= 0, 422, 'No payment has been recorded for this period yet.');
+
+        $rentPayment->load(['lease.property', 'unit.property', 'renter']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('property.payments.receipt-pdf', compact('rentPayment'));
+        $pdf->getDomPDF()->addInfo('Title', 'Payment Receipt — ' . $rentPayment->periodLabel());
+
+        return $pdf->download('receipt-' . $rentPayment->id . '.pdf');
+    }
+
     public function payments(string $slug)
     {
         $tenant = $this->resolveTenant($slug);

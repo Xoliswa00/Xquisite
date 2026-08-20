@@ -260,8 +260,10 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::post('renters/{renter}/invite', [RenterController::class, 'invite'])->name('renters.invite');
         Route::resource('leases', LeaseController::class)->except(['destroy']);
         Route::post('leases/{lease}/terminate', [LeaseController::class, 'terminate'])->name('leases.terminate');
+        Route::get('leases/{lease}/agreement', [LeaseController::class, 'downloadAgreement'])->name('leases.agreement');
         Route::get('rent-payments', [RentPaymentController::class, 'index'])->name('rent-payments.index');
         Route::get('rent-payments/{rentPayment}', [RentPaymentController::class, 'show'])->name('rent-payments.show');
+        Route::get('rent-payments/{rentPayment}/receipt', [RentPaymentController::class, 'downloadReceipt'])->name('rent-payments.receipt');
         Route::patch('rent-payments/{rentPayment}/record', [RentPaymentController::class, 'record'])->name('rent-payments.record');
         Route::post('rent-payments/generate', [RentPaymentController::class, 'generateMonthly'])->name('rent-payments.generate');
         Route::post('rent-payments/flag-overdue', [RentPaymentController::class, 'flagOverdue'])->name('rent-payments.flag-overdue');
@@ -486,7 +488,9 @@ Route::prefix('rent/{slug}')->name('rent.')->group(function () {
     Route::middleware('auth:renter')->group(function () {
         Route::get('/',             [RenterPortalController::class, 'portal'])->name('portal');
         Route::get('/lease',        [RenterPortalController::class, 'lease'])->name('lease');
+        Route::get('/lease/download', [RenterPortalController::class, 'downloadLease'])->name('lease.download');
         Route::get('/payments',     [RenterPortalController::class, 'payments'])->name('payments');
+        Route::get('/payments/{paymentId}/receipt', [RenterPortalController::class, 'downloadReceipt'])->name('payments.receipt');
         Route::get('/maintenance',  [RenterPortalController::class, 'maintenance'])->name('maintenance');
         Route::post('/maintenance', [RenterPortalController::class, 'submitMaintenance'])->name('maintenance.submit');
     });
