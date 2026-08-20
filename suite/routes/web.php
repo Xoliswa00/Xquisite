@@ -200,6 +200,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::middleware('module:property_management')->group(function () {
         Route::resource('properties', PropertyController::class);
         Route::resource('properties.units', UnitController::class);
+        Route::get('api/properties/{property}/units', [UnitController::class, 'apiIndex'])->name('properties.units.api');
         Route::resource('renters', RenterController::class);
         Route::post('renters/{renter}/invite', [RenterController::class, 'invite'])->name('renters.invite');
         Route::resource('leases', LeaseController::class)->except(['destroy']);

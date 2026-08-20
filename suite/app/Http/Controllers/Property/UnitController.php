@@ -20,6 +20,14 @@ class UnitController extends Controller
         return view('property.units.create', compact('property'));
     }
 
+    // Feeds the Lease/Maintenance "New" forms' unit dropdown, which is
+    // populated client-side once a property is selected.
+    public function apiIndex(Property $property)
+    {
+        $units = $property->units()->orderBy('unit_number')->get(['id', 'unit_number', 'monthly_rent', 'status']);
+        return response()->json($units);
+    }
+
     public function store(Request $request, Property $property)
     {
         $validated = $request->validate([
@@ -36,6 +44,7 @@ class UnitController extends Controller
 
         $validated['property_id'] = $property->id;
         $validated['status'] = 'vacant';
+        $validated['deposit_amount'] = $validated['deposit_amount'] ?? 0;
 
         Unit::create($validated);
 
@@ -67,6 +76,8 @@ class UnitController extends Controller
             'deposit_amount' => 'nullable|numeric|min:0',
             'notes'          => 'nullable|string',
         ]);
+
+        $validated['deposit_amount'] = $validated['deposit_amount'] ?? 0;
 
         $unit->update($validated);
 

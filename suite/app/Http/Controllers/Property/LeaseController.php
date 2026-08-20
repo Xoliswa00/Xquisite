@@ -65,6 +65,7 @@ class LeaseController extends Controller
         );
 
         $validated['status'] = 'active';
+        $validated['deposit_amount'] = $validated['deposit_amount'] ?? 0;
         $lease = Lease::create($validated);
 
         // Mark unit as occupied
@@ -115,6 +116,8 @@ class LeaseController extends Controller
             'deposit_paid'   => 'boolean',
             'notes'          => 'nullable|string',
         ]);
+
+        $validated['deposit_amount'] = $validated['deposit_amount'] ?? 0;
 
         $lease->update($validated);
 
