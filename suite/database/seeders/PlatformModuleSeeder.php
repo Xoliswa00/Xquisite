@@ -114,6 +114,16 @@ class PlatformModuleSeeder extends Seeder
                 'sort_order'    => 10,
             ],
             [
+                'key'           => 'service_delivery',
+                'name'          => 'Service Delivery & SLAs',
+                'description'   => 'Track client hosting/support SLA contracts and one-off project gigs — discovery, quoting, monthly billing, and late-payment automation.',
+                'icon'          => 'briefcase',
+                'price'         => 249.00,
+                'status'        => 'active',
+                'auto_activate' => false,
+                'sort_order'    => 12,
+            ],
+            [
                 'key'           => 'client_messaging',
                 'name'          => 'Client Messaging',
                 'description'   => 'Direct messaging channel between you and your business clients — with read receipts and in-app notifications.',

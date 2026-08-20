@@ -23,6 +23,12 @@ class PublicQuoteController extends Controller
 
         $quote->update(['status' => 'accepted']);
 
+        // Client approved pricing on a gig quote — move it out of "lead", but leave the
+        // in_progress/review/etc. transitions to be made manually once work actually starts.
+        if ($quote->gig_id) {
+            $quote->gig()->where('status', 'lead')->update(['status' => 'quoted']);
+        }
+
         // Create a payment plan for the deposit + balance
         $plan = PaymentPlan::create([
             'tenant_id'      => $quote->tenant_id,

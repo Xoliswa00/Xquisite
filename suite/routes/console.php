@@ -29,3 +29,9 @@ Schedule::command('ecommerce:expire-pending-orders')->everyTenMinutes()->without
 
 // Ping all active monitored instances every 5 minutes and log health status.
 Schedule::command('instances:check-health')->everyFiveMinutes()->withoutOverlapping();
+
+// Advance overdue service agreements through the Day 3/7/10/30 late-payment stages.
+Schedule::command('service-delivery:check')->dailyAt('08:00')->withoutOverlapping();
+
+// Generate the current period's charge for every active service agreement, on the 1st at 02:00.
+Schedule::command('service-delivery:generate-charges')->monthlyOn(1, '02:00')->withoutOverlapping();

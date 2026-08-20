@@ -11,7 +11,7 @@ class Quote extends Model
 {
     use HasTenant;
     protected $fillable = [
-        'tenant_id', 'customer_id', 'created_by', 'reference', 'title',
+        'tenant_id', 'customer_id', 'gig_id', 'client_id', 'created_by', 'reference', 'title',
         'line_items', 'subtotal', 'tax_rate', 'tax_amount', 'total',
         'deposit_percentage', 'status', 'valid_until', 'notes',
         'client_email', 'payment_plan_id', 'converted_to_appointment_id',
@@ -38,6 +38,8 @@ class Quote extends Model
 
     public function tenant()      { return $this->belongsTo(Tenant::class); }
     public function customer()    { return $this->belongsTo(\App\Modules\Booking\Models\Customer::class); }
+    public function client()      { return $this->belongsTo(Client::class); }
+    public function gig()         { return $this->belongsTo(\App\Modules\ServiceDelivery\Models\Gig::class); }
     public function creator()     { return $this->belongsTo(User::class, 'created_by'); }
     public function paymentPlan() { return $this->belongsTo(PaymentPlan::class); }
     public function appointment() { return $this->belongsTo(\App\Modules\Booking\Models\Appointment::class, 'converted_to_appointment_id'); }

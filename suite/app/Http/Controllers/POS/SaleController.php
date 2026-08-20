@@ -56,6 +56,8 @@ class SaleController extends Controller
         $sale->load(['items', 'customer', 'appointment.staff']);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pos.sales.receipt-pdf', ['sale' => $sale]);
+        $pdf->getDomPDF()->addInfo('Title', "Receipt {$sale->reference}");
+        $pdf->getDomPDF()->addInfo('Author', \App\Models\BillingSetting::get('company_name') ?: config('app.name'));
 
         return $pdf->download('receipt-' . $sale->reference . '.pdf');
     }

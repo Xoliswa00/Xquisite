@@ -27,35 +27,55 @@
             </div>
         @endif
 
+        @isset($gig)
+            <div class="mb-5 p-4 bg-panel-2 border border-line-2 rounded-xl text-sm">
+                <p class="text-ink-faint text-xs uppercase font-semibold mb-1">Building a quote for gig</p>
+                <p class="text-ink font-medium">{{ $gig->title }} — {{ $gig->client?->name }}</p>
+            </div>
+        @endisset
+
         <form method="POST" action="{{ route('quotes.store') }}" class="space-y-5">
             @csrf
+            @isset($gig)
+                <input type="hidden" name="gig_id" value="{{ $gig->id }}">
+                <input type="hidden" name="client_id" value="{{ $gig->client_id }}">
+            @endisset
 
             {{-- Title + Client --}}
             <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Quote Title <span class="text-red-500">*</span></label>
-                    <input type="text" name="title" value="{{ old('title') }}" required
+                    <input type="text" name="title" value="{{ old('title', $gig->title ?? '') }}" required
                            placeholder="e.g. Wedding catering for 80 guests — 14 Feb"
                            class="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Client</label>
-                        <select name="customer_id" class="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
-                            <option value="">— Select customer —</option>
-                            @foreach ($customers as $c)
-                                <option value="{{ $c->id }}" {{ old('customer_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
-                            @endforeach
-                        </select>
+                @if(!isset($gig))
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Client</label>
+                            <select name="customer_id" class="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
+                                <option value="">— Select customer —</option>
+                                @foreach ($customers as $c)
+                                    <option value="{{ $c->id }}" {{ old('customer_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Client Email</label>
+                            <input type="email" name="client_email" value="{{ old('client_email') }}"
+                                   placeholder="For sending the quote"
+                                   class="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
+                        </div>
                     </div>
+                @else
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">Client Email</label>
-                        <input type="email" name="client_email" value="{{ old('client_email') }}"
+                        <input type="email" name="client_email" value="{{ old('client_email', $gig->client?->email) }}"
                                placeholder="For sending the quote"
                                class="w-full border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
                     </div>
-                </div>
+                @endif
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -131,6 +151,42 @@
                     </div>
                 </div>
             </div>
+
+            @isset($gig)
+                @php
+                    $pricing = config('service_pricing');
+                @endphp
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-5" x-data="{ open: true }">
+                    <button type="button" @click="open = !open" class="flex items-center justify-between w-full text-left">
+                        <h3 class="font-semibold text-[#D4AF37] text-sm">Pricing Reference</h3>
+                        <span class="text-xs text-slate-500" x-text="open ? 'Hide' : 'Show'"></span>
+                    </button>
+                    <div x-show="open" x-transition class="mt-3 grid grid-cols-2 gap-6 text-xs">
+                        <div>
+                            <p class="text-slate-500 uppercase font-semibold mb-1.5">Project Pricing (starting from)</p>
+                            <ul class="space-y-1">
+                                @foreach($pricing['projects'] as $item)
+                                    <li class="flex justify-between text-slate-400">
+                                        <span>{{ $item['label'] }}</span>
+                                        <span class="text-slate-300">R{{ number_format($item['min']) }}–{{ number_format($item['max']) }}{{ !empty($item['plus']) ? '+' : '' }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="text-slate-500 uppercase font-semibold mb-1.5">Hourly Rates</p>
+                            <ul class="space-y-1">
+                                @foreach($pricing['hourly'] as $item)
+                                    <li class="flex justify-between text-slate-400">
+                                        <span>{{ $item['label'] }}</span>
+                                        <span class="text-slate-300">R{{ number_format($item['min']) }}–{{ number_format($item['max']) }}/hr</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            @endisset
 
             {{-- Notes --}}
             <div class="bg-slate-800 rounded-xl border border-slate-700 p-5">

@@ -221,6 +221,73 @@ class BillingBridge
         }
     }
 
+    // ── Service agreement subscriptions ─────────────────────────────
+
+    /**
+     * Create a monthly billing subscription for an active service agreement.
+     * Returns billing subscription_id on success, null on failure (not queued — agreements are long-lived).
+     */
+    public function createServiceAgreementSubscription(
+        string $clientName,
+        string $clientEmail,
+        ?string $clientPhone,
+        string $planName,
+        float $monthlyFee,
+        string $startDate
+    ): ?int {
+        if (!$this->apiKey) {
+            return null;
+        }
+
+        try {
+            $response = Http::timeout(10)
+                ->withHeaders(['X-Internal-Key' => $this->apiKey])
+                ->post("{$this->baseUrl}/api/internal/service-agreement-subscriptions", [
+                    'client_name'  => $clientName,
+                    'client_email' => $clientEmail,
+                    'client_phone' => $clientPhone,
+                    'plan_name'    => $planName,
+                    'monthly_fee'  => $monthlyFee,
+                    'start_date'   => $startDate,
+                ]);
+
+            if ($response->successful()) {
+                return $response->json('subscription_id');
+            }
+
+            Log::warning('BillingBridge: service agreement subscription failed', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::warning('BillingBridge: service agreement subscription HTTP error', ['message' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
+    public function cancelServiceAgreementSubscription(int $billingSubscriptionId): bool
+    {
+        if (!$this->apiKey) {
+            return false;
+        }
+
+        try {
+            $response = Http::timeout(10)
+                ->withHeaders(['X-Internal-Key' => $this->apiKey])
+                ->post("{$this->baseUrl}/api/internal/service-agreement-subscriptions/cancel", [
+                    'subscription_id' => $billingSubscriptionId,
+                ]);
+
+            return $response->successful();
+
+        } catch (\Throwable $e) {
+            Log::warning('BillingBridge: service agreement cancel error', ['message' => $e->getMessage()]);
+            return false;
+        }
+    }
+
     // ── Private helpers ────────────────────────────────────────────
 
     private function enqueue(string $type, int $tenantId, string $moduleKey, array $payload, string $error): void

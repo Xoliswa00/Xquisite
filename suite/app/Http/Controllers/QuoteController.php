@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\PaymentPlan;
 use App\Models\Quote;
 use App\Modules\Booking\Models\Customer;
+use App\Modules\ServiceDelivery\Models\Gig;
 use App\Notifications\QuoteStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -21,11 +23,13 @@ class QuoteController extends Controller
         return view('quotes.index', compact('quotes'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $customers = Customer::orderBy('name')->get();
 
-        return view('quotes.create', compact('customers'));
+        $gig = $request->filled('gig_id') ? Gig::with('client')->find($request->gig_id) : null;
+
+        return view('quotes.create', compact('customers', 'gig'));
     }
 
     public function store(Request $request)
@@ -33,6 +37,8 @@ class QuoteController extends Controller
         $data = $request->validate([
             'title'              => 'required|string|max:150',
             'customer_id'        => 'nullable|exists:customers,id',
+            'gig_id'             => 'nullable|exists:gigs,id',
+            'client_id'          => 'nullable|exists:clients,id',
             'client_email'       => 'nullable|email|max:150',
             'line_items'         => 'required|array|min:1',
             'line_items.*.name'  => 'required|string|max:150',
@@ -57,6 +63,8 @@ class QuoteController extends Controller
         $quote = Quote::create([
             'tenant_id'          => auth()->user()->tenant_id,
             'customer_id'        => $data['customer_id'] ?? null,
+            'gig_id'             => $data['gig_id'] ?? null,
+            'client_id'          => $data['client_id'] ?? null,
             'created_by'         => auth()->id(),
             'title'              => $data['title'],
             'line_items'         => $lineItems,

@@ -91,6 +91,7 @@
             <h3 class="text-sm font-semibold text-slate-300 mb-4">Update Status</h3>
             <form method="POST" action="{{ route('maintenance.status', $maintenance) }}" class="space-y-4">
                 @csrf
+                @method('PATCH')
 
                 @if($errors->any())
                     <div class="p-4 bg-red-900/30 border border-red-700 text-red-300 rounded-xl text-sm">

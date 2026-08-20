@@ -111,7 +111,7 @@ class Tenant extends Model
 
     public function activateModule(string $module, ?int $activatedBy = null, ?float $priceOverride = null, ?int $billingSubscriptionId = null): TenantModule
     {
-        return $this->tenantModules()->updateOrCreate(
+        $tenantModule = $this->tenantModules()->updateOrCreate(
             ['module' => $module],
             [
                 'is_active'               => true,
@@ -122,6 +122,12 @@ class Tenant extends Model
                 'billing_subscription_id' => $billingSubscriptionId,
             ]
         );
+
+        if ($module === 'service_delivery') {
+            \App\Modules\ServiceDelivery\Models\SlaPlan::seedDefaultsFor($this->id);
+        }
+
+        return $tenantModule;
     }
 
     public function deactivateModule(string $module): void

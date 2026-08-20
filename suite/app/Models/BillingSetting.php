@@ -13,6 +13,8 @@ class BillingSetting extends Model
         'invoice_due_days'     => '7',
         'auto_billing_enabled' => '1',
         'billing_day_of_month' => '1',
+        'vat_rate'             => '15.00',
+        'company_logo_path'    => null,
     ];
 
     public static function get(string $key): ?string

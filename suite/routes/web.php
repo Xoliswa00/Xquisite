@@ -43,6 +43,11 @@ use App\Http\Controllers\Property\RentPaymentController;
 use App\Http\Controllers\Property\MaintenanceController;
 use App\Http\Controllers\Property\RenterAuthController;
 use App\Http\Controllers\Property\RenterPortalController;
+use App\Http\Controllers\ServiceDelivery\ServiceAgreementController;
+use App\Http\Controllers\ServiceDelivery\ServiceAgreementChargeController;
+use App\Http\Controllers\ServiceDelivery\GigController;
+use App\Http\Controllers\ServiceDelivery\ServiceRequestReviewController;
+use App\Http\Controllers\ServiceDelivery\InvoiceController;
 use App\Http\Controllers\Admin\PlatformModuleController;
 use App\Http\Controllers\Admin\TemplateController as AdminTemplateController;
 use App\Http\Controllers\Website\TemplateCatalogController;
@@ -77,6 +82,11 @@ Route::post('/demo',   [DemoController::class, 'login'])->name('demo.login');
 Route::get('/about',   AboutController::class)->name('about');
 Route::get('/terms',   fn() => view('terms'))->name('terms');
 Route::get('/privacy', fn() => view('privacy'))->name('privacy');
+
+Route::get('/request-service', [\App\Http\Controllers\ServiceDelivery\PublicServiceRequestController::class, 'show'])->name('request-service.show');
+Route::post('/request-service', [\App\Http\Controllers\ServiceDelivery\PublicServiceRequestController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('request-service.store');
 
 Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(function () {
 
@@ -245,6 +255,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::middleware('module:property_management')->group(function () {
         Route::resource('properties', PropertyController::class);
         Route::resource('properties.units', UnitController::class);
+        Route::get('api/properties/{property}/units', [UnitController::class, 'apiIndex'])->name('properties.units.api');
         Route::resource('renters', RenterController::class);
         Route::post('renters/{renter}/invite', [RenterController::class, 'invite'])->name('renters.invite');
         Route::resource('leases', LeaseController::class)->except(['destroy']);
@@ -256,6 +267,37 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::post('rent-payments/flag-overdue', [RentPaymentController::class, 'flagOverdue'])->name('rent-payments.flag-overdue');
         Route::resource('maintenance', MaintenanceController::class);
         Route::patch('maintenance/{maintenance}/status', [MaintenanceController::class, 'updateStatus'])->name('maintenance.status');
+    });
+
+    // Service Delivery module — SLAs, agreements & gigs
+    Route::middleware('module:service_delivery')->group(function () {
+        Route::resource('service-agreements', ServiceAgreementController::class)->except(['destroy']);
+        Route::post('service-agreements/{serviceAgreement}/accept', [ServiceAgreementController::class, 'accept'])->name('service-agreements.accept');
+        Route::post('service-agreements/{serviceAgreement}/suspend', [ServiceAgreementController::class, 'suspend'])->name('service-agreements.suspend');
+        Route::post('service-agreements/{serviceAgreement}/reactivate', [ServiceAgreementController::class, 'reactivate'])->name('service-agreements.reactivate');
+        Route::post('service-agreements/{serviceAgreement}/terminate', [ServiceAgreementController::class, 'terminate'])->name('service-agreements.terminate');
+        Route::post('service-agreements/{serviceAgreement}/log-minutes', [ServiceAgreementController::class, 'logMinutes'])->name('service-agreements.log-minutes');
+        Route::patch('service-agreements/{serviceAgreement}/charges/{charge}/record', [ServiceAgreementController::class, 'recordCharge'])->name('service-agreements.charges.record');
+        Route::get('service-agreements/{serviceAgreement}/contract.pdf', [ServiceAgreementController::class, 'contractPdf'])->name('service-agreements.contract-pdf');
+
+        Route::get('service-agreement-charges', [ServiceAgreementChargeController::class, 'index'])->name('service-agreement-charges.index');
+        Route::post('service-agreement-charges/generate', [ServiceAgreementChargeController::class, 'generateMonthly'])->name('service-agreement-charges.generate');
+        Route::post('service-agreement-charges/flag-overdue', [ServiceAgreementChargeController::class, 'flagOverdue'])->name('service-agreement-charges.flag-overdue');
+
+        Route::resource('gigs', GigController::class);
+        Route::patch('gigs/{gig}/status', [GigController::class, 'updateStatus'])->name('gigs.status');
+        Route::post('gigs/{gig}/log-time', [GigController::class, 'logTime'])->name('gigs.log-time');
+
+        Route::resource('invoices', InvoiceController::class)->except(['destroy']);
+        Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
+        Route::post('invoices/{invoice}/record-payment', [InvoiceController::class, 'recordPayment'])->name('invoices.record-payment');
+        Route::post('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
+        Route::get('invoices/{invoice}/download', [InvoiceController::class, 'downloadPdf'])->name('invoices.download');
+
+        Route::get('service-requests', [ServiceRequestReviewController::class, 'index'])->name('service-requests.index');
+        Route::get('service-requests/{serviceRequest}', [ServiceRequestReviewController::class, 'show'])->name('service-requests.show');
+        Route::post('service-requests/{serviceRequest}/convert', [ServiceRequestReviewController::class, 'convert'])->name('service-requests.convert');
+        Route::post('service-requests/{serviceRequest}/dismiss', [ServiceRequestReviewController::class, 'dismiss'])->name('service-requests.dismiss');
     });
 
     Route::prefix('admin')->name('admin.')->group(function () {

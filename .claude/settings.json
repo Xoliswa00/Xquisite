@@ -1,4 +1,27 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(curl -sL -o publicsans.zip \"https://fonts.google.com/download?family=Public%20Sans\")",
+      "Bash(unzip -l publicsans.zip)",
+      "Bash(python3 -c \"import fontTools; print\\(fontTools.version\\)\")",
+      "Bash(pip3 show *)",
+      "Bash(curl -s \"https://gwfh.mranftl.com/api/fonts/public-sans\")",
+      "Bash(curl -s \"https://gwfh.mranftl.com/api/fonts/libre-caslon-text\" -o /tmp/librecaslon.json)",
+      "Bash(mkdir -p \"c:/Users/beste/x/Xquisite/suite/resources/fonts/documents\")",
+      "Bash(curl -sL -o PublicSans-Regular.ttf \"https://fonts.gstatic.com/s/publicsans/v21/ijwGs572Xtc6ZYQws9YVwllKVG8qX1oyOymuFpmJxAct.ttf\")",
+      "Bash(curl -sL -o PublicSans-Medium.ttf \"https://fonts.gstatic.com/s/publicsans/v21/ijwGs572Xtc6ZYQws9YVwllKVG8qX1oyOymuJJmJxAct.ttf\")",
+      "Bash(curl -sL -o PublicSans-SemiBold.ttf \"https://fonts.gstatic.com/s/publicsans/v21/ijwGs572Xtc6ZYQws9YVwllKVG8qX1oyOymuyJ6JxAct.ttf\")",
+      "Bash(curl -sL -o PublicSans-Bold.ttf \"https://fonts.gstatic.com/s/publicsans/v21/ijwGs572Xtc6ZYQws9YVwllKVG8qX1oyOymu8Z6JxAct.ttf\")",
+      "Bash(grep -n 'protected $fillable' -A 15 app/Modules/POS/Models/Sale.php app/Modules/POS/Models/SaleItem.php)",
+      "Bash(mkdir -p \"/c/Users/beste/Downloads/xquisite-pdf-samples\")",
+      "Bash(cp \"C:/Users/beste/AppData/Local/Temp/claude/c--Users-beste-x-Xquisite/31db742b-a17d-4841-97b4-4dee2676ad0b/scratchpad/contract-final.pdf\" \"/c/Users/beste/Downloads/xquisite-pdf-samples/contract-final.pdf\")",
+      "Bash(cp \"C:/Users/beste/AppData/Local/Temp/claude/c--Users-beste-x-Xquisite/31db742b-a17d-4841-97b4-4dee2676ad0b/scratchpad/invoice-final.pdf\" \"/c/Users/beste/Downloads/xquisite-pdf-samples/invoice-final.pdf\")",
+      "Bash(cp \"C:/Users/beste/AppData/Local/Temp/claude/c--Users-beste-x-Xquisite/31db742b-a17d-4841-97b4-4dee2676ad0b/scratchpad/receipt-final.pdf\" \"/c/Users/beste/Downloads/xquisite-pdf-samples/receipt-final.pdf\")",
+      "Read(//c/Users/beste/Downloads/**)",
+      "Bash(where magick.exe)",
+      "Bash(where gswin64c.exe)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {

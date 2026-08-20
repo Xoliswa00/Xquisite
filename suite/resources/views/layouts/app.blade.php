@@ -139,6 +139,11 @@
                 $propertyRentPaymentsRoutes = ['rent-payments.*'];
                 $propertyMaintenanceRoutes = ['maintenance.*'];
 
+                $serviceDeliveryAgreementsRoutes = ['service-agreements.*', 'service-agreement-charges.*'];
+                $serviceDeliveryGigsRoutes = ['gigs.*'];
+                $serviceDeliveryRequestsRoutes = ['service-requests.*'];
+                $serviceDeliveryInvoicesRoutes = ['invoices.*'];
+
                 $settingsModulesRoutes = ['settings.modules*'];
                 $settingsServicesRoutes = ['settings.services*'];
                 $profileRoutes = ['profile.*'];
@@ -150,6 +155,11 @@
                 if (Auth::check()) {
                     $unreadNotificationCount = Auth::user()->unreadNotifications()->count();
                     $recentNotifications = Auth::user()->notifications()->latest()->take(6)->get();
+                }
+
+                $serviceRequestsNewCount = 0;
+                if ($authTenant && $authTenant->hasModule('service_delivery')) {
+                    $serviceRequestsNewCount = \App\Modules\ServiceDelivery\Models\ServiceRequest::where('status', 'new')->count();
                 }
 
                 $sidebarReorderCount = 0;
@@ -375,6 +385,38 @@
                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-panel-2 {{ request()->routeIs($propertyMaintenanceRoutes) ? 'bg-panel-2 text-ink' : 'text-ink-muted hover:text-ink' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         Maintenance
+                    </a>
+                </div>
+            @endif
+
+            {{-- Service Delivery module --}}
+            @if($authTenant && $authTenant->hasModule('service_delivery'))
+                <div class="pt-2 border-t border-line mt-2">
+                    <p class="px-3 text-xs text-[#D4AF37] uppercase tracking-wide mb-1">Service Delivery</p>
+                    <a href="{{ route('service-agreements.index') }}"
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-panel-2 {{ request()->routeIs($serviceDeliveryAgreementsRoutes) ? 'bg-panel-2 text-ink' : 'text-ink-muted hover:text-ink' }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        SLA Agreements
+                    </a>
+                    <a href="{{ route('gigs.index') }}"
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-panel-2 {{ request()->routeIs($serviceDeliveryGigsRoutes) ? 'bg-panel-2 text-ink' : 'text-ink-muted hover:text-ink' }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m-4 6h16v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8z"/></svg>
+                        Gigs
+                    </a>
+                    <a href="{{ route('service-requests.index') }}"
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-panel-2 {{ request()->routeIs($serviceDeliveryRequestsRoutes) ? 'bg-panel-2 text-ink' : 'text-ink-muted hover:text-ink' }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <span class="flex-1">Requests</span>
+                        @if($serviceRequestsNewCount > 0)
+                            <span class="bg-amber-500 text-slate-950 text-xs font-bold px-1.5 py-0.5 rounded-full leading-none">
+                                {{ $serviceRequestsNewCount }}
+                            </span>
+                        @endif
+                    </a>
+                    <a href="{{ route('invoices.index') }}"
+                       class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-panel-2 {{ request()->routeIs($serviceDeliveryInvoicesRoutes) ? 'bg-panel-2 text-ink' : 'text-ink-muted hover:text-ink' }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+                        Invoices
                     </a>
                 </div>
             @endif

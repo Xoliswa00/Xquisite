@@ -34,4 +34,19 @@ class Client extends Model
     {
         return $this->hasMany(Communication::class);
     }
+
+    public function serviceAgreements()
+    {
+        return $this->hasMany(\App\Modules\ServiceDelivery\Models\ServiceAgreement::class);
+    }
+
+    public function gigs()
+    {
+        return $this->hasMany(\App\Modules\ServiceDelivery\Models\Gig::class);
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(\App\Modules\ServiceDelivery\Models\Invoice::class);
+    }
 }

@@ -214,6 +214,8 @@ class BillingController extends Controller
         ]);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('billing.invoice-pdf', ['invoice' => $invoice->load('tenant')]);
+        $pdf->getDomPDF()->addInfo('Title', "Invoice {$invoice->invoice_number}");
+        $pdf->getDomPDF()->addInfo('Author', \App\Models\BillingSetting::get('company_name') ?: config('app.name'));
         return $pdf->download('invoice-' . $invoice->invoice_number . '.pdf');
     }
 
@@ -246,6 +248,8 @@ class BillingController extends Controller
         ]);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('billing.invoice-pdf', ['invoice' => $invoice->load('tenant')]);
+        $pdf->getDomPDF()->addInfo('Title', "Invoice {$invoice->invoice_number}");
+        $pdf->getDomPDF()->addInfo('Author', \App\Models\BillingSetting::get('company_name') ?: config('app.name'));
         return $pdf->download('invoice-' . $invoice->invoice_number . '.pdf');
     }
 

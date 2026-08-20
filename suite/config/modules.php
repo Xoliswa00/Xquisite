@@ -53,6 +53,16 @@ return [
         'routes'        => ['properties.*', 'units.*', 'renters.*', 'leases.*', 'rent.*', 'maintenance.*'],
     ],
 
+    'service_delivery' => [
+        'name'          => 'Service Delivery & SLAs',
+        'description'   => 'Track client hosting/support SLA contracts and one-off project gigs — discovery, quoting, monthly billing, and late-payment automation.',
+        'icon'          => 'briefcase',
+        'price'         => 249.00,
+        'status'        => 'active',
+        'auto_activate' => false,
+        'routes'        => ['service-agreements.*', 'service-agreement-charges.*', 'gigs.*', 'service-requests.*', 'invoices.*'],
+    ],
+
     // ── In Testing ────────────────────────────────────────────────────────────
 
     'analytics' => [
