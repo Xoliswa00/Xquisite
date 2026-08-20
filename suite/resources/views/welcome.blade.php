@@ -173,7 +173,6 @@
             {{-- Desktop nav --}}
             <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-[#2D3748]">
                 <a href="#services"              class="hover:text-[#0078D4] transition-colors">Services</a>
-                <a href="#templates"              class="hover:text-[#0078D4] transition-colors">Websites</a>
                 <a href="#modules"               class="hover:text-[#0078D4] transition-colors">Platform</a>
                 <a href="{{ route('about') }}"   class="hover:text-[#0078D4] transition-colors">About</a>
                 <a href="{{ route('demo') }}" class="hover:text-[#0078D4] transition-colors">Live Demo</a>
@@ -389,52 +388,6 @@
         @endif
     </div>
 </section>
-
-{{-- ─── WEBSITE TEMPLATES ────────────────────────────────────────────────── --}}
-@php $showcaseTemplates = \App\Models\Template::visible()->active()->ordered()->get(); @endphp
-@if ($showcaseTemplates->isNotEmpty())
-<section class="py-16 sm:py-24 bg-white" id="templates">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        <div class="text-center mb-12 lg:mb-16 xq-sr">
-            <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
-            <span class="inline-block px-3 py-1 rounded-full text-[10px] f-mont font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 mb-5">
-                Included Free
-            </span>
-            <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-[#002B5B]">Launch Your Website in Minutes</h2>
-            <p class="text-sm sm:text-base text-[#2D3748]/70 max-w-2xl mx-auto leading-relaxed">
-                Every Xquisite account includes a free website builder. Pick a template, add your logo and colors,
-                and your business is online — no code, no separate hosting, no designer required.
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-7">
-            @foreach ($showcaseTemplates as $template)
-            <div class="xq-card bg-[#F5F7FA] rounded-2xl border border-gray-100 overflow-hidden xq-sr xq-d{{ min($loop->iteration, 4) }}">
-                <x-template-preview :template="$template" ratio="aspect-video" />
-                <div class="p-5">
-                    <div class="flex items-center gap-2 flex-wrap mb-1">
-                        <h3 class="xq-card-title f-mont font-semibold text-sm sm:text-base text-[#002B5B]">{{ $template->name }}</h3>
-                        @if ($template->is_featured)
-                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#D4AF37]/15 text-[#B08A1E] border border-[#D4AF37]/30 font-medium">Popular</span>
-                        @endif
-                    </div>
-                    <p class="text-xs sm:text-sm text-[#2D3748]/60 leading-relaxed">{{ $template->description }}</p>
-                    <p class="mt-3 text-xs font-semibold {{ $template->isFree() ? 'text-emerald-600' : 'text-[#2D3748]/50' }}">
-                        {{ $template->isFree() ? 'Free' : 'R' . number_format($template->price ?? 0, 0) . ' · ' . str_replace('_', ' ', $template->price_type) }}
-                    </p>
-                </div>
-            </div>
-            @endforeach
-        </div>
-
-        <p class="text-center text-sm mt-10 text-[#2D3748]/50">
-            More templates added regularly.
-            <a href="{{ route('register') }}" class="text-[#0078D4] underline hover:no-underline">Sign up and pick yours &rarr;</a>
-        </p>
-    </div>
-</section>
-@endif
 
 {{-- ─── PLATFORM MODULES ─────────────────────────────────────────────────── --}}
 <section class="bg-[#002B5B] py-16 sm:py-24" id="modules">

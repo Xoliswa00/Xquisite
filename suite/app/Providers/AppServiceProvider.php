@@ -4,17 +4,13 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use App\Modules\Booking\Models\Appointment;
 use App\Modules\Booking\Models\Customer;
 use App\Modules\Booking\Observers\CustomerObserver;
 use App\Observers\AppointmentObserver;
-use App\Services\Tenant\TenantContext;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,7 +23,6 @@ class AppServiceProvider extends ServiceProvider
 
         $this->registerRateLimiters();
         $this->registerSlowQueryDetector();
-        $this->registerTenantContextQueueGuards();
     }
 
     private function registerRateLimiters(): void
@@ -49,31 +44,6 @@ class AppServiceProvider extends ServiceProvider
         // Admin area — stricter limit
         RateLimiter::for('admin', function (Request $request) {
             return Limit::perMinute(80)->by($request->user()?->id ?? $request->ip());
-        });
-    }
-
-    /**
-     * TenantContext is a static, in-process singleton set only by HTTP-layer
-     * code (ResolveTenant middleware). Nothing clears it between jobs in a
-     * long-running queue worker, so a stale value could otherwise leak from
-     * one job into the next. Clearing is skipped for the 'sync' connection,
-     * since sync jobs run inline in the dispatching request/process — e.g.
-     * UserManagementController::store() queues a welcome email under the
-     * test suite's QUEUE_CONNECTION=sync — and must inherit that request's
-     * ambient context rather than have it wiped mid-request.
-     */
-    private function registerTenantContextQueueGuards(): void
-    {
-        Queue::before(function (JobProcessing $event) {
-            if ($event->connectionName !== 'sync') {
-                TenantContext::clear();
-            }
-        });
-
-        Queue::after(function (JobProcessed $event) {
-            if ($event->connectionName !== 'sync') {
-                TenantContext::clear();
-            }
         });
     }
 

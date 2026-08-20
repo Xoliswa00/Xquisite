@@ -44,17 +44,6 @@ use App\Http\Controllers\Property\MaintenanceController;
 use App\Http\Controllers\Property\RenterAuthController;
 use App\Http\Controllers\Property\RenterPortalController;
 use App\Http\Controllers\Admin\PlatformModuleController;
-use App\Http\Controllers\Admin\TemplateController as AdminTemplateController;
-use App\Http\Controllers\Website\TemplateCatalogController;
-use App\Http\Controllers\Website\TemplateCheckoutController;
-use App\Http\Controllers\Website\TemplateReviewController;
-use App\Http\Controllers\Website\SetupWizardController;
-use App\Http\Controllers\Website\BrandingController;
-use App\Http\Controllers\Website\PublicSiteController;
-use App\Http\Controllers\Website\SiteAnalyticsController;
-use App\Http\Controllers\Website\NewsletterSignupController;
-use App\Http\Controllers\Website\PageEditorController;
-use App\Http\Controllers\Admin\TemplateReviewController as AdminTemplateReviewController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\NotificationController;
@@ -70,7 +59,12 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DemoController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [PublicSiteController::class, 'root'])->name('welcome');
+Route::get('/', function () {
+    if (request()->user() !== null) {
+        return redirect()->route('dashboard');
+    }
+    return view('welcome');
+})->name('welcome');
 
 Route::get('/demo',    [DemoController::class, 'show'])->name('demo');
 Route::post('/demo',   [DemoController::class, 'login'])->name('demo.login');
@@ -159,7 +153,6 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::prefix('pos/sales')->name('pos.sales.')->group(function () {
             Route::get('/', [SaleController::class, 'index'])->name('index');
             Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
-            Route::get('/{sale}/pdf', [SaleController::class, 'downloadPdf'])->name('pdf');
             Route::post('/{sale}/void', [SaleController::class, 'void'])->name('void');
         });
 
@@ -202,44 +195,6 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     // E-commerce — store settings (shipping, etc.)
     Route::get('/store/settings', [StoreSettingsController::class, 'edit'])->name('store.settings')->middleware('module:ecommerce');
     Route::patch('/store/settings', [StoreSettingsController::class, 'update'])->name('store.settings.update')->middleware('module:ecommerce');
-
-    // Website template marketplace
-    Route::prefix('website')->name('website.')->group(function () {
-        Route::get('/templates', [TemplateCatalogController::class, 'index'])->name('templates.index');
-        Route::get('/templates/{template}', [TemplateCatalogController::class, 'show'])->name('templates.show');
-        Route::post('/templates/{template}/activate', [TemplateCatalogController::class, 'activate'])->name('templates.activate');
-        Route::post('/templates/{template}/checkout', [TemplateCheckoutController::class, 'checkout'])->name('templates.checkout');
-        Route::post('/templates/{template}/reviews', [TemplateReviewController::class, 'store'])->name('templates.reviews.store');
-
-        Route::get('/analytics', [SiteAnalyticsController::class, 'index'])->name('analytics');
-
-        Route::get('/branding', [BrandingController::class, 'edit'])->name('branding.edit');
-        Route::patch('/branding', [BrandingController::class, 'update'])->name('branding.update');
-        Route::post('/branding/favicon', [BrandingController::class, 'favicon'])->name('branding.favicon');
-        Route::post('/branding/hero-image', [BrandingController::class, 'heroImage'])->name('branding.hero-image');
-        Route::post('/branding/about-image', [BrandingController::class, 'aboutImage'])->name('branding.about-image');
-        Route::post('/branding/gallery-image', [BrandingController::class, 'galleryImageStore'])->name('branding.gallery-image.store');
-        Route::delete('/branding/gallery-image/{index}', [BrandingController::class, 'galleryImageDestroy'])->name('branding.gallery-image.destroy');
-
-        // Website Setup Wizard
-        Route::get('/setup/{step?}', [SetupWizardController::class, 'show'])->name('setup.show');
-        Route::post('/setup/business-type', [SetupWizardController::class, 'updateBusinessType'])->name('setup.business-type');
-        Route::post('/setup/subdomain', [SetupWizardController::class, 'updateSubdomain'])->name('setup.subdomain');
-        Route::post('/setup/custom-domain', [SetupWizardController::class, 'updateCustomDomain'])->name('setup.custom-domain');
-        Route::get('/setup-preview', [PublicSiteController::class, 'previewOwn'])->name('setup.preview-own');
-
-        // Visual page builder
-        Route::get('/editor/preview', [PublicSiteController::class, 'editorPreview'])->name('editor.preview');
-        Route::prefix('editor')->name('editor.')->group(function () {
-            Route::get('/', [PageEditorController::class, 'edit'])->name('edit');
-            Route::post('/sections', [PageEditorController::class, 'store'])->name('sections.store');
-            Route::patch('/sections/reorder', [PageEditorController::class, 'reorder'])->name('sections.reorder');
-            Route::patch('/sections/{section}', [PageEditorController::class, 'update'])->name('sections.update');
-            Route::patch('/sections/{section}/visibility', [PageEditorController::class, 'toggleVisibility'])->name('sections.visibility');
-            Route::post('/sections/{section}/duplicate', [PageEditorController::class, 'duplicate'])->name('sections.duplicate');
-            Route::delete('/sections/{section}', [PageEditorController::class, 'destroy'])->name('sections.destroy');
-        });
-    });
 
     // Property management module
     Route::middleware('module:property_management')->group(function () {
@@ -328,15 +283,6 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             // Platform module registry
             Route::resource('platform-modules', PlatformModuleController::class)->except(['show', 'destroy']);
             Route::patch('platform-modules/{platformModule}/status', [PlatformModuleController::class, 'updateStatus'])->name('platform-modules.status');
-
-            // Website template catalog
-            Route::resource('templates', AdminTemplateController::class)->except(['show', 'destroy']);
-            Route::patch('templates/{template}/status', [AdminTemplateController::class, 'updateStatus'])->name('templates.status');
-            Route::post('templates/{template}/refresh-scores', [AdminTemplateController::class, 'refreshScores'])->name('templates.refresh-scores');
-
-            // Template review moderation
-            Route::get('/template-reviews', [AdminTemplateReviewController::class, 'index'])->name('template-reviews.index');
-            Route::patch('/template-reviews/{templateReview}/status', [AdminTemplateReviewController::class, 'updateStatus'])->name('template-reviews.status');
         });
 
         // User management (for tenant owners to manage their staff)
@@ -450,17 +396,6 @@ Route::prefix('rent/{slug}')->name('rent.')->group(function () {
     });
 });
 
-// Public tenant website (path fallback for tenants without a subdomain/custom domain)
-Route::prefix('site/{slug}')->name('site.')->group(function () {
-    Route::get('/', [PublicSiteController::class, 'show'])->name('index');
-});
-
-// Live sample-data preview of a catalog template (used for thumbnails on the welcome page and dashboard)
-Route::get('/template-preview/{key}', [PublicSiteController::class, 'preview'])->name('template.preview');
-
-// Public newsletter signup (no auth) — posted from the Newsletter section on a tenant's site
-Route::post('/newsletter-signup/{tenantSlug}', [NewsletterSignupController::class, 'store'])->name('newsletter.store');
-
 // Public storefront (no auth)
 Route::prefix('shop/{tenantSlug}')->name('shop.')->group(function () {
     Route::get('/', [StorefrontController::class, 'index'])->name('index');
@@ -481,14 +416,6 @@ Route::prefix('shop/{tenantSlug}')->name('shop.')->group(function () {
     Route::post('/payfast/notify', [CheckoutController::class, 'payfastNotify'])->name('payfast.notify')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     Route::get('/payfast/return', [CheckoutController::class, 'payfastReturn'])->name('payfast.return');
     Route::get('/payfast/cancel', [CheckoutController::class, 'payfastCancel'])->name('payfast.cancel');
-});
-
-// PayFast callbacks for premium website-template purchases (unauthenticated — PayFast's
-// server calls notify directly, no session available; mirrors the shop.payfast.* group above)
-Route::prefix('website-template-purchase/{tenantSlug}')->name('website.templates.payfast.')->group(function () {
-    Route::post('/notify', [TemplateCheckoutController::class, 'payfastNotify'])->name('notify')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-    Route::get('/return', [TemplateCheckoutController::class, 'payfastReturn'])->name('return');
-    Route::get('/cancel', [TemplateCheckoutController::class, 'payfastCancel'])->name('cancel');
 });
 
 // ─── Public quote acceptance (no auth) ───────────────────────────────────────

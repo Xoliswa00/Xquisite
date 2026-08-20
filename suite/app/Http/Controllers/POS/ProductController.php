@@ -56,10 +56,6 @@ class ProductController extends Controller
 
         Product::create($data);
 
-        if ($request->boolean('from_wizard')) {
-            return redirect()->route('website.setup.show')->with('success', 'Product added.');
-        }
-
         return redirect()->route('products.index')
             ->with('success', 'Product added.');
     }

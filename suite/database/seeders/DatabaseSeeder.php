@@ -24,7 +24,6 @@ class DatabaseSeeder extends Seeder
             DemoSeeder::class,
             PlatformModuleSeeder::class,
             ReviewSeeder::class,
-            TemplateSeeder::class,
         ]);
 
         // Example accounts — local and demo environments only.

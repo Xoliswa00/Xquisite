@@ -119,9 +119,7 @@
       "Bash(git config *)",
       "Bash(grep -n 'service_ids\\\\|serviceCheckbox\\\\|x-data\\\\|servicesData\\\\|@foreach\\($services' resources/views/appointments/create.blade.php)",
       "Bash(gh pr create --base dev --head fix/service-pricing-and-quantity --title 'fix\\(bookings\\): correct pricing and add quantity for per_head/per_unit services' --body ' *)",
-      "PowerShell(gh --version)",
-      "Bash(docker --version)",
-      "Bash(docker compose *)"
+      "PowerShell(gh --version)"
     ],
     "additionalDirectories": [
       "c:\\Users\\beste\\x\\Xquisite"
