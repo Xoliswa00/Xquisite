@@ -5,16 +5,9 @@ namespace App\Http\Controllers\Booking;
 use App\Http\Controllers\Controller;
 use App\Modules\Booking\Models\Customer;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
 {
-    private function tenantId(): int
-    {
-        return Auth::user()->tenant_id ?? abort(403, 'No tenant assigned to this account.');
-    }
-
     public function index(Request $request)
     {
         $query = Customer::orderBy('name');
@@ -46,10 +39,7 @@ class CustomerController extends Controller
     {
         $data = $request->validate([
             'name'      => 'required|string|max:255',
-            'email'     => [
-                'nullable', 'email', 'max:255',
-                Rule::unique('customers')->where(fn ($q) => $q->where('tenant_id', $this->tenantId())),
-            ],
+            'email'     => 'nullable|email|max:255|unique:customers,email',
             'phone'     => 'nullable|string|max:50',
             'notes'     => 'nullable|string|max:2000',
             'is_active' => 'boolean',
@@ -82,12 +72,7 @@ class CustomerController extends Controller
     {
         $data = $request->validate([
             'name'      => 'required|string|max:255',
-            'email'     => [
-                'nullable', 'email', 'max:255',
-                Rule::unique('customers')
-                    ->where(fn ($q) => $q->where('tenant_id', $this->tenantId()))
-                    ->ignore($customer->id),
-            ],
+            'email'     => 'nullable|email|max:255|unique:customers,email,' . $customer->id,
             'phone'     => 'nullable|string|max:50',
             'notes'     => 'nullable|string|max:2000',
             'is_active' => 'boolean',

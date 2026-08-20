@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Mail\AppointmentReminderEmail;
 use App\Modules\Booking\Models\AppointmentReminder;
-use App\Services\Tenant\TenantContext;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
@@ -15,14 +14,6 @@ class SendAppointmentReminders extends Command
 
     public function handle(): int
     {
-        // AppointmentReminder is HasTenant-scoped. This command intentionally
-        // spans every tenant's due reminders in one run, relying on the
-        // global scope's fail-open behavior when no tenant context is set —
-        // a fresh console process already starts with none, but clear
-        // explicitly so that reliance is a documented decision rather than
-        // an accident.
-        TenantContext::clear();
-
         $due = AppointmentReminder::where('status', 'pending')
             ->where('scheduled_at', '<=', now())
             ->with(['appointment.customer', 'appointment.service', 'appointment.staff'])

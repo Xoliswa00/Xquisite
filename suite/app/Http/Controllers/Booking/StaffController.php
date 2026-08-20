@@ -51,10 +51,6 @@ class StaffController extends Controller
         $member = Staff::create($data);
         $member->services()->sync($serviceIds);
 
-        if ($request->boolean('from_wizard')) {
-            return redirect()->route('website.setup.show')->with('success', 'Staff member added.');
-        }
-
         return redirect()->route('staff.index')
             ->with('success', 'Staff member added.');
     }

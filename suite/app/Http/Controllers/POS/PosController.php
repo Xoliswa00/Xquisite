@@ -5,19 +5,14 @@ namespace App\Http\Controllers\POS;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentPlan;
 use App\Modules\Booking\Models\Appointment;
-use App\Modules\Ecommerce\Exceptions\InsufficientStockException;
 use App\Modules\POS\Models\Product;
 use App\Modules\POS\Models\Sale;
 use App\Modules\POS\Models\SaleItem;
-use App\Modules\POS\Services\SaleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class PosController extends Controller
 {
-    public function __construct(private readonly SaleService $sales) {}
-
     public function terminal(Request $request)
     {
         $appointment      = null;
@@ -79,15 +74,12 @@ class PosController extends Controller
                 'tracked'  => $p->track_stock,
             ]);
 
-        $tenantId = auth()->user()->tenant_id;
-
-        return view('pos.terminal', compact('appointment', 'products', 'preloadItems', 'serviceSuggestions', 'tenantId'));
+        return view('pos.terminal', compact('appointment', 'products', 'preloadItems', 'serviceSuggestions'));
     }
 
     public function checkout(Request $request)
     {
-        $data = $request->validate([
-            'idempotency_key' => 'required|uuid',
+        $request->validate([
             'items'          => 'required|array|min:1',
             'items.*.type'   => 'required|in:service,product',
             'items.*.id'     => 'required|integer',
@@ -101,25 +93,60 @@ class PosController extends Controller
             'customer_id'    => 'nullable|exists:customers,id',
         ]);
 
-        $tenant = auth()->user()->tenant;
+        DB::transaction(function () use ($request) {
+            $items    = $request->items;
+            $discount = (float) ($request->discount ?? 0);
+            $subtotal = collect($items)->sum(fn($i) => $i['price'] * $i['qty']);
+            $total    = max(0, $subtotal - $discount);
 
-        try {
-            $sale = $this->sales->checkout($tenant, $data, $data['idempotency_key']);
-        } catch (InsufficientStockException $e) {
-            return response()->json(['error' => $e->getMessage()], 422);
-        } catch (\Throwable $e) {
-            Log::error('POS checkout failed', ['tenant' => $tenant->id, 'error' => $e->getMessage()]);
+            $sale = Sale::create([
+                'reference'       => Sale::generateReference(),
+                'appointment_id'  => $request->appointment_id,
+                'customer_id'     => $request->customer_id,
+                'status'          => 'paid',
+                'subtotal'        => $subtotal,
+                'discount_amount' => $discount,
+                'tax_amount'      => 0,
+                'total'           => $total,
+                'payment_method'  => $request->payment_method,
+                'notes'           => $request->notes,
+                'paid_at'         => now(),
+            ]);
 
-            return response()->json([
-                'error' => 'We could not process this sale. No stock was deducted — please try again.',
-            ], 500);
-        }
+            foreach ($items as $item) {
+                SaleItem::create([
+                    'sale_id'    => $sale->id,
+                    'item_type'  => $item['type'],
+                    'item_id'    => $item['id'],
+                    'name'       => $item['name'],
+                    'unit_price' => $item['price'],
+                    'quantity'   => $item['qty'],
+                    'subtotal'   => $item['price'] * $item['qty'],
+                ]);
 
-        return response()->json([
-            'sale_id'     => $sale->id,
-            'reference'   => $sale->reference,
-            'receipt_url' => route('pos.sales.show', $sale),
-        ]);
+                // Decrement stock + write adjustment log for products
+                if ($item['type'] === 'product') {
+                    $product = Product::find($item['id']);
+                    $product?->decrementStock($item['qty'], 'sale', [
+                        'sale_id'   => $sale->id,
+                        'reference' => $sale->reference,
+                    ]);
+                }
+            }
+
+            // Link appointment and mark completed
+            if ($request->appointment_id) {
+                Appointment::where('id', $request->appointment_id)->update([
+                    'pos_order_id' => $sale->id,
+                    'status'       => 'completed',
+                ]);
+            }
+
+            session(['last_sale_id' => $sale->id]);
+        });
+
+        return redirect()->route('pos.sales.show', session('last_sale_id'))
+            ->with('success', 'Payment processed successfully.');
     }
 
     public function layby(Request $request)
@@ -158,8 +185,6 @@ class PosController extends Controller
                 'payment_method'  => 'layby',
                 'notes'           => $request->notes,
             ]);
-
-            $sale->assignSequentialReference();
 
             foreach ($items as $item) {
                 SaleItem::create([

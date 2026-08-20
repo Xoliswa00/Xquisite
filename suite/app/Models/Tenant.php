@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Models\ModuleRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
 
 class Tenant extends Model
 {
@@ -28,7 +27,6 @@ class Tenant extends Model
         'vat_number',
         'plan',
         'industry',
-        'preferred_template_key',
         'logo_url',
         'shipping_enabled',
         'shipping_type',
@@ -54,18 +52,6 @@ class Tenant extends Model
         'suspended_at'               => 'datetime',
         'last_billing_date'          => 'datetime',
     ];
-
-    // ── Mutators ────────────────────────────────────────────────
-
-    public function setSlugAttribute($value): void
-    {
-        $this->attributes['slug'] = $value !== null ? strtolower(trim($value)) : $value;
-    }
-
-    public function setSubdomainAttribute($value): void
-    {
-        $this->attributes['subdomain'] = $value !== null && $value !== '' ? strtolower(trim($value)) : null;
-    }
 
     // ── Relationships ──────────────────────────────────────────
 
@@ -212,17 +198,6 @@ class Tenant extends Model
         return $this->trial_ends_at && $this->trial_ends_at->isFuture();
     }
 
-    /**
-     * Real (non-placeholder) website templates are a paid-plan feature — a
-     * trial tenant only ever gets the free Coming Soon page. Matches the
-     * existing "don't do the paid thing during trial" convention used for
-     * module billing (see Settings\ModuleController::store()).
-     */
-    public function canActivateRealTemplate(): bool
-    {
-        return ! $this->isOnTrial();
-    }
-
     public function getStorefrontUrlAttribute(): string
     {
         if ($this->custom_domain && $this->custom_domain_verified) {
@@ -234,64 +209,5 @@ class Tenant extends Model
         }
 
         return route('shop.index', $this->slug);
-    }
-
-    // ── Website templates ──────────────────────────────────────
-
-    public function tenantTemplates()
-    {
-        return $this->hasMany(TenantTemplate::class);
-    }
-
-    public function activeTemplate()
-    {
-        return $this->hasOne(TenantTemplate::class)->where('is_active', true);
-    }
-
-    public function branding()
-    {
-        return $this->hasOne(TenantBranding::class);
-    }
-
-    public function pageSections()
-    {
-        return $this->hasMany(TenantPageSection::class);
-    }
-
-    public function siteVisits()
-    {
-        return $this->hasMany(SiteVisit::class);
-    }
-
-    public function activateTemplate(string $templateKey, ?int $activatedBy = null): TenantTemplate
-    {
-        return DB::transaction(function () use ($templateKey, $activatedBy) {
-            $this->tenantTemplates()
-                ->where('is_active', true)
-                ->update(['is_active' => false, 'deactivated_at' => now()]);
-
-            return $this->tenantTemplates()->updateOrCreate(
-                ['template_key' => $templateKey],
-                [
-                    'is_active'      => true,
-                    'activated_at'   => now(),
-                    'activated_by'   => $activatedBy,
-                    'deactivated_at' => null,
-                ]
-            );
-        });
-    }
-
-    public function getWebsiteUrlAttribute(): string
-    {
-        if ($this->custom_domain && $this->custom_domain_verified) {
-            return 'https://' . $this->custom_domain;
-        }
-
-        if ($this->subdomain) {
-            return 'https://' . $this->subdomain . '.' . config('app.domain', 'xquisite.co.za');
-        }
-
-        return route('site.index', $this->slug);
     }
 }

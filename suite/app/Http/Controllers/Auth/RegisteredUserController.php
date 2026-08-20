@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\WelcomeNewUserMail;
-use App\Models\Template;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\NewTenantRegistered;
@@ -23,22 +22,7 @@ class RegisteredUserController extends Controller
 {
     public function create(): View
     {
-        $templates = Template::visible()->active()->ordered()->get();
-
-        // Loosely maps the registration "industry" options to a template
-        // category, so step 2 can pre-select the closest-matching tab.
-        $industryCategoryMap = [
-            'salon' => 'beauty-spa', 'spa' => 'beauty-spa', 'barbershop' => 'beauty-spa',
-            'beauty' => 'beauty-spa', 'nail' => 'beauty-spa', 'massage' => 'beauty-spa',
-            'fitness' => 'fitness',
-            'hospitality' => 'restaurant',
-            'events' => 'wedding-events',
-            'coming_soon' => 'coming-soon',
-        ];
-
-        $placeholderKeys = $templates->filter->isPlaceholder()->pluck('key')->values();
-
-        return view('auth.register', compact('templates', 'industryCategoryMap', 'placeholderKeys'));
+        return view('auth.register');
     }
 
     public function store(Request $request): RedirectResponse
@@ -51,7 +35,6 @@ class RegisteredUserController extends Controller
             'phone'         => ['nullable', 'string', 'max:30'],
             'email'         => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password'      => ['required', 'confirmed', Rules\Password::defaults()],
-            'template_key'  => ['nullable', 'string', 'exists:templates,key'],
         ]);
 
         $slug = $this->uniqueSlug($request->business_name);
@@ -60,11 +43,7 @@ class RegisteredUserController extends Controller
             ? $request->industry_other
             : $request->industry;
 
-        $template = $request->filled('template_key')
-            ? Template::where('key', $request->template_key)->where('is_active', true)->where('is_visible', true)->first()
-            : null;
-
-        [$tenant, $user] = DB::transaction(function () use ($request, $slug, $industry, $template) {
+        [$tenant, $user] = DB::transaction(function () use ($request, $slug, $industry) {
             $tenant = Tenant::create([
                 'name'          => $request->business_name,
                 'slug'          => $slug,
@@ -86,21 +65,6 @@ class RegisteredUserController extends Controller
 
             $user->assignRole('tenant-owner');
 
-            // New tenants always start on trial, and real industry templates are
-            // a paid-plan feature — the Coming Soon page is the one exception.
-            if ($template && $template->isPlaceholder()) {
-                $tenant->activateTemplate($template->key, $user->id);
-                $tenant->branding()->create([]);
-            } elseif ($template) {
-                $tenant->update(['preferred_template_key' => $template->key]);
-
-                $comingSoon = Template::where('category', 'coming-soon')->where('is_active', true)->first();
-                if ($comingSoon) {
-                    $tenant->activateTemplate($comingSoon->key, $user->id);
-                    $tenant->branding()->create([]);
-                }
-            }
-
             return [$tenant, $user];
         });
 
@@ -115,18 +79,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        if ($template && $template->isPlaceholder()) {
-            return redirect()->route('website.setup.show')
-                ->with('success', "Welcome! {$template->name} is now live — let's finish setting up your site.");
-        }
-
-        if ($template) {
-            return redirect()->route('website.setup.show')
-                ->with('info', "Welcome! Your site is live with a free Coming Soon page for now — we've saved "
-                    . "{$template->name} as your pick, ready to activate the moment you're on a paid plan.");
-        }
-
-        return redirect()->route('website.setup.show');
+        return redirect()->route('dashboard');
     }
 
     private function uniqueSlug(string $name): string

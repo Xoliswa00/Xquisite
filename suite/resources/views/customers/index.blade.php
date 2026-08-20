@@ -6,16 +6,16 @@
             <form method="GET" class="flex flex-col sm:flex-row flex-wrap gap-2">
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Name, email or phone…"
-                       class="bg-panel-2 border border-line-2 text-ink text-sm rounded-lg px-3 py-2 w-full sm:w-52 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                       class="bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 w-full sm:w-52 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                 <div class="flex gap-2">
-                    <select name="status" class="flex-1 sm:flex-none bg-panel-2 border border-line-2 text-ink text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                    <select name="status" class="flex-1 sm:flex-none bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                         <option value="">All</option>
                         <option value="active" @selected(request('status') === 'active')>Active</option>
                         <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
                     </select>
-                    <button type="submit" class="bg-panel-2 hover:bg-line-2 text-ink text-sm px-4 py-2 rounded-lg">Filter</button>
+                    <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Filter</button>
                     @if(request()->hasAny(['search','status']))
-                        <a href="{{ route('customers.index') }}" class="text-sm px-4 py-2 rounded-lg text-ink-muted hover:text-ink border border-line-2">Clear</a>
+                        <a href="{{ route('customers.index') }}" class="text-sm px-4 py-2 rounded-lg text-slate-400 hover:text-white border border-slate-700">Clear</a>
                     @endif
                 </div>
             </form>
@@ -29,16 +29,16 @@
         <div class="sm:hidden space-y-2">
             @forelse($customers as $customer)
                 <a href="{{ route('customers.show', $customer) }}"
-                   class="block bg-panel-2 rounded-xl p-4 hover:bg-line-2/70 transition-colors">
+                   class="block bg-slate-800 rounded-xl p-4 hover:bg-slate-700/70 transition-colors">
                     <div class="flex items-center justify-between gap-3">
-                        <p class="font-medium text-ink text-sm truncate">{{ $customer->name }}</p>
+                        <p class="font-medium text-white text-sm truncate">{{ $customer->name }}</p>
                         @if($customer->is_active)
-                            <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-400 dark:border-emerald-800">Active</span>
+                            <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
                         @else
-                            <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-panel-2 text-ink-muted border border-line-2">Inactive</span>
+                            <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
                         @endif
                     </div>
-                    <div class="flex items-center gap-3 mt-1 text-xs text-ink-faint">
+                    <div class="flex items-center gap-3 mt-1 text-xs text-slate-500">
                         @if($customer->phone)
                             <span>{{ $customer->phone }}</span>
                         @endif
@@ -48,15 +48,15 @@
                     </div>
                 </a>
             @empty
-                <p class="text-center text-ink-faint py-10 text-sm">No customers found.</p>
+                <p class="text-center text-slate-500 py-10 text-sm">No customers found.</p>
             @endforelse
         </div>
 
         {{-- Desktop table --}}
-        <div class="hidden sm:block bg-panel-2 rounded-xl overflow-hidden overflow-x-auto">
+        <div class="hidden sm:block bg-slate-800 rounded-xl overflow-hidden overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-line-2 text-ink-muted text-left">
+                    <tr class="border-b border-slate-700 text-slate-400 text-left">
                         <th class="px-4 py-3 font-medium">Name</th>
                         <th class="px-4 py-3 font-medium">Email</th>
                         <th class="px-4 py-3 font-medium">Phone</th>
@@ -64,30 +64,30 @@
                         <th class="px-4 py-3 font-medium"></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-line-2">
+                <tbody class="divide-y divide-slate-700">
                     @forelse($customers as $customer)
-                        <tr class="hover:bg-line-2/50">
+                        <tr class="hover:bg-slate-700/50">
                             <td class="px-4 py-3">
                                 <a href="{{ route('customers.show', $customer) }}" class="text-[#0078D4] hover:text-[#B8D4F0] font-medium">
                                     {{ $customer->name }}
                                 </a>
                             </td>
-                            <td class="px-4 py-3 text-ink-muted">{{ $customer->email ?? '—' }}</td>
-                            <td class="px-4 py-3 text-ink-muted">{{ $customer->phone ?? '—' }}</td>
+                            <td class="px-4 py-3 text-slate-300">{{ $customer->email ?? '—' }}</td>
+                            <td class="px-4 py-3 text-slate-300">{{ $customer->phone ?? '—' }}</td>
                             <td class="px-4 py-3">
                                 @if($customer->is_active)
-                                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-400 dark:border-emerald-800">Active</span>
+                                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
                                 @else
-                                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-panel-2 text-ink-muted border border-line-2">Inactive</span>
+                                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <a href="{{ route('customers.edit', $customer) }}" class="text-ink-muted hover:text-ink text-xs">Edit</a>
+                                <a href="{{ route('customers.edit', $customer) }}" class="text-slate-400 hover:text-white text-xs">Edit</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-10 text-center text-ink-faint">No customers found.</td>
+                            <td colspan="5" class="px-4 py-10 text-center text-slate-500">No customers found.</td>
                         </tr>
                     @endforelse
                 </tbody>

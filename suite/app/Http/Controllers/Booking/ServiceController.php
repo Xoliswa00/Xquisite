@@ -82,10 +82,6 @@ class ServiceController extends Controller
         $service = Service::create($data);
         $this->syncBundles($service, $bundles);
 
-        if ($request->boolean('from_wizard')) {
-            return redirect()->route('website.setup.show')->with('success', 'Service added.');
-        }
-
         return redirect()->route('services.index')
             ->with('success', 'Service created.');
     }

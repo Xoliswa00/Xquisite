@@ -14,8 +14,6 @@ class Order extends Model
     protected $fillable = [
         'tenant_id',
         'reference',
-        'idempotency_key',
-        'payment_initiated_at',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -42,7 +40,6 @@ class Order extends Model
         'total'            => 'decimal:2',
         'paid_at'          => 'datetime',
         'fulfilled_at'     => 'datetime',
-        'payment_initiated_at' => 'datetime',
     ];
 
     const STATUS_PENDING   = 'pending';
