@@ -56,6 +56,25 @@ class MonitoredInstance extends Model
         return $this->status === 'up' && $this->consecutive_failures === 0;
     }
 
+    /**
+     * Accessor for $instance->is_healthy, used throughout the monitoring
+     * views — without this, ->is_healthy silently resolves to null since
+     * it isn't a real column, and every "Healthy"/"Unhealthy" badge falls
+     * to the unhealthy branch regardless of actual status.
+     */
+    public function getIsHealthyAttribute(): bool
+    {
+        return $this->isHealthy();
+    }
+
+    /**
+     * Accessor for $instance->active — the real column is is_active.
+     */
+    public function getActiveAttribute(): bool
+    {
+        return (bool) $this->is_active;
+    }
+
     public function getUptimeClass(): string
     {
         if ($this->uptime_percentage >= 99.5) {
