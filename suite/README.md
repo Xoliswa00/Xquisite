@@ -7,6 +7,26 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Outstanding / Pending — Xquisite Creations Suite
+
+_Updated 2026-08-25. See `CLAUDE.md` for module/branch conventions._
+
+**Uncommitted on `fix/property-management-bugs`:**
+- `app/Http/Controllers/DashboardController.php`, `resources/views/dashboard.blade.php` — module-aware dashboard + per-module onboarding checklist rewrite (8-agent reviewed, fixes applied). Verified against live DB, not yet committed.
+- ~248 other modified/added files on this branch are uncommitted as of this date, including work from multiple concurrent sessions on this machine — some (an `Auditable` trait rollout across ~50 models) has **unconfirmed ownership**; confirm before staging/committing.
+
+**Known bugs, not yet fixed:**
+- `products.create` is gated behind `module:pos` middleware (`routes/web.php`), so a tenant with only the E-commerce module (no POS) cannot add products to their own store.
+
+**Deferred (not urgent):**
+- Dashboard Blade markup (revenue-anchor cards, stat tiles, activity lists) is duplicated ~3-5x across module sections. Fine at current module count; extract into `<x-dashboard.*>` components before a 6th module (analytics/loyalty/payroll are already seeded) gets its own section.
+
+**Carried from `CLAUDE.md`:**
+- Upload `/img/og-image.jpg` (1200×630) for WhatsApp/OG preview.
+- Fix slug `Misstee-Beauty-Studio` → lowercase in DB.
+- PayFast card payment integration (deferred).
+- Post-appointment review request feature (not yet built).
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
