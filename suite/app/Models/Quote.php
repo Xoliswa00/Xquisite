@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Models\Traits\HasTenant;
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class Quote extends Model
 {
-    use HasTenant;
+    use HasTenant, Auditable;
     protected $fillable = [
         'tenant_id', 'customer_id', 'created_by', 'reference', 'title',
         'line_items', 'subtotal', 'tax_rate', 'tax_amount', 'total',

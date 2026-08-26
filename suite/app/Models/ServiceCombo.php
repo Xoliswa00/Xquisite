@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Models\Traits\HasTenant;
+use App\Models\Traits\Auditable;
 use App\Modules\Booking\Models\Service;
 use Illuminate\Database\Eloquent\Model;
 
 class ServiceCombo extends Model
 {
-    use HasTenant;
+    use HasTenant, Auditable;
     protected $fillable = [
         'tenant_id', 'name', 'description', 'discount_type',
         'discount_value', 'valid_from', 'valid_until', 'is_active',

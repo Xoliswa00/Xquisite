@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Booking;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Modules\Booking\Models\Customer;
+use App\Services\AuditService;
+use App\Services\Security\LoginThrottleService;
 use App\Services\Tenant\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -37,8 +39,23 @@ class CustomerAuthController extends Controller
 
         if (Auth::guard('customer')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             $request->session()->regenerate();
+
+            AuditService::log(
+                action: 'customer.login',
+                entityType: 'Customer',
+                entityId: Auth::guard('customer')->id(),
+                meta: ['tenant_slug' => $slug],
+            );
+
             return redirect()->intended(route('book.index', $slug));
         }
+
+        AuditService::log(
+            action: 'customer.login_failed',
+            entityType: 'Customer',
+            meta: ['email' => $request->input('email'), 'tenant_slug' => $slug],
+        );
+        LoginThrottleService::recordFailure($request->ip(), 'customer');
 
         return back()->withErrors(['email' => 'These credentials do not match our records.'])->withInput();
     }
@@ -159,6 +176,13 @@ class CustomerAuthController extends Controller
 
     public function logout(string $slug, Request $request)
     {
+        AuditService::log(
+            action: 'customer.logout',
+            entityType: 'Customer',
+            entityId: Auth::guard('customer')->id(),
+            meta: ['tenant_slug' => $slug],
+        );
+
         Auth::guard('customer')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -89,7 +89,7 @@ class PlanController extends Controller
 
         $plan->update($data);
 
-        PlanModule::where('plan_id', $plan->id)->delete();
+        PlanModule::where('plan_id', $plan->id)->get()->each->delete();
 
         foreach ($modules as $moduleKey) {
             PlanModule::create(['plan_id' => $plan->id, 'module_key' => $moduleKey]);

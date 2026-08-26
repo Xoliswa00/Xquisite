@@ -40,7 +40,16 @@
                                 {{ $log->entity_type }}
                                 @if($log->entity_id)<span class="text-slate-500"> #{{ $log->entity_id }}</span>@endif
                             </td>
-                            <td class="px-4 py-3 text-slate-300 text-xs">{{ $log->user?->name ?? 'System' }}</td>
+                            <td class="px-4 py-3 text-slate-300 text-xs">
+                                @if($log->user)
+                                    {{ $log->user->name }}
+                                @elseif($actor = data_get($log->meta, 'actor'))
+                                    {{ $actor['label'] ?? ('#' . $actor['id']) }}
+                                    <span class="text-slate-500">({{ $actor['type'] }})</span>
+                                @else
+                                    System
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-slate-400 text-xs">{{ $log->ip_address ?? '—' }}</td>
                             <td class="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">
                                 {{ $log->created_at->format('d M Y H:i') }}
@@ -69,7 +78,15 @@
                         {{ $log->entity_type }}@if($log->entity_id) <span class="text-slate-500">#{{ $log->entity_id }}</span>@endif
                     </p>
                     <div class="flex items-center gap-2 text-xs text-slate-500">
-                        <span>{{ $log->user?->name ?? 'System' }}</span>
+                        <span>
+                            @if($log->user)
+                                {{ $log->user->name }}
+                            @elseif($actor = data_get($log->meta, 'actor'))
+                                {{ $actor['label'] ?? ('#' . $actor['id']) }} ({{ $actor['type'] }})
+                            @else
+                                System
+                            @endif
+                        </span>
                         @if($log->ip_address)
                             <span>&middot;</span>
                             <span>{{ $log->ip_address }}</span>

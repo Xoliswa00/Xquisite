@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class TenantServiceOrder extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'platform_service_id', 'tenant_id', 'requested_by', 'assigned_to',
         'status', 'quoted_price', 'client_notes', 'admin_notes',

@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\User;
+use App\Services\AuditService;
 
 class UserObserver
 {
@@ -11,13 +12,12 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        //
-          AuditService::log(
-        action: 'user.created',
-        entityType: 'User',
-        entityId: $user->id,
-        new: $user->toArray()
-    );
+        AuditService::log(
+            action: 'user.created',
+            entityType: 'User',
+            entityId: $user->id,
+            new: $user->toArray()
+        );
     }
 
     /**
@@ -25,7 +25,13 @@ class UserObserver
      */
     public function updated(User $user): void
     {
-        //
+        AuditService::log(
+            action: 'user.updated',
+            entityType: 'User',
+            entityId: $user->id,
+            old: $user->getOriginal(),
+            new: $user->getChanges()
+        );
     }
 
     /**
@@ -33,7 +39,12 @@ class UserObserver
      */
     public function deleted(User $user): void
     {
-        //
+        AuditService::log(
+            action: 'user.deleted',
+            entityType: 'User',
+            entityId: $user->id,
+            old: $user->toArray()
+        );
     }
 
     /**
@@ -41,7 +52,12 @@ class UserObserver
      */
     public function restored(User $user): void
     {
-        //
+        AuditService::log(
+            action: 'user.restored',
+            entityType: 'User',
+            entityId: $user->id,
+            new: $user->toArray()
+        );
     }
 
     /**
@@ -49,6 +65,11 @@ class UserObserver
      */
     public function forceDeleted(User $user): void
     {
-        //
+        AuditService::log(
+            action: 'user.forceDeleted',
+            entityType: 'User',
+            entityId: $user->id,
+            old: $user->toArray()
+        );
     }
 }

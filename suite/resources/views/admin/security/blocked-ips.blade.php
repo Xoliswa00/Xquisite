@@ -6,12 +6,6 @@
 
     <div class="space-y-6">
 
-        @if(session('success'))
-            <div class="bg-green-900/30 border border-green-700 text-green-300 px-4 py-3 rounded-lg text-sm">
-                {{ session('success') }}
-            </div>
-        @endif
-
         {{-- Stats --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
@@ -26,6 +20,21 @@
                 <p class="text-slate-400 text-sm">Temporary Blocks</p>
                 <p class="text-2xl font-bold text-yellow-400 mt-1">{{ $blocked->getCollection()->whereNotNull('expires_at')->count() }}</p>
             </div>
+        </div>
+
+        {{-- Map --}}
+        <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                <h3 class="text-base font-semibold text-white">Blocked IP Locations</h3>
+                <span class="text-xs text-slate-500">{{ $points->count() }} geolocated of {{ $blocked->total() }}</span>
+            </div>
+            @if($points->isEmpty())
+                <div class="px-6 py-12 text-center text-slate-500 text-sm">
+                    No locations to show{{ $blocked->isEmpty() ? '.' : ' — geolocation lookup failed or is unavailable for these IPs.' }}
+                </div>
+            @else
+                <div id="blocked-ip-map" class="h-96 w-full"></div>
+            @endif
         </div>
 
         {{-- Block new IP --}}
@@ -129,4 +138,46 @@
         </div>
 
     </div>
+
+    @if($points->isNotEmpty())
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+              integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+                integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <script>
+            (function () {
+                const points = @js($points);
+                const map = L.map('blocked-ip-map', { scrollWheelZoom: false });
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    maxZoom: 18,
+                }).addTo(map);
+
+                const markers = points.map(p => {
+                    const marker = L.circleMarker([p.lat, p.lon], {
+                        radius: 7,
+                        color: p.expired ? '#64748b' : '#ef4444',
+                        fillColor: p.expired ? '#64748b' : '#ef4444',
+                        fillOpacity: 0.7,
+                        weight: 2,
+                    }).addTo(map);
+
+                    marker.bindPopup(
+                        '<strong>' + p.ip + '</strong><br>' +
+                        (p.label || 'Unknown location') + '<br>' +
+                        '<span style="color:#94a3b8">' + p.reason + '</span>'
+                    );
+
+                    return marker;
+                });
+
+                if (markers.length === 1) {
+                    map.setView([points[0].lat, points[0].lon], 6);
+                } else {
+                    map.fitBounds(L.featureGroup(markers).getBounds().pad(0.3));
+                }
+            })();
+        </script>
+    @endif
 </x-app-layout>

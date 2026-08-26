@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Services\AuditService;
+use App\Services\Security\LoginThrottleService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -45,6 +47,13 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            AuditService::log(
+                action: 'auth.login_failed',
+                entityType: 'User',
+                meta: ['email' => $this->string('email')->toString()],
+            );
+            LoginThrottleService::recordFailure($this->ip(), 'staff');
+
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
@@ -65,6 +74,12 @@ class LoginRequest extends FormRequest
         }
 
         event(new Lockout($this));
+
+        AuditService::log(
+            action: 'auth.login_locked_out',
+            entityType: 'User',
+            meta: ['email' => $this->string('email')->toString()],
+        );
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
 

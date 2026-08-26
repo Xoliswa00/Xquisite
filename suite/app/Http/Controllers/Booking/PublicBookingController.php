@@ -262,7 +262,9 @@ class PublicBookingController extends Controller
                         ? round($baseTotal * $promo->discount_value / 100, 2)
                         : min((float) $promo->discount_value, $baseTotal);
                     $promoCode = $promo->code;
-                    $promo->increment('used_count');
+                    // increment() bypasses Eloquent events (no audit trail); the row is
+                    // already locked via lockForUpdate() above, so a plain update is safe.
+                    $promo->update(['used_count' => $promo->used_count + 1]);
                 } else {
                     // Signal caller to redirect back with error
                     return null;
