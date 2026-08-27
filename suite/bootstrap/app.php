@@ -11,13 +11,28 @@ use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\EnforcePasswordChange;
 use App\Http\Middleware\SecurityHeaders;
 
+// Resolves where an expired/guest session should be sent back to — the tenant's
+// own portal login (with its slug) when the request was inside one, never the
+// main staff login. Shared by the auth-guard redirect and the CSRF-expiry handler
+// below so a page refresh or a stale form submit lands back on the same portal.
+$portalLoginRedirect = function (\Illuminate\Http\Request $request): string {
+    $slug = $request->route('slug');
+
+    return match (true) {
+        $slug && $request->is('rent/*')       => route('rent.login', $slug),
+        $slug && $request->is('book/*')       => route('book.login', $slug),
+        $slug && $request->is('contractor/*') => route('contractor.login', $slug),
+        default                               => route('login'),
+    };
+};
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
+    ->withMiddleware(function (Middleware $middleware) use ($portalLoginRedirect): void {
         $middleware->web(prepend: [
             CheckBlockedIp::class,
         ]);
@@ -34,15 +49,24 @@ return Application::configure(basePath: dirname(__DIR__))
             '/js-error',
         ]);
 
+        $middleware->redirectGuestsTo($portalLoginRedirect);
+
         $middleware->alias([
             'module' => EnsureModuleActive::class,
             'enforce-password-change' => EnforcePasswordChange::class,
             'company.suspension' => \App\Http\Middleware\CheckCompanySuspension::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
-            return redirect()->route('login')->with('status', 'Your session expired. Please sign in again.');
+    ->withExceptions(function (Exceptions $exceptions) use ($portalLoginRedirect): void {
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) use ($portalLoginRedirect) {
+            $message = 'Your session expired. Please sign in again.';
+
+            // 'status' is what the main staff login checks (Breeze convention);
+            // 'success' is what every portal layout (renter/booking/contractor) checks.
+            // Flash both so the message shows up wherever this redirect lands.
+            return redirect($portalLoginRedirect($request))
+                ->with('status', $message)
+                ->with('success', $message);
         });
 
         // Log every exception to the database, including 404s, 403s, and handled errors

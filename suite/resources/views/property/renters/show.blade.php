@@ -1,31 +1,43 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <div>
-                <h2 class="text-2xl font-bold text-[#D4AF37]">{{ $renter->name }}</h2>
-                <a href="{{ route('renters.index') }}" class="text-sm text-slate-400 hover:text-white">&larr; Back to Renters</a>
-            </div>
-            <div class="flex gap-2">
-                @if($renter->email && !$renter->password)
-                    <form method="POST" action="{{ route('renters.invite', $renter) }}">
-                        @csrf
-                        <button type="submit"
-                                class="px-3 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg">
-                            Grant Portal Access
-                        </button>
-                    </form>
-                @endif
-                <a href="{{ route('renters.edit', $renter) }}"
-                   class="px-3 py-2 bg-[#002B5B] hover:bg-[#0078D4] text-white text-sm rounded-lg">Edit</a>
-            </div>
-        </div>
-    </x-slot>
+    <x-slot name="header">{{ $renter->name }}</x-slot>
 
     <div class="max-w-5xl mx-auto p-6 space-y-6">
 
-        @if(session('success'))
-            <div class="p-4 bg-emerald-900/30 border border-emerald-700 text-emerald-300 rounded-xl text-sm">{{ session('success') }}</div>
-        @endif
+        {{-- Identity --}}
+        <div class="bg-slate-800 rounded-xl p-6">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-[#D4AF37]">{{ $renter->name }}</h2>
+                    <a href="{{ route('renters.index') }}" class="text-sm text-slate-400 hover:text-white mt-0.5 inline-block">&larr; Back to Renters</a>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    @if($renter->email && !$renter->password)
+                        <form method="POST" action="{{ route('renters.invite', $renter) }}">
+                            @csrf
+                            <button type="submit"
+                                    class="px-3 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg">
+                                Grant Portal Access
+                            </button>
+                        </form>
+                    @endif
+                    <a href="{{ route('renters.edit', $renter) }}"
+                       class="px-3 py-2 bg-[#002B5B] hover:bg-[#0078D4] text-white text-sm rounded-lg">Edit</a>
+                </div>
+            </div>
+            @if($renter->password && $renter->tenant)
+                @php $portalLink = route('rent.login', $renter->tenant->slug); @endphp
+                <div class="flex items-center gap-2 bg-slate-900 rounded-lg px-3 py-2 mt-4" x-data="{ copied: false }">
+                    <span class="text-xs text-slate-400 uppercase font-semibold shrink-0">Portal Link</span>
+                    <span class="text-xs text-slate-300 truncate flex-1">{{ $portalLink }}</span>
+                    <button type="button"
+                            @click="navigator.clipboard.writeText('{{ $portalLink }}').then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                            class="shrink-0 text-xs font-semibold px-2 py-1 rounded-md transition-all"
+                            :class="copied ? 'bg-emerald-900/40 text-emerald-400' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'">
+                        <span x-text="copied ? 'Copied!' : 'Copy Link'"></span>
+                    </button>
+                </div>
+            @endif
+        </div>
 
         {{-- Profile Card --}}
         <div class="bg-slate-800 rounded-xl p-6">

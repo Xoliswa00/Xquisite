@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Modules\Booking\Models\Customer;
 use App\Modules\Property\Models\Renter;
+use App\Modules\Property\Models\Contractor;
 
 return [
 
@@ -52,6 +53,10 @@ return [
             'driver'   => 'session',
             'provider' => 'renters',
         ],
+        'contractor' => [
+            'driver'   => 'session',
+            'provider' => 'contractors',
+        ],
     ],
 
     /*
@@ -83,6 +88,10 @@ return [
         'renters' => [
             'driver' => 'eloquent',
             'model'  => Renter::class,
+        ],
+        'contractors' => [
+            'driver' => 'eloquent',
+            'model'  => Contractor::class,
         ],
 
         // 'users' => [

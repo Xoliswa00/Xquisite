@@ -15,6 +15,7 @@ class PropertyController extends Controller
     public function index()
     {
         $properties = Property::withCount(['units', 'occupiedUnits', 'vacantUnits'])
+            ->with('coverImage')
             ->where('is_active', true)
             ->orderBy('name')
             ->paginate(20);
@@ -51,9 +52,21 @@ class PropertyController extends Controller
             'owner_name'    => 'nullable|string|max:255',
             'owner_email'   => 'nullable|email|max:255',
             'owner_phone'   => 'nullable|string|max:30',
+            'owner_id_number' => 'nullable|string|max:50',
+            'annual_increase_percentage' => 'nullable|numeric|min:0|max:100',
+            'photos'        => 'nullable|array',
+            'photos.*'      => 'image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
+        unset($validated['photos']);
+
         $property = Property::create($validated);
+
+        foreach ($request->file('photos', []) as $photo) {
+            $property->images()->create([
+                'path' => $photo->store('properties', 'public'),
+            ]);
+        }
 
         return redirect()->route('properties.show', $property)
             ->with('success', 'Property created.');
@@ -61,7 +74,7 @@ class PropertyController extends Controller
 
     public function show(Property $property)
     {
-        $property->load(['units.activeLease.renter']);
+        $property->load(['units.activeLease.renter', 'images']);
 
         $stats = [
             'units'      => $property->units()->count(),
@@ -94,6 +107,8 @@ class PropertyController extends Controller
             'owner_name'    => 'nullable|string|max:255',
             'owner_email'   => 'nullable|email|max:255',
             'owner_phone'   => 'nullable|string|max:30',
+            'owner_id_number' => 'nullable|string|max:50',
+            'annual_increase_percentage' => 'nullable|numeric|min:0|max:100',
             'is_active'     => 'boolean',
         ]);
 

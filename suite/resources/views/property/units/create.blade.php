@@ -1,10 +1,5 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-[#D4AF37]">Add Unit &mdash; {{ $property->name }}</h2>
-            <a href="{{ route('properties.units.index', $property) }}" class="text-sm text-slate-400 hover:text-white">&larr; Back to Units</a>
-        </div>
-    </x-slot>
+    <x-slot name="header">Add Unit &mdash; {{ $property->name }}</x-slot>
 
     <div class="max-w-2xl mx-auto p-6">
         <form method="POST" action="{{ route('properties.units.store', $property) }}" class="space-y-6">
@@ -54,10 +49,17 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Size (sqm)</label>
-                    <input type="number" name="size_sqm" value="{{ old('size_sqm') }}" step="0.01" min="0"
-                           class="w-full bg-slate-700 border-slate-600 text-slate-100 rounded-lg text-sm px-3 py-2">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Size (sqm)</label>
+                        <input type="number" name="size_sqm" value="{{ old('size_sqm') }}" step="0.01" min="0"
+                               class="w-full bg-slate-700 border-slate-600 text-slate-100 rounded-lg text-sm px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Parking Bay</label>
+                        <input type="text" name="parking_bay" value="{{ old('parking_bay') }}" placeholder="e.g. 319"
+                               class="w-full bg-slate-700 border-slate-600 text-slate-100 rounded-lg text-sm px-3 py-2">
+                    </div>
                 </div>
             </div>
 
@@ -91,7 +93,7 @@
                 <a href="{{ route('properties.units.index', $property) }}"
                    class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm">Cancel</a>
                 <button type="submit"
-                        class="px-5 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg text-sm font-semibold">
+                        class="px-5 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg text-sm font-semibold">
                     Save Unit
                 </button>
             </div>

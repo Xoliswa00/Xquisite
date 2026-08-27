@@ -110,4 +110,52 @@ class RenterPortalController extends Controller
         return redirect()->route('rent.maintenance', $slug)
             ->with('success', 'Maintenance request submitted. We\'ll be in touch shortly.');
     }
+
+    public function receiptPdf(string $slug, RentPayment $rentPayment)
+    {
+        $this->resolveTenant($slug);
+        if ($r = $this->requireRenter($slug)) return $r;
+
+        $renter = Auth::guard('renter')->user();
+        abort_unless($rentPayment->renter_id === $renter->id, 404);
+        abort_if($rentPayment->amount_paid <= 0, 422, 'No payment has been recorded for this period yet.');
+
+        $rentPayment->load(['unit.property', 'renter']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('property.payments.receipt-pdf', compact('rentPayment'));
+
+        return $pdf->download('receipt-rent-' . $rentPayment->id . '.pdf');
+    }
+
+    public function notifications(string $slug)
+    {
+        $tenant = $this->resolveTenant($slug);
+        if ($r = $this->requireRenter($slug)) return $r;
+
+        $renter = Auth::guard('renter')->user();
+        $notifications = $renter->notifications()->latest()->paginate(20);
+        $unreadCount = $renter->unreadNotifications()->count();
+
+        return view('property.portal.notifications', compact('tenant', 'slug', 'renter', 'notifications', 'unreadCount'));
+    }
+
+    public function markNotificationRead(string $slug, string $id)
+    {
+        $this->resolveTenant($slug);
+        if ($r = $this->requireRenter($slug)) return $r;
+
+        Auth::guard('renter')->user()->notifications()->findOrFail($id)->markAsRead();
+
+        return back();
+    }
+
+    public function markAllNotificationsRead(string $slug)
+    {
+        $this->resolveTenant($slug);
+        if ($r = $this->requireRenter($slug)) return $r;
+
+        Auth::guard('renter')->user()->unreadNotifications->markAsRead();
+
+        return back()->with('success', 'All notifications marked as read.');
+    }
 }

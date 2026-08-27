@@ -1,19 +1,14 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-[#D4AF37]">Properties</h2>
-            <a href="{{ route('properties.create') }}"
-               class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg">
-                + Add Property
-            </a>
-        </div>
-    </x-slot>
+    <x-slot name="header">Properties</x-slot>
 
     <div class="max-w-7xl mx-auto p-6 space-y-6">
 
-        @if(session('success'))
-            <div class="p-4 bg-emerald-900/30 border border-emerald-700 text-emerald-300 rounded-xl text-sm">{{ session('success') }}</div>
-        @endif
+        <div class="flex justify-end">
+            <a href="{{ route('properties.create') }}"
+               class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg">
+                + Add Property
+            </a>
+        </div>
 
         {{-- KPI Strip --}}
         <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
@@ -35,8 +30,17 @@
         {{-- Properties list --}}
         <div class="space-y-3">
             @forelse($properties as $property)
-                <div class="bg-slate-800 rounded-xl p-5 flex items-center justify-between hover:bg-slate-750 transition">
-                    <div>
+                <div class="bg-slate-800 rounded-xl p-5 flex items-center gap-4 justify-between hover:bg-slate-750 transition">
+                    <div class="flex items-center gap-4 min-w-0">
+                        @if($property->coverImage)
+                            <img src="{{ $property->coverImage->url() }}" alt="{{ $property->name }}"
+                                 class="w-14 h-14 object-cover rounded-lg border border-slate-700 shrink-0">
+                        @else
+                            <div class="w-14 h-14 rounded-lg border border-slate-700 bg-slate-900 flex items-center justify-center text-slate-600 text-xs shrink-0">
+                                No photo
+                            </div>
+                        @endif
+                        <div class="min-w-0">
                         <div class="flex items-center gap-3">
                             <p class="font-semibold text-white">{{ $property->name }}</p>
                             <span class="px-2 py-0.5 rounded text-xs bg-slate-700 text-slate-300">{{ ucfirst($property->type) }}</span>
@@ -47,8 +51,9 @@
                             <span><span class="text-emerald-400 font-medium">{{ $property->occupied_units_count }}</span> occupied</span>
                             <span><span class="text-yellow-400 font-medium">{{ $property->vacant_units_count }}</span> vacant</span>
                         </div>
+                        </div>
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 shrink-0">
                         <a href="{{ route('properties.units.index', $property) }}"
                            class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs rounded-lg">
                             Units

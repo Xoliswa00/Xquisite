@@ -29,3 +29,21 @@ Schedule::command('ecommerce:expire-pending-orders')->everyTenMinutes()->without
 
 // Ping all active monitored instances every 5 minutes and log health status.
 Schedule::command('instances:check-health')->everyFiveMinutes()->withoutOverlapping();
+
+// Property Management: generate each active lease's rent payment on the 1st of the month.
+Schedule::command('rent:generate-monthly')->monthlyOn(1, '02:00')->withoutOverlapping();
+
+// Property Management: flag pending rent payments/charges past their due date.
+Schedule::command('rent:flag-overdue')->dailyAt('01:00')->withoutOverlapping();
+
+// Property Management: check for data desyncs and a stalled billing cycle; logs via
+// Log::error(), which the 'database' log channel already turns into an admin email alert.
+// Runs after flag-overdue so a non-zero "pending past due" finding actually means
+// something (flag-overdue didn't run), not just routine same-tick duplicate work.
+Schedule::command('property:health-check')->dailyAt('01:30')->withoutOverlapping();
+
+// Property Management: notify tenant owners about leases ending in 30/14/7/1 days.
+Schedule::command('leases:check-expiring')->dailyAt('07:00')->withoutOverlapping();
+
+// Property Management: remind renters whose rent is due within the next few days.
+Schedule::command('rent:send-due-reminders')->dailyAt('08:00')->withoutOverlapping();

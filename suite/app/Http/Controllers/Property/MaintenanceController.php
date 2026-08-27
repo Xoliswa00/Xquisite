@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Property\Models\Contractor;
 use App\Modules\Property\Models\MaintenanceRequest;
 use App\Modules\Property\Models\Property;
 use App\Modules\Property\Models\Unit;
 use App\Modules\Property\Models\Lease;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 
 class MaintenanceController extends Controller
@@ -67,8 +69,38 @@ class MaintenanceController extends Controller
 
     public function show(MaintenanceRequest $maintenance)
     {
-        $maintenance->load(['property', 'unit', 'renter', 'lease']);
-        return view('property.maintenance.show', compact('maintenance'));
+        $maintenance->load(['property', 'unit', 'renter', 'lease', 'photos', 'contractor', 'invitedContractors', 'quotes.contractor']);
+        $contractors = Contractor::where('is_active', true)->orderBy('name')->get();
+        return view('property.maintenance.show', compact('maintenance', 'contractors'));
+    }
+
+    /**
+     * Invite one or more contractors to quote on this job. Whichever quote gets approved becomes the assigned contractor.
+     *
+     * ->sync() writes directly to the pivot table and fires no Eloquent events, so there's
+     * no model to hang Auditable off — logged explicitly instead.
+     */
+    public function assignContractors(Request $request, MaintenanceRequest $maintenance)
+    {
+        $validated = $request->validate([
+            'contractor_ids'   => 'nullable|array',
+            'contractor_ids.*' => 'exists:contractors,id',
+        ]);
+
+        $changes = $maintenance->invitedContractors()->sync($validated['contractor_ids'] ?? []);
+
+        if ($changes['attached'] || $changes['detached']) {
+            AuditService::log(
+                action: 'maintenance_request.contractors_invited',
+                entityType: 'MaintenanceRequest',
+                entityId: $maintenance->id,
+                meta: ['attached' => $changes['attached'], 'detached' => $changes['detached']],
+            );
+        }
+
+        $count = count($validated['contractor_ids'] ?? []);
+        return redirect()->route('maintenance.show', $maintenance)
+            ->with('success', $count > 0 ? "Invited {$count} contractor(s) to quote." : 'No contractors invited.');
     }
 
     public function edit(MaintenanceRequest $maintenance)

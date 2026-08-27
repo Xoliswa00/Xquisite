@@ -70,6 +70,15 @@ class AuditService
             ]];
         }
 
+        if (auth('contractor')->check()) {
+            $contractor = auth('contractor')->user();
+            return [null, [
+                'type'  => 'Contractor',
+                'id'    => $contractor->id,
+                'label' => $contractor->name ?? $contractor->email,
+            ]];
+        }
+
         return [null, null];
     }
 }

@@ -1,26 +1,21 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <div>
-                <h2 class="text-2xl font-bold text-[#D4AF37]">Units &mdash; {{ $property->name }}</h2>
-                <a href="{{ route('properties.show', $property) }}" class="text-sm text-slate-400 hover:text-white">&larr; Back to Property</a>
-            </div>
-            <a href="{{ route('properties.units.create', $property) }}"
-               class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg">
-                + Add Unit
-            </a>
-        </div>
-    </x-slot>
+    <x-slot name="header">Units &mdash; {{ $property->name }}</x-slot>
 
     <div class="max-w-7xl mx-auto p-6 space-y-6">
 
-        @if(session('success'))
-            <div class="p-4 bg-emerald-900/30 border border-emerald-700 text-emerald-300 rounded-xl text-sm">{{ session('success') }}</div>
-        @endif
-
-        @if(session('error'))
-            <div class="p-4 bg-red-900/30 border border-red-700 text-red-300 rounded-xl text-sm">{{ session('error') }}</div>
-        @endif
+        <div class="flex justify-between items-center">
+            <a href="{{ route('properties.show', $property) }}" class="text-sm text-slate-400 hover:text-white">&larr; Back to Property</a>
+            <div class="flex gap-2">
+                <a href="{{ route('properties.units.bulk-create', $property) }}"
+                   class="bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm px-4 py-2 rounded-lg">
+                    Bulk Add
+                </a>
+                <a href="{{ route('properties.units.create', $property) }}"
+                   class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg">
+                    + Add Unit
+                </a>
+            </div>
+        </div>
 
         <div class="bg-slate-800 rounded-xl overflow-hidden">
             <table class="w-full text-sm summary-on-mobile">
@@ -56,7 +51,7 @@
                                 <span class="px-2 py-0.5 rounded text-xs font-medium
                                     @if($unit->status === 'occupied') bg-emerald-900/40 text-emerald-400
                                     @elseif($unit->status === 'vacant') bg-yellow-900/40 text-yellow-400
-                                    @else bg-orange-900/40 text-orange-400 @endif">
+                                    @else bg-yellow-900/40 text-yellow-400 @endif">
                                     {{ ucfirst($unit->status) }}
                                 </span>
                             </td>

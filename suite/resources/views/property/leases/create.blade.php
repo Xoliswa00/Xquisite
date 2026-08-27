@@ -1,10 +1,5 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-[#D4AF37]">New Lease</h2>
-            <a href="{{ route('leases.index') }}" class="text-sm text-slate-400 hover:text-white">&larr; Back to Leases</a>
-        </div>
-    </x-slot>
+    <x-slot name="header">New Lease</x-slot>
 
     <div class="max-w-2xl mx-auto p-6"
          x-data="{
@@ -94,6 +89,12 @@
                         <input type="date" name="end_date" value="{{ old('end_date') }}"
                                class="w-full bg-slate-700 border-slate-600 text-slate-100 rounded-lg text-sm px-3 py-2">
                     </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Signed Date <span class="text-slate-500">(defaults to today)</span></label>
+                        <input type="date" name="signed_date" value="{{ old('signed_date', date('Y-m-d')) }}"
+                               class="w-full bg-slate-700 border-slate-600 text-slate-100 rounded-lg text-sm px-3 py-2">
+                        <p class="text-xs text-slate-500 mt-1">Used on the generated lease agreement.</p>
+                    </div>
                 </div>
             </div>
 
@@ -135,7 +136,7 @@
                 <a href="{{ route('leases.index') }}"
                    class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm">Cancel</a>
                 <button type="submit"
-                        class="px-5 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg text-sm font-semibold">
+                        class="px-5 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg text-sm font-semibold">
                     Create Lease
                 </button>
             </div>
