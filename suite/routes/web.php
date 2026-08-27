@@ -303,6 +303,11 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('blocked-ips', [\App\Http\Controllers\Admin\BlockedIpController::class, 'store'])->name('blocked-ips.store');
             Route::delete('blocked-ips/{blockedIp}', [\App\Http\Controllers\Admin\BlockedIpController::class, 'destroy'])->name('blocked-ips.destroy');
             Route::delete('blocked-ips-purge', [\App\Http\Controllers\Admin\BlockedIpController::class, 'purgeExpired'])->name('blocked-ips.purge');
+
+            // Security — IP reputation (accounts sharing an IP)
+            Route::get('ip-reputation', [\App\Http\Controllers\Admin\IpReputationController::class, 'index'])->name('ip-reputation.index');
+            Route::post('ip-reputation/verify', [\App\Http\Controllers\Admin\IpReputationController::class, 'verify'])->name('ip-reputation.verify');
+            Route::delete('ip-reputation/{verifiedIp}', [\App\Http\Controllers\Admin\IpReputationController::class, 'unverify'])->name('ip-reputation.unverify');
         });
     });
 

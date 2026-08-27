@@ -160,6 +160,21 @@
                     ]);
                 }
 
+                $sidebarFlaggedIpCount = 0;
+                if (Auth::check() && Auth::user()->can('manage-tenants')) {
+                    $sidebarFlaggedIpCount = \App\Services\Security\IpReputationService::flaggedUnverifiedCount();
+                }
+
+                if ($sidebarFlaggedIpCount > 0) {
+                    $internalNotifications->push([
+                        'id' => 'ip-reputation',
+                        'title' => 'Unusual IP activity',
+                        'message' => "{$sidebarFlaggedIpCount} IP".($sidebarFlaggedIpCount === 1 ? ' is' : 's are')." shared across more than 3 businesses, unverified.",
+                        'url' => route('admin.ip-reputation.index'),
+                        'created_at' => now(),
+                    ]);
+                }
+
                 $notificationCount = $unreadNotificationCount;
 
                 $systemMonitoringRoutes = ['monitoring.*'];

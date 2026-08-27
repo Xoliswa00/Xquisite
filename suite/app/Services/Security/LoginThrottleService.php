@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\RateLimiter;
  */
 class LoginThrottleService
 {
-    private const THRESHOLD = 15;       // failed attempts, any account, within the window
-    private const WINDOW_SECONDS = 900; // 15 minutes
-    private const BLOCK_MINUTES = 60;
+    private const THRESHOLD = 3;         // failed attempts, any account, within the window
+    private const WINDOW_SECONDS = 900;  // 15 minutes
+    private const BLOCK_MINUTES = 5;
 
     public static function recordFailure(string $ip, string $context): void
     {
@@ -30,7 +30,7 @@ class LoginThrottleService
         if ($attempts >= self::THRESHOLD) {
             BlockedIp::block(
                 $ip,
-                "Automated: {$attempts} failed login attempts within 15 minutes ({$context})",
+                "Automated: {$attempts} failed login attempts ({$context}) — auto-releases in " . self::BLOCK_MINUTES . " min",
                 null,
                 self::BLOCK_MINUTES
             );
