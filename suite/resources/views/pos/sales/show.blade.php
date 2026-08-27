@@ -7,8 +7,12 @@
         <div class="bg-slate-800 rounded-xl overflow-hidden" id="receipt">
 
             <!-- Header -->
+            @php $tenant = Auth::user()->tenant; @endphp
             <div class="px-6 py-5 border-b border-slate-700 text-center">
-                <h1 class="text-xl font-bold text-[#D4AF37]">Xquisite Creation</h1>
+                @if(!empty($tenant?->logo_url))
+                    <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}" class="w-10 h-10 rounded-lg object-cover mx-auto mb-2">
+                @endif
+                <h1 class="text-xl font-bold text-[#D4AF37]">{{ $tenant?->name ?? config('app.name') }}</h1>
                 <p class="text-xs text-slate-500 mt-0.5">{{ now()->format('d M Y') }}</p>
             </div>
 

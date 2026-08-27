@@ -20,13 +20,6 @@
         </div>
 
         {{-- Flash messages --}}
-        @if(session('success'))
-            <div class="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-sm">{{ session('success') }}</div>
-        @endif
-        @if(session('info'))
-            <div class="p-4 bg-slate-700/50 border border-slate-600 text-slate-300 rounded-xl text-sm">{{ session('info') }}</div>
-        @endif
-
         {{-- Stats --}}
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
@@ -60,7 +53,7 @@
                     <form method="POST" action="{{ route('admin.billing.batch-generate') }}"
                           onsubmit="return confirm('Generate invoices for all {{ $dueTenants->count() }} tenant(s) now?')">
                         @csrf
-                        <button class="px-4 py-1.5 text-sm bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg transition-colors">
+                        <button class="px-4 py-1.5 text-sm bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg transition-colors">
                             Generate All Now
                         </button>
                     </form>
@@ -115,37 +108,62 @@
             <div class="px-5 py-3 border-b border-slate-800">
                 <p class="font-semibold text-white text-sm">All Tenants</p>
             </div>
-            <table class="w-full text-sm">
-                <thead class="border-b border-slate-800 text-slate-400 text-xs uppercase tracking-wide">
-                    <tr>
-                        <th class="text-left px-5 py-3">Tenant</th>
-                        <th class="text-left px-5 py-3">Plan</th>
-                        <th class="text-left px-5 py-3">Status</th>
-                        <th class="text-left px-5 py-3">Unpaid</th>
-                        <th class="px-5 py-3"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800">
-                    @foreach($tenants as $tenant)
-                        <tr class="hover:bg-slate-800/30">
-                            <td class="px-5 py-4">
-                                <p class="font-medium text-white">{{ $tenant->name }}</p>
-                                <p class="text-xs text-slate-400">{{ $tenant->email }}</p>
-                            </td>
-                            <td class="px-5 py-4 text-slate-300">{{ ucfirst($tenant->plan ?? 'basic') }}</td>
-                            <td class="px-5 py-4">
-                                <span class="px-2 py-0.5 rounded-full text-xs font-medium border {{ $tenant->billingStatusClass() }}">
-                                    {{ $tenant->billingStatusLabel() }}
-                                </span>
-                            </td>
-                            <td class="px-5 py-4 text-slate-300">{{ $tenant->unpaid_count }}</td>
-                            <td class="px-5 py-4">
-                                <a href="{{ route('admin.billing.show', ['tenant' => $tenant->id]) }}" class="text-xs px-3 py-1.5 border border-slate-700 text-slate-300 hover:bg-slate-700 rounded-lg">Manage</a>
-                            </td>
+
+            {{-- Mobile cards (hidden on sm+) --}}
+            <div class="sm:hidden divide-y divide-slate-800">
+                @foreach($tenants as $tenant)
+                    <div class="p-4 space-y-2.5">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="font-medium text-white truncate">{{ $tenant->name }}</p>
+                                <p class="text-xs text-slate-400 truncate">{{ $tenant->email }}</p>
+                            </div>
+                            <span class="shrink-0 px-2 py-0.5 rounded-full text-xs font-medium border {{ $tenant->billingStatusClass() }}">
+                                {{ $tenant->billingStatusLabel() }}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>{{ ucfirst($tenant->plan ?? 'basic') }} &middot; {{ $tenant->unpaid_count }} unpaid</span>
+                            <a href="{{ route('admin.billing.show', ['tenant' => $tenant->id]) }}" class="text-xs px-3 py-1.5 border border-slate-700 text-slate-300 hover:bg-slate-700 rounded-lg">Manage</a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Desktop table (hidden on mobile) --}}
+            <div class="hidden sm:block overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="border-b border-slate-800 text-slate-400 text-xs uppercase tracking-wide">
+                        <tr>
+                            <th class="text-left px-5 py-3">Tenant</th>
+                            <th class="text-left px-5 py-3">Plan</th>
+                            <th class="text-left px-5 py-3">Status</th>
+                            <th class="text-left px-5 py-3">Unpaid</th>
+                            <th class="px-5 py-3"></th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+                        @foreach($tenants as $tenant)
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="px-5 py-4">
+                                    <p class="font-medium text-white">{{ $tenant->name }}</p>
+                                    <p class="text-xs text-slate-400">{{ $tenant->email }}</p>
+                                </td>
+                                <td class="px-5 py-4 text-slate-300">{{ ucfirst($tenant->plan ?? 'basic') }}</td>
+                                <td class="px-5 py-4">
+                                    <span class="px-2 py-0.5 rounded-full text-xs font-medium border {{ $tenant->billingStatusClass() }}">
+                                        {{ $tenant->billingStatusLabel() }}
+                                    </span>
+                                </td>
+                                <td class="px-5 py-4 text-slate-300">{{ $tenant->unpaid_count }}</td>
+                                <td class="px-5 py-4">
+                                    <a href="{{ route('admin.billing.show', ['tenant' => $tenant->id]) }}" class="text-xs px-3 py-1.5 border border-slate-700 text-slate-300 hover:bg-slate-700 rounded-lg">Manage</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         {{ $tenants->links() }}

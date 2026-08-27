@@ -71,7 +71,7 @@
             <form method="POST" action="{{ route('public.quotes.accept', [$quote, $token]) }}" class="flex-1">
                 @csrf
                 <button type="submit"
-                        class="w-full py-3.5 bg-[#0078D4] hover:bg-[#0078D4] text-white font-semibold rounded-xl transition">
+                        class="w-full py-3.5 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition">
                     Accept & Pay Deposit
                 </button>
             </form>
@@ -99,7 +99,10 @@
             </div>
         @endif
 
-        <p class="text-xs text-gray-400 text-center mt-8">Powered by Xquisite Creation · Xquisite Technologies (Pty) Ltd</p>
+        <p class="text-xs text-gray-400 text-center mt-8 inline-flex items-center justify-center gap-1.5 w-full">
+            <img src="/img/android-icon-96x96.png" alt="Xquisite Creations" class="h-4 w-4 object-contain rounded">
+            Powered by Xquisite Creations · Xquisite Technologies (Pty) Ltd
+        </p>
     </div>
 </div>
 </x-guest-layout>

@@ -31,15 +31,15 @@
             {{-- Context-aware create button --}}
             <div class="flex gap-2">
                 <a x-show="tab==='services'" href="{{ route('services.create') }}"
-                   class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
+                   class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
                     + New Service
                 </a>
                 <a x-show="tab==='combos'" href="{{ route('combos.create') }}"
-                   class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
+                   class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
                     + New Combo
                 </a>
                 <a x-show="tab==='promotions'" href="{{ route('promotions.create') }}"
-                   class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
+                   class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
                     + New Promotion
                 </a>
             </div>

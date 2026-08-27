@@ -9,10 +9,6 @@
             <h1 class="text-xl font-bold text-[#D4AF37]">Billing Settings</h1>
         </div>
 
-        @if(session('success'))
-            <div class="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-sm">{{ session('success') }}</div>
-        @endif
-
         @if($errors->any())
             <div class="p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl text-sm">
                 Please fix the errors below before saving.
@@ -184,7 +180,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1.5">Account Name</label>
-                            <input type="text" name="bank_account_name" value="{{ $settings['bank_account_name'] ?? '' }}" class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0078D4]" placeholder="Xquisite Creation (Pty) Ltd">
+                            <input type="text" name="bank_account_name" value="{{ $settings['bank_account_name'] ?? '' }}" class="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0078D4]" placeholder="Xquisite Creations (Pty) Ltd">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1.5">Account Number</label>

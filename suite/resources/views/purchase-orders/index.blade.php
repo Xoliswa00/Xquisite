@@ -9,7 +9,7 @@
                 From Reorder List
             </a>
             <a href="{{ route('purchase-orders.create') }}"
-               class="w-full sm:w-auto text-center bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-5 py-2 rounded-lg">
+               class="w-full sm:w-auto text-center bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-5 py-2 rounded-lg">
                 New Order
             </a>
         </div>

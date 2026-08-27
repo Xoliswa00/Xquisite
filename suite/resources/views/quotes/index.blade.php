@@ -3,17 +3,13 @@
         <div class="flex items-center justify-between gap-3">
             <h2 class="text-xl font-semibold">Quotes</h2>
             <a href="{{ route('quotes.create') }}"
-               class="px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg font-medium whitespace-nowrap">
+               class="px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm rounded-lg font-medium whitespace-nowrap">
                 + New Quote
             </a>
         </div>
     </x-slot>
 
     <div class="py-6 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        @if (session('success'))
-            <div class="mb-6 p-4 bg-emerald-900/50 border border-emerald-700 text-emerald-300 rounded-lg text-sm">{{ session('success') }}</div>
-        @endif
 
         <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden overflow-x-auto">
 

@@ -89,7 +89,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                     </svg>
-                    Proof uploaded — we'll confirm your booking shortly.
+                    Proof uploaded. We'll confirm your booking shortly.
                 </div>
             @else
             <form method="POST"
@@ -140,7 +140,7 @@
 
     <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
         <a href="{{ route('book.my-bookings', $slug) }}"
-           class="px-6 py-3 bg-[#0078D4] hover:bg-[#0078D4] text-white font-semibold rounded-xl transition">
+           class="px-6 py-3 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition">
             View my bookings
         </a>
         <a href="{{ route('book.index', $slug) }}"

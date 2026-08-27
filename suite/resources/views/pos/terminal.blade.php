@@ -108,7 +108,7 @@
                     <p class="text-xs text-slate-400">Customer</p>
                     <p class="text-sm font-medium text-white">{{ $appointment->customer->name }}</p>
                     @if($appointment->customer->phone)
-                        <p class="text-xs text-slate-500">{{ $appointment->customer->phone }}</p>
+                        <p class="text-xs text-slate-500"><x-whatsapp-link :phone="$appointment->customer->phone" :message="'Hi ' . $appointment->customer->name . ', this is ' . (Auth::user()->tenant?->name ?? config('app.name'))" /></p>
                     @endif
                 </div>
             @endif

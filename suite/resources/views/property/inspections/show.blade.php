@@ -3,10 +3,6 @@
 
     <div class="max-w-4xl mx-auto p-6 space-y-6">
 
-        @if(session('success'))
-            <div class="p-4 bg-emerald-900/30 border border-emerald-700 text-emerald-300 rounded-xl text-sm">{{ session('success') }}</div>
-        @endif
-
         {{-- Identity --}}
         <div class="bg-slate-800 rounded-xl p-6">
             <div class="flex flex-wrap items-start justify-between gap-4">

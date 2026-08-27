@@ -13,7 +13,7 @@
                         <p class="text-sm text-slate-400">{{ $staff->email }}</p>
                     @endif
                     @if($staff->phone)
-                        <p class="text-sm text-slate-400">{{ $staff->phone }}</p>
+                        <p class="text-sm text-slate-400"><x-whatsapp-link :phone="$staff->phone" :message="'Hi ' . $staff->name . ', this is ' . (Auth::user()->tenant?->name ?? config('app.name'))" /></p>
                     @endif
                     @if($staff->services->count())
                         <div class="flex flex-wrap gap-1.5 pt-2">

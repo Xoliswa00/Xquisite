@@ -172,7 +172,7 @@
                     @endif
 
                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
-                        <button type="submit" class="w-full sm:w-auto bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-6 py-2 rounded-lg">Create Service</button>
+                        <button type="submit" class="w-full sm:w-auto bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-6 py-2 rounded-lg">Create Service</button>
                         <a href="{{ route('services.index') }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>
                     </div>
                 </form>
@@ -253,10 +253,6 @@
             <div class="bg-slate-800 rounded-xl p-4" x-data="{ icon: '✨', color: 'indigo' }">
                 <h3 class="text-sm font-semibold text-slate-200 mb-3">New Category</h3>
 
-                @if(session('success') && str_contains(session('success'), 'Category created'))
-                    <p class="text-xs text-green-400 mb-2">{{ session('success') }}</p>
-                @endif
-
                 <form method="POST" action="{{ route('service-categories.store') }}" class="space-y-3">
                     @csrf
                     <input type="hidden" name="_redirect" value="services.create">
@@ -289,7 +285,7 @@
                     <input type="hidden" name="is_active" value="1">
 
                     <button type="submit"
-                            class="w-full bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium py-2 rounded-lg transition-colors">
+                            class="w-full bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-medium py-2 rounded-lg transition-colors">
                         + Create Category
                     </button>
                 </form>

@@ -5,13 +5,6 @@
         </div>
     </x-slot>
 
-    @if(session('success'))
-        <div class="mb-4 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{{ session('error') }}</div>
-    @endif
-
     <div class="bg-slate-800 rounded-2xl border border-slate-700">
 
         <div class="px-5 py-4 border-b border-slate-700">
@@ -29,7 +22,7 @@
                             <p class="text-xs text-[#B8D4F0] mt-0.5">{{ $request->module_name }}</p>
                         </div>
                         <span class="shrink-0 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold
-                            {{ $request->status === 'pending'  ? 'bg-amber-500/15 text-amber-300'  :
+                            {{ $request->status === 'pending'  ? 'bg-yellow-500/15 text-yellow-300'  :
                                ($request->status === 'approved' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300') }}">
                             {{ ucfirst($request->status) }}
                         </span>
@@ -104,7 +97,7 @@
                             <td class="px-4 py-4 text-slate-300">{{ $request->user->name }}</td>
                             <td class="px-4 py-4">
                                 <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold
-                                    {{ $request->status === 'pending'  ? 'bg-amber-500/15 text-amber-300'  :
+                                    {{ $request->status === 'pending'  ? 'bg-yellow-500/15 text-yellow-300'  :
                                        ($request->status === 'approved' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300') }}">
                                     {{ ucfirst($request->status) }}
                                 </span>

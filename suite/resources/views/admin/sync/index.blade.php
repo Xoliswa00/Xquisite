@@ -22,12 +22,6 @@
             @endif
         </div>
 
-        @if(session('success'))
-            <div class="p-4 bg-green-900/30 border border-green-700 text-green-300 rounded-lg text-sm">
-                {{ session('success') }}
-            </div>
-        @endif
-
         {{-- Status counters --}}
         <div class="grid grid-cols-4 gap-4">
             @foreach([
@@ -43,7 +37,7 @@
                 <p class="text-3xl font-bold mt-1
                     @if($meta['color'] === 'yellow') text-yellow-400
                     @elseif($meta['color'] === 'blue') text-blue-400
-                    @elseif($meta['color'] === 'green') text-green-400
+                    @elseif($meta['color'] === 'green') text-emerald-400
                     @else text-red-400 @endif">
                     {{ $counts[$status] }}
                 </p>
@@ -98,7 +92,7 @@
                                 <span class="px-2 py-0.5 rounded text-xs
                                     @if($item->status === 'pending') bg-yellow-900/40 text-yellow-300
                                     @elseif($item->status === 'retrying') bg-blue-900/40 text-blue-300
-                                    @elseif($item->status === 'completed') bg-green-900/40 text-green-300
+                                    @elseif($item->status === 'completed') bg-emerald-900/40 text-emerald-300
                                     @else bg-red-900/40 text-red-300 @endif">
                                     {{ ucfirst($item->status) }}
                                 </span>
@@ -108,7 +102,7 @@
                             </td>
                             <td class="px-4 py-3 text-slate-400 text-xs">
                                 @if($item->status === 'completed')
-                                    <span class="text-green-400">Done {{ $item->completed_at?->diffForHumans() }}</span>
+                                    <span class="text-emerald-400">Done {{ $item->completed_at?->diffForHumans() }}</span>
                                 @elseif($item->next_retry_at)
                                     {{ $item->next_retry_at->diffForHumans() }}
                                 @else

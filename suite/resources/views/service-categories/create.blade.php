@@ -60,7 +60,7 @@
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3">
-                <button type="submit" class="px-6 py-2.5 bg-[#0078D4] hover:bg-[#0078D4] text-white font-medium rounded-lg text-sm transition-colors">
+                <button type="submit" class="px-6 py-2.5 bg-[#0078D4] hover:bg-[#0065B8] text-white font-medium rounded-lg text-sm transition-colors">
                     {{ isset($category) ? 'Update' : 'Create Category' }}
                 </button>
                 <a href="{{ route('service-categories.index') }}" class="px-6 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-lg text-sm text-center">Cancel</a>

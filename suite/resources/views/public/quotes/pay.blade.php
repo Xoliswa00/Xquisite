@@ -36,7 +36,10 @@
                class="text-sm text-[#0078D4] hover:text-[#002B5B]">← View full quote</a>
         </div>
 
-        <p class="text-xs text-gray-400 text-center mt-6">Powered by Xquisite Technologies (Pty) Ltd</p>
+        <p class="text-xs text-gray-400 text-center mt-6 inline-flex items-center justify-center gap-1.5 w-full">
+            <img src="/img/android-icon-96x96.png" alt="Xquisite Creations" class="h-4 w-4 object-contain rounded">
+            Powered by Xquisite Technologies (Pty) Ltd
+        </p>
     </div>
 </div>
 </x-guest-layout>

@@ -11,6 +11,7 @@ use App\Services\Tenant\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
 
 class CustomerAuthController extends Controller
@@ -172,6 +173,81 @@ class CustomerAuthController extends Controller
 
         return redirect()->route('book.index', $slug)
             ->with('success', "Welcome, {$customer->name}! Your account is ready — you can now sign in any time.");
+    }
+
+    // ── Forgot / reset password ──────────────────────────────────────────────
+
+    public function showForgotPassword(string $slug)
+    {
+        $tenant = $this->resolveTenant($slug);
+        return view('booking.auth.forgot-password', compact('tenant', 'slug'));
+    }
+
+    public function sendResetLink(string $slug, Request $request)
+    {
+        $this->resolveTenant($slug);
+
+        $request->validate(['email' => 'required|email']);
+
+        $status = Password::broker('customers')->sendResetLink($request->only('email'));
+
+        AuditService::log(
+            action: $status === Password::RESET_LINK_SENT ? 'customer.password_reset_requested' : 'customer.password_reset_request_failed',
+            entityType: 'Customer',
+            meta: ['email' => $request->input('email'), 'tenant_slug' => $slug, 'status' => $status],
+        );
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            LoginThrottleService::recordFailure($request->ip(), 'customer-password-reset');
+        }
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('success', 'A password reset link has been sent to your email.')
+            : back()->withErrors(['email' => __($status)]);
+    }
+
+    public function showResetPassword(string $slug, string $token, Request $request)
+    {
+        $tenant = $this->resolveTenant($slug);
+        $email  = $request->query('email');
+        return view('booking.auth.reset-password', compact('tenant', 'slug', 'token', 'email'));
+    }
+
+    public function resetPassword(string $slug, Request $request)
+    {
+        $this->resolveTenant($slug);
+
+        $request->validate([
+            'token'    => 'required',
+            'email'    => 'required|email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $status = Password::broker('customers')->reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($customer, $password) {
+                $customer->forceFill(['password' => $password])->save();
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            AuditService::log(
+                action: 'customer.password_reset_completed',
+                entityType: 'Customer',
+                meta: ['email' => $request->input('email'), 'tenant_slug' => $slug],
+            );
+
+            return redirect()->route('book.login', $slug)->with('success', 'Your password has been reset. You can now sign in.');
+        }
+
+        AuditService::log(
+            action: 'customer.password_reset_failed',
+            entityType: 'Customer',
+            meta: ['email' => $request->input('email'), 'tenant_slug' => $slug, 'status' => $status],
+        );
+        LoginThrottleService::recordFailure($request->ip(), 'customer-password-reset');
+
+        return back()->withErrors(['email' => __($status)]);
     }
 
     public function logout(string $slug, Request $request)

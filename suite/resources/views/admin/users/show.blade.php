@@ -9,10 +9,6 @@
 
     <div class="space-y-5">
 
-        @if(session('success'))
-            <div class="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">{{ session('success') }}</div>
-        @endif
-
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
             {{-- Basic Info --}}
@@ -93,7 +89,7 @@
                 <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Actions</h3>
                 <div class="space-y-2">
                     <a href="{{ route('admin.users.edit', $user) }}"
-                       class="block w-full text-center px-3 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg text-sm font-medium transition-colors">
+                       class="block w-full text-center px-3 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg text-sm font-medium transition-colors">
                         Edit Account
                     </a>
 

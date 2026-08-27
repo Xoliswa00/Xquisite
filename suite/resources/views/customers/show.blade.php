@@ -13,7 +13,7 @@
                         <p class="text-sm text-slate-400">{{ $customer->email }}</p>
                     @endif
                     @if($customer->phone)
-                        <p class="text-sm text-slate-400">{{ $customer->phone }}</p>
+                        <p class="text-sm text-slate-400"><x-whatsapp-link :phone="$customer->phone" :message="'Hi ' . $customer->name . ', this is ' . (Auth::user()->tenant?->name ?? config('app.name'))" /></p>
                     @endif
                     @if($customer->notes)
                         <p class="text-sm text-slate-500 pt-1">{{ $customer->notes }}</p>
@@ -30,7 +30,7 @@
                 <a href="{{ route('customers.edit', $customer) }}"
                    class="flex-1 sm:flex-none text-center bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Edit</a>
                 <a href="{{ route('appointments.create') }}?customer_id={{ $customer->id }}"
-                   class="flex-1 sm:flex-none text-center bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg font-medium">+ Book</a>
+                   class="flex-1 sm:flex-none text-center bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg font-medium">+ Book</a>
             </div>
         </div>
 

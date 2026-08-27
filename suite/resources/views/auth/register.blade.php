@@ -11,7 +11,7 @@
 
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-[#D4AF37]" style="font-family:'Montserrat',sans-serif">Create your account</h1>
-        <p class="text-sm text-[#2D3748]/60 mt-1">14-day free trial &middot; No credit card required</p>
+        <p class="text-base text-[#2D3748]/75 mt-1">14-day free trial &middot; No credit card required</p>
     </div>
 
     <form method="POST" action="{{ route('register') }}" class="space-y-4">
@@ -126,7 +126,7 @@
         });
     </script>
 
-    <p class="mt-6 text-center text-sm text-[#2D3748]/60">
+    <p class="mt-6 text-center text-base text-[#2D3748]/75">
         Already have an account? <a href="{{ route('login') }}" class="text-[#0078D4] hover:text-[#0065B8] font-medium">Sign in</a>
     </p>
 

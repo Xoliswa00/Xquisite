@@ -57,7 +57,7 @@
                     <input type="text" name="notes" placeholder="Reason (optional)"
                            class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                     <button type="submit"
-                            class="w-full bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg">
+                            class="w-full bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg">
                         Apply
                     </button>
                 </form>

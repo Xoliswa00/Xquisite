@@ -11,10 +11,6 @@
             </a>
         </div>
 
-        @if (session('success'))
-            <div class="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">{{ session('success') }}</div>
-        @endif
-
         @if ($members->isEmpty())
             <div class="bg-slate-800 rounded-xl border border-slate-700 px-6 py-12 text-center">
                 <p class="text-slate-400 text-sm">No team members yet. Add your first one.</p>

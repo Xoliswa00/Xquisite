@@ -16,7 +16,7 @@
         <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-xl">✨</div>
         <div class="flex-1 min-w-0">
             <p class="font-black text-white text-lg leading-tight">{{ $combo->name }}</p>
-            <p class="text-[#B8D4F0] text-sm mt-1">Bundle deal — all {{ $combo->services->count() }} services included</p>
+            <p class="text-[#B8D4F0] text-sm mt-1">Bundle deal, all {{ $combo->services->count() }} services included</p>
         </div>
         <div class="shrink-0 text-right">
             <p class="text-xs text-white/40 line-through">R{{ number_format($combo->total_service_price, 2) }}</p>
@@ -155,7 +155,7 @@
             @endif
             <input type="hidden" name="scheduled_at" x-bind:value="selectedSlot">
             <button type="submit"
-                    class="w-full py-4 bg-[#0078D4] hover:bg-[#0078D4] text-white font-bold rounded-2xl transition text-lg">
+                    class="w-full py-4 bg-[#0078D4] hover:bg-[#0065B8] text-white font-bold rounded-2xl transition text-lg">
                 Continue &rarr;
             </button>
         </form>

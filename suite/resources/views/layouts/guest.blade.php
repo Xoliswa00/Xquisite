@@ -63,7 +63,7 @@
                     <span class="text-[#0078D4]">built around you.</span>
                 </h2>
                 <p class="mt-4 text-[#B8D4F0] leading-relaxed text-sm">
-                    Custom software, automation, data analytics, and digital platforms — one platform for your entire operation.
+                    Custom software, automation, data analytics, and digital platforms, all in one platform for your entire operation.
                 </p>
                 <p class="mt-3 f-mont font-semibold italic text-[#D4AF37] text-sm">Understand Your Why.</p>
             </div>

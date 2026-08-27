@@ -10,12 +10,6 @@
         </div>
     </x-slot>
 
-    @if(session('success'))
-        <div class="mb-4 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">
-            {{ session('success') }}
-        </div>
-    @endif
-
     <div class="grid lg:grid-cols-3 gap-6">
 
         <!-- Left: Items + Summary -->
@@ -80,7 +74,7 @@
                     @if($order->customer_phone)
                         <div>
                             <p class="text-xs text-slate-400 mb-1">Phone</p>
-                            <p class="text-slate-300">{{ $order->customer_phone }}</p>
+                            <p class="text-slate-300"><x-whatsapp-link :phone="$order->customer_phone" :message="'Hi ' . $order->customer_name . ', this is ' . (Auth::user()->tenant?->name ?? config('app.name')) . ' regarding order ' . $order->reference" /></p>
                         </div>
                     @endif
                     <div>

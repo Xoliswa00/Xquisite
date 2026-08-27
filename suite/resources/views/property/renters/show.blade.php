@@ -53,7 +53,13 @@
                 </div>
                 <div>
                     <p class="text-xs text-slate-400 uppercase font-semibold">Phone</p>
-                    <p class="text-slate-200 mt-0.5">{{ $renter->phone ?? '—' }}</p>
+                    <p class="text-slate-200 mt-0.5">
+                        @if($renter->phone)
+                            <x-whatsapp-link :phone="$renter->phone" :message="'Hi ' . $renter->name . ', this is ' . (Auth::user()->tenant?->name ?? config('app.name'))" />
+                        @else
+                            —
+                        @endif
+                    </p>
                 </div>
                 <div>
                     <p class="text-xs text-slate-400 uppercase font-semibold">ID Number</p>
@@ -65,7 +71,13 @@
                 </div>
                 <div>
                     <p class="text-xs text-slate-400 uppercase font-semibold">Emergency Phone</p>
-                    <p class="text-slate-200 mt-0.5">{{ $renter->emergency_contact_phone ?? '—' }}</p>
+                    <p class="text-slate-200 mt-0.5">
+                        @if($renter->emergency_contact_phone)
+                            <x-whatsapp-link :phone="$renter->emergency_contact_phone" :message="'Hi ' . ($renter->emergency_contact_name ?: 'there') . ', this is ' . (Auth::user()->tenant?->name ?? config('app.name')) . ' regarding ' . $renter->name" />
+                        @else
+                            —
+                        @endif
+                    </p>
                 </div>
                 @if($renter->notes)
                 <div class="col-span-full">

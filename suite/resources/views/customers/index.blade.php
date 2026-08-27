@@ -20,7 +20,7 @@
                 </div>
             </form>
             <a href="{{ route('customers.create') }}"
-               class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
+               class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
                 + New Customer
             </a>
         </div>
@@ -73,7 +73,13 @@
                                 </a>
                             </td>
                             <td class="px-4 py-3 text-slate-300">{{ $customer->email ?? '—' }}</td>
-                            <td class="px-4 py-3 text-slate-300">{{ $customer->phone ?? '—' }}</td>
+                            <td class="px-4 py-3 text-slate-300">
+                                @if($customer->phone)
+                                    <x-whatsapp-link :phone="$customer->phone" :message="'Hi ' . $customer->name . ', this is ' . (Auth::user()->tenant?->name ?? config('app.name'))" />
+                                @else
+                                    —
+                                @endif
+                            </td>
                             <td class="px-4 py-3">
                                 @if($customer->is_active)
                                     <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>

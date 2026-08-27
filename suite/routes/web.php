@@ -401,14 +401,20 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
     // ── Customer auth routes (guests only — redirect if already logged in) ───
     Route::middleware('guest:customer')->group(function () {
         Route::get('/login',              [CustomerAuthController::class, 'showLogin'])->name('login');
-        Route::post('/login',             [CustomerAuthController::class, 'login'])->name('login.post');
+        Route::post('/login',             [CustomerAuthController::class, 'login'])->name('login.post')->middleware('throttle:auth');
         Route::get('/register',           [CustomerAuthController::class, 'showRegister'])->name('register');
         Route::post('/register',          [CustomerAuthController::class, 'register'])->name('register.post');
         // Account claim — for manually-added customers who want to set up their own login
         Route::get('/claim',              [CustomerAuthController::class, 'showClaim'])->name('claim');
-        Route::post('/claim',             [CustomerAuthController::class, 'lookupByPhone'])->name('claim.lookup');
+        Route::post('/claim',             [CustomerAuthController::class, 'lookupByPhone'])->name('claim.lookup')->middleware('throttle:auth');
         Route::get('/claim/setup',        [CustomerAuthController::class, 'showClaimSetup'])->name('claim.setup');
         Route::post('/claim/setup',       [CustomerAuthController::class, 'completeClaimSetup'])->name('claim.complete');
+
+        // Forgot / reset password
+        Route::get('/forgot-password',   [CustomerAuthController::class, 'showForgotPassword'])->name('password.request');
+        Route::post('/forgot-password',  [CustomerAuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:auth');
+        Route::get('/reset-password/{token}', [CustomerAuthController::class, 'showResetPassword'])->name('password.reset');
+        Route::post('/reset-password',   [CustomerAuthController::class, 'resetPassword'])->name('password.store');
     });
 
     // ── Requires customer auth ────────────────────────────────────────────────
@@ -434,8 +440,14 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
 Route::prefix('rent/{slug}')->name('rent.')->group(function () {
     // Public auth routes — no guard needed
     Route::get('/login',        [RenterAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login',       [RenterAuthController::class, 'login'])->name('login.post');
+    Route::post('/login',       [RenterAuthController::class, 'login'])->name('login.post')->middleware('throttle:auth');
     Route::post('/logout',      [RenterAuthController::class, 'logout'])->name('logout');
+
+    // Forgot / reset password — public, no guard needed
+    Route::get('/forgot-password',   [RenterAuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password',  [RenterAuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:auth');
+    Route::get('/reset-password/{token}', [RenterAuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password',   [RenterAuthController::class, 'resetPassword'])->name('password.store');
 
     // Protected portal pages — renter guard enforced at route level
     Route::middleware('auth:renter')->group(function () {
@@ -457,6 +469,12 @@ Route::prefix('contractor/{slug}')->name('contractor.')->group(function () {
     Route::get('/login',   [ContractorAuthController::class, 'showLogin'])->name('login');
     Route::post('/login',  [ContractorAuthController::class, 'login'])->name('login.post')->middleware('throttle:auth');
     Route::post('/logout', [ContractorAuthController::class, 'logout'])->name('logout');
+
+    // Forgot / reset password — public, no guard needed
+    Route::get('/forgot-password',   [ContractorAuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password',  [ContractorAuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:auth');
+    Route::get('/reset-password/{token}', [ContractorAuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password',   [ContractorAuthController::class, 'resetPassword'])->name('password.store');
 
     // Protected portal pages — contractor guard enforced at route level
     Route::middleware('auth:contractor')->group(function () {
@@ -566,7 +584,9 @@ Route::get('/api/health', function () {
     ], $critical ? 503 : 200);
 })->name('health');
 
-// Client-side JS error collector — no auth, CSRF-exempt, CORS-enabled for cross-project beacons
+// Client-side JS error collector — CSRF-exempt, CORS-enabled for cross-project beacons.
+// Bearer token optional: present + valid attributes to that MonitoredInstance by name;
+// present + invalid is rejected; absent falls back to path-based bucketing (first-party pages).
 Route::options('/js-error', [App\Http\Controllers\JsErrorController::class, 'preflight']);
 Route::post('/js-error', [App\Http\Controllers\JsErrorController::class, 'store'])
     ->middleware('throttle:30,1')
