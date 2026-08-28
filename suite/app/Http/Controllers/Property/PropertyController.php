@@ -9,6 +9,7 @@ use App\Modules\Property\Models\Lease;
 use App\Modules\Property\Models\RentPayment;
 use App\Modules\Property\Models\MaintenanceRequest;
 use App\Rules\SouthAfricanIdNumber;
+use App\Rules\SouthAfricanPhoneNumber;
 use Illuminate\Http\Request;
 
 class PropertyController extends Controller
@@ -52,7 +53,7 @@ class PropertyController extends Controller
             'description'   => 'nullable|string',
             'owner_name'    => 'nullable|string|max:255',
             'owner_email'   => 'nullable|email|max:255',
-            'owner_phone'   => 'nullable|string|max:30',
+            'owner_phone'   => ['nullable', new SouthAfricanPhoneNumber],
             'owner_id_number' => ['nullable', new SouthAfricanIdNumber],
             'annual_increase_percentage' => 'nullable|numeric|min:0|max:100',
             'photos'        => 'nullable|array',
@@ -107,7 +108,7 @@ class PropertyController extends Controller
             'description'   => 'nullable|string',
             'owner_name'    => 'nullable|string|max:255',
             'owner_email'   => 'nullable|email|max:255',
-            'owner_phone'   => 'nullable|string|max:30',
+            'owner_phone'   => ['nullable', new SouthAfricanPhoneNumber],
             'owner_id_number' => ['nullable', new SouthAfricanIdNumber],
             'annual_increase_percentage' => 'nullable|numeric|min:0|max:100',
             'is_active'     => 'boolean',

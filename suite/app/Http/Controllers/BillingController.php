@@ -8,6 +8,7 @@ use App\Models\Modules\Core\Models\SystemLog;
 use App\Models\PlatformInvoice;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Rules\SouthAfricanPhoneNumber;
 use App\Notifications\BillingPopSubmittedNotification;
 use App\Services\AuditService;
 use App\Services\PlatformBillingService;
@@ -325,7 +326,7 @@ class BillingController extends Controller
             'company_name'         => 'nullable|string|max:100',
             'company_address'      => 'nullable|string|max:500',
             'company_email'        => 'nullable|email|max:100',
-            'company_phone'        => 'nullable|string|max:30',
+            'company_phone'        => ['nullable', new SouthAfricanPhoneNumber],
             'company_vat'          => 'nullable|string|max:30',
             'company_registration' => 'nullable|string|max:40',
             'company_website'      => 'nullable|string|max:100',
