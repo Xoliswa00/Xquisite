@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -33,7 +34,12 @@ Schedule::command('billing:process-queue')->everyFiveMinutes()->withoutOverlappi
 Schedule::command('ecommerce:expire-pending-orders')->everyTenMinutes()->withoutOverlapping();
 
 // Ping all active monitored instances every 5 minutes and log health status.
-Schedule::command('instances:check-health')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('instances:check-health')->everyFiveMinutes()->withoutOverlapping()
+    ->onFailure(fn () => Log::error('Instance health check failed'));
+
+// Wipe and re-seed the demo tenant so prospects always see clean sample data,
+// not whatever the last visitor (or QA) left behind.
+Schedule::command('demo:reset --force')->everySixHours()->withoutOverlapping()->runInBackground();
 
 // Property Management: generate each active lease's rent payment on the 1st of the month.
 Schedule::command('rent:generate-monthly')->monthlyOn(1, '02:00')->withoutOverlapping();
