@@ -193,8 +193,10 @@
 
     {{-- ═══════════════ DESKTOP SIDEBAR — accordion ═══════════════ --}}
     <aside class="hidden lg:flex lg:flex-col w-64 shrink-0 bg-slate-900 border-r border-slate-800">
-        <div class="px-5 py-4 border-b border-slate-800 flex items-center gap-2.5" style="background:linear-gradient(135deg,rgba(0,120,212,.1) 0%,transparent 60%)">
-            <img src="/img/android-icon-96x96.png" alt="Xquisite" class="h-8 w-8 object-contain shrink-0 rounded-lg">
+        <div class="px-5 py-4 border-b border-slate-800 flex items-center gap-3" style="background:linear-gradient(135deg,rgba(0,120,212,.1) 0%,transparent 60%)">
+            <div class="shrink-0 p-1.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
+                <img src="/img/android-icon-96x96.png" alt="Xquisite" class="h-7 w-7 object-contain rounded-md">
+            </div>
             <div class="min-w-0">
                 <span class="text-base font-bold tracking-wide text-white" style="font-family:'Montserrat',sans-serif">XQUISITE <span class="text-[#D4AF37]">CREATIONS</span></span>
                 <p class="text-[10px] text-slate-500 mt-0.5 tracking-wide italic" style="font-family:'Montserrat',sans-serif">Understand Your Why.</p>
