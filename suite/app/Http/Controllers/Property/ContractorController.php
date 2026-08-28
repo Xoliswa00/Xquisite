@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Property;
 use App\Http\Controllers\Controller;
 use App\Mail\ContractorPortalInvite;
 use App\Modules\Property\Models\Contractor;
+use App\Rules\SouthAfricanPhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -40,7 +41,7 @@ class ContractorController extends Controller
             'company_name' => 'nullable|string|max:255',
             'trade'        => 'nullable|string|max:255',
             'email'        => 'nullable|email|max:255|unique:contractors,email',
-            'phone'        => 'nullable|string|max:30',
+            'phone'        => ['nullable', new SouthAfricanPhoneNumber],
             'notes'        => 'nullable|string',
         ]);
 
@@ -71,7 +72,7 @@ class ContractorController extends Controller
             'company_name' => 'nullable|string|max:255',
             'trade'        => 'nullable|string|max:255',
             'email'        => 'nullable|email|max:255|unique:contractors,email,' . $contractor->id,
-            'phone'        => 'nullable|string|max:30',
+            'phone'        => ['nullable', new SouthAfricanPhoneNumber],
             'is_active'    => 'boolean',
             'notes'        => 'nullable|string',
         ]);

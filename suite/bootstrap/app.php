@@ -58,6 +58,28 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) use ($portalLoginRedirect): void {
+        // Last-resort net for any DB integrity violation that slips past
+        // application-level validation (a race condition, a spot a validation
+        // rule doesn't cover yet, etc.) — across every portal, not just the
+        // ones we've explicitly hardened. Never let one of these reach the
+        // user as a raw stack trace/500; the exception is still fully logged
+        // to system_logs via the report() callback below regardless.
+        $exceptions->render(function (\Illuminate\Database\UniqueConstraintViolationException $e, $request) {
+            $message = 'That didn\'t save — this information (ID number, email, or phone number) already belongs to another record. Please check for a duplicate and try again.';
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $message], 409)
+                : back()->withInput()->withErrors(['error' => $message]);
+        });
+
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, $request) {
+            $message = 'That didn\'t save due to a data problem on our end. Please try again — if it keeps happening, let us know.';
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $message], 500)
+                : back()->withInput()->withErrors(['error' => $message]);
+        });
+
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) use ($portalLoginRedirect) {
             $message = 'Your session expired. Please sign in again.';
 

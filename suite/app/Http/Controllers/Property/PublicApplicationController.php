@@ -7,6 +7,8 @@ use App\Models\Tenant;
 use App\Modules\Property\Models\Applicant;
 use App\Modules\Property\Models\Property;
 use App\Modules\Property\Models\Unit;
+use App\Rules\SouthAfricanIdNumber;
+use App\Rules\SouthAfricanPhoneNumber;
 use App\Services\Tenant\TenantContext;
 use Illuminate\Http\Request;
 
@@ -39,8 +41,8 @@ class PublicApplicationController extends Controller
             'unit_id'                 => 'nullable|exists:units,id',
             'name'                    => 'required|string|max:255',
             'email'                   => 'nullable|email|max:255',
-            'phone'                   => 'nullable|string|max:30',
-            'id_number'               => 'nullable|string|max:50',
+            'phone'                   => ['nullable', new SouthAfricanPhoneNumber],
+            'id_number'               => ['nullable', new SouthAfricanIdNumber],
             'employer'                => 'nullable|string|max:255',
             'employment_type'         => 'nullable|in:permanent,contract,self_employed,unemployed,other',
             'employment_months'       => 'nullable|integer|min:0',
@@ -48,7 +50,7 @@ class PublicApplicationController extends Controller
             'monthly_expenses'        => 'nullable|numeric|min:0',
             'number_of_occupants'     => 'nullable|integer|min:0|max:255',
             'previous_landlord_name'  => 'nullable|string|max:255',
-            'previous_landlord_phone' => 'nullable|string|max:30',
+            'previous_landlord_phone' => ['nullable', new SouthAfricanPhoneNumber],
             'notes'                   => 'nullable|string',
             'documents.id_copy.*'             => 'file|mimes:jpg,jpeg,png,heic,heif,webp,pdf|max:15360',
             'documents.proof_of_income.*'     => 'file|mimes:jpg,jpeg,png,heic,heif,webp,pdf|max:15360',

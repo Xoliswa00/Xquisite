@@ -7,6 +7,9 @@ use App\Modules\Property\Models\Applicant;
 use App\Modules\Property\Models\Property;
 use App\Modules\Property\Models\Renter;
 use App\Modules\Property\Models\Unit;
+use App\Rules\SouthAfricanIdNumber;
+use App\Rules\SouthAfricanPhoneNumber;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -40,8 +43,8 @@ class ApplicantController extends Controller
             'unit_id'        => 'nullable|exists:units,id',
             'name'           => 'required|string|max:255',
             'email'          => 'nullable|email|max:255',
-            'phone'          => 'nullable|string|max:30',
-            'id_number'      => 'nullable|string|max:50',
+            'phone'          => ['nullable', new SouthAfricanPhoneNumber],
+            'id_number'      => ['nullable', new SouthAfricanIdNumber],
             'employer'       => 'nullable|string|max:255',
             'employment_type'   => 'nullable|in:permanent,contract,self_employed,unemployed,other',
             'employment_months' => 'nullable|integer|min:0',
@@ -49,7 +52,7 @@ class ApplicantController extends Controller
             'monthly_expenses'   => 'nullable|numeric|min:0',
             'number_of_occupants'      => 'nullable|integer|min:0|max:255',
             'previous_landlord_name'   => 'nullable|string|max:255',
-            'previous_landlord_phone'  => 'nullable|string|max:30',
+            'previous_landlord_phone'  => ['nullable', new SouthAfricanPhoneNumber],
             'notes'          => 'nullable|string',
         ]);
 
@@ -80,8 +83,8 @@ class ApplicantController extends Controller
             'unit_id'        => 'nullable|exists:units,id',
             'name'           => 'required|string|max:255',
             'email'          => 'nullable|email|max:255',
-            'phone'          => 'nullable|string|max:30',
-            'id_number'      => 'nullable|string|max:50',
+            'phone'          => ['nullable', new SouthAfricanPhoneNumber],
+            'id_number'      => ['nullable', new SouthAfricanIdNumber],
             'employer'       => 'nullable|string|max:255',
             'employment_type'   => 'nullable|in:permanent,contract,self_employed,unemployed,other',
             'employment_months' => 'nullable|integer|min:0',
@@ -89,7 +92,7 @@ class ApplicantController extends Controller
             'monthly_expenses'   => 'nullable|numeric|min:0',
             'number_of_occupants'      => 'nullable|integer|min:0|max:255',
             'previous_landlord_name'   => 'nullable|string|max:255',
-            'previous_landlord_phone'  => 'nullable|string|max:30',
+            'previous_landlord_phone'  => ['nullable', new SouthAfricanPhoneNumber],
             'notes'          => 'nullable|string',
         ]);
 
@@ -148,26 +151,51 @@ class ApplicantController extends Controller
                 ->with('success', 'Applicant already converted to renter.');
         }
 
-        $renter = DB::transaction(function () use ($applicant) {
-            // Lock so two concurrent clicks can't both pass the status check
-            // above and each create their own Renter row.
-            $applicant = Applicant::whereKey($applicant->id)->lockForUpdate()->firstOrFail();
+        // Different applicants can end up sharing an email (shared inbox, typo,
+        // someone applying on another person's behalf) — the public application
+        // link takes no login and never checks this at submission time. Renters
+        // are unique per tenant by email (used for portal login), so catch the
+        // clash here with a clear message instead of letting a raw
+        // UniqueConstraintViolationException reach the page.
+        if ($applicant->email) {
+            $existingRenter = Renter::where('email', $applicant->email)->first();
 
-            abort_unless($applicant->status === 'approved', 422, 'Only approved applicants can be converted to a renter.');
+            if ($existingRenter) {
+                return back()->withErrors([
+                    'email' => "Can't convert — {$existingRenter->name} is already a renter using this email. "
+                        . 'Check whether this is a duplicate application, or fix the applicant\'s email before converting.',
+                ]);
+            }
+        }
 
-            $renter = Renter::create([
-                'applicant_id' => $applicant->id,
-                'name'         => $applicant->name,
-                'email'        => $applicant->email,
-                'phone'        => $applicant->phone,
-                'id_number'    => $applicant->id_number,
-                'notes'        => $applicant->notes,
+        try {
+            $renter = DB::transaction(function () use ($applicant) {
+                // Lock so two concurrent clicks can't both pass the status check
+                // above and each create their own Renter row.
+                $applicant = Applicant::whereKey($applicant->id)->lockForUpdate()->firstOrFail();
+
+                abort_unless($applicant->status === 'approved', 422, 'Only approved applicants can be converted to a renter.');
+
+                $renter = Renter::create([
+                    'applicant_id' => $applicant->id,
+                    'name'         => $applicant->name,
+                    'email'        => $applicant->email,
+                    'phone'        => $applicant->phone,
+                    'id_number'    => $applicant->id_number,
+                    'notes'        => $applicant->notes,
+                ]);
+
+                $applicant->update(['status' => 'converted']);
+
+                return $renter;
+            });
+        } catch (UniqueConstraintViolationException) {
+            // Belt-and-braces for the race the pre-check above can't fully close:
+            // two different duplicate-email applicants converted at the same instant.
+            return back()->withErrors([
+                'email' => 'Can\'t convert — another renter with this email was just created. Check for a duplicate application.',
             ]);
-
-            $applicant->update(['status' => 'converted']);
-
-            return $renter;
-        });
+        }
 
         return redirect()->route('renters.show', $renter)->with('success', 'Applicant converted to renter. You can now create their lease.');
     }

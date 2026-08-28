@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Booking;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Modules\Booking\Models\Customer;
+use App\Rules\SouthAfricanPhoneNumber;
 use App\Services\AuditService;
 use App\Services\Security\LoginThrottleService;
 use App\Services\Tenant\TenantContext;
@@ -74,7 +75,7 @@ class CustomerAuthController extends Controller
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:customers,email',
-            'phone'    => 'nullable|string|max:50',
+            'phone'    => ['nullable', new SouthAfricanPhoneNumber],
             'password' => 'required|string|min:8|confirmed',
         ]);
 
