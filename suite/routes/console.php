@@ -8,6 +8,11 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+// Process queued jobs (emails, notifications) every minute. QUEUE_CONNECTION=database
+// has no persistent worker on shared hosting, so this piggybacks on the artisan
+// scheduler's own cron entry instead of needing a separate long-running process.
+Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->everyMinute()->withoutOverlapping();
+
 // Retry pending billing sync items every 5 minutes.
 Schedule::command('billing:sync-queue')->everyFiveMinutes()->withoutOverlapping();
 
