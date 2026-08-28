@@ -3,9 +3,28 @@
 
     <div class="max-w-7xl mx-auto p-6 space-y-6">
 
-        <div class="flex justify-end">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            @php $listingsLink = route('listings.index', Auth::user()->tenant->slug); @endphp
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 bg-slate-800 rounded-lg px-3 py-2 flex-1 min-w-0">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-xs text-slate-400 uppercase font-semibold shrink-0">Public Listings Page</span>
+                    <span class="text-xs text-slate-300 truncate min-w-0 flex-1">{{ $listingsLink }}</span>
+                </div>
+                <div class="flex items-center gap-2 shrink-0" x-data="{ copied: false }">
+                    <button type="button"
+                            @click="navigator.clipboard.writeText('{{ $listingsLink }}').then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                            class="shrink-0 text-xs font-semibold px-2 py-1 rounded-md transition-all"
+                            :class="copied ? 'bg-emerald-900/40 text-emerald-400' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'">
+                        <span x-text="copied ? 'Copied!' : 'Copy Link'"></span>
+                    </button>
+                    <a href="{{ $listingsLink }}" target="_blank" rel="noopener"
+                       class="shrink-0 text-xs font-semibold px-2 py-1 rounded-md bg-[#0078D4] hover:bg-[#0065B8] text-white transition-colors">
+                        View &rarr;
+                    </a>
+                </div>
+            </div>
             <a href="{{ route('properties.create') }}"
-               class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg">
+               class="shrink-0 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg text-center">
                 + Add Property
             </a>
         </div>

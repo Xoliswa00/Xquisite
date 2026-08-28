@@ -37,6 +37,7 @@ use App\Http\Controllers\Booking\CustomerAuthController;
 use App\Http\Controllers\Booking\CustomerPortalController;
 use App\Http\Controllers\Property\ApplicantController;
 use App\Http\Controllers\Property\PublicApplicationController;
+use App\Http\Controllers\Property\PropertyListingController;
 use App\Http\Controllers\Property\PropertyController;
 use App\Http\Controllers\Property\PropertyImageController;
 use App\Http\Controllers\Property\UnitController;
@@ -486,6 +487,10 @@ Route::prefix('contractor/{slug}')->name('contractor.')->group(function () {
         Route::post('/jobs/{job}/photos',     [ContractorPortalController::class, 'storePhoto'])->name('jobs.photos');
     });
 });
+
+// Public "browse available rentals" listing page (no auth) — discovery layer in
+// front of the apply flow below; a visitor doesn't need a direct property link.
+Route::get('listings/{slug}', [PropertyListingController::class, 'index'])->name('listings.index');
 
 // Public rental application (no auth) — a link staff can share with a prospective applicant
 // so they fill in their own details and upload supporting documents directly.
