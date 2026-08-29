@@ -13,7 +13,7 @@
                 @endif
             </form>
             <a href="{{ route('staff.create') }}"
-               class="w-full sm:w-auto text-center bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
+               class="w-full sm:w-auto text-center bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
                 + Add Staff
             </a>
         </div>
@@ -67,7 +67,10 @@
                             </td>
                             <td class="px-4 py-3 text-slate-300">{{ $member->role ?? '—' }}</td>
                             <td class="px-4 py-3 text-slate-400 text-xs">
-                                {{ $member->email ?? '' }}<br>{{ $member->phone ?? '' }}
+                                {{ $member->email ?? '' }}<br>
+                                @if($member->phone)
+                                    <x-whatsapp-link :phone="$member->phone" :message="'Hi ' . $member->name . ', this is ' . (Auth::user()->tenant?->name ?? config('app.name'))" />
+                                @endif
                             </td>
                             <td class="px-4 py-3 text-slate-300">{{ $member->appointments_count }}</td>
                             <td class="px-4 py-3">

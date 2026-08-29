@@ -30,12 +30,6 @@
             </div>
         </div>
 
-        @if(session('success'))
-            <div class="p-3 bg-green-900/30 border border-green-700 text-green-300 rounded-lg text-sm">
-                {{ session('success') }}
-            </div>
-        @endif
-
         {{-- Filters --}}
         <form method="GET" id="filter-form" class="grid grid-cols-2 sm:flex flex-wrap gap-2 items-center">
             <select name="level"
@@ -84,7 +78,7 @@
                     <input type="hidden" name="{{ $k }}" value="{{ $v }}">
                 @endforeach
                 <button type="submit"
-                        class="px-3 py-2 bg-slate-700 hover:bg-green-800 text-slate-300 hover:text-green-200 text-sm rounded-lg transition-colors whitespace-nowrap">
+                        class="px-3 py-2 bg-slate-700 hover:bg-emerald-800 text-slate-300 hover:text-emerald-200 text-sm rounded-lg transition-colors whitespace-nowrap">
                     Resolve all
                 </button>
             </form>
@@ -149,7 +143,7 @@
                                 'new'         => 'bg-red-900/40 text-red-300',
                                 'acknowledged'=> 'bg-yellow-900/40 text-yellow-300',
                                 'in_progress' => 'bg-blue-900/40 text-blue-300',
-                                default       => 'bg-green-900/40 text-green-300',
+                                default       => 'bg-emerald-900/40 text-emerald-300',
                             };
                         @endphp
                         <tr class="hover:bg-slate-700/30" :class="selected.includes({{ $log->id }}) ? 'bg-slate-700/50' : ''">
@@ -197,7 +191,7 @@
                         'new'         => 'bg-red-900/40 text-red-300',
                         'acknowledged'=> 'bg-yellow-900/40 text-yellow-300',
                         'in_progress' => 'bg-blue-900/40 text-blue-300',
-                        default       => 'bg-green-900/40 text-green-300',
+                        default       => 'bg-emerald-900/40 text-emerald-300',
                     };
                 @endphp
                 <div class="bg-slate-800 rounded-xl px-4 py-3 space-y-2"

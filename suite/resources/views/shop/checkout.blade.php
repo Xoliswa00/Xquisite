@@ -133,7 +133,7 @@
                                        x-model="payment" class="accent-[#0078D4]">
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-gray-900">Manual EFT</p>
-                                    <p class="text-xs text-gray-400 mt-0.5">Pay via bank transfer — we'll confirm your order once received</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">Pay via bank transfer. We'll confirm your order once received</p>
                                 </div>
                                 <svg class="w-8 h-8 text-[#0078D4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>

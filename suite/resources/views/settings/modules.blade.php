@@ -1,19 +1,6 @@
 <x-app-layout>
     <x-slot name="header">My Modules</x-slot>
 
-    @if(session('info'))
-        <div class="mb-6 px-5 py-4 rounded-xl bg-[#0078D4]/10 border border-[#0078D4]/30 text-[#B8D4F0] text-sm flex items-start gap-3">
-            <svg class="w-5 h-5 text-[#0078D4] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span>{{ session('info') }}</span>
-        </div>
-    @endif
-
-    @if(session('success'))
-        <div class="mb-4 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">
-            {{ session('success') }}
-        </div>
-    @endif
-
     {{-- Summary strip --}}
     <div class="grid sm:grid-cols-3 gap-4 mb-8">
         <div class="bg-slate-800 rounded-2xl border border-slate-700 p-4">
@@ -77,7 +64,7 @@
                                 <p class="text-[10px] text-slate-600 mb-3">Active since {{ $tenantModule->activated_at->format('d M Y') }}</p>
                             @endif
                             @if ($pendingRequest)
-                                <div class="px-3 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
+                                <div class="px-3 py-2.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-300">
                                     A modification request is pending review.
                                 </div>
                             @else
@@ -96,7 +83,7 @@
                             @endif
                         @else
                             @if ($pendingRequest)
-                                <div class="px-3 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
+                                <div class="px-3 py-2.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-300">
                                     Activation request pending review.
                                 </div>
                             @else
@@ -159,7 +146,7 @@
                         @if ($isActive)
                             <p class="text-[10px] text-slate-600 text-center">Active — early access</p>
                         @elseif ($pendingRequest)
-                            <div class="px-3 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
+                            <div class="px-3 py-2.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-300">
                                 Early access request pending.
                             </div>
                         @else

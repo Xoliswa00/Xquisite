@@ -4,9 +4,12 @@ namespace App\Modules\Ecommerce\Models;
 
 use App\Modules\POS\Models\Product;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\Auditable;
 
 class OrderItem extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'order_id',
         'product_id',

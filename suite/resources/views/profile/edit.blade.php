@@ -117,7 +117,7 @@
             </div>
             <form method="POST" action="{{ route('profile.logo.update') }}" enctype="multipart/form-data" class="px-8 py-6">
                 @csrf
-                <div class="flex items-center gap-6">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
                     {{-- Current logo preview --}}
                     <div class="shrink-0">
                         @if($tenant->logo_url)
@@ -130,16 +130,16 @@
                         @endif
                     </div>
                     {{-- Upload input --}}
-                    <div class="flex-1 space-y-3" x-data="{ fileName: '' }">
+                    <div class="flex-1 min-w-0 space-y-3" x-data="{ fileName: '' }">
                         <label class="block text-sm font-medium text-slate-300">
                             {{ $tenant->logo_url ? 'Replace logo' : 'Upload logo' }}
                         </label>
-                        <label class="flex items-center gap-3 cursor-pointer">
+                        <label class="flex items-center gap-3 cursor-pointer flex-wrap">
                             <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-sm text-slate-300 transition">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                 Choose file
                             </span>
-                            <span class="text-sm text-slate-400" x-text="fileName || 'No file selected'"></span>
+                            <span class="text-sm text-slate-400 truncate" x-text="fileName || 'No file selected'"></span>
                             <input type="file" name="logo" accept="image/*" class="sr-only"
                                    @change="fileName = $event.target.files[0]?.name || ''">
                         </label>
@@ -147,7 +147,7 @@
                         @error('logo')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <button type="submit"
-                            class="shrink-0 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#0078D4] hover:bg-[#0065B8] text-white transition">
+                            class="w-full sm:w-auto shrink-0 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#0078D4] hover:bg-[#0065B8] text-white transition">
                         Upload
                     </button>
                 </div>

@@ -5,12 +5,8 @@
 
     <div class="space-y-8">
 
-        @if (session('success'))
-            <div class="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">{{ session('success') }}</div>
-        @endif
-
         @foreach ([
-            'pending'  => ['label' => 'Pending Review', 'colour' => 'amber'],
+            'pending'  => ['label' => 'Pending Review', 'colour' => 'yellow'],
             'approved' => ['label' => 'Approved',        'colour' => 'emerald'],
             'rejected' => ['label' => 'Rejected',        'colour' => 'red'],
         ] as $status => $meta)
@@ -21,7 +17,7 @@
         <div>
             <div class="flex items-center gap-3 mb-3">
                 <span class="px-2.5 py-1 rounded-full text-xs font-medium
-                    {{ $meta['colour'] === 'amber'   ? 'bg-amber-500/20 text-amber-300' : '' }}
+                    {{ $meta['colour'] === 'yellow'  ? 'bg-yellow-500/20 text-yellow-300' : '' }}
                     {{ $meta['colour'] === 'emerald' ? 'bg-emerald-500/20 text-emerald-300' : '' }}
                     {{ $meta['colour'] === 'red'     ? 'bg-red-500/20 text-red-300' : '' }}">
                     {{ $meta['label'] }}

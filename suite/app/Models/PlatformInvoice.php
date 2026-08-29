@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class PlatformInvoice extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'tenant_id', 'invoice_number', 'plan', 'amount', 'status',
         'due_date', 'billing_period_start', 'billing_period_end',

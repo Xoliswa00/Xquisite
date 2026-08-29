@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Cache;
 
 class BlockedIp extends Model
 {
+    use Auditable;
+
     protected $fillable = ['ip_address', 'reason', 'blocked_by', 'expires_at'];
 
     protected $casts = ['expires_at' => 'datetime'];

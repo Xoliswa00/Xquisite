@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>About Us — Xquisite Creations</title>
-    <meta name="description" content="Meet the team behind Xquisite Creations — building business technology solutions for South African entrepreneurs.">
+    <meta name="description" content="Meet the team behind Xquisite Creations, building business technology solutions for South African entrepreneurs.">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=montserrat:500,600,700,800|inter:400,500,600&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -88,17 +88,17 @@
                 <div class="space-y-4 text-[#2D3748]/75 leading-relaxed">
                     <p>
                         Xquisite Creations was founded with a clear purpose: South African businesses deserve
-                        technology that actually fits the way they operate — not tools built for a different
+                        technology that actually fits the way they operate, not tools built for a different
                         market and retrofitted for ours.
                     </p>
                     <p>
-                        We started by working directly with service businesses — salons, spas, and independent
-                        operators — and quickly learned that most platforms left them patching together five
+                        We started by working directly with service businesses (salons, spas, and independent
+                        operators) and quickly learned that most platforms left them patching together five
                         different apps just to manage a single day. Bookings in one place, sales in another,
                         client data somewhere else entirely.
                     </p>
                     <p>
-                        So we built Xquisite — one platform where your entire operation lives. Activate only
+                        So we built Xquisite: one platform where your entire operation lives. Activate only
                         what you need, expand as your business grows, and always have your data in one place.
                     </p>
                 </div>
@@ -110,7 +110,7 @@
                 @foreach([
                     ['title' => 'Business-First Thinking',   'body' => 'We start with your operation, not with features. Every module we build solves a real problem real businesses told us about.'],
                     ['title' => 'Transparent & Local',       'body' => 'Proudly South African. Rand-denominated pricing, POPIA-compliant, and support that speaks your language.'],
-                    ['title' => 'Built to Scale With You',   'body' => 'Whether you\'re one chair in a studio or five branches across Gauteng — the platform grows with you.'],
+                    ['title' => 'Built to Scale With You',   'body' => 'Whether you\'re one chair in a studio or five branches across Gauteng, the platform grows with you.'],
                 ] as $v)
                 <div class="flex items-start gap-4 bg-[#F5F7FA] rounded-xl p-5">
                     <div class="w-2 h-2 rounded-full bg-[#D4AF37] mt-2 shrink-0"></div>
@@ -132,7 +132,7 @@
         <div class="text-center mb-12 lg:mb-16">
             <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
             <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-[#002B5B]">Meet the Team</h2>
-            <p class="text-sm sm:text-base text-[#2D3748]/60 max-w-xl mx-auto">
+            <p class="text-base sm:text-lg text-[#2D3748]/75 max-w-xl mx-auto">
                 The people who design, build, and support the platform every day.
             </p>
         </div>
@@ -182,9 +182,9 @@
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
         <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-[#002B5B]">The People Behind the Platform</h2>
-        <p class="text-base text-[#2D3748]/60 leading-relaxed">
-            A small, dedicated team building tools that help beauty and wellness businesses thrive —
-            hands-on, responsive, and obsessed with making Xquisite work beautifully for you.
+        <p class="text-lg text-[#2D3748]/75 leading-relaxed">
+            A small, dedicated team building tools that help beauty and wellness businesses thrive.
+            We're hands-on and responsive, and we care about making Xquisite work beautifully for you.
         </p>
     </div>
 </section>
@@ -198,7 +198,7 @@
             Ready to Work With Us?
         </h2>
         <p class="text-base text-[#B8D4F0] max-w-xl mx-auto mb-10 leading-relaxed">
-            Start with a 14-day free trial — no credit card required.
+            Start with a 14-day free trial. No credit card required.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="{{ route('register') }}" class="px-8 py-4 text-white font-semibold bg-[#0078D4] hover:bg-[#0065B8] rounded-xl shadow-lg transition-colors">

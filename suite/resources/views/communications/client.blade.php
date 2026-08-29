@@ -73,7 +73,7 @@
                               class="w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-[#0078D4] focus:border-[#0078D4]"
                               placeholder="Message Xquisite Support…"></textarea>
                     <x-input-error :messages="$errors->get('body')" />
-                    <button type="submit" class="px-5 py-2.5 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium rounded-lg">Send</button>
+                    <button type="submit" class="px-5 py-2.5 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-medium rounded-lg">Send</button>
                 </form>
             </div>
 
@@ -87,7 +87,7 @@
                     <svg class="w-10 h-10 text-slate-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
                     <p class="text-slate-400 font-medium">Client Messaging is not active</p>
                     <p class="text-sm text-slate-500 mt-1">Activate this module to message your business clients directly.</p>
-                    <a href="{{ route('settings.modules.index') }}" class="mt-4 inline-block px-5 py-2.5 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium rounded-lg">
+                    <a href="{{ route('settings.modules.index') }}" class="mt-4 inline-block px-5 py-2.5 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-medium rounded-lg">
                         View Modules
                     </a>
                 </div>

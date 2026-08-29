@@ -63,7 +63,7 @@
                               placeholder="Write your message to {{ $tenant->name }}…"></textarea>
                     <x-input-error :messages="$errors->get('body')" />
                 </div>
-                <button type="submit" class="px-5 py-2.5 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium rounded-lg">
+                <button type="submit" class="px-5 py-2.5 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-medium rounded-lg">
                     Send to Tenant
                 </button>
             </form>

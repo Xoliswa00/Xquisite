@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 class BillingSetting extends Model
 {
+    use Auditable;
+
     protected $fillable = ['key', 'value'];
 
     private static array $defaults = [

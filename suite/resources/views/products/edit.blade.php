@@ -120,7 +120,7 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2">
-                    <button type="submit" class="w-full sm:w-auto bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-6 py-2 rounded-lg">Save Changes</button>
+                    <button type="submit" class="w-full sm:w-auto bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-6 py-2 rounded-lg">Save Changes</button>
                     <a href="{{ route('products.index') }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>
                 </div>
             </form>

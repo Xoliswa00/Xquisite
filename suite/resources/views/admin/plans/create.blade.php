@@ -13,7 +13,7 @@
             @csrf
             @include('admin.plans._form')
             <div class="px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
-                <button type="submit" class="px-5 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg font-medium transition-colors">
+                <button type="submit" class="px-5 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm rounded-lg font-medium transition-colors">
                     Create Plan
                 </button>
                 <a href="{{ route('admin.plans.index') }}" class="px-4 py-2 text-sm text-slate-400 hover:text-white text-center transition-colors">Cancel</a>

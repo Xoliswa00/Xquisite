@@ -9,10 +9,6 @@
 
     <div class="max-w-2xl py-8 px-4 sm:px-6 lg:px-8 space-y-5">
 
-        @if (session('success'))
-            <div class="p-4 bg-emerald-900/30 border border-emerald-700 text-emerald-300 rounded-lg text-sm">{{ session('success') }}</div>
-        @endif
-
         {{-- Detail card --}}
         <div class="bg-slate-800 rounded-xl p-6 space-y-4">
             @php

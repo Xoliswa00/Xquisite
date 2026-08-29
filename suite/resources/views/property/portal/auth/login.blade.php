@@ -17,13 +17,16 @@
                 @error('email')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block text-sm font-medium text-slate-700">Password</label>
+                    <a href="{{ route('rent.password.request', $slug) }}" class="text-xs text-[#0078D4] hover:text-[#0065B8]">Forgot password?</a>
+                </div>
                 <input type="password" name="password" required class="w-full border-slate-300 rounded-xl">
             </div>
             <label class="flex items-center gap-2 text-sm text-slate-600">
                 <input type="checkbox" name="remember" class="rounded border-slate-300"> Remember me
             </label>
-            <button type="submit" class="w-full py-3 bg-[#0078D4] hover:bg-[#0078D4] text-white font-semibold rounded-xl">
+            <button type="submit" class="w-full py-3 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl">
                 Sign in
             </button>
         </form>

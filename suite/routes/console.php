@@ -2,11 +2,17 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+// Process queued jobs (emails, notifications) every minute. QUEUE_CONNECTION=database
+// has no persistent worker on shared hosting, so this piggybacks on the artisan
+// scheduler's own cron entry instead of needing a separate long-running process.
+Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->everyMinute()->withoutOverlapping();
 
 // Retry pending billing sync items every 5 minutes.
 Schedule::command('billing:sync-queue')->everyFiveMinutes()->withoutOverlapping();
@@ -28,4 +34,27 @@ Schedule::command('billing:process-queue')->everyFiveMinutes()->withoutOverlappi
 Schedule::command('ecommerce:expire-pending-orders')->everyTenMinutes()->withoutOverlapping();
 
 // Ping all active monitored instances every 5 minutes and log health status.
-Schedule::command('instances:check-health')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('instances:check-health')->everyFiveMinutes()->withoutOverlapping()
+    ->onFailure(fn () => Log::error('Instance health check failed'));
+
+// Wipe and re-seed the demo tenant so prospects always see clean sample data,
+// not whatever the last visitor (or QA) left behind.
+Schedule::command('demo:reset --force')->everySixHours()->withoutOverlapping()->runInBackground();
+
+// Property Management: generate each active lease's rent payment on the 1st of the month.
+Schedule::command('rent:generate-monthly')->monthlyOn(1, '02:00')->withoutOverlapping();
+
+// Property Management: flag pending rent payments/charges past their due date.
+Schedule::command('rent:flag-overdue')->dailyAt('01:00')->withoutOverlapping();
+
+// Property Management: check for data desyncs and a stalled billing cycle; logs via
+// Log::error(), which the 'database' log channel already turns into an admin email alert.
+// Runs after flag-overdue so a non-zero "pending past due" finding actually means
+// something (flag-overdue didn't run), not just routine same-tick duplicate work.
+Schedule::command('property:health-check')->dailyAt('01:30')->withoutOverlapping();
+
+// Property Management: notify tenant owners about leases ending in 30/14/7/1 days.
+Schedule::command('leases:check-expiring')->dailyAt('07:00')->withoutOverlapping();
+
+// Property Management: remind renters whose rent is due within the next few days.
+Schedule::command('rent:send-due-reminders')->dailyAt('08:00')->withoutOverlapping();

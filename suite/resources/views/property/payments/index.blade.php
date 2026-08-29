@@ -1,35 +1,11 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-[#D4AF37]">Rent Payments</h2>
-            <div class="flex gap-2">
-                <form method="POST" action="{{ route('rent-payments.generate') }}">
-                    @csrf
-                    <button type="submit"
-                            class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded-lg">
-                        Generate Monthly
-                    </button>
-                </form>
-                <form method="POST" action="{{ route('rent-payments.flag-overdue') }}">
-                    @csrf
-                    <button type="submit"
-                            class="px-3 py-2 bg-red-900/40 hover:bg-red-800/50 text-red-400 text-sm rounded-lg border border-red-800">
-                        Flag Overdue
-                    </button>
-                </form>
-            </div>
-        </div>
-    </x-slot>
+    <x-slot name="header">Rent Payments</x-slot>
 
     <div class="max-w-7xl mx-auto p-6 space-y-6">
 
-        @if(session('success'))
-            <div class="p-4 bg-emerald-900/30 border border-emerald-700 text-emerald-300 rounded-xl text-sm">{{ session('success') }}</div>
-        @endif
-
         {{-- Filters --}}
-        <form method="GET" action="{{ route('rent-payments.index') }}" class="bg-slate-800 rounded-xl p-4">
-            <div class="flex gap-3 flex-wrap">
+        <div class="flex flex-col lg:flex-row gap-3 items-start lg:items-center justify-between">
+            <form method="GET" action="{{ route('rent-payments.index') }}" class="flex gap-3 flex-wrap flex-1">
                 <select name="status" class="bg-slate-700 border-slate-600 text-slate-100 rounded-lg text-sm px-3 py-2">
                     <option value="">All Statuses</option>
                     @foreach(['pending','paid','partial','overdue'] as $s)
@@ -40,13 +16,29 @@
                        placeholder="Period (YYYY-MM)"
                        class="bg-slate-700 border-slate-600 text-slate-100 rounded-lg text-sm px-3 py-2 placeholder-slate-500 w-40">
                 <button type="submit"
-                        class="px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg">Filter</button>
+                        class="px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm rounded-lg">Filter</button>
                 @if(request()->hasAny(['status','period']))
                     <a href="{{ route('rent-payments.index') }}"
                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded-lg">Clear</a>
                 @endif
+            </form>
+            <div class="flex gap-2 w-full lg:w-auto">
+                <form method="POST" action="{{ route('rent-payments.generate') }}">
+                    @csrf
+                    <button type="submit"
+                            class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm rounded-lg whitespace-nowrap">
+                        Generate Monthly
+                    </button>
+                </form>
+                <form method="POST" action="{{ route('rent-payments.flag-overdue') }}">
+                    @csrf
+                    <button type="submit"
+                            class="px-3 py-2 bg-red-900/40 hover:bg-red-800/50 text-red-400 text-sm rounded-lg border border-red-800 whitespace-nowrap">
+                        Flag Overdue
+                    </button>
+                </form>
             </div>
-        </form>
+        </div>
 
         {{-- Table --}}
         <div class="bg-slate-800 rounded-xl overflow-hidden">

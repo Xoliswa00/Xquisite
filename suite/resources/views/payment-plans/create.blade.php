@@ -138,7 +138,7 @@
 
             <div class="flex items-center gap-3 pt-2">
                 <button type="submit"
-                        class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-6 py-2 rounded-lg font-medium">
+                        class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-6 py-2 rounded-lg font-medium">
                     Create Plan
                 </button>
                 <a href="{{ route('payment-plans.index') }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>

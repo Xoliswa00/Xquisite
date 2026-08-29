@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Modules\Ecommerce\Exceptions\InsufficientStockException;
 use App\Modules\Ecommerce\Models\Order;
 use App\Modules\Ecommerce\Services\OrderService;
+use App\Rules\SouthAfricanPhoneNumber;
 use App\Services\Cart\CartService;
 use App\Services\Payment\PayFastService;
 use Illuminate\Http\Request;
@@ -50,7 +51,7 @@ class CheckoutController extends Controller
         $data = $request->validate([
             'customer_name'     => 'required|string|max:255',
             'customer_email'    => 'required|email|max:255',
-            'customer_phone'    => 'nullable|string|max:30',
+            'customer_phone'    => ['nullable', new SouthAfricanPhoneNumber],
             'fulfillment_type'  => 'required|in:collection,delivery',
             'payment_method'    => 'required|in:payfast,eft,collection',
             'notes'             => 'nullable|string|max:500',

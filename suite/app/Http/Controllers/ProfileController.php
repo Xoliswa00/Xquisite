@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Rules\SouthAfricanPhoneNumber;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,7 +45,7 @@ class ProfileController extends Controller
             'slug'                => ['required', 'string', 'min:3', 'max:60', 'regex:/^[a-z0-9][a-z0-9-]*[a-z0-9]$/',
                                     Rule::unique('tenants', 'slug')->ignore($tenant->id)],
             'email'               => 'nullable|email|max:100',
-            'phone'               => 'nullable|string|max:30',
+            'phone'               => ['nullable', new SouthAfricanPhoneNumber],
             'address'             => 'nullable|string|max:500',
             'bank_name'           => 'nullable|string|max:100',
             'bank_account_type'   => 'nullable|in:cheque,savings',

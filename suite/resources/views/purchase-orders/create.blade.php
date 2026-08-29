@@ -153,7 +153,7 @@
                         Cancel
                     </a>
                     <button type="submit"
-                            class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-6 py-2 rounded-lg">
+                            class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-6 py-2 rounded-lg">
                         Create Order
                     </button>
                 </div>

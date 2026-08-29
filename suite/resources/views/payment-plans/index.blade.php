@@ -13,14 +13,10 @@
                 @endif
             </div>
             <a href="{{ route('payment-plans.create') }}"
-               class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg font-medium transition-colors">
+               class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm rounded-lg font-medium transition-colors">
                 + New Plan
             </a>
         </div>
-
-        @if (session('success'))
-            <div class="mb-6 p-4 bg-emerald-900/50 border border-emerald-700 text-emerald-300 rounded-lg text-sm">{{ session('success') }}</div>
-        @endif
 
         <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
             <table class="min-w-full divide-y divide-slate-700/50 summary-on-mobile">

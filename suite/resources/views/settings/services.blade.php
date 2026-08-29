@@ -5,13 +5,6 @@
 
     <div class="py-8 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
 
-        @if (session('success'))
-            <div class="p-4 bg-emerald-900/50 border border-emerald-700 text-emerald-300 rounded-lg text-sm">{{ session('success') }}</div>
-        @endif
-        @if (session('error'))
-            <div class="p-4 bg-red-900/50 border border-red-700 text-red-300 rounded-lg text-sm">{{ session('error') }}</div>
-        @endif
-
         {{-- ── Service Catalog ─────────────────────────────────────────────── --}}
         @php
             $categoryLabels = [

@@ -4,10 +4,11 @@ namespace App\Modules\Booking\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\HasTenant;
+use App\Models\Traits\Auditable;
 
 class StaffSchedule extends Model
 {
-    use HasTenant;
+    use HasTenant, Auditable;
 
     protected $fillable = [
         'tenant_id',

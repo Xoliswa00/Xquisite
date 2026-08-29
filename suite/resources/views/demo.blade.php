@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Live Demo — Xquisite Creations</title>
-    <meta name="description" content="Explore the full Xquisite platform live — bookings, clients, POS, analytics and more. No sign-up needed.">
+    <meta name="description" content="Explore the full Xquisite platform live: bookings, clients, POS, analytics and more. No sign-up needed.">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=montserrat:500,600,700,800|inter:400,500,600&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -18,26 +18,9 @@
 
         /* ── Entrance animations ── */
         @keyframes fadeUp   { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
-        @keyframes shimmer  { 0%{transform:translateX(-130%)} 100%{transform:translateX(130%)} }
-        @keyframes floatA   { 0%,100%{transform:translate(0,0)} 50%{transform:translate(28px,-18px)} }
-        @keyframes floatB   { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-22px,24px)} }
         @keyframes pulse-dot{ 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
 
         .xq-enter { opacity:0; animation:fadeUp .7s cubic-bezier(.22,1,.36,1) var(--d,.1s) forwards; }
-
-        /* ── Shimmer CTA ── */
-        .btn-shimmer { position:relative; overflow:hidden; }
-        .btn-shimmer::after {
-            content:''; position:absolute; inset:0;
-            background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);
-            transform:translateX(-130%);
-            animation:shimmer 3s ease-in-out 2s infinite;
-        }
-
-        /* ── Ambient orbs ── */
-        .orb { position:absolute;border-radius:9999px;pointer-events:none;filter:blur(120px); }
-        .orb-blue { width:700px;height:700px;background:rgba(0,120,212,.12);top:-200px;right:-200px;animation:floatA 14s ease-in-out infinite; }
-        .orb-gold { width:400px;height:400px;background:rgba(212,175,55,.07);bottom:-100px;left:20%;animation:floatB 18s ease-in-out infinite; }
 
         /* ── Scroll reveal ── */
         .sr { opacity:0;transform:translateY(20px);transition:opacity .5s cubic-bezier(.22,1,.36,1),transform .5s cubic-bezier(.22,1,.36,1); }
@@ -80,14 +63,6 @@
         /* ── Glow line ── */
         .glow-line { height:1px;background:linear-gradient(90deg,transparent,rgba(0,120,212,.5) 40%,rgba(212,175,55,.4) 60%,transparent); }
 
-        /* ── Hero gradient text ── */
-        .hero-grad {
-            background: linear-gradient(135deg, #0078D4 0%, #4BA3E3 50%, #D4AF37 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
         /* ── Mock stat label colours ── */
         .msl-blue  { color:#0078D4; }
         .msl-gold  { color:#D4AF37; }
@@ -110,15 +85,6 @@
         /* ── Feature card icon colours ── */
         .ficon-blue   { background:rgba(0,120,212,.12);   border:1px solid rgba(0,120,212,.16);   color:#0078D4; }
         .ficon-gold   { background:rgba(212,175,55,.1);   border:1px solid rgba(212,175,55,.16);  color:#D4AF37; }
-        .ficon-green  { background:rgba(16,185,129,.1);   border:1px solid rgba(16,185,129,.16);  color:#10b981; }
-        .ficon-purple { background:rgba(167,139,250,.1);  border:1px solid rgba(167,139,250,.16); color:#a78bfa; }
-
-        /* ── Background grid ── */
-        .bg-grid {
-            background-image: linear-gradient(rgba(0,120,212,.03) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(0,120,212,.03) 1px, transparent 1px);
-            background-size: 56px 56px;
-        }
 
         /* ── CTA section bottom glow ── */
         .cta-glow {
@@ -155,30 +121,18 @@
 
 {{-- ── HERO ────────────────────────────────────────────────────────────── --}}
 <section class="relative overflow-hidden bg-slate-950 pt-16 pb-20 sm:pt-24 sm:pb-28">
-    <div class="orb orb-blue"></div>
-    <div class="orb orb-gold"></div>
-
-    {{-- Subtle grid --}}
-    <div class="absolute inset-0 pointer-events-none bg-grid"></div>
-
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="grid lg:grid-cols-2 gap-14 lg:gap-10 items-center">
 
             {{-- Left: copy --}}
             <div>
-                {{-- Live badge --}}
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold mb-8 xq-enter" style="--d:.05s">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" style="animation:pulse-dot 2s ease-in-out infinite"></span>
-                    Live demo &mdash; full platform access
-                </div>
-
-                <h1 class="f-mont text-4xl sm:text-5xl xl:text-6xl font-bold leading-[1.1] mb-6 xq-enter" style="--d:.15s">
+                <h1 class="f-mont text-4xl sm:text-5xl xl:text-6xl font-bold leading-[1.1] mb-6 xq-enter" style="--d:.05s">
                     See it. Feel it.<br>
-                    <span class="hero-grad">Run it live.</span>
+                    <span class="text-[#0078D4]">Run it live.</span>
                 </h1>
 
                 <p class="text-slate-400 text-base sm:text-lg leading-relaxed mb-10 max-w-lg xq-enter" style="--d:.25s">
-                    The full Xquisite platform, loaded with demo data. Bookings, clients, POS, analytics — click anything, create anything. No setup needed.
+                    The full Xquisite platform, loaded with demo data. Bookings, clients, POS, analytics: click anything, create anything. No setup needed.
                 </p>
 
                 {{-- CTA --}}
@@ -186,7 +140,7 @@
                     <form method="POST" action="{{ route('demo.login') }}" class="inline">
                         @csrf
                         <button type="submit"
-                                class="btn-shimmer inline-flex items-center gap-2.5 px-8 py-4 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl shadow-lg shadow-[#0078D4]/20 transition-colors text-sm">
+                                class="inline-flex items-center gap-2.5 px-8 py-4 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl shadow-lg shadow-[#0078D4]/20 transition-colors text-sm">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/>
                             </svg>
@@ -311,8 +265,8 @@
             @foreach([
                 ['7',    'Platform modules', 'text-[#0078D4]'],
                 ['100%', 'Admin access',     'text-[#D4AF37]'],
-                ['Live', 'Real data',        'text-[#10b981]'],
-                ['0',    'Setup required',   'text-[#a78bfa]'],
+                ['Live', 'Real data',        'text-[#0078D4]'],
+                ['0',    'Setup required',   'text-[#D4AF37]'],
             ] as [$val, $label, $cls])
             <div class="sr d{{ $loop->iteration }}">
                 <div class="stat-value mb-1 {{ $cls }}">{{ $val }}</div>
@@ -329,10 +283,9 @@
 
         {{-- Section header --}}
         <div class="text-center mb-14 sr">
-            <p class="f-mont text-xs font-bold uppercase tracking-[.18em] text-[#D4AF37] mb-3">Full platform access</p>
             <h2 class="f-mont text-3xl sm:text-4xl font-bold text-white mb-4">What's inside the demo</h2>
             <p class="text-slate-400 text-base max-w-xl mx-auto leading-relaxed">
-                Every module is live. Create bookings, ring up a sale, browse analytics — it's the real platform.
+                Every module is live. Create bookings, ring up a sale, browse analytics. It's the real platform.
             </p>
         </div>
 
@@ -355,24 +308,24 @@
                     'icon'  => 'M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
                     'label' => 'Staff & Schedules',
                     'desc'  => 'Set working hours, block unavailable slots, and see each staff member\'s day at a glance on the calendar.',
-                    'cls'   => 'ficon-green',
+                    'cls'   => 'ficon-blue',
                 ],
                 [
                     'icon'  => 'M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z',
                     'label' => 'Point of Sale',
-                    'desc'  => 'Full POS terminal — ring up products and services, apply discounts, split payments, and generate receipts.',
-                    'cls'   => 'ficon-purple',
+                    'desc'  => 'Full POS terminal. Ring up products and services, apply discounts, split payments, and generate receipts.',
+                    'cls'   => 'ficon-gold',
                 ],
                 [
                     'icon'  => 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z',
                     'label' => 'Analytics & Reports',
-                    'desc'  => 'Revenue by service, top clients, staff performance and booking trends — all in one live dashboard.',
+                    'desc'  => 'Revenue by service, top clients, staff performance and booking trends, all in one live dashboard.',
                     'cls'   => 'ficon-blue',
                 ],
                 [
                     'icon'  => 'M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244',
                     'label' => 'Public Booking Portal',
-                    'desc'  => 'Your clients see a branded booking page at their own URL — mobile-first, no app download needed.',
+                    'desc'  => 'Your clients see a branded booking page at their own URL. Mobile-first, no app download needed.',
                     'cls'   => 'ficon-gold',
                 ],
             ] as $f)
@@ -398,7 +351,6 @@
     <div class="absolute inset-0 pointer-events-none cta-glow"></div>
 
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 sr">
-        <p class="f-mont text-xs font-bold uppercase tracking-[.18em] text-[#D4AF37] mb-4">No commitment</p>
         <h2 class="f-mont text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-5 leading-tight">
             Ready to see it<br>for yourself?
         </h2>
@@ -410,7 +362,7 @@
             <form method="POST" action="{{ route('demo.login') }}">
                 @csrf
                 <button type="submit"
-                        class="btn-shimmer inline-flex items-center gap-2.5 px-10 py-4 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl shadow-lg shadow-[#0078D4]/20 transition-colors">
+                        class="inline-flex items-center gap-2.5 px-10 py-4 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl shadow-lg shadow-[#0078D4]/20 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/>
                     </svg>

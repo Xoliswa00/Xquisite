@@ -88,6 +88,11 @@
 
     <div class="footer">
         © {{ date('Y') }} Xquisite Technologies (Pty) Ltd &mdash; One platform. Every operation.
+        <br>
+        <span style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;">
+            <img src="{{ asset('img/android-icon-96x96.png') }}" alt="Xquisite Creations" style="height:16px;width:16px;border-radius:4px;">
+            Powered by Xquisite Creations
+        </span>
     </div>
 </div>
 </body>

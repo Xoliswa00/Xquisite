@@ -35,7 +35,7 @@
                 </div>
             </div>
             <button type="submit"
-                    class="px-5 py-2.5 bg-[#0078D4] hover:bg-[#0078D4] text-white font-semibold rounded-xl transition text-sm">
+                    class="px-5 py-2.5 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition text-sm">
                 Submit Request
             </button>
         </form>

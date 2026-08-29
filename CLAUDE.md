@@ -84,6 +84,15 @@ Laravel 11 + Blade + Alpine.js SaaS platform. Multi-tenant. Key areas:
 - Background: `bg-slate-900` / `bg-slate-950`
 - Card surface: `bg-slate-900 border border-slate-800 rounded-xl`
 
+### UI/UX standards & the designer agent (standing rule, confirmed by Xoliswa 2026-08-27)
+
+The `ui-ux-designer` subagent (user-level, `~/.claude/agents/ui-ux-designer.md`) is the designated authority for UI/UX work on this project — not just when explicitly requested, but any time a task touches visual design, layout, color, responsive behavior, or copy tone. Use the Agent tool with `subagent_type: ui-ux-designer` for that work, or apply its standards directly if working inline.
+
+- **Project-specific standards live in memory**: `project_ui_ux_standards.md` is the single consolidated reference (design tokens, the AI-slop checklist, the three legitimate mobile-responsive table patterns, the duplicate-flash-banner rule, the component inventory). Read it before any UI/UX change.
+- **Automated enforcement**: `php artisan xq:audit-ui` (wired into `.git/hooks/pre-commit` and `pre-push`, local-only — not version-controlled) hard-fails a commit/push on no-op hover colors, the "Xquisite Creation" brand typo, unresponsive tables, duplicate flash banners, and gradient/shimmer AI-slop CSS. It also prints non-blocking warnings for likely eyebrows and em-dash clause-join copy — those need human judgment, review them.
+- **Never trust code-read alone**: any UI/UX change must be verified in a real browser at both desktop and mobile (390px) width before being considered done — this project's real bugs were consistently invisible in the code and obvious the moment a screenshot was taken.
+- When reviewing UI built by another session/agent: keep sound functional work, fix standards violations in place — don't reflexively revert working features over a styling issue.
+
 ### Pending actions
 - Upload `/img/og-image.jpg` (1200×630) for WhatsApp/OG preview
 - Fix slug `Misstee-Beauty-Studio` → lowercase in DB

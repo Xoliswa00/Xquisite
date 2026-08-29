@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Property;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Property\Models\Lease;
 use App\Modules\Property\Models\RentPayment;
+use App\Notifications\RentPaymentReceivedNotification;
+use App\Services\Property\RentCycleService;
 use Illuminate\Http\Request;
 
 class RentPaymentController extends Controller
@@ -50,32 +51,37 @@ class RentPaymentController extends Controller
             'status'      => $status,
         ]));
 
+        if ($rentPayment->renter?->email) {
+            $rentPayment->renter->notify(new RentPaymentReceivedNotification($rentPayment));
+        }
+
         return redirect()->route('rent-payments.show', $rentPayment)
             ->with('success', $status === 'paid' ? 'Payment recorded — fully paid.' : 'Partial payment recorded.');
     }
 
-    /** Generate monthly payment records for all active leases */
-    public function generateMonthly()
+    public function receiptPdf(RentPayment $rentPayment)
     {
-        $leases = Lease::where('status', 'active')->get();
-        $created = 0;
+        abort_if($rentPayment->amount_paid <= 0, 422, 'No payment has been recorded for this period yet.');
 
-        foreach ($leases as $lease) {
-            $payment = $lease->generateCurrentPeriodPayment();
-            if ($payment->wasRecentlyCreated) {
-                $created++;
-            }
-        }
+        $rentPayment->load(['unit.property', 'renter']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('property.payments.receipt-pdf', compact('rentPayment'));
+
+        return $pdf->download('receipt-rent-' . $rentPayment->id . '.pdf');
+    }
+
+    /** Generate monthly payment records for all active leases */
+    public function generateMonthly(RentCycleService $rentCycle)
+    {
+        $created = $rentCycle->generateMonthly();
 
         return back()->with('success', "{$created} new payment record(s) generated for " . now()->format('F Y') . '.');
     }
 
     /** Mark overdue — flag any pending payments past due date */
-    public function flagOverdue()
+    public function flagOverdue(RentCycleService $rentCycle)
     {
-        $count = RentPayment::where('status', 'pending')
-            ->where('due_date', '<', now())
-            ->update(['status' => 'overdue']);
+        $count = $rentCycle->flagOverdue();
 
         return back()->with('success', "{$count} payment(s) marked as overdue.");
     }

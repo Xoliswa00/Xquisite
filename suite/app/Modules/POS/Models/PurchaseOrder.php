@@ -4,10 +4,11 @@ namespace App\Modules\POS\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\HasTenant;
+use App\Models\Traits\Auditable;
 
 class PurchaseOrder extends Model
 {
-    use HasTenant;
+    use HasTenant, Auditable;
 
     protected $fillable = [
         'tenant_id',

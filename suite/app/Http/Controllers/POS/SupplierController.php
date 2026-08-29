@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\POS\Models\Supplier;
 use App\Modules\POS\Models\Product;
 use App\Modules\POS\Models\PurchaseOrder;
+use App\Rules\SouthAfricanPhoneNumber;
 use Illuminate\Http\Request;
 
 class SupplierController extends Controller
@@ -29,7 +30,7 @@ class SupplierController extends Controller
         $data = $request->validate([
             'name'           => 'required|string|max:255',
             'email'          => 'nullable|email|max:255',
-            'phone'          => 'nullable|string|max:50',
+            'phone'          => ['nullable', new SouthAfricanPhoneNumber],
             'contact_person' => 'nullable|string|max:255',
             'website'        => 'nullable|url|max:255',
             'address'        => 'nullable|string|max:1000',
@@ -73,7 +74,7 @@ class SupplierController extends Controller
         $data = $request->validate([
             'name'           => 'required|string|max:255',
             'email'          => 'nullable|email|max:255',
-            'phone'          => 'nullable|string|max:50',
+            'phone'          => ['nullable', new SouthAfricanPhoneNumber],
             'contact_person' => 'nullable|string|max:255',
             'website'        => 'nullable|url|max:255',
             'address'        => 'nullable|string|max:1000',

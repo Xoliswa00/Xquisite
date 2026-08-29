@@ -75,7 +75,7 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button type="submit" class="px-5 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg text-sm font-medium transition-colors">
+                    <button type="submit" class="px-5 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg text-sm font-medium transition-colors">
                         Create Staff Account
                     </button>
                     <a href="{{ route('admin.users.index') }}" class="px-5 py-2 border border-slate-700 text-slate-300 hover:bg-slate-700 rounded-lg text-sm font-medium text-center transition-colors">

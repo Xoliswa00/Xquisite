@@ -40,7 +40,7 @@
                                 'new'         => 'bg-red-900/40 text-red-300',
                                 'acknowledged'=> 'bg-yellow-900/40 text-yellow-300',
                                 'in_progress' => 'bg-blue-900/40 text-blue-300',
-                                default       => 'bg-green-900/40 text-green-300',
+                                default       => 'bg-emerald-900/40 text-emerald-300',
                             };
                         @endphp
                         <tr class="hover:bg-slate-700/30">
@@ -94,7 +94,7 @@
                         'new'         => 'bg-red-900/40 text-red-300',
                         'acknowledged'=> 'bg-yellow-900/40 text-yellow-300',
                         'in_progress' => 'bg-blue-900/40 text-blue-300',
-                        default       => 'bg-green-900/40 text-green-300',
+                        default       => 'bg-emerald-900/40 text-emerald-300',
                     };
                 @endphp
                 <div class="bg-slate-800 rounded-xl px-4 py-3 space-y-2">

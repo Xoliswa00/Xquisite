@@ -7,7 +7,7 @@
             <div class="flex gap-2">
                 <form method="POST" action="{{ route('admin.billing.generate', ['tenant' => $tenant->id]) }}">
                     @csrf
-                    <button class="text-sm px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg">Generate Invoice</button>
+                    <button class="text-sm px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg">Generate Invoice</button>
                 </form>
                 @if($tenant->suspended_at)
                     <form method="POST" action="{{ route('admin.billing.reactivate', ['tenant' => $tenant->id]) }}">
@@ -49,22 +49,24 @@
             @forelse($invoices as $invoice)
                 @php $badge = $invoice->status_badge; @endphp
                 <div class="px-5 py-4 border-b border-slate-800 last:border-0 {{ $invoice->isAwaitingConfirmation() ? 'bg-[#0078D4]/5' : 'hover:bg-slate-800/30' }} space-y-3">
-                    <div class="flex items-center gap-4">
-                        <div class="flex-1">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                        <div class="flex-1 min-w-0">
                             <p class="font-medium text-white">{{ $invoice->invoice_number }}</p>
                             <p class="text-xs text-slate-400">{{ $invoice->billing_period_start->format('d M') }} – {{ $invoice->billing_period_end->format('d M Y') }} · Due {{ $invoice->due_date->format('d M Y') }}</p>
                         </div>
-                        <div class="text-right mr-2">
-                            <p class="text-white">R{{ number_format($invoice->amount, 2) }}</p>
-                            <span class="text-xs px-2 py-0.5 rounded-full border {{ $badge['class'] }}">{{ $badge['label'] }}</span>
+                        <div class="flex items-center justify-between sm:contents">
+                            <div class="text-left sm:text-right sm:mr-2">
+                                <p class="text-white">R{{ number_format($invoice->amount, 2) }}</p>
+                                <span class="text-xs px-2 py-0.5 rounded-full border {{ $badge['class'] }}">{{ $badge['label'] }}</span>
+                            </div>
+                            <a href="{{ route('admin.billing.pdf.admin', $invoice) }}" class="text-xs px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg">PDF</a>
                         </div>
-                        <a href="{{ route('admin.billing.pdf.admin', $invoice) }}" class="text-xs px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg">PDF</a>
                         @if(in_array($invoice->status, ['unpaid', 'overdue']))
                             <form method="POST" action="{{ route('admin.billing.mark-paid', $invoice) }}" class="flex items-center gap-2">
                                 @csrf
-                                <input type="text" name="payment_method" placeholder="Method" required class="w-24 text-xs rounded bg-slate-800 border-slate-700 text-slate-200 px-2 py-1.5">
-                                <input type="text" name="payment_reference" placeholder="Reference" required class="w-28 text-xs rounded bg-slate-800 border-slate-700 text-slate-200 px-2 py-1.5">
-                                <button class="text-xs px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg">Mark Paid</button>
+                                <input type="text" name="payment_method" placeholder="Method" required class="min-w-0 w-0 flex-1 sm:w-24 sm:flex-none text-xs rounded bg-slate-800 border-slate-700 text-slate-200 px-2 py-1.5">
+                                <input type="text" name="payment_reference" placeholder="Reference" required class="min-w-0 w-0 flex-1 sm:w-28 sm:flex-none text-xs rounded bg-slate-800 border-slate-700 text-slate-200 px-2 py-1.5">
+                                <button class="shrink-0 text-xs px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg">Mark Paid</button>
                             </form>
                         @else
                             <span class="text-xs text-slate-500">{{ $invoice->paid_at?->format('d M Y') }}</span>

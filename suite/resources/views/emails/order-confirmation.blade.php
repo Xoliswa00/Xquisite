@@ -147,7 +147,11 @@
     <div class="footer">
         <p>
             Questions? Contact us at <strong>{{ $tenant->email }}</strong><br>
-            © {{ date('Y') }} <strong>{{ $tenant->name }}</strong> · Powered by <strong>Xquisite Creation</strong>
+            © {{ date('Y') }} <strong>{{ $tenant->name }}</strong>
+        </p>
+        <p style="margin-top:8px;">
+            <img src="{{ asset('img/android-icon-96x96.png') }}" alt="Xquisite Creations" style="height:16px;width:16px;vertical-align:middle;margin-right:4px;border-radius:4px;">
+            Powered by <strong>Xquisite Creations</strong>
         </p>
     </div>
 </div>

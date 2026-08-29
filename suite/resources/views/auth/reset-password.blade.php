@@ -2,7 +2,7 @@
 
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-[#D4AF37]" style="font-family:'Montserrat',sans-serif">Set new password</h1>
-        <p class="text-sm text-[#2D3748]/60 mt-1">Choose a strong password for your account.</p>
+        <p class="text-base text-[#2D3748]/75 mt-1">Choose a strong password for your account.</p>
     </div>
 
     <form method="POST" action="{{ route('password.store') }}" class="space-y-4">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Rules\SouthAfricanPhoneNumber;
 use App\Services\BillingBridge;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -51,7 +52,7 @@ class TenantController extends Controller
         $request->validate([
             'name'          => 'required|string|max:255',
             'email'         => 'required|email|unique:tenants,email',
-            'phone'         => 'nullable|string|max:30',
+            'phone'         => ['nullable', new SouthAfricanPhoneNumber],
             'industry'      => 'nullable|string|max:100',
             'owner_name'    => 'required|string|max:255',
             'owner_email'   => 'required|email|unique:users,email',

@@ -6,14 +6,10 @@
         <div class="flex items-center justify-between gap-4 flex-wrap">
             <h1 class="text-xl font-bold text-[#D4AF37]">Bundle Plans</h1>
             <a href="{{ route('admin.plans.create') }}"
-               class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg font-medium transition-colors">
+               class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm rounded-lg font-medium transition-colors">
                 + New Plan
             </a>
         </div>
-
-        @if (session('success'))
-            <div class="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">{{ session('success') }}</div>
-        @endif
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             @forelse ($plans as $plan)

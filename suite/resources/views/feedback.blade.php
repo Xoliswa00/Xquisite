@@ -8,13 +8,6 @@
             <p class="text-slate-500 mt-1 text-sm">Tell us how Xquisite is working for you. Takes 30 seconds.</p>
         </div>
 
-        @if(session('success'))
-            <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-5 flex items-start gap-3">
-                <svg class="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <p class="text-emerald-700 text-sm font-medium">{{ session('success') }}</p>
-            </div>
-        @endif
-
         @if($existing)
             <div class="rounded-2xl bg-slate-800 border border-slate-200 p-6 space-y-3">
                 <div class="flex items-center gap-0.5 text-2xl leading-none">
@@ -91,7 +84,7 @@
 
                     <button type="submit"
                             :disabled="rating === 0"
-                            class="w-full py-2.5 bg-[#0078D4] hover:bg-[#0078D4] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition">
+                            class="w-full py-2.5 bg-[#0078D4] hover:bg-[#0065B8] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition">
                         Submit feedback
                     </button>
 

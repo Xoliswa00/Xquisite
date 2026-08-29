@@ -10,13 +10,6 @@
         </div>
     </x-slot>
 
-    @if(session('success'))
-        <div class="mb-4 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{{ session('error') }}</div>
-    @endif
-
     <div class="grid lg:grid-cols-3 gap-6">
 
         <!-- Left: Info + Subdomain -->
@@ -29,7 +22,7 @@
                     <div><dt class="text-xs text-slate-400 mb-0.5">Name</dt><dd class="text-white font-medium">{{ $tenant->name }}</dd></div>
                     <div><dt class="text-xs text-slate-400 mb-0.5">Email</dt><dd class="text-slate-300">{{ $tenant->email }}</dd></div>
                     @if($tenant->phone)
-                        <div><dt class="text-xs text-slate-400 mb-0.5">Phone</dt><dd class="text-slate-300">{{ $tenant->phone }}</dd></div>
+                        <div><dt class="text-xs text-slate-400 mb-0.5">Phone</dt><dd class="text-slate-300"><x-whatsapp-link :phone="$tenant->phone" :message="'Hi ' . $tenant->name . ', this is ' . config('app.name')" /></dd></div>
                     @endif
                     @if($tenant->address)
                         <div><dt class="text-xs text-slate-400 mb-0.5">Address</dt><dd class="text-slate-300 text-xs leading-relaxed">{{ $tenant->address }}</dd></div>
@@ -46,7 +39,7 @@
                         <dd class="{{ $tenant->is_active ? 'text-emerald-400' : 'text-red-400' }} font-medium">
                             {{ $tenant->is_active ? 'Active' : 'Inactive' }}
                             @if($tenant->isOnTrial())
-                                <span class="ml-2 text-amber-400 font-normal">(Trial until {{ $tenant->trial_ends_at->format('d M Y') }})</span>
+                                <span class="ml-2 text-[#D4AF37] font-normal">(Trial until {{ $tenant->trial_ends_at->format('d M Y') }})</span>
                             @endif
                         </dd>
                     </div>
@@ -83,7 +76,7 @@
                     <div class="mt-3 pt-3 border-t border-slate-700">
                         <p class="text-xs text-slate-400 mb-1">Custom Domain</p>
                         <p class="text-sm text-white font-mono">{{ $tenant->custom_domain }}</p>
-                        <span class="text-xs {{ $tenant->custom_domain_verified ? 'text-emerald-400' : 'text-amber-400' }}">
+                        <span class="text-xs {{ $tenant->custom_domain_verified ? 'text-emerald-400' : 'text-yellow-400' }}">
                             {{ $tenant->custom_domain_verified ? '✓ Verified' : '⚠ Pending verification' }}
                         </span>
                     </div>
@@ -174,13 +167,13 @@
 
                     <div class="space-y-3">
                         @foreach($tenant->moduleRequests->where('status', 'pending') as $request)
-                            <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-slate-200">
+                            <div class="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4 text-sm text-slate-200">
                                 <div class="flex items-center justify-between gap-3">
                                     <div>
                                         <p class="font-semibold text-white">{{ $request->module_name }}</p>
                                         <p class="text-xs text-slate-400">{{ ucfirst($request->type) }} requested by {{ $request->user->name }}</p>
                                     </div>
-                                    <span class="text-xs text-amber-300 uppercase tracking-wide">Pending</span>
+                                    <span class="text-xs text-yellow-300 uppercase tracking-wide">Pending</span>
                                 </div>
                                 @if($request->notes)
                                     <p class="mt-3 text-xs text-slate-400">"{{ $request->notes }}"</p>

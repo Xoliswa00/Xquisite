@@ -54,7 +54,7 @@
                     @endforeach
                 </select>
                 <button type="submit"
-                        class="px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-semibold rounded-lg">
+                        class="px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-semibold rounded-lg">
                     Assign &amp; Confirm
                 </button>
             </form>
@@ -106,7 +106,7 @@
                         {{ $appointment->customer->name }}
                     </a>
                     @if($appointment->customer->phone)
-                        <p class="text-slate-400 text-xs">{{ $appointment->customer->phone }}</p>
+                        <p class="text-slate-400 text-xs"><x-whatsapp-link :phone="$appointment->customer->phone" :message="'Hi ' . $appointment->customer->name . ', this is ' . (Auth::user()->tenant?->name ?? config('app.name'))" /></p>
                     @endif
                 </div>
                 <div>

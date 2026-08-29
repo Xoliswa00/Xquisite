@@ -7,8 +7,11 @@ use App\Modules\Property\Models\Lease;
 use App\Modules\Property\Models\Property;
 use App\Modules\Property\Models\Renter;
 use App\Modules\Property\Models\Unit;
+use App\Notifications\LeaseRenewedNotification;
+use App\Services\AuditService;
 use App\Services\BillingBridge;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class LeaseController extends Controller
 {
@@ -47,6 +50,7 @@ class LeaseController extends Controller
             'unit_id'        => 'required|exists:units,id',
             'renter_id'      => 'required|exists:renters,id',
             'start_date'     => 'required|date',
+            'signed_date'    => 'nullable|date',
             'end_date'       => 'nullable|date|after:start_date',
             'monthly_rent'   => 'required|numeric|min:0',
             'deposit_amount' => 'nullable|numeric|min:0',
@@ -65,6 +69,7 @@ class LeaseController extends Controller
         );
 
         $validated['status'] = 'active';
+        $validated['deposit_amount'] = $validated['deposit_amount'] ?? 0;
         $lease = Lease::create($validated);
 
         // Mark unit as occupied
@@ -91,7 +96,7 @@ class LeaseController extends Controller
 
     public function show(Lease $lease)
     {
-        $lease->load(['property', 'unit', 'renter', 'rentPayments' => fn($q) => $q->orderByDesc('period')]);
+        $lease->load(['property', 'unit', 'renter', 'rentPayments' => fn($q) => $q->orderByDesc('period'), 'charges' => fn($q) => $q->latest(), 'depositDeductions', 'inspections']);
         return view('property.leases.show', compact('lease'));
     }
 
@@ -115,6 +120,8 @@ class LeaseController extends Controller
             'deposit_paid'   => 'boolean',
             'notes'          => 'nullable|string',
         ]);
+
+        $validated['deposit_amount'] = $validated['deposit_amount'] ?? 0;
 
         $lease->update($validated);
 
@@ -150,5 +157,79 @@ class LeaseController extends Controller
         }
 
         return redirect()->route('leases.show', $lease)->with('success', 'Lease terminated. Unit is now vacant.');
+    }
+
+    /** Extend an active lease's term. Resets the expiry-alert cycle so the new end date gets its own 30/14/7/1-day notices. */
+    public function renew(Request $request, Lease $lease)
+    {
+        abort_unless($lease->status === 'active', 422, 'Only an active lease can be renewed.');
+
+        $validated = $request->validate([
+            'new_end_date'     => 'required|date|after:' . ($lease->end_date?->toDateString() ?? 'today'),
+            'new_monthly_rent' => 'nullable|numeric|min:0',
+        ]);
+
+        $oldEndDate = $lease->end_date;
+        $oldRent = $lease->monthly_rent;
+
+        $lease->update([
+            'end_date'            => $validated['new_end_date'],
+            'monthly_rent'        => $validated['new_monthly_rent'] ?? $lease->monthly_rent,
+            'notified_thresholds' => [],
+        ]);
+
+        if (!empty($validated['new_monthly_rent'])) {
+            $lease->unit?->update(['monthly_rent' => $validated['new_monthly_rent']]);
+        }
+
+        AuditService::log(
+            action: 'lease.renewed',
+            entityType: 'Lease',
+            entityId: $lease->id,
+            old: ['end_date' => $oldEndDate?->toDateString(), 'monthly_rent' => $oldRent],
+            new: ['end_date' => $lease->end_date->toDateString(), 'monthly_rent' => $lease->monthly_rent],
+        );
+
+        if ($lease->renter?->email) {
+            $lease->renter->notify(new LeaseRenewedNotification($lease, (float) $oldRent));
+        }
+
+        return redirect()->route('leases.show', $lease)->with('success', 'Lease renewed to ' . $lease->end_date->format('d M Y') . '.');
+    }
+
+    public function agreementPdf(Lease $lease)
+    {
+        $lease->load(['property', 'unit', 'renter']);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('property.leases.agreement-pdf', compact('lease'));
+
+        return $pdf->download('lease-agreement-' . $lease->id . '.pdf');
+    }
+
+    public function statementPdf(Lease $lease)
+    {
+        $lease->load(['property', 'unit', 'renter', 'rentPayments', 'charges']);
+
+        $entries = $lease->rentPayments->map(fn ($p) => [
+            'date'        => $p->paid_date ?? $p->due_date,
+            'description' => 'Rent — ' . $p->periodLabel(),
+            'excl'        => (float) $p->amount_due,
+            'vat'         => 0.0,
+            'incl'        => (float) $p->amount_due,
+            'paid'        => (float) $p->amount_paid,
+        ])->concat($lease->charges->map(fn ($c) => [
+            'date'        => $c->paid_date ?? $c->due_date ?? $c->created_at,
+            'description' => $c->description,
+            'excl'        => (float) $c->amount_excl,
+            'vat'         => (float) $c->vat_amount,
+            'incl'        => (float) $c->amount_incl,
+            'paid'        => (float) $c->amount_paid,
+        ]));
+
+        $entries = Collection::make($entries)->sortBy('date')->values();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('property.leases.statement-pdf', compact('lease', 'entries'));
+
+        return $pdf->download('statement-lease-' . $lease->id . '.pdf');
     }
 }

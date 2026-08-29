@@ -1,0 +1,36 @@
+@extends('layouts.booking')
+
+@section('content')
+<div class="max-w-md mx-auto space-y-6">
+    <div class="text-center">
+        <h1 class="text-2xl font-bold text-slate-900">Set a new password</h1>
+        <p class="text-slate-500 mt-1 text-sm">Choose a new password for your account.</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-8">
+        <form method="POST" action="{{ route('book.password.store', $slug) }}" class="space-y-5">
+            @csrf
+            <input type="hidden" name="token" value="{{ $token }}">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <input type="email" name="email" value="{{ old('email', $email) }}" required autofocus
+                       class="w-full border-slate-300 rounded-xl @error('email') border-red-400 @enderror">
+                @error('email')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+                <input type="password" name="password" required
+                       class="w-full border-slate-300 rounded-xl @error('password') border-red-400 @enderror">
+                @error('password')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
+                <input type="password" name="password_confirmation" required class="w-full border-slate-300 rounded-xl">
+            </div>
+            <button type="submit" class="w-full py-3 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition">
+                Reset Password
+            </button>
+        </form>
+    </div>
+</div>
+@endsection

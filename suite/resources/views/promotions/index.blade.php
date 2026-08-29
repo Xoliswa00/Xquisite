@@ -8,7 +8,7 @@
                 <p class="text-sm text-slate-400 mt-1">Discount codes for your clients.</p>
             </div>
             <a href="{{ route('promotions.create') }}"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium rounded-lg transition-colors">
+               class="inline-flex items-center gap-2 px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-medium rounded-lg transition-colors">
                 + New Promotion
             </a>
         </div>

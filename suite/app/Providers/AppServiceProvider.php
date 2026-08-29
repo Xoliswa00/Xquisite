@@ -4,13 +4,18 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use App\Models\User;
 use App\Modules\Booking\Models\Appointment;
 use App\Modules\Booking\Models\Customer;
 use App\Modules\Booking\Observers\CustomerObserver;
 use App\Observers\AppointmentObserver;
+use App\Observers\UserObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,9 +25,11 @@ class AppServiceProvider extends ServiceProvider
     {
         Appointment::observe(AppointmentObserver::class);
         Customer::observe(CustomerObserver::class);
+        User::observe(UserObserver::class);
 
         $this->registerRateLimiters();
         $this->registerSlowQueryDetector();
+        $this->registerFailedJobAlerts();
     }
 
     private function registerRateLimiters(): void
@@ -79,5 +86,24 @@ class AppServiceProvider extends ServiceProvider
                 }
             });
         }
+    }
+
+    /**
+     * A queued job (any job, any queue) exhausting its retries is always worth
+     * knowing about — go through Log::critical() rather than a direct system_logs
+     * insert so it also fires the existing CriticalLogAlert email, the same way
+     * property:health-check findings do.
+     */
+    private function registerFailedJobAlerts(): void
+    {
+        Queue::failing(function (JobFailed $event) {
+            Log::critical('[queue] Job failed permanently: ' . $event->job->resolveName(), [
+                'connection' => $event->connectionName,
+                'queue'      => $event->job->getQueue(),
+                'job_id'     => $event->job->getJobId(),
+                'attempts'   => $event->job->attempts(),
+                'exception'  => $event->exception->getMessage(),
+            ]);
+        });
     }
 }

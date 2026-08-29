@@ -1,10 +1,5 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-[#D4AF37]">Add Renter</h2>
-            <a href="{{ route('renters.index') }}" class="text-sm text-slate-400 hover:text-white">&larr; Back to Renters</a>
-        </div>
-    </x-slot>
+    <x-slot name="header">Add Renter</x-slot>
 
     <div class="max-w-2xl mx-auto p-6">
         <form method="POST" action="{{ route('renters.store') }}" class="space-y-6">
@@ -75,7 +70,7 @@
                 <a href="{{ route('renters.index') }}"
                    class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm">Cancel</a>
                 <button type="submit"
-                        class="px-5 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg text-sm font-semibold">
+                        class="px-5 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg text-sm font-semibold">
                     Save Renter
                 </button>
             </div>

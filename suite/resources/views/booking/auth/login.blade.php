@@ -23,7 +23,10 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block text-sm font-medium text-slate-700">Password</label>
+                    <a href="{{ route('book.password.request', $slug) }}" class="text-xs text-[#0078D4] hover:text-[#0065B8]">Forgot password?</a>
+                </div>
                 <input type="password" name="password" required
                        class="w-full border-slate-300 rounded-xl @error('password') border-red-400 @enderror">
                 @error('password') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
