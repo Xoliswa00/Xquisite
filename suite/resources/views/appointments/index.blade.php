@@ -26,7 +26,7 @@
                 </div>
             </form>
             <a href="{{ route('appointments.create') }}"
-               class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
+               class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
                 + New Booking
             </a>
         </div>

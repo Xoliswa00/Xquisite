@@ -188,7 +188,7 @@
                               class="w-full border-slate-300 rounded-xl text-sm"></textarea>
                 </div>
                 <button type="submit"
-                        class="w-full py-3 bg-[#0078D4] hover:bg-[#0078D4] text-white font-semibold rounded-xl transition text-lg">
+                        class="w-full py-3 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition text-lg">
                     Confirm Booking
                 </button>
             </div>
@@ -204,7 +204,7 @@
                 Sign in to existing account
             </a>
             <a href="{{ route('book.register', $slug) }}"
-               class="block text-center py-3 bg-[#0078D4] hover:bg-[#0078D4] text-white font-semibold rounded-xl transition">
+               class="block text-center py-3 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition">
                 Create a new account
             </a>
         </div>

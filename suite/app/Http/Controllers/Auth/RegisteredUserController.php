@@ -7,6 +7,7 @@ use App\Mail\WelcomeNewUserMail;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\NewTenantRegistered;
+use App\Rules\SouthAfricanPhoneNumber;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class RegisteredUserController extends Controller
             'industry'      => ['nullable', 'string', 'max:100'],
             'industry_other' => ['nullable', 'string', 'max:100', 'required_if:industry,other'],
             'name'          => ['required', 'string', 'max:255'],
-            'phone'         => ['nullable', 'string', 'max:30'],
+            'phone'         => ['nullable', new SouthAfricanPhoneNumber],
             'email'         => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password'      => ['required', 'confirmed', Rules\Password::defaults()],
         ]);

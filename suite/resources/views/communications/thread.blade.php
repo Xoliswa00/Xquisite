@@ -51,7 +51,7 @@
                     <textarea name="body" rows="4" required class="mt-1 w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 text-sm focus:ring-[#0078D4] focus:border-[#0078D4]" placeholder="Type your message…"></textarea>
                     <x-input-error :messages="$errors->get('body')" />
                 </div>
-                <button type="submit" class="px-5 py-2.5 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium rounded-lg">Send Message</button>
+                <button type="submit" class="px-5 py-2.5 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-medium rounded-lg">Send Message</button>
             </form>
         </div>
     </div>

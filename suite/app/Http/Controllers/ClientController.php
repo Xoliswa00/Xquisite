@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Notifications\NewClientNotification;
+use App\Rules\SouthAfricanPhoneNumber;
 use Illuminate\Http\Request;
 
 class ClientController extends Controller
@@ -37,7 +38,7 @@ class ClientController extends Controller
         $data = $request->validate([
             'name'  => 'required|string|max:150',
             'email' => 'nullable|email|max:150',
-            'phone' => 'nullable|string|max:30',
+            'phone' => ['nullable', new SouthAfricanPhoneNumber],
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -72,7 +73,7 @@ class ClientController extends Controller
         $data = $request->validate([
             'name'  => 'required|string|max:150',
             'email' => 'nullable|email|max:150',
-            'phone' => 'nullable|string|max:30',
+            'phone' => ['nullable', new SouthAfricanPhoneNumber],
             'notes' => 'nullable|string|max:1000',
         ]);
 

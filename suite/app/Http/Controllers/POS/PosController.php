@@ -136,7 +136,7 @@ class PosController extends Controller
 
             // Link appointment and mark completed
             if ($request->appointment_id) {
-                Appointment::where('id', $request->appointment_id)->update([
+                Appointment::find($request->appointment_id)?->update([
                     'pos_order_id' => $sale->id,
                     'status'       => 'completed',
                 ]);

@@ -3,9 +3,12 @@
 namespace App\Modules\POS\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\Auditable;
 
 class SaleItem extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'sale_id',
         'item_type',

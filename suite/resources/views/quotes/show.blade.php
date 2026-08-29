@@ -9,13 +9,6 @@
 
     <div class="py-8 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
 
-        @if (session('success'))
-            <div class="p-4 bg-emerald-900/50 border border-emerald-700 text-emerald-300 rounded-lg text-sm">{{ session('success') }}</div>
-        @endif
-        @if (session('error'))
-            <div class="p-4 bg-red-900/50 border border-red-700 text-red-300 rounded-lg text-sm">{{ session('error') }}</div>
-        @endif
-
         {{-- Status bar --}}
         <div class="bg-slate-800 rounded-xl border border-slate-700 p-5 flex items-center justify-between gap-4 flex-wrap">
             <div class="flex items-center gap-3">
@@ -39,7 +32,7 @@
                 @if (in_array($quote->status, ['draft', 'sent']))
                 <form method="POST" action="{{ route('quotes.send', $quote) }}">
                     @csrf
-                    <button type="submit" class="px-3 py-1.5 text-sm bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg font-medium">
+                    <button type="submit" class="px-3 py-1.5 text-sm bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg font-medium">
                         {{ $quote->status === 'sent' ? 'Resend' : 'Send to Client' }}
                     </button>
                 </form>

@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Models\Traits\HasTenant;
+use App\Models\Traits\Auditable;
 use App\Modules\POS\Models\Product;
 use Illuminate\Database\Eloquent\Model;
 
 class ServiceCategory extends Model
 {
-    use HasTenant;
+    use HasTenant, Auditable;
     protected $fillable = [
         'tenant_id', 'name', 'description', 'color', 'icon', 'sort_order', 'is_active',
     ];

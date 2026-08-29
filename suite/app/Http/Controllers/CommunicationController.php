@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\DirectMessageNotification;
 use App\Notifications\PlatformMessageNotification;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 
 class CommunicationController extends Controller
@@ -31,7 +32,17 @@ class CommunicationController extends Controller
 
         $messages = $client->communications()->with('fromUser')->orderBy('created_at')->get();
 
-        $client->communications()->where('is_from_owner', false)->whereNull('read_at')->update(['read_at' => now()]);
+        // Bulk update — bypasses Communication's Auditable trait, so log the sweep explicitly.
+        $markedCount = $client->communications()->where('is_from_owner', false)->whereNull('read_at')->update(['read_at' => now()]);
+
+        if ($markedCount > 0) {
+            AuditService::log(
+                action: 'Communication.bulk_read',
+                entityType: 'Client',
+                entityId: $client->id,
+                meta: ['count' => $markedCount],
+            );
+        }
 
         return view('communications.thread', compact('client', 'messages'));
     }

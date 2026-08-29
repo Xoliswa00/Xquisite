@@ -6,21 +6,17 @@
         <div class="flex items-center justify-between gap-4 flex-wrap">
             <h1 class="text-xl font-bold text-[#D4AF37]">Services & Add-ons</h1>
             <a href="{{ route('admin.platform-services.create') }}"
-               class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg font-medium transition-colors">
+               class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm rounded-lg font-medium transition-colors">
                 + Add Service
             </a>
         </div>
-
-        @if (session('success'))
-            <div class="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">{{ session('success') }}</div>
-        @endif
 
         {{-- Pending Orders --}}
         @if ($orders->isNotEmpty())
         <div>
             <h3 class="text-sm font-semibold text-[#D4AF37] mb-3">
                 Pending Orders
-                <span class="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">{{ $orders->count() }}</span>
+                <span class="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300">{{ $orders->count() }}</span>
             </h3>
 
             <div class="bg-slate-800 rounded-xl border border-slate-700 divide-y divide-slate-700 overflow-hidden">
@@ -65,7 +61,7 @@
                                 @endforeach
                             </select>
                             <button type="submit"
-                                    class="text-xs bg-[#0078D4] hover:bg-[#0078D4] text-white px-3 py-1.5 rounded-lg transition-colors">
+                                    class="text-xs bg-[#0078D4] hover:bg-[#0065B8] text-white px-3 py-1.5 rounded-lg transition-colors">
                                 Save
                             </button>
                         </form>

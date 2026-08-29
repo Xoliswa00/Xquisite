@@ -11,6 +11,21 @@ use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\EnforcePasswordChange;
 use App\Http\Middleware\SecurityHeaders;
 
+// Resolves where an expired/guest session should be sent back to — the tenant's
+// own portal login (with its slug) when the request was inside one, never the
+// main staff login. Shared by the auth-guard redirect and the CSRF-expiry handler
+// below so a page refresh or a stale form submit lands back on the same portal.
+$portalLoginRedirect = function (\Illuminate\Http\Request $request): string {
+    $slug = $request->route('slug');
+
+    return match (true) {
+        $slug && $request->is('rent/*')       => route('rent.login', $slug),
+        $slug && $request->is('book/*')       => route('book.login', $slug),
+        $slug && $request->is('contractor/*') => route('contractor.login', $slug),
+        default                               => route('login'),
+    };
+};
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -18,7 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
+    ->withMiddleware(function (Middleware $middleware) use ($portalLoginRedirect): void {
         $middleware->web(prepend: [
             CheckBlockedIp::class,
         ]);
@@ -35,15 +50,46 @@ return Application::configure(basePath: dirname(__DIR__))
             '/js-error',
         ]);
 
+        $middleware->redirectGuestsTo($portalLoginRedirect);
+
         $middleware->alias([
             'module' => EnsureModuleActive::class,
             'enforce-password-change' => EnforcePasswordChange::class,
             'company.suspension' => \App\Http\Middleware\CheckCompanySuspension::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
-            return redirect()->route('login')->with('status', 'Your session expired. Please sign in again.');
+    ->withExceptions(function (Exceptions $exceptions) use ($portalLoginRedirect): void {
+        // Last-resort net for any DB integrity violation that slips past
+        // application-level validation (a race condition, a spot a validation
+        // rule doesn't cover yet, etc.) — across every portal, not just the
+        // ones we've explicitly hardened. Never let one of these reach the
+        // user as a raw stack trace/500; the exception is still fully logged
+        // to system_logs via the report() callback below regardless.
+        $exceptions->render(function (\Illuminate\Database\UniqueConstraintViolationException $e, $request) {
+            $message = 'That didn\'t save — this information (ID number, email, or phone number) already belongs to another record. Please check for a duplicate and try again.';
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $message], 409)
+                : back()->withInput()->withErrors(['error' => $message]);
+        });
+
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, $request) {
+            $message = 'That didn\'t save due to a data problem on our end. Please try again — if it keeps happening, let us know.';
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $message], 500)
+                : back()->withInput()->withErrors(['error' => $message]);
+        });
+
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) use ($portalLoginRedirect) {
+            $message = 'Your session expired. Please sign in again.';
+
+            // 'status' is what the main staff login checks (Breeze convention);
+            // 'success' is what every portal layout (renter/booking/contractor) checks.
+            // Flash both so the message shows up wherever this redirect lands.
+            return redirect($portalLoginRedirect($request))
+                ->with('status', $message)
+                ->with('success', $message);
         });
 
         // Log every exception to the database, including 404s, 403s, and handled errors

@@ -1,25 +1,30 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <div>
-                <h2 class="text-2xl font-bold text-[#D4AF37]">Payment &mdash; {{ $rentPayment->period }}</h2>
-                <a href="{{ route('rent-payments.index') }}" class="text-sm text-slate-400 hover:text-white">&larr; Back to Payments</a>
-            </div>
-            <span class="px-2 py-0.5 rounded text-xs font-medium
-                @if($rentPayment->status === 'paid') bg-emerald-900/40 text-emerald-400
-                @elseif($rentPayment->status === 'partial') bg-yellow-900/40 text-yellow-400
-                @elseif($rentPayment->status === 'overdue') bg-red-900/40 text-red-400
-                @else bg-slate-700 text-slate-400 @endif">
-                {{ ucfirst($rentPayment->status) }}
-            </span>
-        </div>
-    </x-slot>
+    <x-slot name="header">Payment &mdash; {{ $rentPayment->period }}</x-slot>
 
     <div class="max-w-3xl mx-auto p-6 space-y-6">
 
-        @if(session('success'))
-            <div class="p-4 bg-emerald-900/30 border border-emerald-700 text-emerald-300 rounded-xl text-sm">{{ session('success') }}</div>
-        @endif
+        {{-- Identity --}}
+        <div class="bg-slate-800 rounded-xl p-6">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-[#D4AF37]">Payment &mdash; {{ $rentPayment->period }}</h2>
+                    <a href="{{ route('rent-payments.index') }}" class="text-sm text-slate-400 hover:text-white mt-0.5 inline-block">&larr; Back to Payments</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    @if($rentPayment->amount_paid > 0)
+                        <a href="{{ route('rent-payments.receipt', $rentPayment) }}"
+                           class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs rounded-lg">Download Receipt</a>
+                    @endif
+                    <span class="px-2 py-0.5 rounded text-xs font-medium
+                        @if($rentPayment->status === 'paid') bg-emerald-900/40 text-emerald-400
+                        @elseif($rentPayment->status === 'partial') bg-yellow-900/40 text-yellow-400
+                        @elseif($rentPayment->status === 'overdue') bg-red-900/40 text-red-400
+                        @else bg-slate-700 text-slate-400 @endif">
+                        {{ ucfirst($rentPayment->status) }}
+                    </span>
+                </div>
+            </div>
+        </div>
 
         {{-- Details --}}
         <div class="bg-slate-800 rounded-xl p-6">
@@ -78,6 +83,7 @@
                 <h3 class="text-sm font-semibold text-slate-300 mb-4">Record Payment</h3>
                 <form method="POST" action="{{ route('rent-payments.record', $rentPayment) }}" class="space-y-4">
                     @csrf
+                    @method('PATCH')
 
                     @if($errors->any())
                         <div class="p-4 bg-red-900/30 border border-red-700 text-red-300 rounded-xl text-sm">
@@ -104,7 +110,7 @@
                             <label class="block text-xs font-medium text-slate-400 mb-1">Payment Method</label>
                             <select name="payment_method" class="w-full bg-slate-700 border-slate-600 text-slate-100 rounded-lg text-sm px-3 py-2">
                                 <option value="">Select method...</option>
-                                @foreach(['cash','eft','bank_transfer','card','cheque','other'] as $method)
+                                @foreach(['cash','eft','card','debit_order','other'] as $method)
                                     <option value="{{ $method }}" @selected(old('payment_method') === $method)>{{ ucfirst(str_replace('_', ' ', $method)) }}</option>
                                 @endforeach
                             </select>

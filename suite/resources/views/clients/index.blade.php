@@ -5,7 +5,7 @@
         <div class="flex items-center justify-between">
             <h2 class="text-xl font-bold text-[#D4AF37]">Clients</h2>
             <a href="{{ route('clients.create') }}"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium rounded-lg transition-colors">
+               class="inline-flex items-center gap-2 px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-medium rounded-lg transition-colors">
                 + Add Client
             </a>
         </div>
@@ -18,7 +18,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="font-medium text-white">{{ $client->name }}</p>
-                        <p class="text-sm text-slate-400">{{ $client->email }} {{ $client->phone ? '· ' . $client->phone : '' }}</p>
+                        <p class="text-sm text-slate-400">{{ $client->email }} @if($client->phone)· <x-whatsapp-link :phone="$client->phone" :message="'Hi ' . $client->name . ', this is ' . (Auth::user()->tenant?->name ?? config('app.name'))" />@endif</p>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <a href="{{ route('clients.show', $client) }}" class="text-xs px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-700">View</a>

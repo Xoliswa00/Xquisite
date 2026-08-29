@@ -49,14 +49,14 @@
         <nav class="flex items-center gap-1 sm:gap-3 text-sm">
             @auth('customer')
                 @php $customer = auth('customer')->user(); $unread = $customer?->unreadNotifications()->count(); @endphp
-                <a href="{{ route('book.notifications', $slug) }}" class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition">
+                <a href="{{ route('book.notifications', $slug) }}" class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition {{ request()->routeIs('book.notifications') ? 'font-semibold text-[#0078D4] bg-[#0078D4]/10' : 'text-slate-600 hover:bg-slate-100' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                     <span class="hidden sm:inline">Notifications</span>
                     @if($unread > 0)
                         <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{{ $unread }}</span>
                     @endif
                 </a>
-                <a href="{{ route('book.my-bookings', $slug) }}" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition">
+                <a href="{{ route('book.my-bookings', $slug) }}" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition {{ request()->routeIs('book.my-bookings') ? 'font-semibold text-[#0078D4] bg-[#0078D4]/10' : 'text-slate-600 hover:bg-slate-100' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     <span class="hidden sm:inline">My Bookings</span>
                 </a>
@@ -66,7 +66,7 @@
                 </form>
             @else
                 <a href="{{ route('book.login', $slug) }}" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition">Sign in</a>
-                <a href="{{ route('book.register', $slug) }}" class="bg-[#0078D4] hover:bg-[#0078D4] text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm">
+                <a href="{{ route('book.register', $slug) }}" class="bg-[#0078D4] hover:bg-[#0065B8] text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm">
                     Register
                 </a>
             @endauth

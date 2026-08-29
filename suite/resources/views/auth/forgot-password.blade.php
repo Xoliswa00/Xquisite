@@ -2,7 +2,7 @@
 
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-[#D4AF37]" style="font-family:'Montserrat',sans-serif">Reset your password</h1>
-        <p class="text-sm text-[#2D3748]/60 mt-1">Enter your email and we'll send you a reset link.</p>
+        <p class="text-base text-[#2D3748]/75 mt-1">Enter your email and we'll send you a reset link.</p>
     </div>
 
     <x-auth-session-status class="mb-4" :status="session('status')" />
@@ -25,7 +25,7 @@
         </button>
     </form>
 
-    <p class="mt-6 text-center text-sm text-[#2D3748]/60">
+    <p class="mt-6 text-center text-base text-[#2D3748]/75">
         <a href="{{ route('login') }}" class="text-[#0078D4] hover:text-[#0065B8]">&larr; Back to sign in</a>
     </p>
 

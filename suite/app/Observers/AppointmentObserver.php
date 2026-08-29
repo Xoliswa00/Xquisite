@@ -17,7 +17,7 @@ class AppointmentObserver
         // Re-schedule reminders whenever status or time changes
         if ($appointment->isDirty(['scheduled_at', 'status'])) {
             // Delete existing unsent reminders
-            $appointment->reminders()->where('status', 'pending')->delete();
+            $appointment->reminders()->where('status', 'pending')->get()->each->delete();
 
             if (in_array($appointment->status, ['pending', 'confirmed'])) {
                 $this->scheduleReminders($appointment);

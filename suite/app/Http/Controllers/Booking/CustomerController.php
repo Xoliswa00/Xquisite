@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Booking;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Booking\Models\Customer;
+use App\Rules\SouthAfricanPhoneNumber;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
@@ -40,7 +41,7 @@ class CustomerController extends Controller
         $data = $request->validate([
             'name'      => 'required|string|max:255',
             'email'     => 'nullable|email|max:255|unique:customers,email',
-            'phone'     => 'nullable|string|max:50',
+            'phone'     => ['nullable', new SouthAfricanPhoneNumber],
             'notes'     => 'nullable|string|max:2000',
             'is_active' => 'boolean',
         ]);
@@ -73,7 +74,7 @@ class CustomerController extends Controller
         $data = $request->validate([
             'name'      => 'required|string|max:255',
             'email'     => 'nullable|email|max:255|unique:customers,email,' . $customer->id,
-            'phone'     => 'nullable|string|max:50',
+            'phone'     => ['nullable', new SouthAfricanPhoneNumber],
             'notes'     => 'nullable|string|max:2000',
             'is_active' => 'boolean',
         ]);

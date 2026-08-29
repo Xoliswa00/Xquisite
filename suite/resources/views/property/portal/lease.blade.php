@@ -7,6 +7,9 @@
     @if(!$activeLease)
         <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-amber-800">
             No active lease found. Contact your property manager.
+            @if(!empty($tenant->phone))
+                <x-whatsapp-link :phone="$tenant->phone" :message="'Hi, this is ' . $renter->name" class="font-semibold underline">Message us on WhatsApp</x-whatsapp-link>
+            @endif
         </div>
     @else
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">

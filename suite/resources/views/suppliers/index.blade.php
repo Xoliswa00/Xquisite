@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
             <div></div>
             <a href="{{ route('suppliers.create') }}"
-               class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-5 py-2 rounded-lg">
+               class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-5 py-2 rounded-lg">
                 Add Supplier
             </a>
         </div>
@@ -36,7 +36,7 @@
                             <td class="px-4 py-3 text-slate-400">
                                 <p>{{ $supplier->contact_person ?: '—' }}</p>
                                 @if($supplier->phone)
-                                    <p class="text-xs text-slate-500">{{ $supplier->phone }}</p>
+                                    <p class="text-xs text-slate-500"><x-whatsapp-link :phone="$supplier->phone" :message="'Hi ' . $supplier->name . ', this is ' . (Auth::user()->tenant?->name ?? config('app.name'))" /></p>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-slate-400">{{ $supplier->payment_terms ?: '—' }}</td>

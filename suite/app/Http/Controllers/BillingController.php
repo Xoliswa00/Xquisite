@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AuditLog;
 use App\Models\BillingQueue;
 use App\Models\BillingSetting;
 use App\Models\Modules\Core\Models\SystemLog;
 use App\Models\PlatformInvoice;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Rules\SouthAfricanPhoneNumber;
 use App\Notifications\BillingPopSubmittedNotification;
+use App\Services\AuditService;
 use App\Services\PlatformBillingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -133,15 +134,12 @@ class BillingController extends Controller
 
         abort_unless($invoice->hasPop(), 404);
 
-        AuditLog::create([
-            'action'      => 'document.accessed',
-            'entity_type' => 'PlatformInvoice',
-            'entity_id'   => $invoice->id,
-            'user_id'     => $user->id,
-            'ip_address'  => request()->ip(),
-            'url'         => request()->fullUrl(),
-            'meta'        => ['file' => 'pop', 'invoice_number' => $invoice->invoice_number],
-        ]);
+        AuditService::log(
+            action: 'document.accessed',
+            entityType: 'PlatformInvoice',
+            entityId: $invoice->id,
+            meta: ['file' => 'pop', 'invoice_number' => $invoice->invoice_number],
+        );
 
         return Storage::disk('private')->download(
             $invoice->pop_path,
@@ -169,15 +167,12 @@ class BillingController extends Controller
 
         abort_unless($invoice->hasPop(), 404);
 
-        AuditLog::create([
-            'action'      => 'document.accessed',
-            'entity_type' => 'PlatformInvoice',
-            'entity_id'   => $invoice->id,
-            'user_id'     => $user->id,
-            'ip_address'  => request()->ip(),
-            'url'         => request()->fullUrl(),
-            'meta'        => ['file' => 'pop', 'role' => 'admin', 'invoice_number' => $invoice->invoice_number, 'tenant_id' => $invoice->tenant_id],
-        ]);
+        AuditService::log(
+            action: 'document.accessed',
+            entityType: 'PlatformInvoice',
+            entityId: $invoice->id,
+            meta: ['file' => 'pop', 'role' => 'admin', 'invoice_number' => $invoice->invoice_number, 'tenant_id' => $invoice->tenant_id],
+        );
 
         return Storage::disk('private')->download(
             $invoice->pop_path,
@@ -203,15 +198,12 @@ class BillingController extends Controller
             abort(403);
         }
 
-        AuditLog::create([
-            'action'      => 'document.accessed',
-            'entity_type' => 'PlatformInvoice',
-            'entity_id'   => $invoice->id,
-            'user_id'     => $user->id,
-            'ip_address'  => request()->ip(),
-            'url'         => request()->fullUrl(),
-            'meta'        => ['file' => 'pdf', 'invoice_number' => $invoice->invoice_number],
-        ]);
+        AuditService::log(
+            action: 'document.accessed',
+            entityType: 'PlatformInvoice',
+            entityId: $invoice->id,
+            meta: ['file' => 'pdf', 'invoice_number' => $invoice->invoice_number],
+        );
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('billing.invoice-pdf', ['invoice' => $invoice->load('tenant')]);
         return $pdf->download('invoice-' . $invoice->invoice_number . '.pdf');
@@ -235,15 +227,12 @@ class BillingController extends Controller
             abort(403);
         }
 
-        AuditLog::create([
-            'action'      => 'document.accessed',
-            'entity_type' => 'PlatformInvoice',
-            'entity_id'   => $invoice->id,
-            'user_id'     => $user->id,
-            'ip_address'  => request()->ip(),
-            'url'         => request()->fullUrl(),
-            'meta'        => ['file' => 'pdf', 'role' => 'admin', 'invoice_number' => $invoice->invoice_number, 'tenant_id' => $invoice->tenant_id],
-        ]);
+        AuditService::log(
+            action: 'document.accessed',
+            entityType: 'PlatformInvoice',
+            entityId: $invoice->id,
+            meta: ['file' => 'pdf', 'role' => 'admin', 'invoice_number' => $invoice->invoice_number, 'tenant_id' => $invoice->tenant_id],
+        );
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('billing.invoice-pdf', ['invoice' => $invoice->load('tenant')]);
         return $pdf->download('invoice-' . $invoice->invoice_number . '.pdf');
@@ -337,7 +326,7 @@ class BillingController extends Controller
             'company_name'         => 'nullable|string|max:100',
             'company_address'      => 'nullable|string|max:500',
             'company_email'        => 'nullable|email|max:100',
-            'company_phone'        => 'nullable|string|max:30',
+            'company_phone'        => ['nullable', new SouthAfricanPhoneNumber],
             'company_vat'          => 'nullable|string|max:30',
             'company_registration' => 'nullable|string|max:40',
             'company_website'      => 'nullable|string|max:100',

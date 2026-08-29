@@ -35,12 +35,25 @@ use App\Http\Controllers\Admin\SyncQueueController;
 use App\Http\Controllers\Booking\PublicBookingController;
 use App\Http\Controllers\Booking\CustomerAuthController;
 use App\Http\Controllers\Booking\CustomerPortalController;
+use App\Http\Controllers\Property\ApplicantController;
+use App\Http\Controllers\Property\PublicApplicationController;
+use App\Http\Controllers\Property\PropertyListingController;
 use App\Http\Controllers\Property\PropertyController;
+use App\Http\Controllers\Property\PropertyImageController;
 use App\Http\Controllers\Property\UnitController;
 use App\Http\Controllers\Property\RenterController;
 use App\Http\Controllers\Property\LeaseController;
+use App\Http\Controllers\Property\LeaseChargeController;
+use App\Http\Controllers\Property\LeaseDepositController;
+use App\Http\Controllers\Property\InspectionController;
+use App\Http\Controllers\Property\MaintenancePhotoController;
+use App\Http\Controllers\Property\MaintenanceQuoteController;
+use App\Http\Controllers\Property\UnitExpenseController;
 use App\Http\Controllers\Property\RentPaymentController;
 use App\Http\Controllers\Property\MaintenanceController;
+use App\Http\Controllers\Property\ContractorController;
+use App\Http\Controllers\Property\ContractorAuthController;
+use App\Http\Controllers\Property\ContractorPortalController;
 use App\Http\Controllers\Property\RenterAuthController;
 use App\Http\Controllers\Property\RenterPortalController;
 use App\Http\Controllers\Admin\PlatformModuleController;
@@ -199,18 +212,52 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     // Property management module
     Route::middleware('module:property_management')->group(function () {
         Route::resource('properties', PropertyController::class);
+        Route::post('properties/{property}/images', [PropertyImageController::class, 'store'])->name('properties.images.store');
+        Route::delete('properties/{property}/images/{image}', [PropertyImageController::class, 'destroy'])->name('properties.images.destroy');
+        Route::resource('applicants', ApplicantController::class)->except(['destroy']);
+        Route::post('applicants/{applicant}/screen', [ApplicantController::class, 'screen'])->name('applicants.screen');
+        Route::post('applicants/{applicant}/convert', [ApplicantController::class, 'convert'])->name('applicants.convert');
+        // Must be registered before the units resource — its {unit} wildcard show
+        // route would otherwise swallow "bulk-create" as a unit route-key.
+        Route::get('properties/{property}/units/bulk-create', [UnitController::class, 'bulkCreate'])->name('properties.units.bulk-create');
+        Route::post('properties/{property}/units/bulk-store', [UnitController::class, 'bulkStore'])->name('properties.units.bulk-store');
         Route::resource('properties.units', UnitController::class);
+        Route::get('api/properties/{property}/units', [UnitController::class, 'apiIndex'])->name('properties.units.api');
+        Route::post('properties/{property}/units/{unit}/expenses', [UnitExpenseController::class, 'store'])->name('properties.units.expenses.store');
+        Route::delete('properties/{property}/units/{unit}/expenses/{expense}', [UnitExpenseController::class, 'destroy'])->name('properties.units.expenses.destroy');
         Route::resource('renters', RenterController::class);
         Route::post('renters/{renter}/invite', [RenterController::class, 'invite'])->name('renters.invite');
         Route::resource('leases', LeaseController::class)->except(['destroy']);
         Route::post('leases/{lease}/terminate', [LeaseController::class, 'terminate'])->name('leases.terminate');
+        Route::patch('leases/{lease}/renew', [LeaseController::class, 'renew'])->name('leases.renew');
+        Route::get('leases/{lease}/statement', [LeaseController::class, 'statementPdf'])->name('leases.statement');
+        Route::get('leases/{lease}/agreement', [LeaseController::class, 'agreementPdf'])->name('leases.agreement');
+        Route::post('leases/{lease}/charges', [LeaseChargeController::class, 'store'])->name('leases.charges.store');
+        Route::delete('leases/{lease}/charges/{charge}', [LeaseChargeController::class, 'destroy'])->name('leases.charges.destroy');
+        Route::get('lease-charges/{charge}', [LeaseChargeController::class, 'show'])->name('lease-charges.show');
+        Route::patch('lease-charges/{charge}/record', [LeaseChargeController::class, 'record'])->name('lease-charges.record');
+        Route::post('leases/{lease}/deposit/deductions', [LeaseDepositController::class, 'storeDeduction'])->name('leases.deposit.deductions.store');
+        Route::delete('leases/{lease}/deposit/deductions/{deduction}', [LeaseDepositController::class, 'destroyDeduction'])->name('leases.deposit.deductions.destroy');
+        Route::post('leases/{lease}/deposit/refund', [LeaseDepositController::class, 'refund'])->name('leases.deposit.refund');
+        Route::get('leases/{lease}/inspections/{type}', [InspectionController::class, 'create'])->name('leases.inspections.create')->where('type', 'move_in|move_out');
+        Route::get('leases/{lease}/inspections-view/{inspection}', [InspectionController::class, 'show'])->name('leases.inspections.show');
+        Route::post('leases/{lease}/inspections-view/{inspection}', [InspectionController::class, 'store'])->name('leases.inspections.store');
+        Route::post('maintenance/{maintenance}/photos', [MaintenancePhotoController::class, 'store'])->name('maintenance.photos.store');
+        Route::delete('maintenance/{maintenance}/photos/{photo}', [MaintenancePhotoController::class, 'destroy'])->name('maintenance.photos.destroy');
         Route::get('rent-payments', [RentPaymentController::class, 'index'])->name('rent-payments.index');
         Route::get('rent-payments/{rentPayment}', [RentPaymentController::class, 'show'])->name('rent-payments.show');
+        Route::get('rent-payments/{rentPayment}/receipt', [RentPaymentController::class, 'receiptPdf'])->name('rent-payments.receipt');
         Route::patch('rent-payments/{rentPayment}/record', [RentPaymentController::class, 'record'])->name('rent-payments.record');
         Route::post('rent-payments/generate', [RentPaymentController::class, 'generateMonthly'])->name('rent-payments.generate');
         Route::post('rent-payments/flag-overdue', [RentPaymentController::class, 'flagOverdue'])->name('rent-payments.flag-overdue');
         Route::resource('maintenance', MaintenanceController::class);
         Route::patch('maintenance/{maintenance}/status', [MaintenanceController::class, 'updateStatus'])->name('maintenance.status');
+        Route::patch('maintenance/{maintenance}/contractors', [MaintenanceController::class, 'assignContractors'])->name('maintenance.assign-contractors');
+        Route::post('maintenance-quotes/{quote}/approve', [MaintenanceQuoteController::class, 'approve'])->name('maintenance-quotes.approve');
+        Route::post('maintenance-quotes/{quote}/reject', [MaintenanceQuoteController::class, 'reject'])->name('maintenance-quotes.reject');
+        Route::post('maintenance-quotes/{quote}/mark-paid', [MaintenanceQuoteController::class, 'markPaid'])->name('maintenance-quotes.mark-paid');
+        Route::resource('contractors', ContractorController::class);
+        Route::post('contractors/{contractor}/invite', [ContractorController::class, 'invite'])->name('contractors.invite');
     });
 
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -303,6 +350,11 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('blocked-ips', [\App\Http\Controllers\Admin\BlockedIpController::class, 'store'])->name('blocked-ips.store');
             Route::delete('blocked-ips/{blockedIp}', [\App\Http\Controllers\Admin\BlockedIpController::class, 'destroy'])->name('blocked-ips.destroy');
             Route::delete('blocked-ips-purge', [\App\Http\Controllers\Admin\BlockedIpController::class, 'purgeExpired'])->name('blocked-ips.purge');
+
+            // Security — IP reputation (accounts sharing an IP)
+            Route::get('ip-reputation', [\App\Http\Controllers\Admin\IpReputationController::class, 'index'])->name('ip-reputation.index');
+            Route::post('ip-reputation/verify', [\App\Http\Controllers\Admin\IpReputationController::class, 'verify'])->name('ip-reputation.verify');
+            Route::delete('ip-reputation/{verifiedIp}', [\App\Http\Controllers\Admin\IpReputationController::class, 'unverify'])->name('ip-reputation.unverify');
         });
     });
 
@@ -350,14 +402,20 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
     // ── Customer auth routes (guests only — redirect if already logged in) ───
     Route::middleware('guest:customer')->group(function () {
         Route::get('/login',              [CustomerAuthController::class, 'showLogin'])->name('login');
-        Route::post('/login',             [CustomerAuthController::class, 'login'])->name('login.post');
+        Route::post('/login',             [CustomerAuthController::class, 'login'])->name('login.post')->middleware('throttle:auth');
         Route::get('/register',           [CustomerAuthController::class, 'showRegister'])->name('register');
         Route::post('/register',          [CustomerAuthController::class, 'register'])->name('register.post');
         // Account claim — for manually-added customers who want to set up their own login
         Route::get('/claim',              [CustomerAuthController::class, 'showClaim'])->name('claim');
-        Route::post('/claim',             [CustomerAuthController::class, 'lookupByPhone'])->name('claim.lookup');
+        Route::post('/claim',             [CustomerAuthController::class, 'lookupByPhone'])->name('claim.lookup')->middleware('throttle:auth');
         Route::get('/claim/setup',        [CustomerAuthController::class, 'showClaimSetup'])->name('claim.setup');
         Route::post('/claim/setup',       [CustomerAuthController::class, 'completeClaimSetup'])->name('claim.complete');
+
+        // Forgot / reset password
+        Route::get('/forgot-password',   [CustomerAuthController::class, 'showForgotPassword'])->name('password.request');
+        Route::post('/forgot-password',  [CustomerAuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:auth');
+        Route::get('/reset-password/{token}', [CustomerAuthController::class, 'showResetPassword'])->name('password.reset');
+        Route::post('/reset-password',   [CustomerAuthController::class, 'resetPassword'])->name('password.store');
     });
 
     // ── Requires customer auth ────────────────────────────────────────────────
@@ -383,8 +441,14 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
 Route::prefix('rent/{slug}')->name('rent.')->group(function () {
     // Public auth routes — no guard needed
     Route::get('/login',        [RenterAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login',       [RenterAuthController::class, 'login'])->name('login.post');
+    Route::post('/login',       [RenterAuthController::class, 'login'])->name('login.post')->middleware('throttle:auth');
     Route::post('/logout',      [RenterAuthController::class, 'logout'])->name('logout');
+
+    // Forgot / reset password — public, no guard needed
+    Route::get('/forgot-password',   [RenterAuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password',  [RenterAuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:auth');
+    Route::get('/reset-password/{token}', [RenterAuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password',   [RenterAuthController::class, 'resetPassword'])->name('password.store');
 
     // Protected portal pages — renter guard enforced at route level
     Route::middleware('auth:renter')->group(function () {
@@ -393,7 +457,47 @@ Route::prefix('rent/{slug}')->name('rent.')->group(function () {
         Route::get('/payments',     [RenterPortalController::class, 'payments'])->name('payments');
         Route::get('/maintenance',  [RenterPortalController::class, 'maintenance'])->name('maintenance');
         Route::post('/maintenance', [RenterPortalController::class, 'submitMaintenance'])->name('maintenance.submit');
+        Route::get('/payments/{rentPayment}/receipt', [RenterPortalController::class, 'receiptPdf'])->name('payments.receipt');
+        Route::get('/notifications',                  [RenterPortalController::class, 'notifications'])->name('notifications.index');
+        Route::post('/notifications/{id}/read',       [RenterPortalController::class, 'markNotificationRead'])->name('notifications.read');
+        Route::post('/notifications/mark-all-read',   [RenterPortalController::class, 'markAllNotificationsRead'])->name('notifications.read-all');
     });
+});
+
+// ─── Contractor portal (/contractor/{slug}) ─────────────────────────────────
+Route::prefix('contractor/{slug}')->name('contractor.')->group(function () {
+    // Public auth routes — no guard needed
+    Route::get('/login',   [ContractorAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',  [ContractorAuthController::class, 'login'])->name('login.post')->middleware('throttle:auth');
+    Route::post('/logout', [ContractorAuthController::class, 'logout'])->name('logout');
+
+    // Forgot / reset password — public, no guard needed
+    Route::get('/forgot-password',   [ContractorAuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password',  [ContractorAuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:auth');
+    Route::get('/reset-password/{token}', [ContractorAuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password',   [ContractorAuthController::class, 'resetPassword'])->name('password.store');
+
+    // Protected portal pages — contractor guard enforced at route level
+    Route::middleware('auth:contractor')->group(function () {
+        Route::get('/',                      [ContractorPortalController::class, 'portal'])->name('portal');
+        Route::get('/jobs',                  [ContractorPortalController::class, 'jobs'])->name('jobs');
+        Route::get('/jobs/{job}',             [ContractorPortalController::class, 'showJob'])->name('jobs.show');
+        Route::post('/jobs/{job}/quote',      [ContractorPortalController::class, 'submitQuote'])->name('jobs.quote');
+        Route::post('/jobs/{job}/complete',   [ContractorPortalController::class, 'markComplete'])->name('jobs.complete');
+        Route::post('/jobs/{job}/photos',     [ContractorPortalController::class, 'storePhoto'])->name('jobs.photos');
+    });
+});
+
+// Public "browse available rentals" listing page (no auth) — discovery layer in
+// front of the apply flow below; a visitor doesn't need a direct property link.
+Route::get('listings/{slug}', [PropertyListingController::class, 'index'])->name('listings.index');
+
+// Public rental application (no auth) — a link staff can share with a prospective applicant
+// so they fill in their own details and upload supporting documents directly.
+Route::prefix('apply/{slug}/{property}')->name('apply.')->group(function () {
+    Route::get('/',        [PublicApplicationController::class, 'show'])->name('show');
+    Route::post('/',       [PublicApplicationController::class, 'store'])->name('store')->middleware('throttle:auth');
+    Route::get('/thanks',  [PublicApplicationController::class, 'thanks'])->name('thanks');
 });
 
 // Public storefront (no auth)
@@ -485,7 +589,9 @@ Route::get('/api/health', function () {
     ], $critical ? 503 : 200);
 })->name('health');
 
-// Client-side JS error collector — no auth, CSRF-exempt, CORS-enabled for cross-project beacons
+// Client-side JS error collector — CSRF-exempt, CORS-enabled for cross-project beacons.
+// Bearer token optional: present + valid attributes to that MonitoredInstance by name;
+// present + invalid is rejected; absent falls back to path-based bucketing (first-party pages).
 Route::options('/js-error', [App\Http\Controllers\JsErrorController::class, 'preflight']);
 Route::post('/js-error', [App\Http\Controllers\JsErrorController::class, 'store'])
     ->middleware('throttle:30,1')

@@ -13,7 +13,7 @@
                 @endif
             </form>
             <a href="{{ route('products.create') }}"
-               class="w-full sm:w-auto text-center bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
+               class="w-full sm:w-auto text-center bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
                 + Add Product
             </a>
         </div>

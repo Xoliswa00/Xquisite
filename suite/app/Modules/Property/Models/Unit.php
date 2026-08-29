@@ -3,15 +3,16 @@
 namespace App\Modules\Property\Models;
 
 use App\Models\Traits\HasTenant;
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 class Unit extends Model
 {
-    use HasTenant;
+    use HasTenant, Auditable;
 
     protected $fillable = [
         'tenant_id', 'property_id', 'unit_number', 'type', 'floor',
-        'bedrooms', 'bathrooms', 'size_sqm', 'monthly_rent',
+        'bedrooms', 'bathrooms', 'size_sqm', 'parking_bay', 'monthly_rent',
         'deposit_amount', 'status', 'notes',
     ];
 
@@ -38,6 +39,11 @@ class Unit extends Model
     public function rentPayments()
     {
         return $this->hasMany(RentPayment::class);
+    }
+
+    public function expenses()
+    {
+        return $this->hasMany(UnitExpense::class);
     }
 
     public function isVacant(): bool

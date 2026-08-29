@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MonitoredInstance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,7 +13,7 @@ class JsErrorController extends Controller
         return [
             'Access-Control-Allow-Origin'  => '*',
             'Access-Control-Allow-Methods' => 'POST, OPTIONS',
-            'Access-Control-Allow-Headers' => 'Content-Type',
+            'Access-Control-Allow-Headers' => 'Content-Type, Authorization',
             'Access-Control-Max-Age'       => '86400',
         ];
     }
@@ -34,16 +35,28 @@ class JsErrorController extends Controller
             'project' => 'nullable|string|max:100',
         ]);
 
-        $path    = parse_url($data['url'] ?? '', PHP_URL_PATH) ?? '';
-        $project = $data['project'] ?? null;
+        $path = parse_url($data['url'] ?? '', PHP_URL_PATH) ?? '';
+
+        // A `project` claim is only trusted when it comes with the instance's own
+        // bearer token — otherwise anyone could POST here claiming to be any
+        // external project. No token means this is first-party (this app's own
+        // pages), bucketed by path only; an invalid token is rejected outright.
+        $instance = null;
+        if ($token = $request->bearerToken()) {
+            $instance = MonitoredInstance::where('api_token', $token)->first();
+
+            if (!$instance) {
+                return response()->json(['error' => 'Invalid token'], 401, $this->corsHeaders());
+            }
+        }
 
         $source = match (true) {
-            $project !== null                   => $project,
-            str_contains($path, '/book/')       => 'booking-portal',
-            str_contains($path, '/admin/')      => 'admin',
-            str_contains($path, '/portal/')     => 'client-portal',
-            str_contains($path, '/shop/')       => 'shop',
-            default                             => 'suite',
+            $instance !== null              => $instance->name,
+            str_contains($path, '/book/')   => 'booking-portal',
+            str_contains($path, '/admin/')  => 'admin',
+            str_contains($path, '/portal/') => 'client-portal',
+            str_contains($path, '/shop/')   => 'shop',
+            default                         => 'suite',
         };
 
         try {

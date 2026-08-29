@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\BlockedIp;
+use App\Support\IpLocation;
 use Illuminate\Http\Request;
 
 class BlockedIpController extends Controller
@@ -14,7 +15,29 @@ class BlockedIpController extends Controller
             ->orderByDesc('created_at')
             ->paginate(50);
 
-        return view('admin.security.blocked-ips', compact('blocked'));
+        // Only the active page's rows are geocoded — this hits the external
+        // ip-api.com lookup, so keep it bounded to what's actually rendered.
+        $points = $blocked->getCollection()
+            ->map(function ($entry) {
+                $geo = IpLocation::geocode($entry->ip_address);
+
+                if (!$geo || !$geo['lat'] || !$geo['lon']) {
+                    return null;
+                }
+
+                return [
+                    'ip'      => $entry->ip_address,
+                    'reason'  => $entry->reason,
+                    'lat'     => $geo['lat'],
+                    'lon'     => $geo['lon'],
+                    'label'   => implode(', ', array_filter([$geo['city'], $geo['country']])),
+                    'expired' => $entry->isExpired(),
+                ];
+            })
+            ->filter()
+            ->values();
+
+        return view('admin.security.blocked-ips', compact('blocked', 'points'));
     }
 
     public function store(Request $request)
@@ -45,9 +68,9 @@ class BlockedIpController extends Controller
 
     public function purgeExpired()
     {
-        $count = BlockedIp::where('expires_at', '<', now())->count();
-        BlockedIp::where('expires_at', '<', now())->delete();
+        $expired = BlockedIp::where('expires_at', '<', now())->get();
+        $expired->each->unblock();
 
-        return back()->with('success', "Removed {$count} expired block(s).");
+        return back()->with('success', "Removed {$expired->count()} expired block(s).");
     }
 }

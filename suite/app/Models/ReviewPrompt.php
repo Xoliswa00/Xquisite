@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 class ReviewPrompt extends Model
 {
+    use Auditable;
+
     public $timestamps = false;
 
     protected $fillable = ['user_id', 'threshold', 'shown_at', 'dismissed_at', 'review_id'];

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Xquisite Creations — Business Management Platform for South African Businesses</title>
-    <meta name="description" content="Bookings, POS, online store, property management, and client messaging — one platform, activated module by module. Built for South African businesses, in rands, with local support. Free to start.">
+    <meta name="description" content="Bookings, POS, online store, property management, and client messaging, activated module by module in one platform. Built for South African businesses, in rands, with local support. Free to start.">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=montserrat:500,600,700,800|inter:400,500,600&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -32,13 +32,13 @@
     <meta property="og:url"           content="{{ url('/') }}">
     <meta property="og:site_name"     content="Xquisite Creations">
     <meta property="og:title"         content="Business Management Platform for South African Businesses — Xquisite Creations">
-    <meta property="og:description"   content="Bookings, POS, online store, property management &amp; client messaging — one platform, activate only what you need. Built in South Africa, works in rands, with PayFast built in. Free to start.">
+    <meta property="og:description"   content="Bookings, POS, online store, property management &amp; client messaging in one platform. Activate only what you need. Built in South Africa, works in rands, with PayFast built in. Free to start.">
     <meta property="og:image"         content="{{ url('/img/og-image.jpg') }}">
     <meta property="og:image:width"   content="1200">
     <meta property="og:image:height"  content="630">
     <meta name="twitter:card"         content="summary_large_image">
     <meta name="twitter:title"        content="Business Management Platform for South African Businesses — Xquisite Creations">
-    <meta name="twitter:description"  content="Bookings, POS, online store, property management &amp; client messaging — one platform for South African businesses. Activate only what you need.">
+    <meta name="twitter:description"  content="Bookings, POS, online store, property management &amp; client messaging, all in one platform for South African businesses. Activate only what you need.">
     <meta name="twitter:image"        content="{{ url('/img/og-image.jpg') }}">
     <style>
         html { scroll-behavior: smooth; }
@@ -209,8 +209,8 @@
             </h1>
 
             <p class="text-base sm:text-lg leading-relaxed mb-4 max-w-2xl text-[#B8D4F0] xq-enter" style="--xq-delay:.28s">
-                Bookings, point of sale, online store, property management, and client messaging —
-                activate only what your business needs. Built for South African businesses, in rands, with local support.
+                Bookings, point of sale, online store, property management, and client messaging.
+                Activate only what your business needs. Built for South African businesses, in rands, with local support.
             </p>
 
             <p class="f-mont font-semibold text-lg italic mb-10 text-[#D4AF37] xq-enter" style="--xq-delay:.4s">
@@ -244,9 +244,9 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-10">
             @foreach([
-                ['svg' => 'M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5', 'title' => 'Activate What You Need', 'body' => 'Bookings, POS, online store, or property management — turn on only the modules your business actually uses.'],
+                ['svg' => 'M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5', 'title' => 'Activate What You Need', 'body' => 'Turn on only the modules your business actually uses: bookings, POS, online store, or property management.'],
                 ['svg' => 'M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z', 'title' => 'Built for South Africa', 'body' => 'Works in rands. PayFast built in. Support that actually responds. No workarounds for a foreign system.'],
-                ['svg' => 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z', 'title' => 'Everything in One Dashboard', 'body' => 'Bookings, sales, stock, tenants, and client messages — all visible in one place. No switching between apps.'],
+                ['svg' => 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z', 'title' => 'Everything in One Dashboard', 'body' => 'Bookings, sales, stock, tenants, and client messages, all visible in one place. No switching between apps.'],
             ] as $p)
             <div class="xq-card bg-white rounded-2xl p-5 border border-gray-100 flex items-start gap-4 xq-sr xq-d{{ $loop->iteration }}">
                 <div class="xq-icon w-10 h-10 bg-[#002B5B] rounded-lg flex items-center justify-center shrink-0">
@@ -279,8 +279,8 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-6">
             @foreach([
                 ['n' => '1', 'title' => 'Create your account', 'body' => 'Sign up in under 2 minutes. No credit card required. Your account is ready immediately.', 'icon' => 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7Z'],
-                ['n' => '2', 'title' => 'Activate your modules', 'body' => 'Turn on Bookings, POS, Online Store, Property Management — only what your business needs right now.', 'icon' => 'M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z'],
-                ['n' => '3', 'title' => 'Run your business', 'body' => 'One login. One dashboard. Bookings, sales, tenants, stock, and client messages — all connected.', 'icon' => 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z'],
+                ['n' => '2', 'title' => 'Activate your modules', 'body' => 'Turn on Bookings, POS, Online Store, Property Management: only what your business needs right now.', 'icon' => 'M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z'],
+                ['n' => '3', 'title' => 'Run your business', 'body' => 'One login. One dashboard. Bookings, sales, tenants, stock, and client messages, all connected.', 'icon' => 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z'],
             ] as $step)
             <div class="flex flex-col items-center text-center xq-sr xq-d{{ $loop->iteration }}">
                 <div class="relative mb-6">
@@ -302,7 +302,7 @@
         <div class="mt-12 text-center">
             <a href="{{ route('register') }}"
                class="xq-shimmer inline-flex items-center gap-2 px-8 py-4 text-white font-semibold bg-[#0078D4] hover:bg-[#0065B8] rounded-xl shadow-lg transition-colors">
-                Get started — it's free
+                Get started, it's free
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
             </a>
             <p class="mt-3 text-xs text-[#2D3748]/40">
@@ -321,7 +321,7 @@
             <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
             <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-[#002B5B]">What We Do</h2>
             <p class="text-sm sm:text-base text-[#2D3748]/70 max-w-2xl mx-auto leading-relaxed">
-                Four core practice areas — each built to help your business operate better, grow faster, and decide smarter.
+                Four core practice areas, each built around a real problem South African businesses run into.
             </p>
         </div>
 
@@ -397,7 +397,7 @@
             <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
             <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-white">Platform Modules</h2>
             <p class="text-sm sm:text-base text-[#B8D4F0] max-w-xl mx-auto">
-                Everything you need to run your business — activate only what fits, expand as you grow.
+                Activate only what fits your business today, and add more as you grow.
             </p>
         </div>
 
@@ -407,7 +407,7 @@
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/25 text-emerald-300 text-xs font-semibold">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Live Now
                 </span>
-                <span class="text-xs sm:text-sm text-[#B8D4F0]/60">Available — activate from your settings</span>
+                <span class="text-xs sm:text-sm text-[#B8D4F0]/60">Available now, activate from your settings</span>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
                 @foreach ($active as $module)
@@ -460,26 +460,20 @@
 {{-- ─── COMING SOON ────────────────────────────────────────────────────── --}}
 @php $comingSoon = \App\Models\PlatformModule::comingSoon()->visible()->ordered()->get(); @endphp
 @if($comingSoon->isNotEmpty())
-<section class="bg-[#001A3A] py-16 sm:py-24 relative overflow-hidden">
-    <div class="absolute inset-0 xq-grid opacity-30 pointer-events-none"></div>
-    <div class="xq-orb xq-orb-gold" style="opacity:.35"></div>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+<section class="bg-slate-950 py-16 sm:py-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <div class="text-center mb-12 xq-sr">
-            <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
-            <span class="inline-block px-3 py-1 rounded-full text-[10px] f-mont font-bold uppercase tracking-widest bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/20 mb-5">
-                What's Next
-            </span>
             <h2 class="f-mont text-3xl sm:text-4xl font-bold text-white mb-4">Coming Soon to the Platform</h2>
-            <p class="text-sm sm:text-base text-[#B8D4F0]/60 max-w-xl mx-auto leading-relaxed">
-                We build what your business actually needs — here's what's already in the pipeline.
+            <p class="text-sm sm:text-base text-[#B8D4F0]/80 max-w-xl mx-auto leading-relaxed">
+                We build what your business actually needs. Here's what's already in the pipeline.
             </p>
         </div>
 
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             @foreach($comingSoon as $module)
-            <div class="xq-sr xq-d{{ ($loop->index % 4) + 1 }} group bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4
-                        hover:border-[#D4AF37]/30 hover:bg-white/[.07] transition-all duration-300">
+            <div class="xq-sr xq-d{{ ($loop->index % 4) + 1 }} group bg-white/[0.06] border border-white/10 rounded-2xl p-6 flex flex-col gap-4
+                        hover:border-[#D4AF37]/30 hover:bg-white/[.09] transition-all duration-300">
                 <div class="flex items-center justify-between">
                     <div class="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center
                                 group-hover:bg-[#D4AF37]/20 transition-colors">
@@ -494,20 +488,20 @@
                 </div>
                 <div class="flex-1">
                     <p class="font-bold text-white f-mont text-sm mb-2 leading-snug">{{ $module->name }}</p>
-                    <p class="text-xs text-[#B8D4F0]/50 leading-relaxed">{{ $module->description }}</p>
+                    <p class="text-sm text-[#B8D4F0]/80 leading-relaxed">{{ $module->description }}</p>
                 </div>
                 @if($module->price)
-                <p class="text-xs text-white/25">
-                    From <span class="font-semibold text-[#D4AF37]/60">R{{ number_format($module->price, 0) }}/mo</span>
+                <p class="text-xs text-slate-400">
+                    From <span class="font-semibold text-[#D4AF37]">R{{ number_format($module->price, 0) }}/mo</span>
                 </p>
                 @endif
             </div>
             @endforeach
         </div>
 
-        <p class="text-center mt-10 text-xs text-white/25">
+        <p class="text-center mt-10 text-sm text-slate-400">
             Want early access?
-            <a href="{{ route('register') }}" class="text-[#D4AF37]/60 hover:text-[#D4AF37] underline underline-offset-2 transition-colors">
+            <a href="{{ route('register') }}" class="text-[#D4AF37] hover:text-[#e8c968] underline underline-offset-2 transition-colors">
                 Sign up now
             </a>
             and we'll notify you when these go live.
@@ -524,7 +518,7 @@
         <div class="text-center mb-12 xq-sr">
             <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
             <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-[#002B5B]">Businesses Running on Xquisite</h2>
-            <p class="text-sm sm:text-base text-[#2D3748]/60">Real feedback from real operators.</p>
+            <p class="text-base sm:text-lg text-[#2D3748]/75">Real feedback from real operators.</p>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             @foreach ($testimonials as $review)
@@ -566,7 +560,7 @@
         <div class="text-center mb-12 lg:mb-16 xq-sr">
             <div class="w-12 h-0.5 mx-auto mb-5 rounded-full bg-[#D4AF37]"></div>
             <h2 class="f-mont text-3xl sm:text-4xl font-bold mb-4 text-[#002B5B]">Simple, Transparent Pricing</h2>
-            <p class="text-sm sm:text-base text-[#2D3748]/60">Bundle and save — or activate individual modules from R99/mo.</p>
+            <p class="text-base sm:text-lg text-[#2D3748]/75">Bundle and save, or activate individual modules from R99/mo.</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">

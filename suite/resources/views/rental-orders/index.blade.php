@@ -10,17 +10,13 @@
                 @endif
             </div>
             <a href="{{ route('rental-orders.create') }}"
-               class="px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg font-medium">
+               class="px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm rounded-lg font-medium">
                 + New Rental
             </a>
         </div>
     </x-slot>
 
     <div class="py-8 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        @if (session('success'))
-            <div class="mb-6 p-4 bg-emerald-900/30 border border-emerald-700 text-emerald-300 rounded-lg text-sm">{{ session('success') }}</div>
-        @endif
 
         <div class="bg-slate-800 rounded-xl overflow-hidden">
             <table class="min-w-full divide-y divide-slate-700 summary-on-mobile">

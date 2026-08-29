@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Tenant;
+use App\Services\AuditService;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -78,6 +79,15 @@ class ResetDemo extends Command
 
         // Re-seed the demo tenant baseline
         $this->call('db:seed', ['--class' => DemoSeeder::class, '--force' => true]);
+
+        // The wipe above is raw DB::table() bulk deletes across ~10 tables — none of it
+        // goes through Eloquent, so nothing here is caught by any model's Auditable trait.
+        // One summary entry stands in for that whole operation.
+        AuditService::log(
+            action: 'demo.reset',
+            entityType: 'Tenant',
+            entityId: $tenant->id,
+        );
 
         $this->info('Demo tenant reset successfully.');
 

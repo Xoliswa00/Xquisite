@@ -124,7 +124,7 @@
                         </template>
                     </div>
 
-                    <button type="submit" class="mt-6 w-full py-2.5 bg-[#0078D4] hover:bg-[#0078D4] text-white font-medium rounded-lg text-sm transition-colors">
+                    <button type="submit" class="mt-6 w-full py-2.5 bg-[#0078D4] hover:bg-[#0065B8] text-white font-medium rounded-lg text-sm transition-colors">
                         {{ isset($combo) ? 'Update Combo' : 'Create Combo' }}
                     </button>
                     <a href="{{ route('services.index', ['tab' => 'combos']) }}" class="block text-center text-xs text-slate-400 hover:text-white mt-3">Cancel</a>

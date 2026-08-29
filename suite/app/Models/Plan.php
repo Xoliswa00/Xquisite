@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Plan extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'key',
         'name',

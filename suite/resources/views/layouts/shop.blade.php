@@ -103,7 +103,10 @@
 <footer class="border-t border-gray-200 mt-12">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-gray-400">
         <span>© {{ date('Y') }} {{ $tenant->name }}</span>
-        <a href="/" target="_blank" rel="noopener" class="hover:opacity-80 transition-opacity">Powered by <span class="text-[#0078D4] font-medium">Xquisite Creation</span></a>
+        <a href="/" target="_blank" rel="noopener" class="inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img src="/img/android-icon-96x96.png" alt="Xquisite Creations" class="h-5 w-5 object-contain rounded">
+            <span>Powered by <span class="text-[#0078D4] font-medium">Xquisite Creations</span></span>
+        </a>
     </div>
 </footer>
 

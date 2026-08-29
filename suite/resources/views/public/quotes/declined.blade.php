@@ -4,7 +4,10 @@
         <h2 class="text-xl font-bold text-gray-900 mb-2">Quote Declined</h2>
         <p class="text-gray-500 text-sm">You've declined the quote for <strong>{{ $quote->title }}</strong>.</p>
         <p class="text-gray-400 text-sm mt-3">The business has been notified. If you'd like to discuss alternatives, please contact them directly.</p>
-        <p class="text-xs text-gray-400 mt-8">Powered by Xquisite Technologies (Pty) Ltd</p>
+        <p class="text-xs text-gray-400 mt-8 inline-flex items-center justify-center gap-1.5 w-full">
+            <img src="/img/android-icon-96x96.png" alt="Xquisite Creations" class="h-4 w-4 object-contain rounded">
+            Powered by Xquisite Technologies (Pty) Ltd
+        </p>
     </div>
 </div>
 </x-guest-layout>

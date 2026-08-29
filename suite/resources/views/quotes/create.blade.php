@@ -141,7 +141,7 @@
 
             <div class="flex justify-end gap-3">
                 <a href="{{ route('quotes.index') }}" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100">Cancel</a>
-                <button type="submit" class="px-5 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm rounded-lg font-medium">
+                <button type="submit" class="px-5 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm rounded-lg font-medium">
                     Save Quote
                 </button>
             </div>

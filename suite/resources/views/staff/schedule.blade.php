@@ -11,12 +11,6 @@
 
     <div class="max-w-3xl space-y-6">
 
-        @if(session('success'))
-            <div class="p-4 bg-emerald-900/30 border border-emerald-700 text-emerald-300 rounded-xl text-sm">
-                {{ session('success') }}
-            </div>
-        @endif
-
         @if($errors->any())
             <div class="p-4 bg-red-900/30 border border-red-700 text-red-300 rounded-xl text-sm">
                 <ul class="space-y-1">
@@ -81,7 +75,7 @@
 
                 <div class="px-6 py-4 border-t border-slate-700 flex justify-end">
                     <button type="submit"
-                            class="px-5 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-semibold rounded-lg transition">
+                            class="px-5 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-semibold rounded-lg transition">
                         Save Working Hours
                     </button>
                 </div>

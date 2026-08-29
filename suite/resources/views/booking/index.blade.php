@@ -43,7 +43,7 @@
                     {{ $tenant->name }}
                 </h1>
                 <p class="text-white/50 text-sm sm:text-base mt-3 max-w-md">
-                    Book your perfect experience — combos, specials, and individual services all in one place.
+                    Book your perfect experience: combos, specials, and individual services all in one place.
                 </p>
 
                 {{-- Stats strip --}}
@@ -205,7 +205,7 @@
                     <template x-if="isComboSelected({{ json_encode($ids) }}, {{ $combo->id }})">
                         <span class="flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                            Added — see summary →
+                            Added, see summary →
                         </span>
                     </template>
                 </button>
@@ -225,7 +225,7 @@
         </div>
         <div>
             <h2 class="text-lg font-bold text-slate-900 leading-none">Current Specials</h2>
-            <p class="text-xs text-slate-400 mt-0.5">Enter code at confirmation to redeem — not valid on combo deals</p>
+            <p class="text-xs text-slate-400 mt-0.5">Enter code at confirmation to redeem. Not valid on combo deals</p>
         </div>
         <span class="ml-auto text-xs text-amber-600 font-bold bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full">
             {{ $promotions->count() }} on now
@@ -683,7 +683,7 @@
                         </template>
                         <input type="hidden" name="combo_id" :value="selectedComboId || ''">
                         <button type="submit"
-                                class="w-full bg-[#0078D4] hover:bg-[#0078D4] active:scale-[0.98] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#DCEEFA] hover:shadow-xl hover:shadow-[#B8D4F0] flex items-center justify-center gap-2 text-sm">
+                                class="w-full bg-[#0078D4] hover:bg-[#0065B8] active:scale-[0.98] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#DCEEFA] hover:shadow-xl hover:shadow-[#B8D4F0] flex items-center justify-center gap-2 text-sm">
                             Choose Date &amp; Time
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                         </button>
@@ -882,7 +882,7 @@
     <template x-if="comboDeal">
         <div class="bg-emerald-500 text-white text-xs font-bold text-center py-1.5 flex items-center justify-center gap-2">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-            Combo deal applied — you're saving
+            Combo deal applied, you're saving
             <span x-text="'R' + comboDeal.savings"></span>
         </div>
     </template>
@@ -912,7 +912,7 @@
             </template>
             <input type="hidden" name="combo_id" :value="selectedComboId || ''">
             <button type="submit"
-                    class="shrink-0 bg-[#0078D4] hover:bg-[#0078D4] active:scale-95 text-white font-bold px-5 py-3 rounded-xl transition-all shadow-lg shadow-[#B8D4F0] flex items-center gap-2 text-sm whitespace-nowrap">
+                    class="shrink-0 bg-[#0078D4] hover:bg-[#0065B8] active:scale-95 text-white font-bold px-5 py-3 rounded-xl transition-all shadow-lg shadow-[#B8D4F0] flex items-center gap-2 text-sm whitespace-nowrap">
                 Book Now
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
             </button>

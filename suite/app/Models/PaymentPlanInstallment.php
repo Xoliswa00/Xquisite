@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 class PaymentPlanInstallment extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'payment_plan_id', 'installment_number', 'label',
         'amount', 'due_date', 'paid_at', 'payment_method',

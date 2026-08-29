@@ -135,7 +135,7 @@ class ServiceController extends Controller
 
     private function syncBundles(Service $service, array $bundles): void
     {
-        $service->serviceProducts()->delete();
+        $service->serviceProducts()->get()->each->delete();
 
         foreach ($bundles as $bundle) {
             ServiceProduct::create([

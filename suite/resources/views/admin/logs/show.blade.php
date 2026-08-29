@@ -8,12 +8,6 @@
 
     <div class="max-w-4xl mx-auto p-6 space-y-6">
 
-        @if(session('success'))
-            <div class="p-4 bg-green-900/30 border border-green-700 text-green-300 rounded-lg text-sm">
-                {{ session('success') }}
-            </div>
-        @endif
-
         {{-- Status update form --}}
         @if($log->status !== 'resolved')
         <div class="bg-slate-800 rounded-xl p-6">
@@ -27,7 +21,7 @@
                                 class="px-4 py-2 rounded-lg text-sm font-medium
                                     @if($s === 'acknowledged') bg-yellow-700 hover:bg-yellow-600 text-white
                                     @elseif($s === 'in_progress') bg-blue-700 hover:bg-blue-600 text-white
-                                    @else bg-green-700 hover:bg-green-600 text-white @endif
+                                    @else bg-emerald-700 hover:bg-emerald-600 text-white @endif
                                     {{ $log->status === $s ? 'ring-2 ring-white/50' : '' }}">
                             {{ ucfirst(str_replace('_', ' ', $s)) }}
                         </button>
@@ -39,7 +33,7 @@
             </form>
         </div>
         @else
-        <div class="bg-green-900/20 border border-green-700 rounded-xl p-4 text-sm text-green-300">
+        <div class="bg-emerald-900/20 border border-emerald-700 rounded-xl p-4 text-sm text-emerald-300">
             Resolved {{ $log->resolved_at?->format('d M Y H:i') }}
             @if($log->resolvedBy) by {{ $log->resolvedBy->name }} @endif
             @if($log->resolution_note) — "{{ $log->resolution_note }}" @endif

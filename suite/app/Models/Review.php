@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Models\Traits\HasTenant;
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Review extends Model
 {
-    use HasTenant;
+    use HasTenant, Auditable;
     protected $fillable = [
         'user_id',
         'tenant_id',

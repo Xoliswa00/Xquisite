@@ -71,7 +71,7 @@
 
                 <div class="flex gap-3">
                     <button type="submit" 
-                            class="flex-1 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white rounded-lg font-medium transition">
+                            class="flex-1 px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg font-medium transition">
                         Save Changes
                     </button>
                     <a href="{{ route('monitoring.show', $instance) }}"

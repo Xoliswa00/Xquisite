@@ -110,7 +110,7 @@
                     Cancel
                 </a>
                 <button type="submit"
-                        class="bg-[#0078D4] hover:bg-[#0078D4] text-white px-6 py-2 rounded-xl text-sm font-semibold transition">
+                        class="bg-[#0078D4] hover:bg-[#0065B8] text-white px-6 py-2 rounded-xl text-sm font-semibold transition">
                     Save Changes
                 </button>
             </div>

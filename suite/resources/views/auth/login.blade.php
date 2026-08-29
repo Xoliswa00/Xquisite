@@ -2,7 +2,7 @@
 
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-[#D4AF37]" style="font-family:'Montserrat',sans-serif">Welcome back</h1>
-        <p class="text-sm text-[#2D3748]/60 mt-1">Sign in to your Xquisite Creations account</p>
+        <p class="text-base text-[#2D3748]/75 mt-1">Sign in to your Xquisite Creations account</p>
     </div>
 
     <x-auth-session-status class="mb-4" :status="session('status')" />
@@ -54,7 +54,7 @@
     </script>
 
     @if (Route::has('register'))
-        <p class="mt-6 text-center text-sm text-[#2D3748]/60">
+        <p class="mt-6 text-center text-base text-[#2D3748]/75">
             Don't have an account? <a href="{{ route('register') }}" class="text-[#0078D4] hover:text-[#0065B8] font-medium">Start free trial</a>
         </p>
     @endif

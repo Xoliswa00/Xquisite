@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class PlatformService extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'key', 'name', 'description', 'category', 'billing_type',
         'price', 'price_label', 'icon', 'is_active', 'is_requestable', 'sort_order',

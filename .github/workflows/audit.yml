@@ -1,0 +1,49 @@
+name: Standards audit
+
+# Server-side mirror of .git/hooks/pre-commit and pre-push, which only run
+# from this local machine's checkout. This makes the same three checks —
+# valid route() references, every model carrying Auditable, and the
+# UI/UX standards audit — unconditional: they run on GitHub for every push
+# and PR regardless of which machine or clone it came from, and (once this
+# check is marked required in branch protection) can't be skipped with
+# --no-verify or bypassed by a fresh clone.
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: suite
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: suite/vendor
+          key: composer-${{ hashFiles('suite/composer.lock') }}
+
+      - run: composer install --no-interaction --prefer-dist --no-progress
+
+      - run: cp .env.example .env
+      - run: php artisan key:generate
+
+      - name: Route reference audit
+        run: php artisan --no-ansi xq:audit-routes
+
+      - name: Auditable-trait audit
+        run: php artisan --no-ansi xq:audit-auditable
+
+      - name: UI/UX standards audit
+        run: php artisan --no-ansi xq:audit-ui

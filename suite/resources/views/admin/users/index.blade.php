@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between gap-4 flex-wrap">
             <h1 class="text-xl font-bold text-[#D4AF37]">Staff Management</h1>
             <a href="{{ route('admin.users.create') }}"
-               class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium rounded-lg transition-colors">
+               class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-medium rounded-lg transition-colors">
                 + Add Staff Member
             </a>
         </div>

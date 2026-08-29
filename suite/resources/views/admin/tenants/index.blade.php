@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between gap-4 mb-5 flex-wrap">
         <h1 class="text-xl font-bold text-[#D4AF37]">Tenants</h1>
         <a href="{{ route('admin.tenants.create') }}"
-           class="shrink-0 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+           class="shrink-0 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
             + New Tenant
         </a>
     </div>
@@ -14,7 +14,7 @@
         <input type="text" name="search" value="{{ request('search') }}"
                placeholder="Name, email, slug…"
                class="flex-1 min-w-[180px] bg-slate-800 border border-slate-700 text-sm text-white rounded-xl px-4 py-2.5 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
-        <button type="submit" class="shrink-0 bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2.5 rounded-xl transition-colors">
+        <button type="submit" class="shrink-0 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2.5 rounded-xl transition-colors">
             Search
         </button>
         @if(request('search'))
@@ -41,7 +41,7 @@
                                 <span class="inline-block text-xs text-red-400 font-medium">Inactive</span>
                             @endif
                             @if($tenant->isOnTrial())
-                                <p class="text-[10px] text-amber-400 mt-0.5">Trial ends {{ $tenant->trial_ends_at->format('d M') }}</p>
+                                <p class="text-[10px] text-[#D4AF37] mt-0.5">Trial ends {{ $tenant->trial_ends_at->format('d M') }}</p>
                             @endif
                         </div>
                     </div>
@@ -130,7 +130,7 @@
                                     <span class="text-xs text-red-400 font-medium">Inactive</span>
                                 @endif
                                 @if($tenant->isOnTrial())
-                                    <p class="text-xs text-amber-400">Trial ends {{ $tenant->trial_ends_at->format('d M') }}</p>
+                                    <p class="text-xs text-[#D4AF37]">Trial ends {{ $tenant->trial_ends_at->format('d M') }}</p>
                                 @endif
                             </td>
                             <td class="px-5 py-4 text-slate-400">{{ $tenant->users_count }}</td>

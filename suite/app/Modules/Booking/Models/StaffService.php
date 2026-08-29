@@ -3,9 +3,12 @@
 namespace App\Modules\Booking\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\Auditable;
 
 class StaffService extends Model
 {
+    use Auditable;
+
     protected $table = 'staff_services';
 
     protected $fillable = [

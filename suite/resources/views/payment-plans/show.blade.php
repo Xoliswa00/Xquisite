@@ -9,10 +9,6 @@
 
     <div class="py-8 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
-        @if (session('success'))
-            <div class="p-4 bg-emerald-900/50 border border-emerald-700 text-emerald-300 rounded-lg text-sm">{{ session('success') }}</div>
-        @endif
-
         {{-- Summary card --}}
         <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">

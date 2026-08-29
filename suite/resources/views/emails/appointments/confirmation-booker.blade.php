@@ -39,7 +39,20 @@
                         <td style="padding:12px 20px;border-bottom:1px solid #e2e8f0;">
                             <span style="font-size:14px;font-weight:600;color:#1e293b;">{{ $appointment->customer->full_name ?? $appointment->customer->name }}</span>
                             @if($appointment->customer->phone)
-                            <br><span style="font-size:12px;color:#64748b;">{{ $appointment->customer->phone }}</span>
+                                @php
+                                    $bookerWaDigits = preg_replace('/[^0-9]/', '', $appointment->customer->phone);
+                                    if (strlen($bookerWaDigits) === 10 && str_starts_with($bookerWaDigits, '0')) {
+                                        $bookerWaDigits = '27' . substr($bookerWaDigits, 1);
+                                    }
+                                    $bookerWaMsg = 'Hi ' . ($appointment->customer->full_name ?? $appointment->customer->name) . ', this is ' . ($appointment->tenant->name ?? config('app.name'));
+                                    $bookerWaUrl = $bookerWaDigits ? 'https://wa.me/' . $bookerWaDigits . '?text=' . rawurlencode($bookerWaMsg) : null;
+                                @endphp
+                                <br>
+                                @if($bookerWaUrl)
+                                    <a href="{{ $bookerWaUrl }}" style="font-size:12px;color:#25D366;text-decoration:none;">{{ $appointment->customer->phone }} (WhatsApp)</a>
+                                @else
+                                    <span style="font-size:12px;color:#64748b;">{{ $appointment->customer->phone }}</span>
+                                @endif
                             @endif
                         </td>
                     </tr>

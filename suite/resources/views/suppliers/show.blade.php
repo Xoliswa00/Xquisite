@@ -22,7 +22,7 @@
                         <p class="text-sm text-slate-400">Email: <span class="text-white">{{ $supplier->email }}</span></p>
                     @endif
                     @if($supplier->phone)
-                        <p class="text-sm text-slate-400">Phone: <span class="text-white">{{ $supplier->phone }}</span></p>
+                        <p class="text-sm text-slate-400">Phone: <x-whatsapp-link :phone="$supplier->phone" :message="'Hi ' . $supplier->name . ', this is ' . (Auth::user()->tenant?->name ?? config('app.name'))" class="text-white" /></p>
                     @endif
                     @if($supplier->website)
                         <p class="text-sm text-slate-400">Website: <a href="{{ $supplier->website }}" target="_blank" class="text-[#0078D4] hover:text-[#B8D4F0]">{{ $supplier->website }}</a></p>
@@ -44,7 +44,7 @@
                         Edit
                     </a>
                     <a href="{{ route('purchase-orders.create', ['supplier_id' => $supplier->id]) }}"
-                       class="bg-[#0078D4] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg text-center">
+                       class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg text-center">
                         New PO
                     </a>
                 </div>

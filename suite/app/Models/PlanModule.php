@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 class PlanModule extends Model
 {
+    use Auditable;
+
     public $timestamps = false;
 
     protected $fillable = ['plan_id', 'module_key'];

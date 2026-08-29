@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Booking;
 use App\Http\Controllers\Controller;
 use App\Modules\Booking\Models\Staff;
 use App\Modules\Booking\Models\Service;
+use App\Rules\SouthAfricanPhoneNumber;
 use Illuminate\Http\Request;
 
 class StaffController extends Controller
@@ -37,7 +38,7 @@ class StaffController extends Controller
         $data = $request->validate([
             'name'        => 'required|string|max:255',
             'email'       => 'nullable|email|max:255',
-            'phone'       => 'nullable|string|max:50',
+            'phone'       => ['nullable', new SouthAfricanPhoneNumber],
             'role'        => 'nullable|string|max:100',
             'is_active'   => 'boolean',
             'service_ids' => 'nullable|array',
@@ -85,7 +86,7 @@ class StaffController extends Controller
         $data = $request->validate([
             'name'          => 'required|string|max:255',
             'email'         => 'nullable|email|max:255',
-            'phone'         => 'nullable|string|max:50',
+            'phone'         => ['nullable', new SouthAfricanPhoneNumber],
             'role'          => 'nullable|string|max:100',
             'is_active'     => 'boolean',
             'service_ids'   => 'nullable|array',

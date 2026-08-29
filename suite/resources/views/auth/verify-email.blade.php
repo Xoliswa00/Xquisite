@@ -7,7 +7,7 @@
             </svg>
         </div>
         <h1 class="text-2xl font-bold text-[#D4AF37]" style="font-family:'Montserrat',sans-serif">Check your email</h1>
-        <p class="text-sm text-[#2D3748]/60 mt-2 max-w-sm mx-auto">
+        <p class="text-base text-[#2D3748]/75 mt-2 max-w-sm mx-auto">
             We've sent a verification link to your email address. Click the link to activate your account.
         </p>
     </div>

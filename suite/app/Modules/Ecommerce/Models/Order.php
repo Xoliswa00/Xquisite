@@ -4,12 +4,13 @@ namespace App\Modules\Ecommerce\Models;
 
 use App\Models\Tenant;
 use App\Models\Traits\HasTenant;
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class Order extends Model
 {
-    use HasTenant;
+    use HasTenant, Auditable;
 
     protected $fillable = [
         'tenant_id',

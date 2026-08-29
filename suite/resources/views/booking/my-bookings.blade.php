@@ -9,7 +9,7 @@
             <p class="text-slate-500 text-sm mt-0.5">{{ auth('customer')->user()->name }}</p>
         </div>
         <a href="{{ route('book.index', $slug) }}"
-           class="bg-[#0078D4] hover:bg-[#0078D4] text-white px-4 py-2 rounded-xl text-sm font-semibold transition">
+           class="bg-[#0078D4] hover:bg-[#0065B8] text-white px-4 py-2 rounded-xl text-sm font-semibold transition">
             + Book again
         </a>
     </div>

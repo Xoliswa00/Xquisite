@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Property;
 use App\Http\Controllers\Controller;
 use App\Mail\RenterPortalInvite;
 use App\Modules\Property\Models\Renter;
+use App\Rules\SouthAfricanIdNumber;
+use App\Rules\SouthAfricanPhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -37,10 +39,10 @@ class RenterController extends Controller
         $validated = $request->validate([
             'name'                    => 'required|string|max:255',
             'email'                   => 'nullable|email|max:255|unique:renters,email',
-            'phone'                   => 'nullable|string|max:30',
-            'id_number'               => 'nullable|string|max:50',
+            'phone'                   => ['nullable', new SouthAfricanPhoneNumber],
+            'id_number'               => ['nullable', new SouthAfricanIdNumber],
             'emergency_contact_name'  => 'nullable|string|max:255',
-            'emergency_contact_phone' => 'nullable|string|max:30',
+            'emergency_contact_phone' => ['nullable', new SouthAfricanPhoneNumber],
             'notes'                   => 'nullable|string',
         ]);
 
@@ -65,10 +67,10 @@ class RenterController extends Controller
         $validated = $request->validate([
             'name'                    => 'required|string|max:255',
             'email'                   => 'nullable|email|max:255|unique:renters,email,' . $renter->id,
-            'phone'                   => 'nullable|string|max:30',
-            'id_number'               => 'nullable|string|max:50',
+            'phone'                   => ['nullable', new SouthAfricanPhoneNumber],
+            'id_number'               => ['nullable', new SouthAfricanIdNumber],
             'emergency_contact_name'  => 'nullable|string|max:255',
-            'emergency_contact_phone' => 'nullable|string|max:30',
+            'emergency_contact_phone' => ['nullable', new SouthAfricanPhoneNumber],
             'notes'                   => 'nullable|string',
         ]);
 
