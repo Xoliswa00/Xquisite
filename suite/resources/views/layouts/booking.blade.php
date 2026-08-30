@@ -37,7 +37,11 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         <a href="{{ route('book.index', $slug) }}" class="flex items-center gap-3 min-w-0">
             @if(!empty($tenant->logo_url))
-                <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}" class="w-8 h-8 rounded-lg object-cover shrink-0">
+                <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}" class="w-8 h-8 rounded-lg object-cover shrink-0"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span class="w-8 h-8 rounded-lg bg-[#0078D4] items-center justify-center text-white font-black text-sm shrink-0" style="display:none">
+                    {{ strtoupper(substr($tenant->name, 0, 1)) }}
+                </span>
             @else
                 <span class="w-8 h-8 rounded-lg bg-[#0078D4] flex items-center justify-center text-white font-black text-sm shrink-0">
                     {{ strtoupper(substr($tenant->name, 0, 1)) }}
@@ -65,8 +69,8 @@
                     <button class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition text-xs sm:text-sm">Sign out</button>
                 </form>
             @else
-                <a href="{{ route('book.login', $slug) }}" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition">Sign in</a>
-                <a href="{{ route('book.register', $slug) }}" class="bg-[#0078D4] hover:bg-[#0065B8] text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm">
+                <a href="{{ route('book.login', $slug) }}" class="hidden sm:inline-block px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition">Sign in</a>
+                <a href="{{ route('book.register', $slug) }}" class="bg-[#0078D4] hover:bg-[#0065B8] text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm shrink-0">
                     Register
                 </a>
             @endauth

@@ -100,6 +100,16 @@ class AuditUiStandards extends Command
                 $warnings[] = ['file' => $relPath, 'rule' => 'possible eyebrow', 'detail' => 'rounded-full + uppercase + tracking-wide found together — confirm it is not a kicker/eyebrow label above a heading'];
             }
 
+            // ── WARNING: plain-text eyebrow — a short uppercase+tracking label sitting
+            // directly above an <h1>. Catches the classic kicker shape the rounded-full
+            // check above misses (no pill/badge chrome, just small caps text before a
+            // headline) — see feedback_no_eyebrows.md.
+            if (preg_match_all('/<(p|span|div)\b[^>]*\buppercase\b[^>]*\btracking-[\w\[\].]+[^>]*>([^<]{0,80})<\/\1>\s*(?:<[^>]+>\s*)?<h1\b/is', $contents, $m, PREG_OFFSET_CAPTURE)) {
+                foreach ($m[0] as $i => [$match, $offset]) {
+                    $warnings[] = ['file' => $relPath, 'line' => $this->lineOf($contents, $offset), 'rule' => 'possible eyebrow', 'detail' => 'uppercase+tracking label immediately before <h1> — "' . trim($m[2][$i][0]) . '" — confirm it is not a kicker/eyebrow label above a heading'];
+                }
+            }
+
             // ── WARNING: em-dash clause-join candidate ──
             if (preg_match_all('/\s—\s/u', $contents, $m, PREG_OFFSET_CAPTURE)) {
                 foreach ($m[0] as [$match, $offset]) {

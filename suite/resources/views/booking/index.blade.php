@@ -16,18 +16,18 @@
 <div class="relative overflow-hidden rounded-3xl mb-10 shadow-2xl">
     {{-- Layered gradient background --}}
     <div class="absolute inset-0 bg-gradient-to-br from-[#001A3A] via-[#002B5B] to-slate-900"></div>
-    {{-- Glowing orbs --}}
-    <div class="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#0078D4] opacity-20 blur-3xl"></div>
-    <div class="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-[#0078D4] opacity-10 blur-3xl"></div>
-    <div class="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-[#D4AF37] opacity-8 blur-3xl"></div>
 
     <div class="relative px-7 py-10 sm:px-12 sm:py-14">
         <div class="flex flex-col sm:flex-row sm:items-center gap-6">
 
-            {{-- Logo --}}
+            {{-- Logo — falls back to the letter avatar if logo_url is unset OR the file fails to load --}}
             @if(!empty($tenant->logo_url))
                 <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}"
-                     class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-white/20 shadow-2xl shrink-0">
+                     class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-white/20 shadow-2xl shrink-0"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[#0078D4] to-[#002B5B] border border-white/20 shadow-2xl items-center justify-center shrink-0" style="display:none">
+                    <span class="text-4xl sm:text-5xl font-black text-white">{{ strtoupper(substr($tenant->name, 0, 1)) }}</span>
+                </div>
             @else
                 <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[#0078D4] to-[#002B5B] border border-white/20 shadow-2xl flex items-center justify-center shrink-0">
                     <span class="text-4xl sm:text-5xl font-black text-white">{{ strtoupper(substr($tenant->name, 0, 1)) }}</span>
@@ -36,9 +36,6 @@
 
             {{-- Info --}}
             <div class="flex-1 min-w-0">
-                <p class="text-[#B8D4F0] text-xs font-bold uppercase tracking-[0.2em] mb-2">
-                    {{ ucwords(str_replace('_', ' ', $tenant->industry ?? 'Beauty & Wellness')) }}
-                </p>
                 <h1 class="text-3xl sm:text-5xl font-black text-white leading-[1.05] tracking-tight">
                     {{ $tenant->name }}
                 </h1>
@@ -51,6 +48,9 @@
                     <div class="flex items-center gap-2 text-white/60 text-sm">
                         <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
                         <span>Open for bookings</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-[#B8D4F0] text-sm font-semibold">
+                        <span>{{ ucwords(str_replace('_', ' ', $tenant->industry ?? 'Beauty & Wellness')) }}</span>
                     </div>
                     @if($combos->isNotEmpty())
                         <div class="flex items-center gap-2 text-white/60 text-sm">
