@@ -192,7 +192,7 @@
     @endphp
 
     {{-- ═══════════════ DESKTOP SIDEBAR — accordion ═══════════════ --}}
-    <aside class="hidden lg:flex lg:flex-col w-64 shrink-0 bg-slate-900 border-r border-slate-800">
+    <aside class="hidden lg:flex lg:flex-col w-64 shrink-0 bg-slate-900 border-r border-slate-800 sticky top-0 h-screen">
         <div class="px-5 py-4 border-b border-slate-800 flex items-center gap-3" style="background:linear-gradient(135deg,rgba(0,120,212,.1) 0%,transparent 60%)">
             <img src="/img/apple-icon-180x180.png" alt="Xquisite Creations" class="h-11 w-11 object-contain rounded-lg shadow-md shadow-black/40 shrink-0">
             <div class="min-w-0">
@@ -449,7 +449,7 @@
                     {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
                 </span>
             </x-nav-rail-icon>
-            <x-nav-flyout flyout-key="profile" :label="Auth::user()->name">
+            <x-nav-flyout flyout-key="profile" :label="Auth::user()->name" align="bottom">
                 <a href="{{ route('reviews.create') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
                     Give feedback
