@@ -334,7 +334,7 @@
                         @click="toggle({{ $service->id }})"
                         @keydown.enter.stop="toggle({{ $service->id }})"
                         @keydown.space.prevent.stop="toggle({{ $service->id }})"
-                        class="group relative text-left w-full rounded-2xl border bg-white p-4 cursor-pointer transition-all duration-200 overflow-hidden select-none"
+                        class="group relative flex flex-col text-left w-full h-full rounded-2xl border bg-white p-4 cursor-pointer transition-all duration-200 overflow-hidden select-none"
                         :class="selected.includes({{ $service->id }})
                             ? 'border-[#0078D4] bg-[#F0F7FF]/80 ring-2 ring-[#0078D4] ring-offset-1 shadow-lg shadow-[#E8F2FA]'
                             : 'border-slate-200 hover:border-slate-300 hover:shadow-md hover:bg-slate-50/50'">
@@ -358,7 +358,7 @@
                         </svg>
                     </div>
 
-                    <div class="pl-3 pr-10">
+                    <div class="pl-3 pr-10 flex flex-col flex-1">
                         <p class="font-semibold text-sm text-slate-900 group-hover:text-[#002B5B] transition-colors leading-snug"
                            :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
                             {{ $service->name }}
@@ -401,7 +401,7 @@
                             @endif
                         </div>
                         @endif
-                        <div class="flex items-center justify-between mt-3.5">
+                        <div class="flex items-center justify-between mt-auto pt-3.5">
                             <div class="flex items-center gap-1.5 text-xs text-slate-400">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 {{ $service->duration_minutes }} min
