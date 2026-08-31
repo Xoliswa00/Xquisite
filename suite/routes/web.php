@@ -148,6 +148,9 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::post('appointments/{appointment}/remind', [\App\Http\Controllers\Booking\AppointmentController::class, 'remind'])->name('appointments.remind');
         Route::post('appointments/{appointment}/mark-paid', [\App\Http\Controllers\Booking\AppointmentController::class, 'markPaid'])->name('appointments.mark-paid');
         Route::get('calendar/{date?}', [\App\Http\Controllers\Booking\AppointmentController::class, 'calendar'])->name('appointments.calendar');
+        // Registered before the resource route so "import" isn't swallowed by {customer}.
+        Route::get('customers/import', [CustomerController::class, 'importForm'])->name('customers.import');
+        Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import.store');
         Route::resource('customers', CustomerController::class);
         Route::resource('services', ServiceController::class)->except(['show']);
         Route::resource('staff', StaffController::class);

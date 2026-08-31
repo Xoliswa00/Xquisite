@@ -19,10 +19,16 @@
                     @endif
                 </div>
             </form>
-            <a href="{{ route('customers.create') }}"
-               class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
-                + New Customer
-            </a>
+            <div class="flex gap-2">
+                <a href="{{ route('customers.import') }}"
+                   class="bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
+                    Import Contacts
+                </a>
+                <a href="{{ route('customers.create') }}"
+                   class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2.5 rounded-lg text-center font-medium whitespace-nowrap">
+                    + New Customer
+                </a>
+            </div>
         </div>
 
         {{-- Mobile cards --}}
