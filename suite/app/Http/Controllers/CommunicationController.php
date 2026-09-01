@@ -29,6 +29,7 @@ class CommunicationController extends Controller
     public function thread(Client $client)
     {
         abort_unless($client->tenant_id === $this->tenantId(), 403);
+        abort_unless($client->tenant->hasModule('client_messaging'), 403, 'Client Messaging module not active.');
 
         $messages = $client->communications()->with('fromUser')->orderBy('created_at')->get();
 

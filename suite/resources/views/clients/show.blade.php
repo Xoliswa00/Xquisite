@@ -10,7 +10,9 @@
                 </div>
             </div>
             <div class="flex gap-2">
-                <a href="{{ route('clients.messages', $client) }}" class="flex-1 sm:flex-none text-center px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm rounded-lg">Messages</a>
+                @if(Auth::user()->tenant->hasModule('client_messaging'))
+                    <a href="{{ route('clients.messages', $client) }}" class="flex-1 sm:flex-none text-center px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm rounded-lg">Messages</a>
+                @endif
                 <a href="{{ route('clients.edit', $client) }}" class="flex-1 sm:flex-none text-center px-4 py-2 border border-slate-700 text-slate-300 hover:bg-slate-800 text-sm rounded-lg">Edit</a>
             </div>
         </div>
