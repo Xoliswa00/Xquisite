@@ -120,11 +120,13 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     // Clients + messaging
     Route::resource('clients', ClientController::class);
     Route::get('clients/{client}/messages', [CommunicationController::class, 'thread'])->name('clients.messages');
+    Route::get('clients/{client}/messages/poll', [CommunicationController::class, 'pollThread'])->name('clients.messages.poll');
     Route::post('clients/{client}/messages', [CommunicationController::class, 'store'])->name('clients.messages.store');
 
     // Client portal (for users with role=client)
     Route::get('/portal/dashboard', [ClientPortalController::class, 'dashboard'])->name('portal.dashboard');
     Route::get('/portal/messages', [CommunicationController::class, 'clientIndex'])->name('portal.messages');
+    Route::get('/portal/messages/poll', [CommunicationController::class, 'pollPlatform'])->name('portal.messages.poll');
     Route::post('/portal/messages/reply', [CommunicationController::class, 'clientReply'])->name('portal.messages.reply');
 
     // Platform billing (tenant owner view)
@@ -292,6 +294,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('/tenants/{tenant}/users/{user}/toggle', [TenantController::class, 'toggleUserStatus'])->name('tenants.users.toggle');
             // Platform ↔ tenant messaging
             Route::get('/tenants/{tenant}/messages', [CommunicationController::class, 'platformThread'])->name('tenants.messages');
+            Route::get('/tenants/{tenant}/messages/poll', [CommunicationController::class, 'pollPlatformThread'])->name('tenants.messages.poll');
             Route::post('/tenants/{tenant}/messages', [CommunicationController::class, 'platformStore'])->name('tenants.messages.store');
 
         // Billing sync queue
