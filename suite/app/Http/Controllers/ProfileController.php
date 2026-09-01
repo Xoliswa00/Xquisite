@@ -81,14 +81,17 @@ class ProfileController extends Controller
             'logo' => 'required|image|mimes:jpeg,jpg,png,webp,svg|max:2048',
         ]);
 
-        // Delete old logo if stored in our storage (not an external URL)
+        // Delete old logo if stored in our storage (not an external URL).
+        // Must target the 'public' disk explicitly — the app's default disk
+        // is 'local' (storage/app/private since Laravel 11's disk split),
+        // which is NOT what public/storage actually symlinks to.
         if ($tenant->logo_url && str_starts_with($tenant->logo_url, '/storage/')) {
-            $old = str_replace('/storage/', 'public/', $tenant->logo_url);
-            Storage::delete($old);
+            $old = str_replace('/storage/', '', $tenant->logo_url);
+            Storage::disk('public')->delete($old);
         }
 
-        $path = $request->file('logo')->store("public/logos/{$tenant->id}");
-        $tenant->update(['logo_url' => Storage::url($path)]);
+        $path = $request->file('logo')->store("logos/{$tenant->id}", 'public');
+        $tenant->update(['logo_url' => Storage::disk('public')->url($path)]);
 
         return Redirect::route('profile.edit')->with('status', 'logo-updated');
     }

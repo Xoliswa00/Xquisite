@@ -1,12 +1,13 @@
 name: Standards audit
 
 # Server-side mirror of .git/hooks/pre-commit and pre-push, which only run
-# from this local machine's checkout. This makes the same three checks —
-# valid route() references, every model carrying Auditable, and the
-# UI/UX standards audit — unconditional: they run on GitHub for every push
-# and PR regardless of which machine or clone it came from, and (once this
-# check is marked required in branch protection) can't be skipped with
-# --no-verify or bypassed by a fresh clone.
+# from this local machine's checkout. This makes the same four checks —
+# valid route() references, every model carrying Auditable, the UI/UX
+# standards audit, and personal-data (ID/phone/email) validation —
+# unconditional: they run on GitHub for every push and PR regardless of
+# which machine or clone it came from, and (once this check is marked
+# required in branch protection) can't be skipped with --no-verify or
+# bypassed by a fresh clone.
 
 on:
   push:
@@ -47,3 +48,6 @@ jobs:
 
       - name: UI/UX standards audit
         run: php artisan --no-ansi xq:audit-ui
+
+      - name: Personal-data validation audit
+        run: php artisan --no-ansi xq:audit-data-integrity
