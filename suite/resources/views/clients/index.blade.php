@@ -10,6 +10,8 @@
             </a>
         </div>
 
+        @php $hasClientMessaging = Auth::user()->tenant->hasModule('client_messaging'); @endphp
+
         <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
             @forelse($clients as $client)
                 <div class="flex items-center gap-4 px-5 py-4 border-b border-slate-800 last:border-0 hover:bg-slate-800/30">
@@ -22,7 +24,9 @@
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <a href="{{ route('clients.show', $client) }}" class="text-xs px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-700">View</a>
-                        <a href="{{ route('clients.messages', $client) }}" class="text-xs px-3 py-1.5 rounded-lg border border-[#002B5B] text-[#0078D4] hover:bg-[#001A3A]/30">Messages</a>
+                        @if($hasClientMessaging)
+                            <a href="{{ route('clients.messages', $client) }}" class="text-xs px-3 py-1.5 rounded-lg border border-[#002B5B] text-[#0078D4] hover:bg-[#001A3A]/30">Messages</a>
+                        @endif
                     </div>
                 </div>
             @empty
