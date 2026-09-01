@@ -36,14 +36,18 @@ class StaffScheduleController extends Controller
 
     public function update(Request $request, Staff $staff, BookingNotificationService $notifications)
     {
-        // Base structural rules
+        // Base structural rules. Time fields are nullable, not required: a day that's
+        // toggled off (or was never configured) can legitimately submit blank/absent
+        // times — a disabled <input type="time"> is unreliable across browsers about
+        // what it round-trips once re-enabled, and an inactive day's hours don't matter
+        // functionally anyway, so we shouldn't hard-fail the whole form over them.
         $request->validate([
             'days'         => 'nullable|array',
             'days.*'       => 'integer|between:0,6',
-            'start_time'   => 'required|array',
-            'start_time.*' => 'required|date_format:H:i',
-            'end_time'     => 'required|array',
-            'end_time.*'   => 'required|date_format:H:i',
+            'start_time'   => 'nullable|array',
+            'start_time.*' => 'nullable|date_format:H:i',
+            'end_time'     => 'nullable|array',
+            'end_time.*'   => 'nullable|date_format:H:i',
         ]);
 
         // Validate each day's pair individually — wildcard after: can't resolve array keys
@@ -62,8 +66,8 @@ class StaffScheduleController extends Controller
         // Upsert one row per day (0–6)
         foreach (array_keys(self::DAYS) as $day) {
             $isActive  = in_array((string) $day, array_map('strval', $activeDays));
-            $startTime = $request->input("start_time.{$day}", '09:00');
-            $endTime   = $request->input("end_time.{$day}", '17:00');
+            $startTime = $request->input("start_time.{$day}") ?: '09:00';
+            $endTime   = $request->input("end_time.{$day}") ?: '17:00';
 
             StaffSchedule::updateOrCreate(
                 ['staff_id' => $staff->id, 'day_of_week' => $day],
