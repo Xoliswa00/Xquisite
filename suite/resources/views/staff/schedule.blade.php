@@ -34,7 +34,14 @@
                         $days = [0=>'Sunday',1=>'Monday',2=>'Tuesday',3=>'Wednesday',4=>'Thursday',5=>'Friday',6=>'Saturday'];
                     @endphp
                     @foreach($days as $num => $label)
-                        @php $sched = $scheduleByDay[$num]; @endphp
+                        @php
+                            $sched = $scheduleByDay[$num];
+                            // TIME columns come back as "09:00:00" (seconds included) with no
+                            // Eloquent cast — trim to H:i so it always matches what the server
+                            // validates and what <input type="time"> expects back.
+                            $startVal = $sched?->start_time ? \Illuminate\Support\Carbon::parse($sched->start_time)->format('H:i') : '09:00';
+                            $endVal   = $sched?->end_time ? \Illuminate\Support\Carbon::parse($sched->end_time)->format('H:i') : '17:00';
+                        @endphp
                         <div x-data="{ on: {{ ($sched && $sched->is_active) ? 'true' : 'false' }} }"
                              class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4">
 
@@ -53,13 +60,13 @@
                             <div class="flex items-center gap-2" :class="!on && 'opacity-30 pointer-events-none'">
                                 <input type="time"
                                        name="start_time[{{ $num }}]"
-                                       value="{{ $sched?->start_time ?? '09:00' }}"
+                                       value="{{ old("start_time.$num", $startVal) }}"
                                        class="bg-slate-700 border-slate-600 text-slate-200 rounded-lg text-sm px-3 py-1.5"
                                        :disabled="!on">
                                 <span class="text-slate-500 text-sm">to</span>
                                 <input type="time"
                                        name="end_time[{{ $num }}]"
-                                       value="{{ $sched?->end_time ?? '17:00' }}"
+                                       value="{{ old("end_time.$num", $endVal) }}"
                                        class="bg-slate-700 border-slate-600 text-slate-200 rounded-lg text-sm px-3 py-1.5"
                                        :disabled="!on">
                             </div>

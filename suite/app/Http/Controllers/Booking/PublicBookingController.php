@@ -13,7 +13,9 @@ use App\Services\Booking\AvailabilityService;
 use App\Services\Notifications\BookingNotificationService;
 use App\Services\Tenant\TenantContext;
 use Carbon\Carbon;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -212,116 +214,134 @@ class PublicBookingController extends Controller
                 ->with('info', 'Please log in or create an account to complete your booking.');
         }
 
-        $services      = Service::findMany($pending['service_ids']);
-        $quantities    = $pending['quantities'] ?? [];
-        $serviceIds    = $services->pluck('id')->all();
-        $totalDuration = $services->sum('duration_minutes');
-        $start         = Carbon::parse($pending['scheduled_at']);
-        $isMultiDay    = $totalDuration >= 1440;
+        // Guards against the classic duplicate-booking cause: the customer double-clicks
+        // "Confirm Booking" (or the request is just slow) before the first request has
+        // cleared pending_booking from the session. Only one submission per logged-in
+        // customer can be inside this block at a time — a second one either waits and
+        // then correctly finds the session already cleared, or times out with a friendly
+        // "already processing" message instead of creating a second appointment.
+        try {
+            return Cache::lock('booking-submit:' . $customer->id, 15)->block(5, function () use (
+                $slug, $request, $availability, $notifications, $tenant, $pending, $customer
+            ) {
+                $services      = Service::findMany($pending['service_ids']);
+                $quantities    = $pending['quantities'] ?? [];
+                $serviceIds    = $services->pluck('id')->all();
+                $totalDuration = $services->sum('duration_minutes');
+                $start         = Carbon::parse($pending['scheduled_at']);
+                $isMultiDay    = $totalDuration >= 1440;
 
-        // Slot availability check only applies to same-day bookings (multi-day have no fixed slots)
-        if (!$isMultiDay) {
-            $slots          = $availability->availableSlotsForDuration($totalDuration, $start->copy()->startOfDay(), $serviceIds);
-            $stillAvailable = $slots->contains(fn($s) => $s->format('Y-m-d H:i') === $start->format('Y-m-d H:i'));
+                // Slot availability check only applies to same-day bookings (multi-day have no fixed slots)
+                if (!$isMultiDay) {
+                    $slots          = $availability->availableSlotsForDuration($totalDuration, $start->copy()->startOfDay(), $serviceIds);
+                    $stillAvailable = $slots->contains(fn($s) => $s->format('Y-m-d H:i') === $start->format('Y-m-d H:i'));
 
-            if (!$stillAvailable) {
-                session()->forget('pending_booking');
-                return redirect()->route('book.service', $slug)
-                    ->with('service_ids', $pending['service_ids'])
-                    ->withErrors(['slot' => 'That time slot is no longer available. Please choose another.']);
-            }
-        }
-
-        $notes = $request->validate(['notes' => 'nullable|string|max:1000'])['notes'] ?? null;
-
-        // Auto-detect combo pricing (works even if combo_id wasn't threaded through session)
-        $combo      = $this->detectCombo($pending['combo_id'] ?? null, $serviceIds);
-        $comboId    = $combo?->id;
-        $comboPrice = $combo?->combo_price;
-
-        // Promo + appointment creation inside a transaction so lockForUpdate() is effective
-        $promoCode     = null;
-        $promoDiscount = null;
-
-        $appointment = DB::transaction(function () use (
-            $combo, $request, $services, $quantities, $tenant, $customer, $start,
-            $totalDuration, $notes, $comboId, $comboPrice, &$promoCode, &$promoDiscount
-        ) {
-            if (!$combo && $request->filled('promo_code')) {
-                $code = strtoupper(trim($request->input('promo_code')));
-
-                // Lock the row so concurrent requests can't over-redeem max_uses
-                $promo = Promotion::where('code', $code)
-                    ->where('is_active', true)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($promo && $promo->isLive() && in_array($promo->applies_to, ['all', 'services'])) {
-                    $baseTotal     = (float) $services->sum(fn($s) => $s->calculatePrice($quantities[$s->id] ?? 1));
-                    $promoDiscount = $promo->discount_type === 'percentage'
-                        ? round($baseTotal * $promo->discount_value / 100, 2)
-                        : min((float) $promo->discount_value, $baseTotal);
-                    $promoCode = $promo->code;
-                    // increment() bypasses Eloquent events (no audit trail); the row is
-                    // already locked via lockForUpdate() above, so a plain update is safe.
-                    $promo->update(['used_count' => $promo->used_count + 1]);
-                } else {
-                    // Signal caller to redirect back with error
-                    return null;
+                    if (!$stillAvailable) {
+                        session()->forget('pending_booking');
+                        return redirect()->route('book.service', $slug)
+                            ->with('service_ids', $pending['service_ids'])
+                            ->withErrors(['slot' => 'That time slot is no longer available. Please choose another.']);
+                    }
                 }
-            }
 
-            $appt = Appointment::create([
-                'tenant_id'        => $tenant->id,
-                'customer_id'      => $customer->id,
-                'staff_id'         => null,
-                'scheduled_at'     => $start,
-                'duration_minutes' => $totalDuration,
-                'status'           => 'pending',
-                'notes'            => $notes,
-                'combo_id'         => $comboId,
-                'combo_price'      => $comboPrice,
-                'promo_code'       => $promoCode,
-                'promo_discount'   => $promoDiscount,
-            ]);
+                $notes = $request->validate(['notes' => 'nullable|string|max:1000'])['notes'] ?? null;
 
-            $appt->services()->sync(
-                $services->mapWithKeys(fn($service, $index) => [
-                    $service->id => [
-                        'duration_minutes' => $service->duration_minutes,
-                        'price_at_booking' => $service->calculatePrice($quantities[$service->id] ?? 1),
-                        'quantity'         => $quantities[$service->id] ?? 1,
-                        'sort_order'       => $index,
-                    ],
-                ])->all()
-            );
+                // Auto-detect combo pricing (works even if combo_id wasn't threaded through session)
+                $combo      = $this->detectCombo($pending['combo_id'] ?? null, $serviceIds);
+                $comboId    = $combo?->id;
+                $comboPrice = $combo?->combo_price;
 
-            return $appt;
-        });
+                // Promo + appointment creation inside a transaction so lockForUpdate() is effective
+                $promoCode     = null;
+                $promoDiscount = null;
 
-        if ($appointment === null) {
-            return back()->withErrors(['promo_code' => 'Invalid or expired promo code.'])->withInput();
+                $appointment = DB::transaction(function () use (
+                    $combo, $request, $services, $quantities, $tenant, $customer, $start,
+                    $totalDuration, $notes, $comboId, $comboPrice, &$promoCode, &$promoDiscount
+                ) {
+                    if (!$combo && $request->filled('promo_code')) {
+                        $code = strtoupper(trim($request->input('promo_code')));
+
+                        // Lock the row so concurrent requests can't over-redeem max_uses
+                        $promo = Promotion::where('code', $code)
+                            ->where('is_active', true)
+                            ->lockForUpdate()
+                            ->first();
+
+                        if ($promo && $promo->isLive() && in_array($promo->applies_to, ['all', 'services'])) {
+                            $baseTotal     = (float) $services->sum(fn($s) => $s->calculatePrice($quantities[$s->id] ?? 1));
+                            $promoDiscount = $promo->discount_type === 'percentage'
+                                ? round($baseTotal * $promo->discount_value / 100, 2)
+                                : min((float) $promo->discount_value, $baseTotal);
+                            $promoCode = $promo->code;
+                            // increment() bypasses Eloquent events (no audit trail); the row is
+                            // already locked via lockForUpdate() above, so a plain update is safe.
+                            $promo->update(['used_count' => $promo->used_count + 1]);
+                        } else {
+                            // Signal caller to redirect back with error
+                            return null;
+                        }
+                    }
+
+                    $appt = Appointment::create([
+                        'tenant_id'        => $tenant->id,
+                        'customer_id'      => $customer->id,
+                        'staff_id'         => null,
+                        'scheduled_at'     => $start,
+                        'duration_minutes' => $totalDuration,
+                        'status'           => 'pending',
+                        'notes'            => $notes,
+                        'combo_id'         => $comboId,
+                        'combo_price'      => $comboPrice,
+                        'promo_code'       => $promoCode,
+                        'promo_discount'   => $promoDiscount,
+                    ]);
+
+                    $appt->services()->sync(
+                        $services->mapWithKeys(fn($service, $index) => [
+                            $service->id => [
+                                'duration_minutes' => $service->duration_minutes,
+                                'price_at_booking' => $service->calculatePrice($quantities[$service->id] ?? 1),
+                                'quantity'         => $quantities[$service->id] ?? 1,
+                                'sort_order'       => $index,
+                            ],
+                        ])->all()
+                    );
+
+                    return $appt;
+                });
+
+                if ($appointment === null) {
+                    return back()->withErrors(['promo_code' => 'Invalid or expired promo code.'])->withInput();
+                }
+
+                $notifications->notifyAppointmentCreated($appointment, route('book.success', [$slug, $appointment]));
+
+                // Confirmation email to the customer
+                $appointment->load(['customer', 'services']);
+                if ($customer->email) {
+                    Mail::to($customer->email)
+                        ->queue(new AppointmentConfirmationEmail($appointment, recipient: 'customer'));
+                }
+
+                // Notify the tenant owner so they see the new self-booking
+                $tenantOwnerEmail = $tenant->owner()?->email;
+                if ($tenantOwnerEmail) {
+                    Mail::to($tenantOwnerEmail)
+                        ->queue(new AppointmentConfirmationEmail($appointment, recipient: 'booker'));
+                }
+
+                session()->forget('pending_booking');
+
+                return redirect()->route('book.success', [$slug, $appointment]);
+            });
+        } catch (LockTimeoutException) {
+            // A first submission is still mid-flight — this is the second click of a
+            // double-click, not a real second booking attempt. Send them to their
+            // bookings list rather than risk creating a duplicate.
+            return redirect()->route('book.my-bookings', $slug)
+                ->with('info', "We're still processing your booking — check here in a moment.");
         }
-
-        $notifications->notifyAppointmentCreated($appointment, route('book.success', [$slug, $appointment]));
-
-        // Confirmation email to the customer
-        $appointment->load(['customer', 'services']);
-        if ($customer->email) {
-            Mail::to($customer->email)
-                ->queue(new AppointmentConfirmationEmail($appointment, recipient: 'customer'));
-        }
-
-        // Notify the tenant owner so they see the new self-booking
-        $tenantOwnerEmail = $tenant->owner()?->email;
-        if ($tenantOwnerEmail) {
-            Mail::to($tenantOwnerEmail)
-                ->queue(new AppointmentConfirmationEmail($appointment, recipient: 'booker'));
-        }
-
-        session()->forget('pending_booking');
-
-        return redirect()->route('book.success', [$slug, $appointment]);
     }
 
     /** Confirmation page */
