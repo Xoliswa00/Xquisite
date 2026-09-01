@@ -26,7 +26,7 @@
                     {{-- Client (left, white) --}}
                     <div class="flex justify-start">
                         <div class="max-w-[75%]">
-                            <div class="bg-slate-800 text-slate-900 border border-slate-200 rounded-2xl rounded-tl-none px-4 py-3 text-sm">
+                            <div class="bg-white text-slate-900 border border-slate-200 rounded-2xl rounded-tl-none px-4 py-3 text-sm">
                                 {!! nl2br(e($msg->body)) !!}
                             </div>
                             <p class="text-[10px] text-slate-500 mt-1">{{ $msg->created_at->diffForHumans() }} · {{ $client->name }}</p>
