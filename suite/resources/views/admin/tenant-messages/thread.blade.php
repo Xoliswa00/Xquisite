@@ -1,7 +1,8 @@
 <x-app-layout>
     <x-slot name="header">Messages · {{ $tenant->name }}</x-slot>
 
-    <div class="max-w-3xl mx-auto space-y-5">
+    <div class="max-w-3xl mx-auto space-y-5"
+         x-data="adminChatPoller({{ $messages->last()->id ?? 0 }})" x-init="start()">
 
         <div class="flex items-center justify-between">
             <div>
@@ -12,7 +13,7 @@
         </div>
 
         {{-- Thread --}}
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 min-h-64 max-h-[60vh] overflow-y-auto">
+        <div id="admin-messages" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 min-h-64 max-h-[60vh] overflow-y-auto">
             @forelse($messages as $msg)
                 @if($msg->is_from_owner)
                     {{-- From platform / us --}}
@@ -44,7 +45,7 @@
                     </div>
                 @endif
             @empty
-                <p class="text-center text-sm text-slate-500 py-8">No messages yet. Send the first message below.</p>
+                <p id="admin-empty-state" class="text-center text-sm text-slate-500 py-8">No messages yet. Send the first message below.</p>
             @endforelse
         </div>
 
@@ -70,4 +71,65 @@
         </div>
 
     </div>
+
+    {{-- Polls for new messages every few seconds — same pattern as the tenant-
+         and client-side thread views. --}}
+    <script>
+        function adminChatPoller(lastId) {
+            return {
+                lastId: lastId,
+                pollUrl: '{{ route('admin.tenants.messages.poll', $tenant) }}',
+                timer: null,
+                start() {
+                    this.timer = setInterval(() => this.poll(), 4000);
+                    document.addEventListener('visibilitychange', () => {
+                        if (!document.hidden) this.poll();
+                    });
+                },
+                async poll() {
+                    if (document.hidden) return;
+                    try {
+                        const res = await fetch(this.pollUrl + '?after_id=' + this.lastId, { headers: { 'Accept': 'application/json' } });
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        if (!data.messages || !data.messages.length) return;
+
+                        const container = document.getElementById('admin-messages');
+                        const wasNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+
+                        const emptyState = document.getElementById('admin-empty-state');
+                        if (emptyState) emptyState.remove();
+
+                        data.messages.forEach((m) => {
+                            const row = document.createElement('div');
+                            row.className = m.is_from_owner ? 'flex justify-end' : 'flex justify-start';
+
+                            const inner = document.createElement('div');
+                            inner.className = 'max-w-[75%]';
+
+                            let html = '';
+                            if (m.is_from_owner) {
+                                if (m.subject_html) {
+                                    html += `<p class="text-xs text-slate-400 text-right mb-1 font-medium">${m.subject_html}</p>`;
+                                }
+                                html += `<div class="bg-[#002B5B] text-white rounded-2xl rounded-tr-none px-4 py-3 text-sm">${m.body_html}</div>`;
+                                html += `<p class="text-[10px] text-slate-500 text-right mt-1">${m.created_human} · You (Xquisite)</p>`;
+                            } else {
+                                html += `<div class="bg-slate-700 text-slate-100 rounded-2xl rounded-tl-none px-4 py-3 text-sm">${m.body_html}</div>`;
+                                html += `<p class="text-[10px] text-slate-500 mt-1">${m.created_human} · ${m.from_name_html}</p>`;
+                            }
+                            inner.innerHTML = html;
+                            row.appendChild(inner);
+                            container.appendChild(row);
+                        });
+
+                        this.lastId = data.last_id;
+                        if (wasNearBottom) container.scrollTop = container.scrollHeight;
+                    } catch (e) {
+                        // Network hiccup — next interval tries again.
+                    }
+                },
+            };
+        }
+    </script>
 </x-app-layout>

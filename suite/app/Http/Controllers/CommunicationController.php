@@ -24,11 +24,30 @@ class CommunicationController extends Controller
         return $this->authedUser()->tenant_id ?? abort(403, 'No tenant assigned to this account.');
     }
 
+    /**
+     * Shared shape for a poll endpoint's JSON response. Body/subject/name are
+     * pre-escaped server-side (matching the exact nl2br(e()) the Blade views
+     * already use) so the frontend can drop them into innerHTML directly
+     * without a second, JS-side escaping mechanism to keep in sync.
+     */
+    private function formatForPoll($messages, string $ownerLabel, string $otherLabel)
+    {
+        return $messages->map(fn ($m) => [
+            'id'              => $m->id,
+            'is_from_owner'   => $m->is_from_owner,
+            'subject_html'    => $m->subject ? e($m->subject) : null,
+            'body_html'       => nl2br(e($m->body)),
+            'created_human'   => $m->created_at->diffForHumans(),
+            'from_name_html'  => e($m->is_from_owner ? ($m->fromUser?->name ?? $ownerLabel) : $otherLabel),
+        ])->values();
+    }
+
     // ── Tenant-side: staff messages their client ──────────────────────────────
 
     public function thread(Client $client)
     {
         abort_unless($client->tenant_id === $this->tenantId(), 403);
+        abort_unless($client->tenant->hasModule('client_messaging'), 403, 'Client Messaging module not active.');
 
         $messages = $client->communications()->with('fromUser')->orderBy('created_at')->get();
 
@@ -45,6 +64,27 @@ class CommunicationController extends Controller
         }
 
         return view('communications.thread', compact('client', 'messages'));
+    }
+
+    /** Polled by the thread view every few seconds — only messages newer than `after_id`. */
+    public function pollThread(Request $request, Client $client)
+    {
+        abort_unless($client->tenant_id === $this->tenantId(), 403);
+        abort_unless($client->tenant->hasModule('client_messaging'), 403);
+
+        $afterId  = (int) $request->query('after_id', 0);
+        $messages = $client->communications()->with('fromUser')
+            ->where('id', '>', $afterId)->orderBy('created_at')->get();
+
+        $markedCount = $client->communications()->where('is_from_owner', false)->whereNull('read_at')->update(['read_at' => now()]);
+        if ($markedCount > 0) {
+            AuditService::log(action: 'Communication.bulk_read', entityType: 'Client', entityId: $client->id, meta: ['count' => $markedCount]);
+        }
+
+        return response()->json([
+            'messages' => $this->formatForPoll($messages, 'You', $client->name),
+            'last_id'  => $messages->max('id') ?? $afterId,
+        ]);
     }
 
     public function store(Request $request, Client $client)
@@ -110,6 +150,25 @@ class CommunicationController extends Controller
         }
 
         return view('communications.client', compact('platformMessages', 'hasClientMessaging', 'clientThreads'));
+    }
+
+    /** Polled by the Platform Support tab — tenant's own view of their thread with Xquisite. */
+    public function pollPlatform(Request $request)
+    {
+        $user   = $this->authedUser();
+        $tenant = $user->tenant;
+
+        $afterId  = (int) $request->query('after_id', 0);
+        $messages = Communication::whereNull('client_id')->where('tenant_id', $tenant->id)
+            ->where('id', '>', $afterId)->with('fromUser')->orderBy('created_at')->get();
+
+        Communication::whereNull('client_id')->where('tenant_id', $tenant->id)
+            ->where('is_from_owner', true)->whereNull('read_at')->update(['read_at' => now()]);
+
+        return response()->json([
+            'messages' => $this->formatForPoll($messages, 'Xquisite Support', 'You'),
+            'last_id'  => $messages->max('id') ?? $afterId,
+        ]);
     }
 
     public function clientReply(Request $request)
@@ -178,6 +237,22 @@ class CommunicationController extends Controller
             ->update(['read_at' => now()]);
 
         return view('admin.tenant-messages.thread', compact('tenant', 'messages'));
+    }
+
+    /** Polled by the admin-side thread view — system owner's view of a tenant's thread. */
+    public function pollPlatformThread(Request $request, Tenant $tenant)
+    {
+        $afterId  = (int) $request->query('after_id', 0);
+        $messages = Communication::whereNull('client_id')->where('tenant_id', $tenant->id)
+            ->where('id', '>', $afterId)->with('fromUser')->orderBy('created_at')->get();
+
+        Communication::whereNull('client_id')->where('tenant_id', $tenant->id)
+            ->where('is_from_owner', false)->whereNull('read_at')->update(['read_at' => now()]);
+
+        return response()->json([
+            'messages' => $this->formatForPoll($messages, 'Xquisite Support', $tenant->name),
+            'last_id'  => $messages->max('id') ?? $afterId,
+        ]);
     }
 
     public function platformStore(Request $request, Tenant $tenant)
