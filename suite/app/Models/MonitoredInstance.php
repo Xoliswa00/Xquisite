@@ -10,6 +10,7 @@ class MonitoredInstance extends Model
 {
     protected $fillable = [
         'name',
+        'slug',
         'url',
         'api_token',
         'tenant_id',

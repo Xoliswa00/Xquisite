@@ -24,9 +24,23 @@
                 </div>
 
                 <div>
+                    <label for="slug" class="block text-sm font-medium text-slate-300 mb-2">Slug</label>
+                    <input type="text"
+                           id="slug"
+                           name="slug"
+                           value="{{ old('slug', $instance->slug) }}"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4] @error('slug') border-red-500 @enderror"
+                           required>
+                    @error('slug')
+                        <p class="text-red-400 text-xs mt-2">{{ $message }}</p>
+                    @enderror
+                    <p class="text-xs text-slate-400 mt-1">Written onto every forwarded log row (system_logs.source). Changing it splits history in the log viewer.</p>
+                </div>
+
+                <div>
                     <label for="url" class="block text-sm font-medium text-slate-300 mb-2">Instance URL</label>
-                    <input type="url" 
-                           id="url" 
+                    <input type="url"
+                           id="url"
                            name="url" 
                            value="{{ old('url', $instance->url) }}"
                            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4] @error('url') border-red-500 @enderror"
