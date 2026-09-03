@@ -603,5 +603,18 @@ Route::post('/js-error', [App\Http\Controllers\JsErrorController::class, 'store'
     ->middleware('throttle:30,1')
     ->name('js.error');
 
+// ── Cross-project monitoring hub ────────────────────────────────────────────
+// This app is the canonical monitoring/system_log hub — every other project
+// (Keystone/Loan, bx-eventos, jblack-mc/xquisite, …) registers itself once at
+// /admin/monitoring and points its own MONITORING_URL/MONITORING_TOKEN config
+// here. Server-side error events pushed by a reporter land in system_logs and
+// show at /admin/logs?source=<slug>; auth is the bearer token on the
+// MonitoredInstance row (monitored-instance middleware); CSRF-exempt in
+// bootstrap/app.php. See docs/MONITORING_INGEST.md for the full contract.
+Route::options('/ingest/logs', [App\Http\Controllers\LogIngestController::class, 'preflight']);
+Route::post('/ingest/logs', [App\Http\Controllers\LogIngestController::class, 'store'])
+    ->middleware(['monitored-instance', 'throttle:ingest'])
+    ->name('ingest.logs');
+
 
 require __DIR__.'/auth.php';

@@ -11,22 +11,32 @@ use Illuminate\Routing\Controller;
 class HealthReportController extends Controller
 {
     /**
+     * Resolve the calling instance. The route carries the `monitored-instance`
+     * middleware, which stashes the model on the request; the fallback keeps
+     * this controller usable if it is ever wired without that middleware.
+     */
+    private function instance(Request $request): ?MonitoredInstance
+    {
+        $stashed = $request->attributes->get('monitored_instance');
+        if ($stashed instanceof MonitoredInstance) {
+            return $stashed;
+        }
+
+        $token = $request->bearerToken();
+
+        return $token
+            ? MonitoredInstance::where('api_token', $token)->where('is_active', true)->first()
+            : null;
+    }
+
+    /**
      * Get health status - endpoint for external apps to poll
      */
     public function show(Request $request): JsonResponse
     {
-        $token = $request->bearerToken();
-        
-        if (!$token) {
-            return response()->json([
-                'error' => 'Unauthorized',
-                'message' => 'Bearer token required'
-            ], 401);
-        }
+        $instance = $this->instance($request);
 
-        $instance = MonitoredInstance::where('api_token', $token)->first();
-
-        if (!$instance) {
+        if (! $instance) {
             return response()->json([
                 'error' => 'Invalid token',
                 'message' => 'Instance not found'
@@ -47,18 +57,9 @@ class HealthReportController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $token = $request->bearerToken();
-        
-        if (!$token) {
-            return response()->json([
-                'error' => 'Unauthorized',
-                'message' => 'Bearer token required'
-            ], 401);
-        }
+        $instance = $this->instance($request);
 
-        $instance = MonitoredInstance::where('api_token', $token)->first();
-
-        if (!$instance) {
+        if (! $instance) {
             return response()->json([
                 'error' => 'Invalid token',
                 'message' => 'Instance not found'

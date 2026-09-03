@@ -24,6 +24,21 @@
                 </div>
 
                 <div>
+                    <label for="slug" class="block text-sm font-medium text-slate-300 mb-2">Slug</label>
+                    <input type="text"
+                           id="slug"
+                           name="slug"
+                           value="{{ old('slug') }}"
+                           placeholder="e.g., keystone, bx-eventos"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg focus:outline-none focus:border-[#0078D4] focus:ring-1 focus:ring-[#0078D4] @error('slug') border-red-500 @enderror"
+                           required>
+                    @error('slug')
+                        <p class="text-red-400 text-xs mt-2">{{ $message }}</p>
+                    @enderror
+                    <p class="text-xs text-slate-400 mt-1">Stable id written onto every forwarded log row (system_logs.source). Lowercase, letters/numbers/dashes.</p>
+                </div>
+
+                <div>
                     <label for="url" class="block text-sm font-medium text-slate-300 mb-2">Instance URL</label>
                     <input type="url" 
                            id="url" 
@@ -85,10 +100,10 @@
                 <div class="bg-[#001A3A]/20 border border-[#002B5B]/30 rounded-lg p-4">
                     <h4 class="text-sm font-semibold text-[#B8D4F0] mb-3">Integration Steps</h4>
                     <ol class="space-y-2 text-xs text-slate-300">
-                        <li><strong>1.</strong> After creating this instance, you'll receive setup instructions</li>
-                        <li><strong>2.</strong> Use the API token to configure the remote app</li>
-                        <li><strong>3.</strong> Remote app will POST health data to: <code class="bg-slate-900 px-1.5 py-0.5 rounded text-[#B8D4F0]">{{ config('app.url') }}/api/health-report</code></li>
-                        <li><strong>4.</strong> This platform will automatically check instance health every 5 minutes</li>
+                        <li><strong>1.</strong> Give the remote app the Slug and API Token above as <code class="bg-slate-900 px-1.5 py-0.5 rounded text-[#B8D4F0]">MONITORING_TOKEN</code></li>
+                        <li><strong>2.</strong> Remote app pushes error+ logs to: <code class="bg-slate-900 px-1.5 py-0.5 rounded text-[#B8D4F0]">{{ config('app.url') }}/ingest/logs</code> — they show at <code class="bg-slate-900 px-1.5 py-0.5 rounded text-[#B8D4F0]">/admin/logs?source={{ '{slug}' }}</code></li>
+                        <li><strong>3.</strong> Remote app pushes health status to: <code class="bg-slate-900 px-1.5 py-0.5 rounded text-[#B8D4F0]">{{ config('app.url') }}/api/health-report</code></li>
+                        <li><strong>4.</strong> This platform also pulls <code class="bg-slate-900 px-1.5 py-0.5 rounded text-[#B8D4F0]">{url}/api/health</code> every 5 minutes as a backstop — see docs/MONITORING_INGEST.md for the full contract of both paths</li>
                     </ol>
                 </div>
 
@@ -108,16 +123,24 @@
         {{-- Example Configuration --}}
         <div class="mt-8 bg-slate-800 rounded-xl p-6 border border-slate-700">
             <h3 class="text-lg font-semibold text-[#D4AF37] mb-4">How to Configure Remote App</h3>
-            <p class="text-slate-400 text-sm mb-4">Add this code to your remote Laravel app to report health:</p>
-            <pre class="bg-slate-900 p-4 rounded-lg overflow-x-auto text-xs text-slate-300"><code>// config/services.php
+            <p class="text-slate-400 text-sm mb-4">Every reporter app just needs these four env vars pointed at this hub — nothing else changes per project:</p>
+            <pre class="bg-slate-900 p-4 rounded-lg overflow-x-auto text-xs text-slate-300"><code>// .env
+MONITORING_ENABLED=true
+MONITORING_URL={{ config('app.url') }}
+MONITORING_TOKEN=&lt;the API Token above&gt;
+MONITORING_SLUG=&lt;the Slug above&gt;
+
+// config/services.php
 'monitoring' => [
     'enabled' => env('MONITORING_ENABLED', false),
-    'url' => env('MONITORING_URL'), // Base URL of this owner platform
-    'token' => env('MONITORING_TOKEN'),
+    'url'     => env('MONITORING_URL'),   // this hub's base URL
+    'token'   => env('MONITORING_TOKEN'), // this instance's api_token
+    'slug'    => env('MONITORING_SLUG'),  // must match the Slug set here
 ],
 
-// Schedule in app/Console/Kernel.php
-$schedule->job(new \App\Jobs\ReportHealthStatus)->everyFiveMinutes();</code></pre>
+// Schedule in routes/console.php (or app/Console/Kernel.php)
+$schedule->job(new \App\Jobs\ReportHealthStatus)->everyFiveMinutes();   // POST {url}/api/health-report
+$schedule->job(new \App\Jobs\ForwardErrorLogs)->everyFiveMinutes();     // POST {url}/ingest/logs (batched, see docs/MONITORING_INGEST.md)</code></pre>
         </div>
     </div>
 

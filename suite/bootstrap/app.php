@@ -48,6 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             '/js-error',
+            '/ingest/logs',
         ]);
 
         $middleware->redirectGuestsTo($portalLoginRedirect);
@@ -56,6 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'module' => EnsureModuleActive::class,
             'enforce-password-change' => EnforcePasswordChange::class,
             'company.suspension' => \App\Http\Middleware\CheckCompanySuspension::class,
+            'monitored-instance' => \App\Http\Middleware\EnsureMonitoredInstance::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) use ($portalLoginRedirect): void {
