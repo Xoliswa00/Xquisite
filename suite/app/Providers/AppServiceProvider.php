@@ -52,6 +52,13 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('admin', function (Request $request) {
             return Limit::perMinute(80)->by($request->user()?->id ?? $request->ip());
         });
+
+        // Cross-project log ingest (/ingest/logs) — keyed by the reporter's
+        // bearer token, not IP, so several reporters behind one egress IP (or a
+        // burst draining a backlog after hub downtime) don't starve each other.
+        RateLimiter::for('ingest', function (Request $request) {
+            return Limit::perMinute(120)->by($request->bearerToken() ?: $request->ip());
+        });
     }
 
     private function registerSlowQueryDetector(): void
