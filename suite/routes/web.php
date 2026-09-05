@@ -72,6 +72,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\FoundingTwentyController;
 use App\Http\Controllers\Admin\FoundingTwentyController as AdminFoundingTwentyController;
+use App\Http\Controllers\Admin\PromoCodeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -333,6 +334,16 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('/founding-twenty/{foundingTwenty}/deposit/confirm', [AdminFoundingTwentyController::class, 'confirmDeposit'])->name('founding-twenty.deposit.confirm');
             Route::post('/founding-twenty/{foundingTwenty}/deposit/refund', [AdminFoundingTwentyController::class, 'markDepositRefunded'])->name('founding-twenty.deposit.refund');
             Route::get('/founding-twenty/{foundingTwenty}/deposit/pop', [AdminFoundingTwentyController::class, 'downloadPop'])->name('founding-twenty.deposit.pop');
+            Route::post('/founding-twenty/{foundingTwenty}/tenant', [AdminFoundingTwentyController::class, 'linkTenant'])->name('founding-twenty.tenant');
+            Route::post('/founding-twenty/{foundingTwenty}/milestone', [AdminFoundingTwentyController::class, 'markMilestone'])->name('founding-twenty.milestone');
+
+            // Promo codes — track discounts issued and their rand value given away
+            Route::get('/promo-codes', [PromoCodeController::class, 'index'])->name('promo-codes.index');
+            Route::get('/promo-codes/create', [PromoCodeController::class, 'create'])->name('promo-codes.create');
+            Route::post('/promo-codes', [PromoCodeController::class, 'store'])->name('promo-codes.store');
+            Route::get('/promo-codes/{promoCode}', [PromoCodeController::class, 'show'])->name('promo-codes.show');
+            Route::post('/promo-codes/{promoCode}/redeem', [PromoCodeController::class, 'redeem'])->name('promo-codes.redeem');
+            Route::post('/promo-codes/{promoCode}/deactivate', [PromoCodeController::class, 'deactivate'])->name('promo-codes.deactivate');
 
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
