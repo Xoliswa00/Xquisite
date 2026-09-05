@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\FoundingTwentyApplication;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Rules\SouthAfricanPhoneNumber;
@@ -41,10 +42,15 @@ class TenantController extends Controller
         return view('admin.tenants.show', compact('tenant', 'allModules'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $allModules = config('modules');
-        return view('admin.tenants.create', compact('allModules'));
+
+        $foundingTwentyApplication = $request->filled('founding_twenty')
+            ? FoundingTwentyApplication::whereNull('tenant_id')->find($request->query('founding_twenty'))
+            : null;
+
+        return view('admin.tenants.create', compact('allModules', 'foundingTwentyApplication'));
     }
 
     public function store(Request $request)
@@ -60,6 +66,7 @@ class TenantController extends Controller
             'modules'       => 'nullable|array',
             'modules.*'     => 'string|in:' . implode(',', array_keys(config('modules'))),
             'trial_days'    => 'nullable|integer|min:0|max:365',
+            'founding_twenty_application_id' => 'nullable|exists:founding_twenty_applications,id',
         ]);
 
         $slug   = $this->uniqueSlug($request->name);
@@ -87,6 +94,12 @@ class TenantController extends Controller
         foreach ($request->input('modules', []) as $module) {
             $billingId = $billing->createModuleSubscription($tenant, $module);
             $tenant->activateModule($module, auth()->id(), null, $billingId);
+        }
+
+        if ($request->filled('founding_twenty_application_id')) {
+            FoundingTwentyApplication::whereKey($request->founding_twenty_application_id)
+                ->whereNull('tenant_id')
+                ->update(['tenant_id' => $tenant->id]);
         }
 
         return redirect()->route('admin.tenants.show', $tenant)
