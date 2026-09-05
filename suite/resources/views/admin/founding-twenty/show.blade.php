@@ -63,19 +63,22 @@
                     @if($a->tenant)
                         <p class="text-sm text-slate-300">Linked tenant: <span class="text-white font-medium">{{ $a->tenant->name }}</span></p>
                     @else
-                        <form method="POST" action="{{ route('admin.founding-twenty.tenant', $a) }}" class="flex items-end gap-2">
-                            @csrf
-                            <div class="flex-1">
-                                <label class="block text-xs font-medium text-slate-400 mb-1">Link to tenant (once created)</label>
-                                <select name="tenant_id" required class="w-full bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
-                                    <option value="">Select…</option>
-                                    @foreach($tenants as $t)
-                                        <option value="{{ $t->id }}">{{ $t->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <button type="submit" class="px-3 py-2 text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition">Link</button>
-                        </form>
+                        <div class="space-y-2">
+                            <form method="POST" action="{{ route('admin.founding-twenty.tenant', $a) }}" class="flex items-end gap-2">
+                                @csrf
+                                <div class="flex-1">
+                                    <label class="block text-xs font-medium text-slate-400 mb-1">Link to an existing tenant</label>
+                                    <select name="tenant_id" required class="w-full bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
+                                        <option value="">Select…</option>
+                                        @foreach($tenants as $t)
+                                            <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <button type="submit" class="px-3 py-2 text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition">Link</button>
+                            </form>
+                            <a href="{{ route('admin.tenants.create', ['founding_twenty' => $a->id]) }}" class="text-xs text-[#0078D4] hover:underline">or create a new tenant from this application &rarr;</a>
+                        </div>
                     @endif
                 </div>
                 <div>
