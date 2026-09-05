@@ -6,6 +6,8 @@ use App\Models\FoundingTwentyApplication;
 use App\Rules\SouthAfricanPhoneNumber;
 use App\Services\FoundingTwentyScoringService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class FoundingTwentyController extends Controller
 {
@@ -121,14 +123,27 @@ class FoundingTwentyController extends Controller
         abort_unless($foundingTwenty->status === 'selected', 404);
 
         $validated = $request->validate([
-            'proof_of_payment' => 'required|file|mimes:jpg,jpeg,png,heic,heif,webp,pdf|max:15360',
+            // extensions: (filename-based), not mimes: (content-sniffed) — HEIC/HEIF from
+            // iPhone screenshots (the common case for a SA banking-app payment proof)
+            // isn't reliably detected by fileinfo and mimes: silently rejects valid files.
+            'proof_of_payment' => ['required', 'file', 'extensions:jpg,jpeg,png,heic,heif,webp,pdf', 'max:15360'],
         ], [
-            'proof_of_payment.mimes' => 'That file type isn\'t supported — please upload a JPG, PNG, HEIC or PDF.',
+            'proof_of_payment.extensions' => 'That file type isn\'t supported — please upload a JPG, PNG, HEIC or PDF.',
             'proof_of_payment.max' => 'That file is too large — please keep it under 15MB.',
         ]);
 
+        if ($foundingTwenty->deposit_pop_path) {
+            Storage::disk('private')->delete($foundingTwenty->deposit_pop_path);
+        }
+
+        $file = $request->file('proof_of_payment');
+        // storeAs with the client's own extension — store()'s auto-naming guesses the
+        // extension from content sniffing, which is exactly what's unreliable for HEIC.
+        $filename = Str::random(40) . '.' . strtolower($file->getClientOriginalExtension());
+        $path = $file->storeAs('founding-twenty-deposits', $filename, 'private');
+
         $foundingTwenty->update([
-            'deposit_pop_path' => $request->file('proof_of_payment')->store('founding-twenty-deposits', 'private'),
+            'deposit_pop_path' => $path,
             'deposit_submitted_at' => now(),
         ]);
 

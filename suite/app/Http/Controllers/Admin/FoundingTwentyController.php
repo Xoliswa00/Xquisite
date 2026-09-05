@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\FoundingTwentyApplication;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -76,6 +77,13 @@ class FoundingTwentyController extends Controller
     public function downloadPop(FoundingTwentyApplication $foundingTwenty)
     {
         abort_unless($foundingTwenty->deposit_pop_path !== null, 404);
+
+        AuditService::log(
+            action: 'document.accessed',
+            entityType: 'FoundingTwentyApplication',
+            entityId: $foundingTwenty->id,
+            meta: ['file' => 'deposit_pop', 'deposit_reference' => $foundingTwenty->deposit_reference],
+        );
 
         return Storage::disk('private')->download(
             $foundingTwenty->deposit_pop_path,
