@@ -55,6 +55,7 @@ class PromoCode extends Model
             'free_months' => (int) $this->value . ' month' . ((int) $this->value === 1 ? '' : 's') . ' free',
             'percentage' => number_format($this->value, 0) . '% off',
             'fixed_amount' => 'R' . number_format($this->value, 2) . ' off',
+            default => ucfirst(str_replace('_', ' ', $this->type)),
         };
     }
 }
