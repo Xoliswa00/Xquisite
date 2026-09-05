@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\FoundingTwentyApplication;
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -25,9 +26,11 @@ class FoundingTwentyController extends Controller
 
     public function show(FoundingTwentyApplication $foundingTwenty)
     {
-        $foundingTwenty->load('reviewer');
+        $foundingTwenty->load(['reviewer', 'tenant', 'promoCodeRedemption.promoCode']);
 
-        return view('admin.founding-twenty.show', ['application' => $foundingTwenty]);
+        $tenants = Tenant::orderBy('name')->get(['id', 'name']);
+
+        return view('admin.founding-twenty.show', ['application' => $foundingTwenty, 'tenants' => $tenants]);
     }
 
     public function updateStatus(Request $request, FoundingTwentyApplication $foundingTwenty)
@@ -71,6 +74,31 @@ class FoundingTwentyController extends Controller
         $foundingTwenty->update(['deposit_refunded_at' => now()]);
 
         return back()->with('success', 'Deposit marked as refunded.');
+    }
+
+    public function linkTenant(Request $request, FoundingTwentyApplication $foundingTwenty)
+    {
+        $validated = $request->validate([
+            'tenant_id' => 'required|exists:tenants,id',
+        ]);
+
+        $foundingTwenty->update($validated);
+
+        return back()->with('success', 'Tenant linked to this application.');
+    }
+
+    public function markMilestone(Request $request, FoundingTwentyApplication $foundingTwenty)
+    {
+        $validated = $request->validate([
+            'first_value_milestone_note' => 'required|string|max:255',
+        ]);
+
+        $foundingTwenty->update([
+            ...$validated,
+            'first_value_milestone_at' => now(),
+        ]);
+
+        return back()->with('success', 'First-value milestone logged.');
     }
 
     public function downloadPop(FoundingTwentyApplication $foundingTwenty)
