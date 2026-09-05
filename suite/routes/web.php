@@ -71,6 +71,7 @@ use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\FoundingTwentyController;
+use App\Http\Controllers\FoundingTwentyCheckinController;
 use App\Http\Controllers\Admin\FoundingTwentyController as AdminFoundingTwentyController;
 use App\Http\Controllers\Admin\PromoCodeController;
 use Illuminate\Support\Facades\Route;
@@ -336,6 +337,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::get('/founding-twenty/{foundingTwenty}/deposit/pop', [AdminFoundingTwentyController::class, 'downloadPop'])->name('founding-twenty.deposit.pop');
             Route::post('/founding-twenty/{foundingTwenty}/tenant', [AdminFoundingTwentyController::class, 'linkTenant'])->name('founding-twenty.tenant');
             Route::post('/founding-twenty/{foundingTwenty}/milestone', [AdminFoundingTwentyController::class, 'markMilestone'])->name('founding-twenty.milestone');
+            Route::post('/founding-twenty/{foundingTwenty}/checkin', [AdminFoundingTwentyController::class, 'issueCheckin'])->name('founding-twenty.checkin.issue');
 
             // Promo codes — track discounts issued and their rand value given away
             Route::get('/promo-codes', [PromoCodeController::class, 'index'])->name('promo-codes.index');
@@ -538,6 +540,11 @@ Route::prefix('founding-20')->name('founding-twenty.')->group(function () {
     // "selected"; secured by an HMAC token (same pattern as public quote links).
     Route::get('/reserve/{foundingTwenty}/{token}',  [FoundingTwentyController::class, 'reserve'])->name('reserve');
     Route::post('/reserve/{foundingTwenty}/{token}', [FoundingTwentyController::class, 'reserveStore'])->name('reserve.store')->middleware('throttle:12,1');
+
+    // 30/60/90-day check-ins — token-secured against the checkin row itself, issued
+    // by an admin once a business has been onboarded.
+    Route::get('/checkin/{checkin}/{token}',  [FoundingTwentyCheckinController::class, 'show'])->name('checkin.show');
+    Route::post('/checkin/{checkin}/{token}', [FoundingTwentyCheckinController::class, 'store'])->name('checkin.store')->middleware('throttle:12,1');
 });
 
 // Public storefront (no auth)
