@@ -11,8 +11,17 @@
     </x-slot>
 
     <div class="max-w-2xl">
+        @if($foundingTwentyApplication)
+            <div class="mb-6 p-4 bg-[#0078D4]/10 border border-[#0078D4]/30 text-[#0078D4] rounded-xl text-sm">
+                Creating this tenant from Founding 20 application <strong>{{ $foundingTwentyApplication->business_name }}</strong> — it'll be linked automatically once saved.
+            </div>
+        @endif
+
         <form action="{{ route('admin.tenants.store') }}" method="POST" class="space-y-6">
             @csrf
+            @if($foundingTwentyApplication)
+                <input type="hidden" name="founding_twenty_application_id" value="{{ $foundingTwentyApplication->id }}">
+            @endif
 
             <!-- Business Details -->
             <div class="bg-slate-800 rounded-2xl border border-slate-700 p-5">
@@ -21,7 +30,7 @@
                     <div class="grid sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Business Name *</label>
-                            <input type="text" name="name" value="{{ old('name') }}" required
+                            <input type="text" name="name" value="{{ old('name', $foundingTwentyApplication->business_name ?? '') }}" required
                                    class="w-full bg-slate-700 border border-slate-600 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0078D4] @error('name') border-red-500 @enderror">
                             @error('name')<p class="text-xs text-red-400 mt-1">{{ $message }}</p>@enderror
                         </div>
@@ -38,13 +47,13 @@
                     <div class="grid sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Business Email *</label>
-                            <input type="email" name="email" value="{{ old('email') }}" required
+                            <input type="email" name="email" value="{{ old('email', $foundingTwentyApplication->email ?? '') }}" required
                                    class="w-full bg-slate-700 border border-slate-600 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0078D4] @error('email') border-red-500 @enderror">
                             @error('email')<p class="text-xs text-red-400 mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Phone</label>
-                            <input type="tel" name="phone" value="{{ old('phone') }}"
+                            <input type="tel" name="phone" value="{{ old('phone', $foundingTwentyApplication->phone ?? '') }}"
                                    class="w-full bg-slate-700 border border-slate-600 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0078D4]">
                         </div>
                     </div>
@@ -75,13 +84,13 @@
                     <div class="grid sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Full Name *</label>
-                            <input type="text" name="owner_name" value="{{ old('owner_name') }}" required
+                            <input type="text" name="owner_name" value="{{ old('owner_name', $foundingTwentyApplication->owner_name ?? '') }}" required
                                    class="w-full bg-slate-700 border border-slate-600 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0078D4] @error('owner_name') border-red-500 @enderror">
                             @error('owner_name')<p class="text-xs text-red-400 mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Login Email *</label>
-                            <input type="email" name="owner_email" value="{{ old('owner_email') }}" required
+                            <input type="email" name="owner_email" value="{{ old('owner_email', $foundingTwentyApplication->email ?? '') }}" required
                                    class="w-full bg-slate-700 border border-slate-600 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0078D4] @error('owner_email') border-red-500 @enderror">
                             @error('owner_email')<p class="text-xs text-red-400 mt-1">{{ $message }}</p>@enderror
                         </div>
