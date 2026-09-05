@@ -46,8 +46,9 @@ class TenantController extends Controller
     {
         $allModules = config('modules');
 
-        $foundingTwentyApplication = $request->filled('founding_twenty')
-            ? FoundingTwentyApplication::whereNull('tenant_id')->find($request->query('founding_twenty'))
+        $foundingTwentyId = filter_var($request->query('founding_twenty'), FILTER_VALIDATE_INT);
+        $foundingTwentyApplication = $foundingTwentyId
+            ? FoundingTwentyApplication::whereNull('tenant_id')->find($foundingTwentyId)
             : null;
 
         return view('admin.tenants.create', compact('allModules', 'foundingTwentyApplication'));
@@ -96,14 +97,21 @@ class TenantController extends Controller
             $tenant->activateModule($module, auth()->id(), null, $billingId);
         }
 
+        $successMessage = "Tenant '{$tenant->name}' created with " . count($request->input('modules', [])) . ' module(s).';
+
         if ($request->filled('founding_twenty_application_id')) {
-            FoundingTwentyApplication::whereKey($request->founding_twenty_application_id)
-                ->whereNull('tenant_id')
-                ->update(['tenant_id' => $tenant->id]);
+            $application = FoundingTwentyApplication::find($request->founding_twenty_application_id);
+
+            if ($application && $application->tenant_id === null) {
+                // Loaded instance, not a query-builder update, so this still fires the
+                // Auditable model events — every other write to this table is audited.
+                $application->update(['tenant_id' => $tenant->id]);
+            } elseif ($application) {
+                $successMessage .= " Note: application #{$application->id} was already linked to another tenant — this new tenant was not linked automatically.";
+            }
         }
 
-        return redirect()->route('admin.tenants.show', $tenant)
-            ->with('success', "Tenant '{$tenant->name}' created with " . count($request->input('modules', [])) . ' module(s).');
+        return redirect()->route('admin.tenants.show', $tenant)->with('success', $successMessage);
     }
 
     public function toggleModule(Request $request, Tenant $tenant, BillingBridge $billing)
