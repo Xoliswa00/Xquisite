@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\FoundingTwentyApplication;
 use App\Models\PromoCode;
+use App\Models\PromoCodeRedemption;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class PromoCodeController extends Controller
 {
@@ -35,10 +37,18 @@ class PromoCodeController extends Controller
 
     public function store(Request $request)
     {
+        // Normalize before validating — otherwise 'abc' passes unique:code against an
+        // existing 'ABC' and only collides once uppercased for insert.
+        $request->merge(['code' => strtoupper((string) ($request->input('code') ?: Str::random(8)))]);
+
         $validated = $request->validate([
-            'code' => 'nullable|string|max:50|unique:promo_codes,code',
+            'code' => 'required|string|max:50|unique:promo_codes,code',
             'type' => 'required|in:free_months,percentage,fixed_amount',
-            'value' => 'required|numeric|min:0',
+            'value' => ['required', 'numeric', 'min:0', function ($attribute, $value, $fail) use ($request) {
+                if ($request->input('type') === 'percentage' && $value > 100) {
+                    $fail('Percentage discounts cannot exceed 100.');
+                }
+            }],
             'max_redemptions' => 'nullable|integer|min:1',
             'expires_at' => 'nullable|date',
             'source' => 'nullable|string|max:100',
@@ -47,7 +57,6 @@ class PromoCodeController extends Controller
 
         $code = PromoCode::create([
             ...$validated,
-            'code' => strtoupper($validated['code'] ?: Str::random(8)),
             'created_by' => $request->user()->id,
         ]);
 
@@ -71,11 +80,23 @@ class PromoCodeController extends Controller
         abort_unless($promoCode->isRedeemable(), 422, 'This promo code can no longer be redeemed.');
 
         $validated = $request->validate([
-            'tenant_id' => 'nullable|exists:tenants,id',
-            'founding_twenty_application_id' => 'nullable|exists:founding_twenty_applications,id',
+            'tenant_id' => 'nullable|required_without:founding_twenty_application_id|exists:tenants,id',
+            'founding_twenty_application_id' => [
+                'nullable',
+                'required_without:tenant_id',
+                Rule::exists('founding_twenty_applications', 'id')->whereIn('status', ['selected', 'converted']),
+            ],
             'financial_value' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:2000',
         ]);
+
+        if (!empty($validated['founding_twenty_application_id'])) {
+            abort_if(
+                PromoCodeRedemption::where('founding_twenty_application_id', $validated['founding_twenty_application_id'])->exists(),
+                422,
+                'This application already has a promo code redemption recorded.'
+            );
+        }
 
         $promoCode->redemptions()->create([
             ...$validated,
