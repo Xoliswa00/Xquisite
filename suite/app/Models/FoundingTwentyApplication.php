@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class FoundingTwentyApplication extends Model
@@ -67,6 +68,11 @@ class FoundingTwentyApplication extends Model
     public function promoCodeRedemption(): HasOne
     {
         return $this->hasOne(PromoCodeRedemption::class);
+    }
+
+    public function checkins(): HasMany
+    {
+        return $this->hasMany(FoundingTwentyCheckin::class);
     }
 
     public function reservationToken(): string

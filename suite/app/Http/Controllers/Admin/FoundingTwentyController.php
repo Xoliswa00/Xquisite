@@ -27,7 +27,7 @@ class FoundingTwentyController extends Controller
 
     public function show(FoundingTwentyApplication $foundingTwenty)
     {
-        $foundingTwenty->load(['reviewer', 'tenant', 'promoCodeRedemption.promoCode']);
+        $foundingTwenty->load(['reviewer', 'tenant', 'promoCodeRedemption.promoCode', 'checkins']);
 
         $tenants = Tenant::orderBy('name')->get(['id', 'name']);
 
@@ -104,6 +104,23 @@ class FoundingTwentyController extends Controller
         ]);
 
         return back()->with('success', 'First-value milestone logged.');
+    }
+
+    public function issueCheckin(Request $request, FoundingTwentyApplication $foundingTwenty)
+    {
+        $request->validate([
+            'checkin_type' => 'required|in:30_day,60_day,90_day',
+        ]);
+
+        abort_if(
+            $foundingTwenty->checkins()->where('checkin_type', $request->checkin_type)->exists(),
+            422,
+            'A ' . str_replace('_', '-', $request->checkin_type) . ' check-in already exists for this application.'
+        );
+
+        $foundingTwenty->checkins()->create(['checkin_type' => $request->checkin_type]);
+
+        return back()->with('success', 'Check-in link issued — copy it from the panel below.');
     }
 
     public function downloadPop(FoundingTwentyApplication $foundingTwenty)
