@@ -106,4 +106,33 @@ class FoundingTwentyController extends Controller
     {
         return view('founding-twenty.thanks');
     }
+
+    public function reserve(FoundingTwentyApplication $foundingTwenty, string $token)
+    {
+        abort_unless(hash_equals($foundingTwenty->reservationToken(), $token), 403, 'Invalid or expired link.');
+        abort_unless($foundingTwenty->status === 'selected', 404);
+
+        return view('founding-twenty.reserve', ['application' => $foundingTwenty, 'token' => $token]);
+    }
+
+    public function reserveStore(Request $request, FoundingTwentyApplication $foundingTwenty, string $token)
+    {
+        abort_unless(hash_equals($foundingTwenty->reservationToken(), $token), 403, 'Invalid or expired link.');
+        abort_unless($foundingTwenty->status === 'selected', 404);
+
+        $validated = $request->validate([
+            'proof_of_payment' => 'required|file|mimes:jpg,jpeg,png,heic,heif,webp,pdf|max:15360',
+        ], [
+            'proof_of_payment.mimes' => 'That file type isn\'t supported — please upload a JPG, PNG, HEIC or PDF.',
+            'proof_of_payment.max' => 'That file is too large — please keep it under 15MB.',
+        ]);
+
+        $foundingTwenty->update([
+            'deposit_pop_path' => $request->file('proof_of_payment')->store('founding-twenty-deposits', 'private'),
+            'deposit_submitted_at' => now(),
+        ]);
+
+        return redirect()->route('founding-twenty.reserve', [$foundingTwenty, $token])
+            ->with('success', "Thanks — we've received your proof of payment and will confirm your spot shortly.");
+    }
 }
