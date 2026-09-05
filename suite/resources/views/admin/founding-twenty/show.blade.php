@@ -31,6 +31,70 @@
             <a href="{{ route('admin.founding-twenty.index') }}" class="text-sm text-slate-400 hover:text-slate-200">&larr; Back to list</a>
         </div>
 
+        @php
+            $isSelected = in_array($a->status, ['selected', 'converted']);
+            $steps = [
+                ['label' => 'Selected for the programme', 'done' => $isSelected],
+                ['label' => 'Deposit confirmed', 'done' => $a->deposit_confirmed_at !== null],
+                ['label' => 'Tenant account linked', 'done' => $a->tenant_id !== null],
+                ['label' => 'Promo code issued', 'done' => $a->promoCodeRedemption !== null],
+                ['label' => 'First-value milestone hit', 'done' => $a->first_value_milestone_at !== null],
+            ];
+        @endphp
+        <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+            <h3 class="text-sm font-semibold text-slate-300 mb-4">Onboarding checklist</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-5">
+                @foreach($steps as $step)
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center shrink-0 {{ $step['done'] ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-500' }}">
+                            @if($step['done'])
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            @else
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+                            @endif
+                        </span>
+                        <span class="{{ $step['done'] ? 'text-slate-300' : 'text-slate-500' }}">{{ $step['label'] }}</span>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4 pt-4 border-t border-slate-700">
+                <div>
+                    @if($a->tenant)
+                        <p class="text-sm text-slate-300">Linked tenant: <span class="text-white font-medium">{{ $a->tenant->name }}</span></p>
+                    @else
+                        <form method="POST" action="{{ route('admin.founding-twenty.tenant', $a) }}" class="flex items-end gap-2">
+                            @csrf
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Link to tenant (once created)</label>
+                                <select name="tenant_id" required class="w-full bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
+                                    <option value="">Select…</option>
+                                    @foreach($tenants as $t)
+                                        <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit" class="px-3 py-2 text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition">Link</button>
+                        </form>
+                    @endif
+                </div>
+                <div>
+                    @if($a->first_value_milestone_at)
+                        <p class="text-sm text-slate-300">First win: <span class="text-white">{{ $a->first_value_milestone_note }}</span> <span class="text-slate-500">({{ $a->first_value_milestone_at->diffForHumans() }})</span></p>
+                    @else
+                        <form method="POST" action="{{ route('admin.founding-twenty.milestone', $a) }}" class="flex items-end gap-2">
+                            @csrf
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Log first-value win (day 1-7 goal)</label>
+                                <input type="text" name="first_value_milestone_note" required placeholder="e.g. sent first automated reminder" class="w-full bg-slate-900 border-slate-700 text-white placeholder-slate-500 rounded-lg text-sm">
+                            </div>
+                            <button type="submit" class="px-3 py-2 text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition">Log</button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        </div>
+
         <div class="grid lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-6">
 
@@ -176,6 +240,18 @@
                         </div>
                     </div>
                 @endif
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-3">
+                    <h3 class="text-sm font-semibold text-slate-300">Promo code</h3>
+                    @if($a->promoCodeRedemption)
+                        <p class="text-sm text-slate-300">Code: <span class="text-white font-mono">{{ $a->promoCodeRedemption->promoCode->code }}</span></p>
+                        <p class="text-sm text-slate-300">Value given: <span class="text-[#D4AF37] font-medium">R{{ number_format($a->promoCodeRedemption->financial_value, 2) }}</span></p>
+                        <a href="{{ route('admin.promo-codes.show', $a->promoCodeRedemption->promoCode) }}" class="text-xs text-[#0078D4] hover:underline">View code details &rarr;</a>
+                    @else
+                        <p class="text-sm text-slate-400">No promo code issued yet.</p>
+                        <a href="{{ route('admin.promo-codes.index') }}" class="text-xs text-[#0078D4] hover:underline">Go to promo codes &rarr;</a>
+                    @endif
+                </div>
 
                 <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
                     <h3 class="text-sm font-semibold text-slate-300 mb-3">Review</h3>
