@@ -29,6 +29,8 @@ class FoundingTwentyApplication extends Model
         'score', 'tier', 'status', 'source', 'ip_address',
         'reviewed_by', 'reviewed_at', 'admin_notes',
         'privacy_consented_at',
+        'deposit_amount', 'deposit_reference', 'deposit_pop_path',
+        'deposit_submitted_at', 'deposit_confirmed_at', 'deposit_refunded_at',
     ];
 
     protected $casts = [
@@ -43,10 +45,19 @@ class FoundingTwentyApplication extends Model
         'willing_to_give_feedback' => 'boolean',
         'reviewed_at' => 'datetime',
         'privacy_consented_at' => 'datetime',
+        'deposit_amount' => 'decimal:2',
+        'deposit_submitted_at' => 'datetime',
+        'deposit_confirmed_at' => 'datetime',
+        'deposit_refunded_at' => 'datetime',
     ];
 
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function reservationToken(): string
+    {
+        return hash_hmac('sha256', $this->id . $this->phone, config('app.key'));
     }
 }
