@@ -71,6 +71,8 @@ use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DemoController;
+use App\Http\Controllers\FoundingTwentyController;
+use App\Http\Controllers\Admin\FoundingTwentyController as AdminFoundingTwentyController;
 use Illuminate\Support\Facades\Route;
 
 // Tenant storefront route definitions — registered twice from this one
@@ -404,6 +406,11 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::patch('/service-photos/{photo}/hidden', [\App\Http\Controllers\Admin\ServicePhotoController::class, 'toggleHidden'])->name('service-photos.toggle-hidden');
             Route::patch('/service-photos/reports/{report}/reviewed', [\App\Http\Controllers\Admin\ServicePhotoController::class, 'markReportReviewed'])->name('service-photos.reports.reviewed');
 
+            // Founding 20 questionnaire applications
+            Route::get('/founding-twenty', [AdminFoundingTwentyController::class, 'index'])->name('founding-twenty.index');
+            Route::get('/founding-twenty/{foundingTwenty}', [AdminFoundingTwentyController::class, 'show'])->name('founding-twenty.show');
+            Route::patch('/founding-twenty/{foundingTwenty}/status', [AdminFoundingTwentyController::class, 'updateStatus'])->name('founding-twenty.status');
+
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
             Route::patch('/module-requests/{moduleRequest}/reject', [ModuleRequestController::class, 'reject'])->name('module-requests.reject');
@@ -609,6 +616,14 @@ Route::prefix('apply/{slug}/{property}')->name('apply.')->group(function () {
     Route::get('/',        [PublicApplicationController::class, 'show'])->name('show');
     Route::post('/',       [PublicApplicationController::class, 'store'])->name('store')->middleware('throttle:auth');
     Route::get('/thanks',  [PublicApplicationController::class, 'thanks'])->name('thanks');
+});
+
+// Public "Founding 20" discovery questionnaire (no auth) — lead-capture funnel from
+// marketing (poster/TikTok/WhatsApp) into a scored, admin-reviewed applicant list.
+Route::prefix('founding-20')->name('founding-twenty.')->group(function () {
+    Route::get('/',       [FoundingTwentyController::class, 'show'])->name('show');
+    Route::post('/',      [FoundingTwentyController::class, 'store'])->name('store')->middleware('throttle:12,1');
+    Route::get('/thanks', [FoundingTwentyController::class, 'thanks'])->name('thanks');
 });
 
 // Public storefront (no auth) — 404s if the tenant hasn't got the ecommerce
