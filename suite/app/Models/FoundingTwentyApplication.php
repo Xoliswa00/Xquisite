@@ -58,6 +58,6 @@ class FoundingTwentyApplication extends Model
 
     public function reservationToken(): string
     {
-        return hash_hmac('sha256', $this->id . $this->phone, config('app.key'));
+        return hash_hmac('sha256', $this->id . '|' . $this->phone, config('app.key'));
     }
 }
