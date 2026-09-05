@@ -6,6 +6,8 @@ use App\Models\FoundingTwentyApplication;
 use App\Rules\SouthAfricanPhoneNumber;
 use App\Services\FoundingTwentyScoringService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class FoundingTwentyController extends Controller
 {
@@ -105,5 +107,47 @@ class FoundingTwentyController extends Controller
     public function thanks()
     {
         return view('founding-twenty.thanks');
+    }
+
+    public function reserve(FoundingTwentyApplication $foundingTwenty, string $token)
+    {
+        abort_unless(hash_equals($foundingTwenty->reservationToken(), $token), 403, 'Invalid or expired link.');
+        abort_unless($foundingTwenty->status === 'selected', 404);
+
+        return view('founding-twenty.reserve', ['application' => $foundingTwenty, 'token' => $token]);
+    }
+
+    public function reserveStore(Request $request, FoundingTwentyApplication $foundingTwenty, string $token)
+    {
+        abort_unless(hash_equals($foundingTwenty->reservationToken(), $token), 403, 'Invalid or expired link.');
+        abort_unless($foundingTwenty->status === 'selected', 404);
+
+        $validated = $request->validate([
+            // extensions: (filename-based), not mimes: (content-sniffed) — HEIC/HEIF from
+            // iPhone screenshots (the common case for a SA banking-app payment proof)
+            // isn't reliably detected by fileinfo and mimes: silently rejects valid files.
+            'proof_of_payment' => ['required', 'file', 'extensions:jpg,jpeg,png,heic,heif,webp,pdf', 'max:15360'],
+        ], [
+            'proof_of_payment.extensions' => 'That file type isn\'t supported — please upload a JPG, PNG, HEIC or PDF.',
+            'proof_of_payment.max' => 'That file is too large — please keep it under 15MB.',
+        ]);
+
+        if ($foundingTwenty->deposit_pop_path) {
+            Storage::disk('private')->delete($foundingTwenty->deposit_pop_path);
+        }
+
+        $file = $request->file('proof_of_payment');
+        // storeAs with the client's own extension — store()'s auto-naming guesses the
+        // extension from content sniffing, which is exactly what's unreliable for HEIC.
+        $filename = Str::random(40) . '.' . strtolower($file->getClientOriginalExtension());
+        $path = $file->storeAs('founding-twenty-deposits', $filename, 'private');
+
+        $foundingTwenty->update([
+            'deposit_pop_path' => $path,
+            'deposit_submitted_at' => now(),
+        ]);
+
+        return redirect()->route('founding-twenty.reserve', [$foundingTwenty, $token])
+            ->with('success', "Thanks — we've received your proof of payment and will confirm your spot shortly.");
     }
 }

@@ -330,6 +330,9 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::get('/founding-twenty', [AdminFoundingTwentyController::class, 'index'])->name('founding-twenty.index');
             Route::get('/founding-twenty/{foundingTwenty}', [AdminFoundingTwentyController::class, 'show'])->name('founding-twenty.show');
             Route::patch('/founding-twenty/{foundingTwenty}/status', [AdminFoundingTwentyController::class, 'updateStatus'])->name('founding-twenty.status');
+            Route::post('/founding-twenty/{foundingTwenty}/deposit/confirm', [AdminFoundingTwentyController::class, 'confirmDeposit'])->name('founding-twenty.deposit.confirm');
+            Route::post('/founding-twenty/{foundingTwenty}/deposit/refund', [AdminFoundingTwentyController::class, 'markDepositRefunded'])->name('founding-twenty.deposit.refund');
+            Route::get('/founding-twenty/{foundingTwenty}/deposit/pop', [AdminFoundingTwentyController::class, 'downloadPop'])->name('founding-twenty.deposit.pop');
 
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
@@ -519,6 +522,11 @@ Route::prefix('founding-20')->name('founding-twenty.')->group(function () {
     Route::get('/',       [FoundingTwentyController::class, 'show'])->name('show');
     Route::post('/',      [FoundingTwentyController::class, 'store'])->name('store')->middleware('throttle:12,1');
     Route::get('/thanks', [FoundingTwentyController::class, 'thanks'])->name('thanks');
+
+    // Reservation deposit — only reachable once an application has been marked
+    // "selected"; secured by an HMAC token (same pattern as public quote links).
+    Route::get('/reserve/{foundingTwenty}/{token}',  [FoundingTwentyController::class, 'reserve'])->name('reserve');
+    Route::post('/reserve/{foundingTwenty}/{token}', [FoundingTwentyController::class, 'reserveStore'])->name('reserve.store')->middleware('throttle:12,1');
 });
 
 // Public storefront (no auth)
