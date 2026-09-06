@@ -14,8 +14,9 @@ class FoundingTwentyController extends Controller
     public function show(Request $request)
     {
         $source = $request->query('src');
+        $campaignId = filter_var($request->query('campaign'), FILTER_VALIDATE_INT);
 
-        return view('founding-twenty.show', compact('source'));
+        return view('founding-twenty.show', compact('source', 'campaignId'));
     }
 
     public function store(Request $request, FoundingTwentyScoringService $scoring)
@@ -88,6 +89,7 @@ class FoundingTwentyController extends Controller
             'privacy_consent' => 'required|accepted',
 
             'source' => 'nullable|string|max:100',
+            'outreach_campaign_id' => 'nullable|exists:outreach_campaigns,id',
         ]);
 
         $application = FoundingTwentyApplication::create([
