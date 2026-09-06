@@ -29,6 +29,9 @@
             <strong class="text-slate-700">3 months free, no setup fee.</strong>
         </p>
         <p class="text-slate-400 text-xs mt-2">Takes about 5–7 minutes. Every answer helps us build a better platform for your industry.</p>
+        @isset($referredByTenantId)
+            <p class="text-xs text-[#D4AF37] font-medium mt-2">You're applying via a referral — thanks for spreading the word!</p>
+        @endisset
     </div>
 
     @if($errors->any())
@@ -64,6 +67,7 @@
         @csrf
         <input type="hidden" name="source" value="{{ old('source', $source) }}">
         <input type="hidden" name="outreach_campaign_id" value="{{ old('outreach_campaign_id', $campaignId ?: '') }}">
+        <input type="hidden" name="referred_by_tenant_id" value="{{ old('referred_by_tenant_id', $referredByTenantId ?: '') }}">
 
         {{-- Section 1 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
