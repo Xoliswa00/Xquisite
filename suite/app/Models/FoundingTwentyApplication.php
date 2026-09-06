@@ -35,6 +35,7 @@ class FoundingTwentyApplication extends Model
         'deposit_amount', 'deposit_reference', 'deposit_pop_path',
         'deposit_submitted_at', 'deposit_confirmed_at', 'deposit_refunded_at',
         'tenant_id', 'first_value_milestone_at', 'first_value_milestone_note',
+        'referred_by_tenant_id', 'referral_reward_processed_at',
     ];
 
     protected $casts = [
@@ -54,6 +55,7 @@ class FoundingTwentyApplication extends Model
         'deposit_confirmed_at' => 'datetime',
         'deposit_refunded_at' => 'datetime',
         'first_value_milestone_at' => 'datetime',
+        'referral_reward_processed_at' => 'datetime',
     ];
 
     public function reviewer(): BelongsTo
@@ -69,6 +71,11 @@ class FoundingTwentyApplication extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function referredByTenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class, 'referred_by_tenant_id');
     }
 
     public function promoCodeRedemption(): HasOne
