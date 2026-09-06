@@ -7,10 +7,16 @@
                 <h2 class="text-2xl font-bold text-[#D4AF37]">Founding 20 Applications</h2>
                 <p class="text-slate-400 text-sm mt-1">Scored discovery questionnaire responses, highest score first</p>
             </div>
-            <a href="{{ route('founding-twenty.show') }}" target="_blank"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm font-medium transition">
-                View public form
-            </a>
+            <div class="flex gap-2">
+                <a href="{{ route('admin.outreach-campaigns.index') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm font-medium transition">
+                    Outreach campaigns
+                </a>
+                <a href="{{ route('founding-twenty.show') }}" target="_blank"
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm font-medium transition">
+                    View public form
+                </a>
+            </div>
         </div>
 
         {{-- Stats --}}
