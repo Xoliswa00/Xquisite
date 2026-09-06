@@ -397,7 +397,7 @@
         <div id="booking-policy" class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25">
             <div class="border-b border-slate-800 px-8 py-6 bg-gradient-to-r from-slate-800/80 to-transparent">
                 <h2 class="text-xl font-semibold text-slate-100 tracking-tight">Booking Policy</h2>
-                <p class="mt-1 text-sm text-slate-400">Your cancellation, no-show, and deposit terms — shown to clients before they confirm a booking.</p>
+                <p class="mt-1 text-sm text-slate-400">Your cancellation, no-show, and deposit terms, shown to clients before they confirm a booking.</p>
             </div>
 
             <form method="POST" action="{{ route('profile.business.update') }}" class="px-8 py-8 space-y-6">
