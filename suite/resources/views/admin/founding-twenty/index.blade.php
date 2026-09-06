@@ -8,6 +8,10 @@
                 <p class="text-slate-400 text-sm mt-1">Scored discovery questionnaire responses, highest score first</p>
             </div>
             <div class="flex gap-2">
+                <a href="{{ route('admin.founding-twenty.action-queue') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 text-[#D4AF37] rounded-lg text-sm font-medium transition">
+                    Action queue
+                </a>
                 <a href="{{ route('admin.outreach-campaigns.index') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm font-medium transition">
                     Outreach campaigns

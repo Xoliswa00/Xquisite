@@ -58,3 +58,7 @@ Schedule::command('leases:check-expiring')->dailyAt('07:00')->withoutOverlapping
 
 // Property Management: remind renters whose rent is due within the next few days.
 Schedule::command('rent:send-due-reminders')->dailyAt('08:00')->withoutOverlapping();
+
+// Founding 20: auto-create 30/60/90-day check-ins once a business has been
+// onboarded that long, instead of relying on someone remembering the date.
+Schedule::command('founding-twenty:auto-issue-checkins')->dailyAt('06:00')->withoutOverlapping();
