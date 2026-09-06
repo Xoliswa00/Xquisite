@@ -214,6 +214,10 @@ class PublicBookingController extends Controller
                 ->with('info', 'Please log in or create an account to complete your booking.');
         }
 
+        if ($tenant->require_booking_terms_acceptance && !$request->boolean('accepted_terms')) {
+            return back()->withErrors(['accepted_terms' => 'Please accept the terms and cancellation policy to continue.']);
+        }
+
         // Guards against the classic duplicate-booking cause: the customer double-clicks
         // "Confirm Booking" (or the request is just slow) before the first request has
         // cleared pending_booking from the session. Only one submission per logged-in
@@ -295,6 +299,7 @@ class PublicBookingController extends Controller
                         'combo_price'      => $comboPrice,
                         'promo_code'       => $promoCode,
                         'promo_discount'   => $promoDiscount,
+                        'terms_accepted_at' => $request->boolean('accepted_terms') ? now() : null,
                     ]);
 
                     $appt->services()->sync(
