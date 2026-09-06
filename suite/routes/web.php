@@ -339,6 +339,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('/founding-twenty/{foundingTwenty}/tenant', [AdminFoundingTwentyController::class, 'linkTenant'])->name('founding-twenty.tenant');
             Route::post('/founding-twenty/{foundingTwenty}/milestone', [AdminFoundingTwentyController::class, 'markMilestone'])->name('founding-twenty.milestone');
             Route::post('/founding-twenty/{foundingTwenty}/checkin', [AdminFoundingTwentyController::class, 'issueCheckin'])->name('founding-twenty.checkin.issue');
+            Route::post('/founding-twenty/{foundingTwenty}/referral-reward', [AdminFoundingTwentyController::class, 'processReferralReward'])->name('founding-twenty.referral-reward');
 
             // Promo codes — track discounts issued and their rand value given away
             Route::get('/promo-codes', [PromoCodeController::class, 'index'])->name('promo-codes.index');

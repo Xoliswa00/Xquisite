@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\FoundingTwentyApplication;
+use App\Models\PromoCode;
 use App\Models\Tenant;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class FoundingTwentyController extends Controller
 
     public function show(FoundingTwentyApplication $foundingTwenty)
     {
-        $foundingTwenty->load(['reviewer', 'tenant', 'promoCodeRedemption.promoCode', 'checkins', 'outreachCampaign']);
+        $foundingTwenty->load(['reviewer', 'tenant', 'promoCodeRedemption.promoCode', 'checkins', 'outreachCampaign', 'referredByTenant']);
 
         $tenants = Tenant::orderBy('name')->get(['id', 'name']);
 
@@ -121,6 +122,56 @@ class FoundingTwentyController extends Controller
         $foundingTwenty->checkins()->create(['checkin_type' => $request->checkin_type]);
 
         return back()->with('success', 'Check-in link issued — copy it from the panel below.');
+    }
+
+    public function processReferralReward(Request $request, FoundingTwentyApplication $foundingTwenty)
+    {
+        abort_unless($foundingTwenty->referred_by_tenant_id !== null, 422, 'This application was not referred by anyone.');
+        abort_unless($foundingTwenty->tenant_id !== null, 422, 'This application must be linked to a paying tenant first.');
+        abort_if($foundingTwenty->referral_reward_processed_at !== null, 422, 'The referral reward has already been processed.');
+
+        $referrer = Tenant::findOrFail($foundingTwenty->referred_by_tenant_id);
+        $newTenant = Tenant::findOrFail($foundingTwenty->tenant_id);
+
+        // Both-sides referral: the referrer gets a free month, the new business gets
+        // a welcome discount — two canonical codes, reused across every referral.
+        $rewardCode = PromoCode::firstOrCreate(
+            ['code' => 'REFERRAL-REWARD'],
+            ['type' => 'free_months', 'value' => 1, 'source' => 'referral_program', 'is_active' => true,
+             'notes' => 'Auto-created — one free month for referring a paying business.']
+        );
+        $welcomeCode = PromoCode::firstOrCreate(
+            ['code' => 'REFERRAL-WELCOME'],
+            ['type' => 'percentage', 'value' => 50, 'source' => 'referral_program', 'is_active' => true,
+             'notes' => 'Auto-created — 50% off for a new business that joined via referral.']
+        );
+
+        $rewardCode->redemptions()->create([
+            'tenant_id' => $referrer->id,
+            'discount_type' => $rewardCode->type,
+            'discount_value' => $rewardCode->value,
+            'financial_value' => $referrer->monthlyTotal(),
+            'notes' => "Referral reward for referring {$newTenant->name}.",
+            'redeemed_by' => $request->user()->id,
+            'redeemed_at' => now(),
+        ]);
+        $rewardCode->increment('times_redeemed');
+
+        $welcomeCode->redemptions()->create([
+            'tenant_id' => $newTenant->id,
+            'founding_twenty_application_id' => $foundingTwenty->id,
+            'discount_type' => $welcomeCode->type,
+            'discount_value' => $welcomeCode->value,
+            'financial_value' => round($newTenant->monthlyTotal() * 0.5, 2),
+            'notes' => "Welcome discount for joining via {$referrer->name}'s referral.",
+            'redeemed_by' => $request->user()->id,
+            'redeemed_at' => now(),
+        ]);
+        $welcomeCode->increment('times_redeemed');
+
+        $foundingTwenty->update(['referral_reward_processed_at' => now()]);
+
+        return back()->with('success', "Referral reward processed — {$referrer->name} got a free month, {$newTenant->name} got a welcome discount.");
     }
 
     public function downloadPop(FoundingTwentyApplication $foundingTwenty)
