@@ -13,6 +13,7 @@ class FoundingTwentyApplication extends Model
     use Auditable;
 
     protected $fillable = [
+        'outreach_campaign_id',
         'business_name', 'owner_name', 'email', 'phone', 'business_type', 'business_type_other',
         'location', 'preferred_contact_method', 'best_contact_time',
         'years_operating', 'staff_count', 'locations_count', 'monthly_customers', 'monthly_appointments',
@@ -58,6 +59,11 @@ class FoundingTwentyApplication extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function outreachCampaign(): BelongsTo
+    {
+        return $this->belongsTo(OutreachCampaign::class);
     }
 
     public function tenant(): BelongsTo

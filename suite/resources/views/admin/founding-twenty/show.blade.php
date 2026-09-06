@@ -193,6 +193,9 @@
                     @if($a->source)
                         <p class="text-sm text-slate-300">Source: <span class="text-white">{{ $a->source }}</span></p>
                     @endif
+                    @if($a->outreachCampaign)
+                        <p class="text-sm text-slate-300">Campaign: <a href="{{ route('admin.outreach-campaigns.show', $a->outreachCampaign) }}" class="text-[#0078D4] hover:underline">{{ $a->outreachCampaign->name }}</a></p>
+                    @endif
                 </div>
 
                 @if($a->deposit_amount !== null)

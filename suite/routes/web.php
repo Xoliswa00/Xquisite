@@ -74,6 +74,7 @@ use App\Http\Controllers\FoundingTwentyController;
 use App\Http\Controllers\FoundingTwentyCheckinController;
 use App\Http\Controllers\Admin\FoundingTwentyController as AdminFoundingTwentyController;
 use App\Http\Controllers\Admin\PromoCodeController;
+use App\Http\Controllers\Admin\OutreachCampaignController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -346,6 +347,12 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::get('/promo-codes/{promoCode}', [PromoCodeController::class, 'show'])->name('promo-codes.show');
             Route::post('/promo-codes/{promoCode}/redeem', [PromoCodeController::class, 'redeem'])->name('promo-codes.redeem');
             Route::post('/promo-codes/{promoCode}/deactivate', [PromoCodeController::class, 'deactivate'])->name('promo-codes.deactivate');
+
+            // Outreach campaigns — plan a wave, then track it filling in by industry
+            Route::get('/outreach-campaigns', [OutreachCampaignController::class, 'index'])->name('outreach-campaigns.index');
+            Route::get('/outreach-campaigns/create', [OutreachCampaignController::class, 'create'])->name('outreach-campaigns.create');
+            Route::post('/outreach-campaigns', [OutreachCampaignController::class, 'store'])->name('outreach-campaigns.store');
+            Route::get('/outreach-campaigns/{outreachCampaign}', [OutreachCampaignController::class, 'show'])->name('outreach-campaigns.show');
 
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');

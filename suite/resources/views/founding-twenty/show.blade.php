@@ -63,6 +63,7 @@
     <form method="POST" action="{{ route('founding-twenty.store') }}" class="space-y-6">
         @csrf
         <input type="hidden" name="source" value="{{ old('source', $source) }}">
+        <input type="hidden" name="outreach_campaign_id" value="{{ old('outreach_campaign_id', $campaignId ?: '') }}">
 
         {{-- Section 1 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">

@@ -27,7 +27,7 @@ class FoundingTwentyController extends Controller
 
     public function show(FoundingTwentyApplication $foundingTwenty)
     {
-        $foundingTwenty->load(['reviewer', 'tenant', 'promoCodeRedemption.promoCode', 'checkins']);
+        $foundingTwenty->load(['reviewer', 'tenant', 'promoCodeRedemption.promoCode', 'checkins', 'outreachCampaign']);
 
         $tenants = Tenant::orderBy('name')->get(['id', 'name']);
 
