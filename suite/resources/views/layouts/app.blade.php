@@ -167,6 +167,7 @@
         $systemModuleRequestsRoutes = ['admin.module-requests.*'];
         $systemUsersRoutes = ['admin.users.*'];
         $systemReviewsRoutes = ['admin.reviews.*'];
+        $systemPublicLaunchesRoutes = ['admin.public-launches.*'];
         $systemSyncRoutes = ['admin.sync.*'];
         $systemLogsRoutes = ['admin.logs.*'];
 
