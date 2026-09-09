@@ -2,202 +2,199 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice {{ $invoice->invoice_number }}</title>
     <style>
+        /* dompdf 3.1.x: @page margin has no effect in this install — page margins
+           are set on <body>. @page keeps size only. Two-column zones are real
+           <table>/<td>, not flex (dompdf flex overflows a right column past the
+           page edge). To move to Libre Caslon Text + Public Sans, drop the two
+           .ttf into resources/fonts/documents/, add @font-face here, and change
+           the `.serif` / body font-family stacks — nothing else changes. */
+        @page { size: A4; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: "DejaVu Sans", Arial, sans-serif;
-            font-size: 10.5px;
-            line-height: 1.35;
-            color: #1f2937;
+            font-size: 10px;
+            line-height: 1.4;
+            color: #1A1A1A;
             background: #fff;
+            margin: 42px 46px;
         }
         .serif { font-family: "DejaVu Serif", Georgia, serif; }
         .num { font-variant-numeric: tabular-nums; }
 
-        .page { padding: 18px 28px; }
+        .rule-gold { border: none; border-top: 1.5px solid #C89B3C; height: 0; }
+        .rule-hair { border: none; border-top: 0.75px solid #E3E2DD; height: 0; }
 
-        /* ── Header ─────────────────────────────────────────── */
-        .header { display: flex; justify-content: space-between; align-items: flex-start; }
+        /* ── Masthead ───────────────────────────────────────── */
+        table.mast { width: 100%; border-collapse: collapse; }
+        table.mast td { vertical-align: top; }
+        table.mast td.r { text-align: right; }
+        .brand-mark { height: 56px; width: auto; display: block; margin-bottom: 10px; }
+        .co-name { font-size: 16px; font-weight: 700; color: #1A1A1A; line-height: 1.15; }
 
-        .brand-block { display: flex; align-items: center; gap: 10px; }
-        .brand-block img { height: 34px; width: auto; display: block; }
-        .brand-name { font-size: 15px; font-weight: 700; color: #0B2D5B; }
-        .brand-sub { font-size: 8.5px; color: #6b7280; margin-top: 1px; }
-
-        .doc-block { text-align: right; }
-        .doc-title { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #0B2D5B; text-transform: uppercase; margin-bottom: 5px; }
-
-        .info-matrix { border-collapse: collapse; margin-left: auto; }
-        .info-matrix td { padding: 1px 0; font-size: 9.5px; }
-        .info-matrix .k { color: #6b7280; padding-right: 14px; white-space: nowrap; text-align: left; }
-        .info-matrix .v { color: #1f2937; font-weight: 700; text-align: right; white-space: nowrap; }
-        .info-matrix .v.status-unpaid   { color: #0B2D5B; }
-        .info-matrix .v.status-overdue  { color: #991b1b; }
-        .info-matrix .v.status-paid     { color: #166534; }
-        .info-matrix .v.status-pop      { color: #0B2D5B; }
-
-        .rule-gold  { border: none; border-top: 1.5px solid #C89B3C; margin: 10px 0; }
-        .rule-gray  { border: none; border-top: 0.75px solid #d1d5db; }
+        .doc-title { font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #1A1A1A; }
+        table.meta { border-collapse: collapse; margin-left: auto; margin-top: 9px; }
+        table.meta td { padding: 1.5px 0; font-size: 9px; }
+        table.meta td.k { color: #6b6b66; padding-right: 18px; text-align: left; white-space: nowrap; }
+        table.meta td.v { font-weight: 700; text-align: right; white-space: nowrap; }
+        table.meta td.v.status-overdue { color: #9A2A2A; }
+        table.meta td.v.status-paid    { color: #1F6B3A; }
 
         /* ── From / Bill To ─────────────────────────────────── */
-        .parties { display: flex; justify-content: space-between; gap: 32px; margin-bottom: 10px; }
-        .party { flex: 1; }
-        .party .label { font-size: 8.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
-        .party .company { font-size: 11px; font-weight: 700; color: #0B2D5B; margin-bottom: 2px; }
-        .party .line { font-size: 9.5px; color: #374151; line-height: 1.42; }
-        .party.right { text-align: right; }
+        table.parties { width: 100%; border-collapse: collapse; }
+        table.parties td { vertical-align: top; width: 50%; padding-right: 28px; }
+        table.parties td.r { text-align: right; padding-right: 0; padding-left: 28px; }
+        .p-label { font-size: 8px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: #6b6b66; padding-bottom: 5px; }
+        .p-name { font-size: 11px; font-weight: 700; color: #1A1A1A; padding-bottom: 2px; }
+        .p-line { font-size: 9.5px; color: #3D3D3A; line-height: 1.5; }
 
-        /* ── Items table ────────────────────────────────────── */
-        .items-table { width: 100%; border-collapse: collapse; }
-        .items-table thead th {
-            padding: 4px 0 5px; text-align: left; font-size: 8.5px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.75px; color: #0B2D5B;
-            border-bottom: 1.5px solid #0B2D5B;
+        /* ── Line items ─────────────────────────────────────── */
+        table.items { width: 100%; border-collapse: collapse; }
+        table.items th {
+            text-align: left; font-size: 8px; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; color: #1A1A1A; padding: 11px 0 6px;
+            border-bottom: 1.25px solid #1A1A1A;
         }
-        .items-table thead th.num-col { text-align: right; }
-        .items-table tbody td { padding: 5px 0; font-size: 10px; color: #1f2937; border-bottom: 0.75px solid #e5e7eb; }
-        .items-table tbody td.num-col { text-align: right; }
-        .items-table tbody tr:last-child td { border-bottom: none; }
-        .col-qty, .col-price, .col-disc, .col-vat, .col-amt { width: 11%; }
-        .col-desc { width: 45%; }
+        table.items th.r { text-align: right; }
+        table.items td { font-size: 10px; color: #1A1A1A; padding: 7px 0; border-bottom: 0.75px solid #E3E2DD; }
+        table.items td.r { text-align: right; white-space: nowrap; }
+        table.items tr:last-child td { border-bottom: none; }
+        .item-sub { color: #6b6b66; }
+        .col-qty { width: 46px; }
+        .col-price { width: 96px; }
+        .col-amt { width: 110px; }
 
-        /* ── Summary (table-based: dompdf's flex justify-content is unreliable for narrow inline k:v pairs) ── */
-        .summary-wrap { display: flex; justify-content: flex-end; margin-top: 2px; }
-        .summary { width: 260px; border-collapse: collapse; }
-        .summary td { padding: 2.5px 0; font-size: 10px; }
-        .summary .k { color: #6b7280; font-weight: 700; text-align: left; }
-        .summary .v { color: #1f2937; font-weight: 600; text-align: right; }
+        /* ── Summary + total band ───────────────────────────── */
+        table.sum { border-collapse: collapse; margin-left: auto; margin-top: 12px; }
+        table.sum td { font-size: 9.5px; padding: 2.5px 0; }
+        table.sum td.k { color: #6b6b66; text-align: left; padding-right: 32px; white-space: nowrap; }
+        table.sum td.v { text-align: right; white-space: nowrap; }
 
-        .total-row td { padding: 6px 0 5px; }
-        .total-row .k { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #0B2D5B; text-align: left; }
-        .total-row .v { font-size: 18px; font-weight: 700; color: #C89B3C; text-align: right; }
-        .total-rule td { border-top: 1.5px solid #C89B3C; padding: 0; line-height: 0; font-size: 0; }
-        .urgency-row td { padding: 0 0 2px; text-align: right; font-size: 9.5px; font-weight: 600; }
+        table.total { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        table.total td { background: #1A1A1A; padding: 15px 20px; vertical-align: middle; }
+        .t-label { font-size: 8.5px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #C7C6C1; }
+        .t-sub { font-size: 9px; color: #B7B6B1; margin-top: 3px; }
+        .t-sub.overdue { color: #E8A0A0; font-weight: 700; }
+        td.t-figcell { text-align: right; }
+        .t-fig { font-size: 25px; font-weight: 700; color: #C89B3C; white-space: nowrap; }
 
         /* ── Paid confirmation ──────────────────────────────── */
-        .paid-line { margin-top: 8px; padding-top: 6px; border-top: 0.75px solid #d1d5db; font-size: 10px; color: #166534; font-weight: 600; }
+        .paid-line { margin-top: 12px; padding-top: 7px; border-top: 0.75px solid #E3E2DD; font-size: 9.5px; color: #1F6B3A; font-weight: 700; letter-spacing: 0.3px; }
 
         /* ── Payment instructions ───────────────────────────── */
-        .section-heading { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #0B2D5B; padding-bottom: 3px; border-bottom: 1px solid #C89B3C; margin-bottom: 6px; }
-        .pay-grid { display: flex; flex-wrap: wrap; }
-        .pay-item { width: 50%; padding: 2px 0; }
-        .pay-item .k { font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; }
-        .pay-item .v { font-size: 10px; color: #1f2937; font-weight: 700; margin-top: 1px; }
-        .pay-ref { margin-top: 5px; font-size: 10px; color: #0B2D5B; }
-        .pay-ref strong { font-weight: 700; }
+        .sec-head { font-size: 8.5px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: #1A1A1A; padding-bottom: 4px; border-bottom: 1px solid #C89B3C; }
+        table.pay { width: 100%; border-collapse: collapse; margin-top: 9px; }
+        table.pay td { width: 50%; vertical-align: top; padding: 3px 0; }
+        .pay-k { font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.6px; color: #6b6b66; }
+        .pay-v { font-size: 9.5px; font-weight: 700; color: #1A1A1A; margin-top: 1px; }
+        .pay-ref { margin-top: 7px; font-size: 9.5px; color: #1A1A1A; }
 
         /* ── Footer ─────────────────────────────────────────── */
-        .footer-grid { display: flex; justify-content: space-between; gap: 24px; }
-        .footer-col { flex: 1; }
-        .footer-col .k { font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.75px; color: #6b7280; margin-bottom: 2px; }
-        .footer-col .v { font-size: 8.5px; color: #374151; line-height: 1.3; }
-        .footer-thanks { text-align: center; font-size: 9.5px; color: #374151; margin: 8px 0 4px; }
-        .footer-meta { text-align: center; font-size: 8px; color: #9ca3af; }
+        table.foot { width: 100%; border-collapse: collapse; margin-top: 14px; }
+        table.foot td { vertical-align: top; width: 33.33%; padding-right: 18px; }
+        table.foot td.r { text-align: right; padding-right: 0; }
+        .foot-k { font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #6b6b66; padding-bottom: 3px; }
+        .foot-v { font-size: 9px; color: #3D3D3A; line-height: 1.4; }
+        .thanks { text-align: center; font-size: 9px; color: #3D3D3A; margin-top: 16px; }
+        .meta-line { text-align: center; font-size: 7.5px; color: #9A9A95; margin-top: 3px; }
     </style>
 </head>
 <body>
-<div class="page">
 
-    {{-- Header --}}
-    <div class="header">
-        <div class="brand-block">
-            <img src="{{ public_path('img/android-icon-192x192.png') }}" alt="Logo">
-            <div>
-                <div class="brand-name serif">{{ \App\Models\BillingSetting::get('company_name') ?: config('app.name') }}</div>
-                @if($companyVat = \App\Models\BillingSetting::get('company_vat'))
-                    <div class="brand-sub">VAT {{ $companyVat }}</div>
-                @endif
-            </div>
-        </div>
-        <div class="doc-block">
-            <div class="doc-title serif">Tax Invoice</div>
-            @php
-                $badge = $invoice->status_badge;
-                $statusClass = match(true) {
-                    $invoice->status === 'paid'        => 'status-paid',
-                    $invoice->isAwaitingConfirmation()  => 'status-pop',
-                    $invoice->status === 'overdue'      => 'status-overdue',
-                    default                              => 'status-unpaid',
-                };
-                $dueDays = (int) (\App\Models\BillingSetting::get('invoice_due_days') ?? 7);
-            @endphp
-            <table class="info-matrix num">
-                <tr><td class="k">Invoice No</td><td class="v">{{ $invoice->invoice_number }}</td></tr>
-                <tr><td class="k">Issue Date</td><td class="v">{{ $invoice->created_at->format('d M Y') }}</td></tr>
-                <tr><td class="k">Due Date</td><td class="v">{{ $invoice->due_date->format('d M Y') }}</td></tr>
-                <tr><td class="k">Terms</td><td class="v">Net {{ $dueDays }}</td></tr>
-                <tr><td class="k">Reference</td><td class="v">{{ $invoice->invoice_number }}</td></tr>
-                <tr><td class="k">Currency</td><td class="v">ZAR</td></tr>
-                <tr><td class="k">Status</td><td class="v {{ $statusClass }}">{{ strtoupper($badge['label']) }}</td></tr>
-            </table>
-        </div>
-    </div>
+    {{-- Masthead --}}
+    @php
+        $companyName = \App\Models\BillingSetting::get('company_name') ?: config('app.name');
+        $companyVat  = \App\Models\BillingSetting::get('company_vat');
+        $companyReg  = \App\Models\BillingSetting::get('company_registration');
+        $companyAddr = \App\Models\BillingSetting::get('company_address');
+        $companyPhone = \App\Models\BillingSetting::get('company_phone');
+        $companyEmail = \App\Models\BillingSetting::get('company_email');
+        $companyWeb   = \App\Models\BillingSetting::get('company_website');
+        $badge = $invoice->status_badge;
+        $statusClass = match(true) {
+            $invoice->status === 'paid'        => 'status-paid',
+            $invoice->isAwaitingConfirmation()  => '',
+            $invoice->status === 'overdue'      => 'status-overdue',
+            default                              => '',
+        };
+        $dueDays = (int) (\App\Models\BillingSetting::get('invoice_due_days') ?? 7);
+    @endphp
+    <table class="mast">
+        <tr>
+            <td>
+                <img src="{{ public_path('img/android-icon-192x192.png') }}" alt="" class="brand-mark">
+                <div class="co-name serif">{{ $companyName }}</div>
+            </td>
+            <td class="r">
+                <div class="doc-title serif">Tax Invoice</div>
+                <table class="meta num">
+                    <tr><td class="k">Invoice No</td><td class="v">{{ $invoice->invoice_number }}</td></tr>
+                    <tr><td class="k">Issue date</td><td class="v">{{ $invoice->created_at->format('d M Y') }}</td></tr>
+                    <tr><td class="k">Due date</td><td class="v">{{ $invoice->due_date->format('d M Y') }}</td></tr>
+                    <tr><td class="k">Terms</td><td class="v">Net {{ $dueDays }}</td></tr>
+                    <tr><td class="k">Currency</td><td class="v">ZAR</td></tr>
+                    <tr><td class="k">Status</td><td class="v {{ $statusClass }}">{{ strtoupper($badge['label']) }}</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 
-    <hr class="rule-gold">
+    <hr class="rule-gold" style="margin: 16px 0 20px;">
 
     {{-- From / Bill To --}}
-    <div class="parties">
-        <div class="party">
-            <div class="label">From</div>
-            <div class="company">{{ \App\Models\BillingSetting::get('company_name') ?: config('app.name') }}</div>
-            @if($addr = \App\Models\BillingSetting::get('company_address'))
-                <div class="line">{{ $addr }}</div>
-            @endif
-            @if($companyVat)<div class="line">VAT {{ $companyVat }}</div>@endif
-            @if($companyPhone = \App\Models\BillingSetting::get('company_phone'))<div class="line">{{ $companyPhone }}</div>@endif
-            @if($companyEmail = \App\Models\BillingSetting::get('company_email'))<div class="line">{{ $companyEmail }}</div>@endif
-        </div>
-        <div class="party right">
-            <div class="label">Bill To</div>
-            <div class="company">{{ $invoice->tenant->name }}</div>
-            @if($invoice->tenant->address)<div class="line">{{ $invoice->tenant->address }}</div>@endif
-            @if($invoice->tenant->vat_number)<div class="line">VAT {{ $invoice->tenant->vat_number }}</div>@endif
-            @if($invoice->tenant->phone)<div class="line">{{ $invoice->tenant->phone }}</div>@endif
-            @if($invoice->tenant->email)<div class="line">{{ $invoice->tenant->email }}</div>@endif
-        </div>
-    </div>
+    <table class="parties">
+        <tr>
+            <td>
+                <div class="p-label">From</div>
+                <div class="p-name">{{ $companyName }}</div>
+                @if($companyAddr)<div class="p-line">{{ $companyAddr }}</div>@endif
+                @if($companyReg)<div class="p-line">Reg {{ $companyReg }}</div>@endif
+                @if($companyVat)<div class="p-line">VAT {{ $companyVat }}</div>@endif
+                @if($companyPhone)<div class="p-line">{{ $companyPhone }}</div>@endif
+                @if($companyEmail)<div class="p-line">{{ $companyEmail }}</div>@endif
+            </td>
+            <td class="r">
+                <div class="p-label">Bill to</div>
+                <div class="p-name">{{ $invoice->tenant->name }}</div>
+                @if($invoice->tenant->address)<div class="p-line">{{ $invoice->tenant->address }}</div>@endif
+                @if($invoice->tenant->vat_number)<div class="p-line">VAT {{ $invoice->tenant->vat_number }}</div>@endif
+                @if($invoice->tenant->phone)<div class="p-line">{{ $invoice->tenant->phone }}</div>@endif
+                @if($invoice->tenant->email)<div class="p-line">{{ $invoice->tenant->email }}</div>@endif
+            </td>
+        </tr>
+    </table>
 
-    <hr class="rule-gold">
+    <hr class="rule-hair" style="margin: 20px 0 0;">
 
-    {{-- Line items --}}
+    {{-- Line item. The invoice amount is a frozen snapshot taken at issue time;
+         re-itemising from the tenant's *current* active modules would not
+         reconcile with it once modules or prices change (it didn't — that was the
+         old bug). A single subscription line for the billing period always
+         balances against amount. A true per-module breakdown needs the line items
+         snapshotted onto the invoice at creation. --}}
     @php
-        $modules = $invoice->tenant->activeModules()->with('platformModule')->get();
+        $periodLabel = ($invoice->billing_period_start && $invoice->billing_period_end)
+            ? $invoice->billing_period_start->format('d M Y') . ' – ' . $invoice->billing_period_end->format('d M Y')
+            : null;
     @endphp
-    <table class="items-table num">
+    <table class="items num">
         <thead>
             <tr>
-                <th class="col-desc">Description</th>
-                <th class="num-col col-qty">Qty</th>
-                <th class="num-col col-price">Unit Price</th>
-                <th class="num-col col-disc">Discount</th>
-                <th class="num-col col-vat">VAT</th>
-                <th class="num-col col-amt">Amount</th>
+                <th>Description</th>
+                <th class="r col-qty">Qty</th>
+                <th class="r col-price">Unit price</th>
+                <th class="r col-amt">Amount</th>
             </tr>
         </thead>
         <tbody>
-            @if($modules->count())
-                @foreach($modules as $tm)
-                    <tr>
-                        <td class="col-desc">{{ $tm->platformModule?->name ?? ucfirst(str_replace('_', ' ', $tm->module)) }} — Platform Module</td>
-                        <td class="num-col col-qty">1</td>
-                        <td class="num-col col-price">{{ number_format($tm->monthly_price, 2) }}</td>
-                        <td class="num-col col-disc">0.00</td>
-                        <td class="num-col col-vat">0.00</td>
-                        <td class="num-col col-amt">{{ number_format($tm->monthly_price, 2) }}</td>
-                    </tr>
-                @endforeach
-            @else
-                <tr>
-                    <td class="col-desc">Platform Subscription</td>
-                    <td class="num-col col-qty">1</td>
-                    <td class="num-col col-price">{{ number_format($invoice->amount, 2) }}</td>
-                    <td class="num-col col-disc">0.00</td>
-                    <td class="num-col col-vat">0.00</td>
-                    <td class="num-col col-amt">{{ number_format($invoice->amount, 2) }}</td>
-                </tr>
-            @endif
+            <tr>
+                <td>Xquisite platform subscription @if($periodLabel)<span class="item-sub">— {{ $periodLabel }}</span>@endif</td>
+                <td class="r">1</td>
+                <td class="r">R {{ number_format($invoice->amount, 2) }}</td>
+                <td class="r">R {{ number_format($invoice->amount, 2) }}</td>
+            </tr>
         </tbody>
     </table>
 
@@ -209,37 +206,39 @@
         $dueUrgencyText = match(true) {
             $invoice->status === 'paid' => null,
             $daysUntilDue < 0  => 'Overdue by ' . abs($daysUntilDue) . ' day' . (abs($daysUntilDue) === 1 ? '' : 's'),
-            $daysUntilDue === 0 => 'Due today',
-            default            => 'Due in ' . $daysUntilDue . ' day' . ($daysUntilDue === 1 ? '' : 's'),
+            $daysUntilDue === 0 => 'Payable today',
+            default            => 'Payable by ' . $invoice->due_date->format('d F Y'),
         };
     @endphp
-    <div class="summary-wrap">
-        <table class="summary num">
-            <tr><td class="k">Subtotal</td><td class="v">R{{ number_format($invoice->amount, 2) }}</td></tr>
-            <tr><td class="k">VAT</td><td class="v">R0.00</td></tr>
-            <tr><td class="k">Discount</td><td class="v">R0.00</td></tr>
-            <tr><td class="k">Payments Received</td><td class="v">R{{ number_format($paymentsReceived, 2) }}</td></tr>
-            <tr class="total-rule"><td colspan="2"></td></tr>
-            <tr class="total-row">
-                <td class="k">{{ $invoice->status === 'paid' ? 'Balance' : 'Total Due' }}</td>
-                <td class="v">R{{ number_format($balanceDue, 2) }}</td>
-            </tr>
-            @if($dueUrgencyText)
-                <tr class="urgency-row"><td colspan="2" style="color: {{ $daysUntilDue < 0 ? '#991b1b' : '#6b7280' }};">{{ $dueUrgencyText }}</td></tr>
-            @endif
-        </table>
-    </div>
+    <table class="sum num">
+        <tr><td class="k">Subtotal</td><td class="v">R {{ number_format($invoice->amount, 2) }}</td></tr>
+        <tr><td class="k">VAT</td><td class="v">R 0.00</td></tr>
+        <tr><td class="k">Discount</td><td class="v">R 0.00</td></tr>
+        <tr><td class="k">Payments received</td><td class="v">R {{ number_format($paymentsReceived, 2) }}</td></tr>
+    </table>
+
+    <table class="total num">
+        <tr>
+            <td>
+                <div class="t-label">{{ $invoice->status === 'paid' ? 'Balance' : 'Total due' }}</div>
+                @if($dueUrgencyText)<div class="t-sub {{ $daysUntilDue < 0 && $invoice->status !== 'paid' ? 'overdue' : '' }}">{{ $dueUrgencyText }}</div>@endif
+            </td>
+            <td class="t-figcell">
+                <span class="t-fig serif">R {{ number_format($balanceDue, 2) }}</span>
+            </td>
+        </tr>
+    </table>
 
     {{-- Paid confirmation --}}
     @if($invoice->status === 'paid')
         <div class="paid-line">
-            PAID IN FULL — {{ $invoice->paid_at->format('d F Y') }}
-            @if($invoice->payment_method) via {{ $invoice->payment_method }}@endif
-            @if($invoice->payment_reference) · Ref: {{ $invoice->payment_reference }}@endif
+            PAID IN FULL &nbsp;·&nbsp; {{ $invoice->paid_at->format('d F Y') }}
+            @if($invoice->payment_method) &nbsp;·&nbsp; {{ $invoice->payment_method }}@endif
+            @if($invoice->payment_reference) &nbsp;·&nbsp; Ref {{ $invoice->payment_reference }}@endif
         </div>
     @endif
 
-    {{-- Payment instructions (only for unpaid/overdue) --}}
+    {{-- Payment instructions (unpaid / overdue) --}}
     @if(in_array($invoice->status, ['unpaid', 'overdue']))
         @php
             $bankName    = \App\Models\BillingSetting::get('bank_name');
@@ -248,46 +247,51 @@
             $bankBranch  = \App\Models\BillingSetting::get('bank_branch_code');
         @endphp
         @if($bankName || $bankAccNum)
-            <div style="margin-top: 10px;">
-                <div class="section-heading">Payment Instructions</div>
-                <div class="pay-grid num">
-                    @if($bankName)<div class="pay-item"><div class="k">Bank</div><div class="v">{{ $bankName }}</div></div>@endif
-                    @if($bankAccName)<div class="pay-item"><div class="k">Account Name</div><div class="v">{{ $bankAccName }}</div></div>@endif
-                    @if($bankAccNum)<div class="pay-item"><div class="k">Account Number</div><div class="v">{{ $bankAccNum }}</div></div>@endif
-                    @if($bankBranch)<div class="pay-item"><div class="k">Branch Code</div><div class="v">{{ $bankBranch }}</div></div>@endif
-                </div>
-                <div class="pay-ref">Use <strong>{{ $invoice->invoice_number }}</strong> as your payment reference — payments without a reference may be delayed.</div>
+            <div style="margin-top: 22px;">
+                <div class="sec-head">Payment instructions</div>
+                <table class="pay num">
+                    <tr>
+                        <td>@if($bankName)<div class="pay-k">Bank</div><div class="pay-v">{{ $bankName }}</div>@endif</td>
+                        <td>@if($bankAccName)<div class="pay-k">Account name</div><div class="pay-v">{{ $bankAccName }}</div>@endif</td>
+                    </tr>
+                    <tr>
+                        <td>@if($bankAccNum)<div class="pay-k">Account number</div><div class="pay-v">{{ $bankAccNum }}</div>@endif</td>
+                        <td>@if($bankBranch)<div class="pay-k">Branch code</div><div class="pay-v">{{ $bankBranch }}</div>@endif</td>
+                    </tr>
+                </table>
+                <div class="pay-ref">Use {{ $invoice->invoice_number }} as your payment reference. Payments without a reference may be delayed.</div>
             </div>
         @endif
     @endif
 
     {{-- Footer --}}
-    <hr class="rule-gray" style="margin: 8px 0 6px;">
-    <div class="footer-grid">
-        <div class="footer-col">
-            <div class="k">Payment Terms</div>
-            <div class="v">Net {{ $dueDays }} — payment due within {{ $dueDays }} day{{ $dueDays === 1 ? '' : 's' }} of the invoice date.</div>
-        </div>
-        <div class="footer-col">
-            <div class="k">Support</div>
-            <div class="v">
-                @if($companyEmail){{ $companyEmail }}<br>@endif
-                @if($companyPhone){{ $companyPhone }}@endif
-            </div>
-        </div>
-        <div class="footer-col" style="text-align:right;">
-            <div class="k">Company</div>
-            <div class="v">
-                @if($companyReg = \App\Models\BillingSetting::get('company_registration'))Reg {{ $companyReg }}<br>@endif
-                @if($companyVat)VAT {{ $companyVat }}<br>@endif
-                @if($companyWeb = \App\Models\BillingSetting::get('company_website')){{ $companyWeb }}@endif
-            </div>
-        </div>
-    </div>
+    <hr class="rule-hair" style="margin: 22px 0 8px;">
+    <table class="foot">
+        <tr>
+            <td>
+                <div class="foot-k">Payment terms</div>
+                <div class="foot-v">Net {{ $dueDays }} — payment due within {{ $dueDays }} day{{ $dueDays === 1 ? '' : 's' }} of the invoice date.</div>
+            </td>
+            <td>
+                <div class="foot-k">Support</div>
+                <div class="foot-v">
+                    @if($companyEmail){{ $companyEmail }}<br>@endif
+                    @if($companyPhone){{ $companyPhone }}@endif
+                </div>
+            </td>
+            <td class="r">
+                <div class="foot-k">Company</div>
+                <div class="foot-v">
+                    @if($companyReg)Reg {{ $companyReg }}<br>@endif
+                    @if($companyVat)VAT {{ $companyVat }}<br>@endif
+                    @if($companyWeb){{ $companyWeb }}@endif
+                </div>
+            </td>
+        </tr>
+    </table>
 
-    <div class="footer-thanks">Thank you for your business.</div>
-    <div class="footer-meta">Generated by {{ \App\Models\BillingSetting::get('company_name') ?: config('app.name') }} · {{ now()->format('d M Y') }} · {{ $invoice->invoice_number }}</div>
+    <div class="thanks">Thank you for your business.</div>
+    <div class="meta-line">Generated by {{ $companyName }} &nbsp;·&nbsp; {{ now()->format('d M Y') }} &nbsp;·&nbsp; {{ $invoice->invoice_number }}</div>
 
-</div>
 </body>
 </html>
