@@ -101,17 +101,17 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
-    // Service combos
-    Route::resource('combos', ServiceComboController::class);
-    Route::post('combos/{combo}/toggle', [ServiceComboController::class, 'toggle'])->name('combos.toggle');
+    // Combos, promotions and service categories set pricing/packaging — managers only.
+    Route::middleware('can:manage-products')->group(function () {
+        Route::resource('combos', ServiceComboController::class);
+        Route::post('combos/{combo}/toggle', [ServiceComboController::class, 'toggle'])->name('combos.toggle');
 
-    // Promotions
-    Route::get('promotions/generate-code', [PromotionController::class, 'generateCode'])->name('promotions.generate-code');
-    Route::resource('promotions', PromotionController::class);
-    Route::post('promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle');
+        Route::get('promotions/generate-code', [PromotionController::class, 'generateCode'])->name('promotions.generate-code');
+        Route::resource('promotions', PromotionController::class);
+        Route::post('promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle');
 
-    // Service categories
-    Route::resource('service-categories', ServiceCategoryController::class);
+        Route::resource('service-categories', ServiceCategoryController::class);
+    });
     Route::get('api/service-categories', [ServiceCategoryController::class, 'apiList'])->name('api.service-categories');
 
     // Booking menu
@@ -154,12 +154,18 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::get('customers/import', [CustomerController::class, 'importForm'])->name('customers.import');
         Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import.store');
         Route::resource('customers', CustomerController::class);
-        Route::resource('services', ServiceController::class)->except(['show']);
-        Route::resource('staff', StaffController::class);
-        Route::get('staff/{staff}/schedule', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'edit'])->name('staff.schedule');
-        Route::put('staff/{staff}/schedule', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'update'])->name('staff.schedule.update');
-        Route::post('staff/{staff}/blocks', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'storeBlock'])->name('staff.blocks.store');
-        Route::delete('staff/{staff}/blocks/{block}', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'destroyBlock'])->name('staff.blocks.destroy');
+        // Service catalogue + pricing — managers only (employees can't edit it).
+        Route::middleware('can:manage-products')->group(function () {
+            Route::resource('services', ServiceController::class)->except(['show']);
+        });
+        // Staff records + schedules — managers only.
+        Route::middleware('can:manage-staff')->group(function () {
+            Route::resource('staff', StaffController::class);
+            Route::get('staff/{staff}/schedule', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'edit'])->name('staff.schedule');
+            Route::put('staff/{staff}/schedule', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'update'])->name('staff.schedule.update');
+            Route::post('staff/{staff}/blocks', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'storeBlock'])->name('staff.blocks.store');
+            Route::delete('staff/{staff}/blocks/{block}', [\App\Http\Controllers\Booking\StaffScheduleController::class, 'destroyBlock'])->name('staff.blocks.destroy');
+        });
     });
 
     // POS module — gated behind module:pos
@@ -171,35 +177,35 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::prefix('pos/sales')->name('pos.sales.')->group(function () {
             Route::get('/', [SaleController::class, 'index'])->name('index');
             Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
-            Route::post('/{sale}/void', [SaleController::class, 'void'])->name('void');
+            // Voiding a completed sale reverses money + stock — managers only.
+            Route::post('/{sale}/void', [SaleController::class, 'void'])->name('void')->middleware('can:manage-products');
         });
 
-        // Product management
-        Route::resource('products', ProductController::class)->except(['show']);
+        // Stock, catalogue, procurement and suppliers — managers only.
+        Route::middleware('can:manage-products')->group(function () {
+            Route::resource('products', ProductController::class)->except(['show']);
 
-        // Stock management
-        Route::get('/stock/take', [StockController::class, 'takePage'])->name('stock.take');
-        Route::post('/stock/take', [StockController::class, 'saveStockTake'])->name('stock.take.save');
-        Route::get('/stock/reorder-alerts', [StockController::class, 'reorderAlerts'])->name('stock.reorder-alerts');
-        Route::post('/products/{product}/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
-        Route::get('/products/{product}/stock/history', [StockController::class, 'history'])->name('stock.history');
+            Route::get('/stock/take', [StockController::class, 'takePage'])->name('stock.take');
+            Route::post('/stock/take', [StockController::class, 'saveStockTake'])->name('stock.take.save');
+            Route::get('/stock/reorder-alerts', [StockController::class, 'reorderAlerts'])->name('stock.reorder-alerts');
+            Route::post('/products/{product}/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
+            Route::get('/products/{product}/stock/history', [StockController::class, 'history'])->name('stock.history');
 
-        // Purchase orders
-        Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
-        Route::get('/purchase-orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
-        Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
-        Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
-        Route::post('/purchase-orders/{purchaseOrder}/send', [PurchaseOrderController::class, 'send'])->name('purchase-orders.send');
-        Route::post('/purchase-orders/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
-        Route::post('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
+            Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+            Route::get('/purchase-orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+            Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+            Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+            Route::post('/purchase-orders/{purchaseOrder}/send', [PurchaseOrderController::class, 'send'])->name('purchase-orders.send');
+            Route::post('/purchase-orders/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
+            Route::post('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
 
-        // Rental orders (decor / event items)
+            Route::resource('suppliers', SupplierController::class);
+        });
+
+        // Rental orders (decor / event items) — front-desk work, employees included.
         Route::resource('rental-orders', \App\Http\Controllers\POS\RentalOrderController::class)->except(['edit','update']);
         Route::patch('/rental-orders/{rentalOrder}/out',    [\App\Http\Controllers\POS\RentalOrderController::class, 'markOut'])->name('rental-orders.out');
         Route::patch('/rental-orders/{rentalOrder}/return', [\App\Http\Controllers\POS\RentalOrderController::class, 'returnItem'])->name('rental-orders.return');
-
-        // Suppliers
-        Route::resource('suppliers', SupplierController::class);
     });
 
     // Analytics
@@ -210,12 +216,15 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('module:ecommerce');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status')->middleware('module:ecommerce');
 
-    // E-commerce — store settings (shipping, etc.)
-    Route::get('/store/settings', [StoreSettingsController::class, 'edit'])->name('store.settings')->middleware('module:ecommerce');
-    Route::patch('/store/settings', [StoreSettingsController::class, 'update'])->name('store.settings.update')->middleware('module:ecommerce');
+    // E-commerce — store settings (shipping, etc.) — managers only.
+    Route::get('/store/settings', [StoreSettingsController::class, 'edit'])->name('store.settings')->middleware(['module:ecommerce', 'can:manage-products']);
+    Route::patch('/store/settings', [StoreSettingsController::class, 'update'])->name('store.settings.update')->middleware(['module:ecommerce', 'can:manage-products']);
 
-    // Property management module
-    Route::middleware('module:property_management')->group(function () {
+    // Property management module — staff-facing admin. Coarse gate: managers/owner
+    // only (there is no property "employee" permission yet — if someone needs to
+    // work here, make them a Manager). Renter/contractor portals are separate
+    // guards outside this group and are unaffected.
+    Route::middleware(['module:property_management', 'can:manage-properties'])->group(function () {
         Route::resource('properties', PropertyController::class);
         Route::post('properties/{property}/images', [PropertyImageController::class, 'store'])->name('properties.images.store');
         Route::delete('properties/{property}/images/{image}', [PropertyImageController::class, 'destroy'])->name('properties.images.destroy');
@@ -338,12 +347,19 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::patch('platform-modules/{platformModule}/status', [PlatformModuleController::class, 'updateStatus'])->name('platform-modules.status');
         });
 
-        // User management (for tenant owners to manage their staff)
-        Route::resource('users', UserManagementController::class);
-        Route::post('/users/{user}/deactivate', [UserManagementController::class, 'deactivate'])->name('users.deactivate');
-        Route::post('/users/{user}/activate', [UserManagementController::class, 'activate'])->name('users.activate');
-        Route::post('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
-        Route::patch('/users/{user}/restore', [UserManagementController::class, 'restore'])->name('users.restore')->withTrashed();
+        // Staff accounts — tenant owners/managers manage their own team.
+        // Gated on can:manage-staff (held by tenant-owner + manager, NOT
+        // platform's can:manage-tenants) which is why this sits outside the
+        // can:manage-tenants block above. Do not move it under platform
+        // middleware or tenant owners lose access to their own team.
+        Route::middleware('can:manage-staff')->group(function () {
+            Route::get('/users/team-guide', [UserManagementController::class, 'teamGuide'])->name('users.team-guide');
+            Route::resource('users', UserManagementController::class);
+            Route::post('/users/{user}/deactivate', [UserManagementController::class, 'deactivate'])->name('users.deactivate');
+            Route::post('/users/{user}/activate', [UserManagementController::class, 'activate'])->name('users.activate');
+            Route::post('/users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
+            Route::patch('/users/{user}/restore', [UserManagementController::class, 'restore'])->name('users.restore')->withTrashed();
+        });
     });
 
     // Instance Monitoring (owner-level admin)

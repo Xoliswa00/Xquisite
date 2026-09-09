@@ -4,28 +4,24 @@ namespace App\Actions;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class CreateStaffAccount
 {
     /**
-     * Create a new staff account with auto-generated temporary password.
-     * Staff will be required to change password on first login.
+     * Create a staff account for a tenant. The caller resolves the plaintext
+     * password (owner-set or generated) and owns role assignment; this action
+     * just persists the user and forces a password change on first login.
+     *
+     * @param array{name:string,email:string,tenant_id:int,password:string} $data
      */
     public function execute(array $data): User
     {
-        $temporaryPassword = Str::password(12);
-
-        $staff = User::create([
+        return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($temporaryPassword),
+            'password' => Hash::make($data['password']),
             'tenant_id' => $data['tenant_id'],
             'require_password_change' => true,
         ]);
-
-        $staff->assignRole($data['role'] ?? 'employee');
-
-        return $staff;
     }
 }

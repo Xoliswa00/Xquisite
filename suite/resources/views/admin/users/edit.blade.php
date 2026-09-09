@@ -1,13 +1,9 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center gap-3">
-            <a href="{{ route('admin.users.show', $user) }}" class="text-slate-400 hover:text-white transition-colors">← {{ $user->name }}</a>
-            <span class="text-slate-600">/</span>
-            <h2 class="text-xl font-bold text-[#D4AF37]">Edit</h2>
-        </div>
-    </x-slot>
+    <x-slot name="header">Edit {{ $user->name }}</x-slot>
 
     <div class="max-w-2xl space-y-4">
+        <a href="{{ route('admin.users.show', $user) }}" class="inline-block text-sm text-slate-400 hover:text-white transition-colors">&larr; Back to {{ $user->name }}</a>
+
         <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
             <form method="POST" action="{{ route('admin.users.update', $user) }}" class="space-y-5">
                 @csrf
@@ -51,22 +47,26 @@
                 </div>
 
                 @if(isset($permissions) && $permissions->isNotEmpty())
-                    <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
-                        <p class="text-sm font-medium text-slate-300 mb-3">Permissions</p>
+                    <fieldset class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+                        <legend class="text-sm font-medium text-slate-300 px-1">Extra permissions</legend>
+                        <p class="text-xs text-slate-400 mb-3">Access granted on top of the role above.</p>
                         <div class="grid gap-2 sm:grid-cols-2">
                             @foreach($permissions as $permission)
                                 <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
                                     <input type="checkbox" name="permissions[]" value="{{ $permission->name }}"
                                            class="rounded border-slate-600 bg-slate-700 text-[#0078D4] focus:ring-[#0078D4]"
-                                           {{ in_array($permission->name, old('permissions', $user->getPermissionNames()->toArray())) ? 'checked' : '' }}>
-                                    {{ ucfirst($permission->name) }}
+                                           {{ in_array($permission->name, old('permissions', $user->getDirectPermissions()->pluck('name')->toArray())) ? 'checked' : '' }}>
+                                    {{ \App\Support\PermissionLabels::for($permission->name) }}
                                 </label>
                             @endforeach
                         </div>
                         @error('permissions')
                             <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
                         @enderror
-                    </div>
+                        @error('permissions.*')
+                            <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
+                        @enderror
+                    </fieldset>
                 @endif
 
                 <div>

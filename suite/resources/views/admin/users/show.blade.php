@@ -1,13 +1,26 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center gap-3">
-            <a href="{{ route('admin.users.index') }}" class="text-slate-400 hover:text-white transition-colors">← Staff</a>
-            <span class="text-slate-600">/</span>
-            <h2 class="text-xl font-bold text-[#D4AF37]">{{ $user->name }}</h2>
-        </div>
-    </x-slot>
+    <x-slot name="header">{{ $user->name }}</x-slot>
 
     <div class="space-y-5">
+
+        <a href="{{ route('admin.users.index') }}" class="inline-block text-sm text-slate-400 hover:text-white transition-colors">&larr; Back to staff</a>
+
+        @if(session('temp_password'))
+            <div class="bg-slate-800 border border-[#0078D4]/40 rounded-xl p-5"
+                 x-data="{ pw: @js(session('temp_password')), copied: false }">
+                <h3 class="text-xs font-semibold text-[#0078D4] uppercase tracking-widest mb-2">Temporary password</h3>
+                <p class="text-sm text-slate-400 mb-3">Give this to {{ $user->name }} now &mdash; it isn't shown again. They'll set their own password when they first sign in.</p>
+                <div class="flex flex-wrap items-center gap-3">
+                    <code class="text-base font-mono text-white bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 select-all" x-text="pw"></code>
+                    <button type="button"
+                            @click="navigator.clipboard.writeText(pw).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                            class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-sm font-medium transition-colors">
+                        <span x-show="!copied">Copy</span>
+                        <span x-show="copied" class="text-emerald-400">Copied</span>
+                    </button>
+                </div>
+            </div>
+        @endif
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
@@ -70,12 +83,12 @@
                             @endif
                         </dd>
                     </div>
-                    @if($user->getPermissionNames()->isNotEmpty())
+                    @if($user->getDirectPermissions()->isNotEmpty())
                         <div>
-                            <dt class="text-xs text-slate-500 mb-1">Permissions</dt>
+                            <dt class="text-xs text-slate-500 mb-1">Extra permissions</dt>
                             <dd class="flex flex-wrap gap-1">
-                                @foreach($user->getPermissionNames() as $permission)
-                                    <span class="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">{{ $permission }}</span>
+                                @foreach($user->getDirectPermissions()->pluck('name') as $permission)
+                                    <span class="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">{{ \App\Support\PermissionLabels::for($permission) }}</span>
                                 @endforeach
                             </dd>
                         </div>
@@ -84,7 +97,7 @@
             </div>
 
             {{-- Actions --}}
-            @if(!$user->isOwner())
+            @if(!$user->isOwner() && (auth()->user()->isOwner() || !$user->hasRole('manager')))
             <div class="bg-slate-800 rounded-xl border border-slate-700 p-5">
                 <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Actions</h3>
                 <div class="space-y-2">
