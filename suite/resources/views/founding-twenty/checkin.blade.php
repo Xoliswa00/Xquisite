@@ -122,6 +122,20 @@
                 <textarea name="biggest_change" rows="3" class="w-full border-slate-300 rounded-xl text-sm">{{ old('biggest_change') }}</textarea>
             </div>
 
+            @if($checkin->isFinalCheckin())
+                <div class="border-t border-slate-200 pt-4 space-y-4">
+                    <p class="text-sm text-slate-500">Your free 3 months are up. The standard subscription from here is R200/month.</p>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">What would make you continue?</label>
+                        <textarea name="continuation_driver" rows="2" class="w-full border-slate-300 rounded-xl text-sm">{{ old('continuation_driver') }}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">What would make you cancel?</label>
+                        <textarea name="churn_driver" rows="2" class="w-full border-slate-300 rounded-xl text-sm">{{ old('churn_driver') }}</textarea>
+                    </div>
+                </div>
+            @endif
+
             <label class="flex items-center gap-3 text-sm text-slate-700 border border-slate-200 rounded-xl px-4 py-3 cursor-pointer has-[:checked]:border-[#D4AF37] has-[:checked]:bg-amber-50">
                 <input type="checkbox" name="would_recommend" value="1" @checked(old('would_recommend')) class="rounded text-[#D4AF37] focus:ring-[#D4AF37]">
                 <span>I'd recommend Xquisite to another business owner</span>

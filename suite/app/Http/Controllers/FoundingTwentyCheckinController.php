@@ -28,6 +28,8 @@ class FoundingTwentyCheckinController extends Controller
             'hours_manual_reminders' => 'nullable|in:<1,1-3,3-5,5-10,10+',
             'value_rating' => 'required|integer|min:1|max:5',
             'continuation_likelihood' => 'required|in:very_likely,likely,unsure,unlikely,very_unlikely',
+            'continuation_driver' => 'nullable|string|max:2000',
+            'churn_driver' => 'nullable|string|max:2000',
             'biggest_change' => 'nullable|string|max:2000',
             'would_recommend' => 'nullable|boolean',
         ]);
