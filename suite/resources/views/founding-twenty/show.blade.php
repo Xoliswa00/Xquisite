@@ -71,7 +71,7 @@
 
         {{-- Section 1 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 1 of 10</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 1 of 9</p>
             <h2 class="text-base font-semibold text-slate-800">Your business</h2>
 
             <div>
@@ -153,7 +153,7 @@
 
         {{-- Section 2 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 2 of 10</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 2 of 9</p>
             <h2 class="text-base font-semibold text-slate-800">How you run things today</h2>
 
             @foreach([
@@ -184,7 +184,7 @@
 
         {{-- Section 3 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 3 of 10</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 3 of 9</p>
             <h2 class="text-base font-semibold text-slate-800">In the last 30 days, how often have you experienced…</h2>
             <div class="flex justify-end text-xs text-slate-400 pr-1"><span>Never</span><span class="ml-16">Very often</span></div>
 
@@ -205,7 +205,7 @@
 
         {{-- Section 4 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 4 of 10</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 4 of 9</p>
             <h2 class="text-base font-semibold text-slate-800">Quantifying the impact</h2>
             <div class="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -231,7 +231,7 @@
 
         {{-- Section 5 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 5 of 10</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 5 of 9</p>
             <h2 class="text-base font-semibold text-slate-800">Time cost</h2>
             @foreach([
                 'hours_booking_admin' => 'How many hours per week do you spend managing appointments?',
@@ -252,7 +252,7 @@
 
         {{-- Section 6 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 6 of 10</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 6 of 9</p>
             <h2 class="text-base font-semibold text-slate-800">What's stopped you before</h2>
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">What prevents you from using a business management/booking platform?</label>
@@ -274,7 +274,7 @@
 
         {{-- Section 7 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 7 of 10</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 7 of 9</p>
             <h2 class="text-base font-semibold text-slate-800">What would help most</h2>
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Which would be most valuable to your business? (choose up to 5)</label>
@@ -299,7 +299,7 @@
 
         {{-- Section 8 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 8 of 10</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 8 of 9</p>
             <h2 class="text-base font-semibold text-slate-800">The value of solving this</h2>
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">If Xquisite could solve your biggest operational problem, how valuable would that be? *</label>
@@ -322,34 +322,7 @@
 
         {{-- Section 9 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 9 of 10</p>
-            <h2 class="text-base font-semibold text-slate-800">After the free 3 months</h2>
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">The standard subscription is R200/month after 3 months free. How would you feel about continuing? *</label>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    @foreach(['very_likely' => 'Very likely', 'likely' => 'Likely', 'unsure' => 'Unsure', 'unlikely' => 'Unlikely', 'very_unlikely' => 'Very unlikely'] as $value => $label)
-                        <label class="flex items-center gap-2 text-sm border border-slate-200 rounded-xl px-3 py-2 cursor-pointer has-[:checked]:border-[#0078D4] has-[:checked]:bg-blue-50">
-                            <input type="radio" name="continuation_likelihood" value="{{ $value }}" required @checked(old('continuation_likelihood') === $value) class="text-[#0078D4] focus:ring-[#0078D4]">
-                            {{ $label }}
-                        </label>
-                    @endforeach
-                </div>
-            </div>
-            <div class="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">What would make you continue?</label>
-                    <textarea name="continuation_driver" rows="2" class="w-full border-slate-300 rounded-xl text-sm">{{ old('continuation_driver') }}</textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">What would make you cancel?</label>
-                    <textarea name="churn_driver" rows="2" class="w-full border-slate-300 rounded-xl text-sm">{{ old('churn_driver') }}</textarea>
-                </div>
-            </div>
-        </div>
-
-        {{-- Section 10 --}}
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#D4AF37]">Section 10 of 10</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#D4AF37]">Section 9 of 9</p>
             <h2 class="text-base font-semibold text-slate-800">Founding 20 Programme</h2>
 
             <label class="flex items-start gap-3 text-sm text-slate-700 border border-slate-200 rounded-xl px-4 py-3 cursor-pointer has-[:checked]:border-[#D4AF37] has-[:checked]:bg-amber-50">
