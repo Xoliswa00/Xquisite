@@ -87,10 +87,6 @@ class FoundingTwentyController extends Controller
             'value_rating' => 'required|integer|min:1|max:5',
             'value_open_text' => 'nullable|string|max:2000',
 
-            'continuation_likelihood' => 'required|in:very_likely,likely,unsure,unlikely,very_unlikely',
-            'continuation_driver' => 'nullable|string|max:2000',
-            'churn_driver' => 'nullable|string|max:2000',
-
             'wants_founding_twenty' => 'nullable|boolean',
             'willing_to_give_feedback' => 'nullable|boolean',
             'privacy_consent' => 'required|accepted',
