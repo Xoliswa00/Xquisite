@@ -28,6 +28,8 @@ use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\PlatformServiceController;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Admin\PublicLaunchController as AdminPublicLaunchController;
+use App\Http\Controllers\PublicLaunchController;
 use App\Http\Controllers\Admin\ModuleRequestController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\LogController;
@@ -84,6 +86,14 @@ Route::post('/demo',   [DemoController::class, 'login'])->name('demo.login');
 Route::get('/about',   AboutController::class)->name('about');
 Route::get('/terms',   fn() => view('terms'))->name('terms');
 Route::get('/privacy', fn() => view('privacy'))->name('privacy');
+
+// Public "coming soon" launch pages — reusable for Founding 20 and future module launches
+Route::prefix('launch/{key}')->name('public-launch.')->group(function () {
+    Route::get('/',            [PublicLaunchController::class, 'show'])->name('show');
+    Route::post('/questions',  [PublicLaunchController::class, 'askQuestion'])->name('questions.store')->middleware('throttle:global');
+});
+Route::get('/founding-20',  [PublicLaunchController::class, 'show'])->name('founding-20.show')->defaults('key', 'founding-20');
+Route::post('/founding-20/questions', [PublicLaunchController::class, 'askQuestion'])->name('founding-20.questions.store')->defaults('key', 'founding-20')->middleware('throttle:global');
 
 Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(function () {
 
@@ -323,6 +333,15 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
             Route::patch('/reviews/{review}/status', [AdminReviewController::class, 'updateStatus'])->name('reviews.status');
             Route::patch('/reviews/{review}/featured', [AdminReviewController::class, 'toggleFeatured'])->name('reviews.featured');
+
+            // Public launch / coming-soon pages (Founding 20 and future module launches)
+            Route::get('/public-launches', [AdminPublicLaunchController::class, 'index'])->name('public-launches.index');
+            Route::get('/public-launches/{publicLaunch}/edit', [AdminPublicLaunchController::class, 'edit'])->name('public-launches.edit');
+            Route::patch('/public-launches/{publicLaunch}', [AdminPublicLaunchController::class, 'update'])->name('public-launches.update');
+            Route::get('/public-launches/{publicLaunch}/questions', [AdminPublicLaunchController::class, 'questions'])->name('public-launches.questions');
+            Route::patch('/public-launches/{publicLaunch}/questions/{publicQuestion}', [AdminPublicLaunchController::class, 'answerQuestion'])->name('public-launches.questions.answer');
+            Route::patch('/public-launches/{publicLaunch}/questions/{publicQuestion}/toggle', [AdminPublicLaunchController::class, 'togglePublished'])->name('public-launches.questions.toggle');
+            Route::delete('/public-launches/{publicLaunch}/questions/{publicQuestion}', [AdminPublicLaunchController::class, 'destroyQuestion'])->name('public-launches.questions.destroy');
 
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
