@@ -123,11 +123,30 @@ class Tenant extends Model
 
     public function monthlyTotal(): float
     {
+        return (float) array_sum(array_column($this->monthlyLineItems(), 'amount'));
+    }
+
+    /**
+     * The active-module rows as billable line items. This is the single source
+     * an invoice's frozen `line_items` snapshot is built from, and the sum of
+     * their `amount` is `monthlyTotal()` — one code path for the total and the
+     * breakdown so they can never drift apart.
+     *
+     * @return array<int, array{key: string, name: string, quantity: int, unit_price: float, amount: float}>
+     */
+    public function monthlyLineItems(): array
+    {
         $modules = $this->relationLoaded('activeModules')
             ? $this->activeModules
             : $this->activeModules()->with('platformModule')->get();
 
-        return $modules->sum(fn (TenantModule $tm) => $tm->monthly_price);
+        return $modules->map(fn (TenantModule $tm) => [
+            'key'        => $tm->module,
+            'name'       => $tm->display_name,
+            'quantity'   => 1,
+            'unit_price' => (float) $tm->monthly_price,
+            'amount'     => (float) $tm->monthly_price,
+        ])->values()->all();
     }
 
     public function platformInvoices()
