@@ -12,6 +12,9 @@ class Service extends Model
 {
     use HasTenant, Auditable, SoftDeletes;
 
+    /** Maximum photos a single service may hold. */
+    public const MAX_PHOTOS = 5;
+
     protected $fillable = [
         'tenant_id',
         'name',
@@ -53,6 +56,11 @@ class Service extends Model
         };
     }
 
+    public function tenant()
+    {
+        return $this->belongsTo(\App\Models\Tenant::class);
+    }
+
     public function category()
     {
         return $this->belongsTo(\App\Models\ServiceCategory::class, 'service_category_id');
@@ -61,6 +69,49 @@ class Service extends Model
     public function serviceProducts()
     {
         return $this->hasMany(ServiceProduct::class);
+    }
+
+    /** All photos, no ordering — safe for writes/aggregates. */
+    public function photos()
+    {
+        return $this->hasMany(ServicePhoto::class);
+    }
+
+    /** Admin view: every photo (including moderator-hidden), cover first. */
+    public function photosOrdered()
+    {
+        return $this->hasMany(ServicePhoto::class)
+            ->orderByDesc('is_primary')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
+    /** Public portal: only photos not hidden by moderation, cover first. */
+    public function visiblePhotos()
+    {
+        return $this->hasMany(ServicePhoto::class)
+            ->whereNull('hidden_at')
+            ->orderByDesc('is_primary')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
+    /** Just the cover — cheap single-row eager load for list views. */
+    public function coverPhoto()
+    {
+        return $this->hasOne(ServicePhoto::class)
+            ->whereNull('hidden_at')
+            ->orderByDesc('is_primary')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
+    /** The single photo shown on the public booking portal (the "cover"). */
+    public function getDisplayPhotoAttribute(): ?ServicePhoto
+    {
+        $photos = $this->relationLoaded('visiblePhotos') ? $this->visiblePhotos : $this->visiblePhotos()->get();
+
+        return $photos->firstWhere('is_primary', true) ?? $photos->first();
     }
 
     public function staff()

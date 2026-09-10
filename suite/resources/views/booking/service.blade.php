@@ -43,7 +43,13 @@
                     $qty     = $quantities[$service->id] ?? 1;
                 @endphp
                 <div class="flex items-center justify-between py-2.5 text-sm">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        @if($service->display_photo)
+                            <img src="{{ $service->display_photo->thumbUrl() }}" alt="" loading="lazy"
+                                 width="36" height="36" decoding="async"
+                                 class="w-9 h-9 rounded-lg object-cover shrink-0 border border-slate-200"
+                                 onerror="this.remove()">
+                        @endif
                         <span class="text-slate-700 font-medium">{{ $service->name }}</span>
                         @if($inCombo)
                             <span class="text-xs bg-[#E8F2FA] text-[#002B5B] font-bold px-2 py-0.5 rounded-full">combo</span>

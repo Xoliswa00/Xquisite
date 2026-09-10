@@ -30,6 +30,10 @@
 
             {{-- Context-aware create button --}}
             <div class="flex gap-2">
+                <a x-show="tab==='services'" href="{{ route('services.photos.index') }}"
+                   class="border border-slate-700 hover:bg-slate-800 text-slate-300 text-sm px-4 py-2 rounded-lg whitespace-nowrap">
+                    Manage photos
+                </a>
                 <a x-show="tab==='services'" href="{{ route('services.create') }}"
                    class="bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap">
                     + New Service
