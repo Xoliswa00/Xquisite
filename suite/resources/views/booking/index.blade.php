@@ -320,112 +320,9 @@
                 </svg>
             </div>
 
-            <div x-show="open" x-cloak class="grid sm:grid-cols-2 gap-3">
+            <div x-show="open" x-cloak class="grid sm:grid-cols-2 gap-3 items-start">
                 @foreach($catServices as $service)
-                @php
-                    $desc      = $service->description ?? '';
-                    $descLines = $desc ? array_values(array_filter(array_map('trim', explode("\n", $desc)))) : [];
-                    $isList    = count($descLines) > 1 && collect($descLines)->every(fn($l) => preg_match('/^[-*•·]|\d+[.)]\s/', $l));
-                    $listItems = $isList ? array_map(fn($l) => trim(preg_replace('/^[-*•·]\s*|\d+[.)]\s*/', '', $l)), $descLines) : [];
-                    $isLong    = $desc && (strlen($desc) > 100 || count($descLines) > 2);
-                    $needsMore = $isLong || count($listItems) > 2;
-                @endphp
-                <div role="button" tabindex="0"
-                        @click="toggle({{ $service->id }})"
-                        @keydown.enter.stop="toggle({{ $service->id }})"
-                        @keydown.space.prevent.stop="toggle({{ $service->id }})"
-                        class="group relative flex flex-col text-left w-full h-full rounded-2xl border bg-white p-4 cursor-pointer transition-all duration-200 overflow-hidden select-none"
-                        :class="selected.includes({{ $service->id }})
-                            ? 'border-[#0078D4] bg-[#F0F7FF]/80 ring-2 ring-[#0078D4] ring-offset-1 shadow-lg shadow-[#E8F2FA]'
-                            : 'border-slate-200 hover:border-slate-300 hover:shadow-md hover:bg-slate-50/50'">
-
-                    {{-- Left accent stripe --}}
-                    <div class="absolute top-0 left-0 w-1 h-full {{ $dotClass }} transition-opacity"
-                         :class="selected.includes({{ $service->id }}) ? 'opacity-100' : 'opacity-40'"></div>
-
-                    {{-- Check ring --}}
-                    <div x-show="selected.includes({{ $service->id }})" x-cloak
-                         class="absolute top-3.5 right-3.5 w-6 h-6 bg-[#0078D4] rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
-                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                        </svg>
-                    </div>
-                    {{-- Plus ring (unselected) --}}
-                    <div x-show="!selected.includes({{ $service->id }})"
-                         class="absolute top-3.5 right-3.5 w-6 h-6 bg-slate-100 group-hover:bg-[#E8F2FA] group-hover:border-[#B8D4F0] rounded-full flex items-center justify-center border border-slate-200 transition-all">
-                        <svg class="w-3 h-3 text-slate-400 group-hover:text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                        </svg>
-                    </div>
-
-                    <div class="pl-3 pr-10 flex flex-col flex-1">
-                        <p class="font-semibold text-sm text-slate-900 group-hover:text-[#002B5B] transition-colors leading-snug"
-                           :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
-                            {{ $service->name }}
-                        </p>
-                        @if($desc)
-                        <div x-data="{ open: false }" class="mt-1">
-                            {{-- Collapsed --}}
-                            <div x-show="!open">
-                                @if($isList)
-                                    <ul class="text-xs text-slate-400 leading-relaxed space-y-0.5 list-disc list-inside">
-                                        @foreach(array_slice($listItems, 0, 2) as $item)
-                                            <li>{{ $item }}</li>
-                                        @endforeach
-                                        @if(count($listItems) > 2)
-                                            <li class="list-none pl-4 text-slate-300">+{{ count($listItems) - 2 }} more…</li>
-                                        @endif
-                                    </ul>
-                                @else
-                                    <p class="text-xs text-slate-400 leading-relaxed line-clamp-2">{{ $desc }}</p>
-                                @endif
-                            </div>
-                            {{-- Expanded --}}
-                            <div x-show="open" x-cloak>
-                                @if($isList)
-                                    <ul class="text-xs text-slate-400 leading-relaxed space-y-0.5 list-disc list-inside">
-                                        @foreach($listItems as $item)
-                                            <li>{{ $item }}</li>
-                                        @endforeach
-                                    </ul>
-                                @else
-                                    <p class="text-xs text-slate-400 leading-relaxed whitespace-pre-line">{{ $desc }}</p>
-                                @endif
-                            </div>
-                            @if($needsMore)
-                            <button type="button" @click.stop="open = !open"
-                                    class="mt-1 flex items-center gap-1 text-xs text-[#0078D4] font-medium hover:underline focus:outline-none">
-                                <span x-text="open ? 'Show less' : 'Read more'"></span>
-                                <svg class="w-3 h-3 transition-transform duration-200" :class="open ? '-rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                            </button>
-                            @endif
-                        </div>
-                        @endif
-                        <div class="flex items-center justify-between mt-auto pt-3.5">
-                            <div class="flex items-center gap-1.5 text-xs text-slate-400">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                {{ $service->duration_minutes }} min
-                            </div>
-                            <p class="font-bold text-slate-900 text-sm"
-                               :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
-                                {{ $service->priceLabel() }}
-                            </p>
-                        </div>
-                        @if($service->pricing_type !== 'flat')
-                        <div x-show="selected.includes({{ $service->id }})" x-cloak
-                             @click.stop class="flex items-center justify-between mt-2.5 pt-2.5 border-t border-slate-100">
-                            <span class="text-xs text-slate-500">{{ $service->unit_label ?? ($service->pricing_type === 'per_head' ? 'guests' : 'units') }}</span>
-                            <div class="flex items-center gap-2">
-                                <button type="button" @click="setQty({{ $service->id }}, (quantities[{{ $service->id }}] || 1) - 1)"
-                                        class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold">&minus;</button>
-                                <span class="w-5 text-center text-sm font-semibold text-slate-900" x-text="quantities[{{ $service->id }}] || 1"></span>
-                                <button type="button" @click="setQty({{ $service->id }}, (quantities[{{ $service->id }}] || 1) + 1)"
-                                        class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold">+</button>
-                            </div>
-                        </div>
-                        @endif
-                    </div>
-                </div>
+                    @include('booking.partials.service-card', ['service' => $service, 'dotClass' => $dotClass])
                 @endforeach
             </div>
         </div>
@@ -445,107 +342,9 @@
                 </svg>
             </div>
             @endif
-            <div x-show="open" x-cloak class="grid sm:grid-cols-2 gap-3">
+            <div x-show="open" x-cloak class="grid sm:grid-cols-2 gap-3 items-start">
                 @foreach($uncategorised as $service)
-                @php
-                    $desc      = $service->description ?? '';
-                    $descLines = $desc ? array_values(array_filter(array_map('trim', explode("\n", $desc)))) : [];
-                    $isList    = count($descLines) > 1 && collect($descLines)->every(fn($l) => preg_match('/^[-*•·]|\d+[.)]\s/', $l));
-                    $listItems = $isList ? array_map(fn($l) => trim(preg_replace('/^[-*•·]\s*|\d+[.)]\s*/', '', $l)), $descLines) : [];
-                    $isLong    = $desc && (strlen($desc) > 100 || count($descLines) > 2);
-                    $needsMore = $isLong || count($listItems) > 2;
-                @endphp
-                <div role="button" tabindex="0"
-                        @click="toggle({{ $service->id }})"
-                        @keydown.enter.stop="toggle({{ $service->id }})"
-                        @keydown.space.prevent.stop="toggle({{ $service->id }})"
-                        class="group relative text-left w-full rounded-2xl border bg-white p-4 cursor-pointer transition-all duration-200 overflow-hidden select-none"
-                        :class="selected.includes({{ $service->id }})
-                            ? 'border-[#0078D4] bg-[#F0F7FF]/80 ring-2 ring-[#0078D4] ring-offset-1 shadow-lg shadow-[#E8F2FA]'
-                            : 'border-slate-200 hover:border-slate-300 hover:shadow-md hover:bg-slate-50/50'">
-
-                    <div class="absolute top-0 left-0 w-1 h-full bg-slate-400 transition-opacity"
-                         :class="selected.includes({{ $service->id }}) ? 'opacity-100 !bg-[#0078D4]' : 'opacity-30'"></div>
-
-                    <div x-show="selected.includes({{ $service->id }})" x-cloak
-                         class="absolute top-3.5 right-3.5 w-6 h-6 bg-[#0078D4] rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
-                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                        </svg>
-                    </div>
-                    <div x-show="!selected.includes({{ $service->id }})"
-                         class="absolute top-3.5 right-3.5 w-6 h-6 bg-slate-100 group-hover:bg-[#E8F2FA] group-hover:border-[#B8D4F0] rounded-full flex items-center justify-center border border-slate-200 transition-all">
-                        <svg class="w-3 h-3 text-slate-400 group-hover:text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                        </svg>
-                    </div>
-
-                    <div class="pl-3 pr-10">
-                        <p class="font-semibold text-sm text-slate-900 group-hover:text-[#002B5B] transition-colors leading-snug"
-                           :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
-                            {{ $service->name }}
-                        </p>
-                        @if($desc)
-                        <div x-data="{ open: false }" class="mt-1">
-                            <div x-show="!open">
-                                @if($isList)
-                                    <ul class="text-xs text-slate-400 leading-relaxed space-y-0.5 list-disc list-inside">
-                                        @foreach(array_slice($listItems, 0, 2) as $item)
-                                            <li>{{ $item }}</li>
-                                        @endforeach
-                                        @if(count($listItems) > 2)
-                                            <li class="list-none pl-4 text-slate-300">+{{ count($listItems) - 2 }} more…</li>
-                                        @endif
-                                    </ul>
-                                @else
-                                    <p class="text-xs text-slate-400 leading-relaxed line-clamp-2">{{ $desc }}</p>
-                                @endif
-                            </div>
-                            <div x-show="open" x-cloak>
-                                @if($isList)
-                                    <ul class="text-xs text-slate-400 leading-relaxed space-y-0.5 list-disc list-inside">
-                                        @foreach($listItems as $item)
-                                            <li>{{ $item }}</li>
-                                        @endforeach
-                                    </ul>
-                                @else
-                                    <p class="text-xs text-slate-400 leading-relaxed whitespace-pre-line">{{ $desc }}</p>
-                                @endif
-                            </div>
-                            @if($needsMore)
-                            <button type="button" @click.stop="open = !open"
-                                    class="mt-1 flex items-center gap-1 text-xs text-[#0078D4] font-medium hover:underline focus:outline-none">
-                                <span x-text="open ? 'Show less' : 'Read more'"></span>
-                                <svg class="w-3 h-3 transition-transform duration-200" :class="open ? '-rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                            </button>
-                            @endif
-                        </div>
-                        @endif
-                        <div class="flex items-center justify-between mt-3.5">
-                            <div class="flex items-center gap-1.5 text-xs text-slate-400">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                {{ $service->duration_minutes }} min
-                            </div>
-                            <p class="font-bold text-slate-900 text-sm"
-                               :class="selected.includes({{ $service->id }}) ? '!text-[#002B5B]' : ''">
-                                {{ $service->priceLabel() }}
-                            </p>
-                        </div>
-                        @if($service->pricing_type !== 'flat')
-                        <div x-show="selected.includes({{ $service->id }})" x-cloak
-                             @click.stop class="flex items-center justify-between mt-2.5 pt-2.5 border-t border-slate-100">
-                            <span class="text-xs text-slate-500">{{ $service->unit_label ?? ($service->pricing_type === 'per_head' ? 'guests' : 'units') }}</span>
-                            <div class="flex items-center gap-2">
-                                <button type="button" @click="setQty({{ $service->id }}, (quantities[{{ $service->id }}] || 1) - 1)"
-                                        class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold">&minus;</button>
-                                <span class="w-5 text-center text-sm font-semibold text-slate-900" x-text="quantities[{{ $service->id }}] || 1"></span>
-                                <button type="button" @click="setQty({{ $service->id }}, (quantities[{{ $service->id }}] || 1) + 1)"
-                                        class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold">+</button>
-                            </div>
-                        </div>
-                        @endif
-                    </div>
-                </div>
+                    @include('booking.partials.service-card', ['service' => $service, 'dotClass' => 'bg-slate-400'])
                 @endforeach
             </div>
         </div>
@@ -845,6 +644,78 @@
     </div>
 </div>
 
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- PHOTO GALLERY (full-screen, mobile-first)                                  --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+<template x-teleport="body">
+<div x-show="galleryOpen" x-cloak
+     @keydown.escape.window="closeGallery()"
+     @keydown.arrow-right.window="galleryNext()"
+     @keydown.arrow-left.window="galleryPrev()"
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-150"
+     x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-[60] bg-black flex flex-col"
+     role="dialog" aria-modal="true" aria-label="Service photos">
+
+    {{-- Top bar --}}
+    <div class="flex items-center justify-between gap-3 px-4 py-3 text-white shrink-0"
+         style="padding-top: max(0.75rem, env(safe-area-inset-top))">
+        <p class="text-sm font-semibold truncate" x-text="galleryTitle"></p>
+        <div class="flex items-center gap-2 shrink-0">
+            <span class="text-xs text-white/60 tabular-nums mr-1" x-text="(galleryIndex + 1) + ' / ' + galleryPhotos.length"></span>
+            <button type="button" @click="reportPhoto()" :disabled="galleryReported"
+                    class="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-full transition-colors disabled:opacity-60"
+                    :class="galleryReported ? 'bg-white/10 text-white/70' : 'bg-white/10 hover:bg-white/20 text-white/80'">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6l1 2h6a2 2 0 012 2v8a2 2 0 01-2 2h-6l-1-2H5a2 2 0 00-2 2z"/></svg>
+                <span x-text="galleryReported ? 'Reported' : 'Report'"></span>
+            </button>
+            <button type="button" @click="closeGallery()" x-ref="galleryClose"
+                    class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                    aria-label="Close gallery">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+    </div>
+
+    {{-- Stage --}}
+    <div class="relative flex-1 flex items-center justify-center px-2 overflow-hidden"
+         @touchstart="galleryTouchX = $event.changedTouches[0].screenX"
+         @touchend="handleGallerySwipe($event.changedTouches[0].screenX)"
+         @click.self="closeGallery()">
+        <template x-for="(photo, i) in galleryPhotos" :key="photo.id">
+            <img :src="photo.url" x-show="i === galleryIndex" alt=""
+                 class="max-h-full max-w-full object-contain select-none" draggable="false">
+        </template>
+
+        <button type="button" x-show="galleryPhotos.length > 1" @click.stop="galleryPrev()"
+                class="absolute left-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                aria-label="Previous photo">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button type="button" x-show="galleryPhotos.length > 1" @click.stop="galleryNext()"
+                class="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                aria-label="Next photo">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </button>
+    </div>
+
+    {{-- Thumbnail strip --}}
+    <div class="shrink-0 px-4 py-3 flex gap-2 overflow-x-auto scrollbar-hide" x-show="galleryPhotos.length > 1"
+         style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))">
+        <template x-for="(photo, i) in galleryPhotos" :key="'t' + photo.id">
+            <button type="button" @click="galleryIndex = i; galleryReported = false"
+                    class="shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition"
+                    :class="i === galleryIndex ? 'border-white' : 'border-transparent opacity-50 hover:opacity-100'"
+                    :aria-label="'Photo ' + (i + 1)">
+                <img :src="photo.url" alt="" class="w-full h-full object-cover">
+            </button>
+        </template>
+    </div>
+</div>
+</template>
+
 </div>{{-- end x-data --}}
 
 @push('scripts')
@@ -861,6 +732,85 @@ function servicePicker() {
         fullPrice: '0.00',
         services: @json($servicesJson),
         combos: @json($combosJson),
+
+        // ── Photo gallery ──────────────────────────────────────────────
+        galleryOpen: false,
+        galleryPhotos: [],
+        galleryTitle: '',
+        galleryIndex: 0,
+        galleryTouchX: 0,
+        galleryReported: false,
+        galleryTriggerEl: null,
+
+        init() {
+            // Phone back button / edge-swipe closes the gallery instead of leaving the page.
+            window.addEventListener('popstate', () => {
+                if (this.galleryOpen) this.closeGallery({ viaPop: true });
+            });
+        },
+
+        openGallery(id) {
+            const s = this.services.find(x => x.id === id);
+            if (!s || !s.photos || s.photos.length === 0) return;
+            this.galleryTriggerEl = document.activeElement;
+            this.galleryPhotos    = s.photos;
+            this.galleryTitle     = s.name;
+            this.galleryIndex     = 0;
+            this.galleryReported  = false;
+            this.galleryOpen      = true;
+            document.body.style.overflow = 'hidden';
+            const main = document.querySelector('main');
+            if (main) main.inert = true;                 // background out of tab order + a11y tree
+            history.pushState({ xqGallery: true }, '');
+            this.$nextTick(() => this.$refs.galleryClose?.focus());
+        },
+        closeGallery(opts = {}) {
+            if (!this.galleryOpen) return;
+            this.galleryOpen = false;
+            document.body.style.overflow = '';
+            const main = document.querySelector('main');
+            if (main) main.inert = false;
+            if (this.galleryTriggerEl) {
+                try { this.galleryTriggerEl.focus(); } catch (e) {}
+                this.galleryTriggerEl = null;
+            }
+            // Pop the history entry we pushed, unless we got here *from* a pop.
+            if (!opts.viaPop && history.state && history.state.xqGallery) history.back();
+        },
+        galleryNext() {
+            if (this.galleryPhotos.length) {
+                this.galleryIndex = (this.galleryIndex + 1) % this.galleryPhotos.length;
+                this.galleryReported = false;
+            }
+        },
+        galleryPrev() {
+            if (this.galleryPhotos.length) {
+                this.galleryIndex = (this.galleryIndex - 1 + this.galleryPhotos.length) % this.galleryPhotos.length;
+                this.galleryReported = false;
+            }
+        },
+        handleGallerySwipe(endX) {
+            const dx = endX - this.galleryTouchX;
+            if (Math.abs(dx) < 40) return;
+            dx < 0 ? this.galleryNext() : this.galleryPrev();
+        },
+        async reportPhoto() {
+            const photo = this.galleryPhotos[this.galleryIndex];
+            if (!photo || this.galleryReported) return;
+            this.galleryReported = true;
+            const url = '{{ route('book.photos.report', ['slug' => $slug, 'photo' => '__PID__']) }}'.replace('__PID__', photo.id);
+            try {
+                await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '',
+                    },
+                    body: '{}',
+                });
+            } catch (e) { /* already flagged in the UI */ }
+        },
 
         toggle(id) {
             // Combo services are locked — they can only be removed via "Clear selection"
