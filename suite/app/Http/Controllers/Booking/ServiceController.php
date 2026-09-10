@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Booking;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\GenerateServicePhotoDerivatives;
 use App\Models\Promotion;
 use App\Models\ServiceCategory;
 use App\Models\ServiceCombo;
@@ -44,6 +45,41 @@ class ServiceController extends Controller
         return view('services.index', compact('services', 'categories', 'combos', 'promotions', 'tab'));
     }
 
+    /** Flat, searchable list for managing photos across many services at a glance. */
+    public function photos(Request $request)
+    {
+        $tenantId = auth()->user()->tenant_id;
+
+        $base = fn() => Service::where('tenant_id', $tenantId);
+
+        $query = $base()
+            ->with('category:id,name,icon')
+            ->with('coverPhoto')
+            ->withCount('photos')
+            ->orderBy('name');
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->string('search')->trim() . '%');
+        }
+
+        $filter = in_array($request->get('filter'), ['missing', 'has'], true) ? $request->get('filter') : null;
+        match ($filter) {
+            'missing' => $query->doesntHave('photos'),
+            'has'     => $query->has('photos'),
+            default   => null,
+        };
+
+        $services = $query->paginate(30)->withQueryString();
+
+        $counts = [
+            'all'     => $base()->count(),
+            'missing' => $base()->doesntHave('photos')->count(),
+            'has'     => $base()->has('photos')->count(),
+        ];
+
+        return view('services.photos', compact('services', 'filter', 'counts'));
+    }
+
     public function create()
     {
         $tenantId     = auth()->user()->tenant_id;
@@ -73,14 +109,19 @@ class ServiceController extends Controller
             'bundles'             => 'nullable|array',
             'bundles.*.product_id' => 'required|integer|exists:products,id',
             'bundles.*.quantity'   => 'required|integer|min:1',
+            'photos'              => 'nullable|array|max:' . Service::MAX_PHOTOS,
+            'photos.*'            => 'image|mimes:jpg,jpeg,png,webp|max:4096',
+        ], [
+            'photos.*.mimes' => 'Photos must be JPG, PNG or WebP. iPhone HEIC photos are not supported yet. In your Camera settings choose "Most Compatible", or share the photo first to convert it to JPG.',
         ]);
 
         $data['is_active'] = $request->boolean('is_active', true);
         $bundles = $data['bundles'] ?? [];
-        unset($data['bundles']);
+        unset($data['bundles'], $data['photos']);
 
         $service = Service::create($data);
         $this->syncBundles($service, $bundles);
+        $this->storePhotos($service, $request);
 
         return redirect()->route('services.index')
             ->with('success', 'Service created.');
@@ -93,7 +134,7 @@ class ServiceController extends Controller
         $products     = $hasInventory ? $this->productList() : collect();
         $categories   = ServiceCategory::where('tenant_id', $tenantId)
             ->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
-        $service->load('serviceProducts');
+        $service->load('serviceProducts', 'photosOrdered');
         return view('services.edit', compact('service', 'products', 'categories', 'hasInventory'));
     }
 
@@ -131,6 +172,28 @@ class ServiceController extends Controller
         return Product::where('is_active', true)
             ->orderBy('category')->orderBy('name')
             ->get(['id', 'name', 'category', 'cost_price']);
+    }
+
+    /** Save any photos uploaded alongside the create form (cap at Service::MAX_PHOTOS). */
+    private function storePhotos(Service $service, Request $request): void
+    {
+        if (! $request->hasFile('photos')) {
+            return;
+        }
+
+        $files = array_slice($request->file('photos'), 0, Service::MAX_PHOTOS);
+
+        foreach (array_values($files) as $i => $file) {
+            $photo = $service->photos()->create([
+                'tenant_id'  => $service->tenant_id,
+                'path'       => $file->store("services/{$service->id}", 'public'),
+                'disk'       => 'public',
+                'sort_order' => $i + 1,
+                'is_primary' => $i === 0,
+            ]);
+
+            GenerateServicePhotoDerivatives::dispatch($photo->id);
+        }
     }
 
     private function syncBundles(Service $service, array $bundles): void

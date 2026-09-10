@@ -6,7 +6,7 @@
         {{-- ── Left: Service form ─────────────────────────────────────────── --}}
         <div class="flex-1 min-w-0">
             <div class="bg-slate-800 rounded-xl p-6">
-                <form method="POST" action="{{ route('services.store') }}" class="space-y-4"
+                <form method="POST" action="{{ route('services.store') }}" class="space-y-4" enctype="multipart/form-data"
                       x-data="bundleManager([], @js($products))">
                     @csrf
                     <x-form-errors />
@@ -41,6 +41,19 @@
                         <label class="block text-sm font-medium text-slate-300 mb-1">Description</label>
                         <textarea name="description" rows="3"
                                   class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">{{ old('description') }}</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">
+                            Photos
+                            <span class="text-xs font-normal text-slate-500 ml-1">optional · up to {{ \App\Modules\Booking\Models\Service::MAX_PHOTOS }}</span>
+                        </label>
+                        <input type="file" name="photos[]" multiple accept="image/jpeg,image/png,image/webp"
+                               class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0078D4] file:text-white hover:file:bg-[#0065B8] file:cursor-pointer">
+                        <p class="text-xs text-slate-500 mt-0.5">JPG, PNG or WebP · max 4MB each. The first photo becomes the cover on your booking page — you can change this later.</p>
+                        <p class="text-xs text-slate-500 mt-0.5">iPhone: if a photo won't upload, set Camera → Formats → "Most Compatible", or share it first (that converts it to JPG).</p>
+                        @error('photos')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
+                        @error('photos.*')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
