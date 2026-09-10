@@ -33,6 +33,7 @@ class PermissionRoleSeeder extends Seeder
             'manage-orders',
             'manage-appointments',
             'manage-customers',
+            'manage-properties',
             'view-reports',
         ];
 
@@ -42,7 +43,8 @@ class PermissionRoleSeeder extends Seeder
 
         $business = [
             'manage-staff', 'manage-products', 'manage-orders',
-            'manage-appointments', 'manage-customers', 'view-reports',
+            'manage-appointments', 'manage-customers', 'manage-properties',
+            'view-reports',
         ];
 
         $roles = [

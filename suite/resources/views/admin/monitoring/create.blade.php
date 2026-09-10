@@ -123,7 +123,7 @@
         {{-- Example Configuration --}}
         <div class="mt-8 bg-slate-800 rounded-xl p-6 border border-slate-700">
             <h3 class="text-lg font-semibold text-[#D4AF37] mb-4">How to Configure Remote App</h3>
-            <p class="text-slate-400 text-sm mb-4">Every reporter app just needs these four env vars pointed at this hub — nothing else changes per project:</p>
+            <p class="text-slate-400 text-sm mb-4">Every reporter app just needs these four env vars pointed at this hub. Nothing else changes per project.</p>
             <pre class="bg-slate-900 p-4 rounded-lg overflow-x-auto text-xs text-slate-300"><code>// .env
 MONITORING_ENABLED=true
 MONITORING_URL={{ config('app.url') }}

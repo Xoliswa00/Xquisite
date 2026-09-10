@@ -165,7 +165,6 @@
         $systemMonitoringRoutes = ['monitoring.*'];
         $systemTenantsRoutes = ['admin.tenants.*'];
         $systemModuleRequestsRoutes = ['admin.module-requests.*'];
-        $systemUsersRoutes = ['admin.users.*'];
         $systemReviewsRoutes = ['admin.reviews.*'];
         $systemSyncRoutes = ['admin.sync.*'];
         $systemLogsRoutes = ['admin.logs.*'];
@@ -187,8 +186,8 @@
         $analyticsIsCurrent = request()->routeIs($analyticsRoutes);
         $propertyIsCurrent = request()->routeIs(array_merge($propertyPropertiesRoutes, $propertyApplicantsRoutes, $propertyRentersRoutes, $propertyLeasesRoutes, $propertyRentPaymentsRoutes, $propertyMaintenanceRoutes, $propertyContractorsRoutes));
         $clientsIsCurrent = request()->routeIs('clients.*');
-        $settingsIsCurrent = request()->routeIs(array_merge($settingsModulesRoutes, $settingsServicesRoutes, $profileRoutes, ['billing.*']));
-        $systemIsCurrent = request()->routeIs(['monitoring.*', 'admin.tenants.*', 'admin.module-requests.*', 'admin.platform-modules.*', 'admin.plans.*', 'admin.platform-services.*', 'admin.users.*', 'admin.team-members.*', 'admin.reviews.*', 'admin.sync.*', 'admin.logs.*', 'admin.billing.*']);
+        $settingsIsCurrent = request()->routeIs(array_merge($settingsModulesRoutes, $settingsServicesRoutes, $profileRoutes, ['billing.*', 'admin.users.*']));
+        $systemIsCurrent = request()->routeIs(['monitoring.*', 'admin.tenants.*', 'admin.module-requests.*', 'admin.platform-modules.*', 'admin.plans.*', 'admin.platform-services.*', 'admin.team-members.*', 'admin.reviews.*', 'admin.sync.*', 'admin.logs.*', 'admin.billing.*']);
     @endphp
 
     {{-- ═══════════════ DESKTOP SIDEBAR — accordion ═══════════════ --}}

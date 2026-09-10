@@ -52,6 +52,20 @@ class DashboardController extends Controller
                 ->with('info', 'Welcome! Choose the modules you want to activate for your business.');
         }
 
+        // Employees don't get the whole-business dashboard (revenue totals, every
+        // staff member's book). Send them to their own work surface instead.
+        if ($user->hasRole('employee')) {
+            if ($tenant->hasModule('booking')) {
+                return redirect()->route('appointments.calendar');
+            }
+            if ($tenant->hasModule('pos')) {
+                return redirect()->route('pos.terminal');
+            }
+            if ($tenant->hasModule('ecommerce')) {
+                return redirect()->route('orders.index');
+            }
+        }
+
         $tenantId = $user->tenant_id;
 
         $hasBooking   = $tenant->hasModule('booking');
