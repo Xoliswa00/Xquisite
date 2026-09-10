@@ -120,12 +120,26 @@
         $companyWeb   = \App\Models\BillingSetting::get('company_website');
         $awaiting = $invoice->isAwaitingConfirmation();
 
-        // "Tax Invoice" only when the issuer is VAT-registered; otherwise a plain
-        // "Invoice". A compliant tax invoice needs a VAT line — that comes back
-        // once generateInvoice() computes and stores VAT (no vat/discount columns
-        // on platform_invoices yet, so both are omitted here rather than shown as
-        // a misleading R 0.00).
-        $docTitle = $companyVat ? 'Tax Invoice' : 'Invoice';
+        // Money, from the frozen snapshot. Old invoices predate the columns, so
+        // fall back to a single line == amount. VAT is inclusive: subtotal is the
+        // ex-VAT value, vat_amount the portion already inside amount.
+        $lines     = $invoice->line_items ?: [[
+            'name' => 'Xquisite platform subscription', 'quantity' => 1,
+            'unit_price' => (float) $invoice->amount, 'amount' => (float) $invoice->amount,
+        ]];
+        $subtotal  = (float) ($invoice->subtotal ?? $invoice->amount);
+        $vatAmount = (float) ($invoice->vat_amount ?? 0);
+        $discount  = (float) ($invoice->discount_amount ?? 0);
+        $vatRate   = (float) (\App\Models\BillingSetting::get('vat_rate') ?? 0);
+        $vatRateLabel = rtrim(rtrim(number_format($vatRate, 2), '0'), '.');
+
+        // A "Tax Invoice" is only a tax invoice when it actually carries a VAT
+        // line; otherwise it is a plain "Invoice".
+        $docTitle = $vatAmount > 0 ? 'Tax Invoice' : 'Invoice';
+
+        $periodLabel = ($invoice->billing_period_start && $invoice->billing_period_end)
+            ? $invoice->billing_period_start->format('d M Y') . ' – ' . $invoice->billing_period_end->format('d M Y')
+            : $invoice->created_at->format('F Y');
 
         $statusClass = match(true) {
             $awaiting                     => 'status-pop',
@@ -148,6 +162,7 @@
                     <tr><td class="k">Invoice No</td><td class="v">{{ $invoice->invoice_number }}</td></tr>
                     <tr><td class="k">Issue date</td><td class="v">{{ $invoice->created_at->format('d M Y') }}</td></tr>
                     <tr><td class="k">Due date</td><td class="v">{{ $invoice->due_date->format('d M Y') }}</td></tr>
+                    <tr><td class="k">Billing period</td><td class="v">{{ $periodLabel }}</td></tr>
                     <tr><td class="k">Terms</td><td class="v">Net {{ $dueDays }}</td></tr>
                     <tr><td class="k">Currency</td><td class="v">ZAR</td></tr>
                     <tr><td class="k">Status</td><td class="v {{ $statusClass }}">{{ $statusLabel }}</td></tr>
@@ -183,27 +198,10 @@
 
     <hr class="rule-hair" style="margin: 20px 0 0;">
 
-    {{-- Line item. The invoice amount is a frozen snapshot taken at issue time;
-         re-itemising from the tenant's *current* active modules would not
-         reconcile with it once modules or prices change (it didn't — that was the
-         old bug). A single subscription line for the billing period always
-         balances against amount. The "Includes" note carries no prices, so it
-         can't drift out of balance — and it's only shown for the current period,
-         where the tenant's live modules still match what was billed. A true
-         per-module priced breakdown needs the line items snapshotted onto the
-         invoice at creation. --}}
-    @php
-        $periodLabel = ($invoice->billing_period_start && $invoice->billing_period_end)
-            ? $invoice->billing_period_start->format('d M Y') . ' – ' . $invoice->billing_period_end->format('d M Y')
-            : $invoice->created_at->format('F Y');
-
-        $isCurrentPeriod = $invoice->billing_period_start && $invoice->billing_period_start->isSameMonth(now());
-        $includedModules = $isCurrentPeriod
-            ? $invoice->tenant->activeModules()->with('platformModule')->get()
-                ->map(fn ($tm) => $tm->platformModule?->name ?? ucfirst(str_replace('_', ' ', $tm->module)))
-                ->filter()->values()
-            : collect();
-    @endphp
+    {{-- Line items — the frozen per-module breakdown taken at issue time. It is
+         built from Tenant::monthlyLineItems() (the same source as the total) and
+         generateInvoice() asserts the two reconcile, so what's listed always
+         adds up to what's charged, even after the tenant later changes modules. --}}
     <table class="items num">
         <thead>
             <tr>
@@ -214,15 +212,14 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>
-                    Xquisite platform subscription <span class="item-sub">— {{ $periodLabel }}</span>
-                    @if($includedModules->isNotEmpty())<div class="item-includes">Includes {{ $includedModules->implode(', ') }}</div>@endif
-                </td>
-                <td class="r">1</td>
-                <td class="r">R {{ number_format($invoice->amount, 2) }}</td>
-                <td class="r">R {{ number_format($invoice->amount, 2) }}</td>
-            </tr>
+            @foreach($lines as $line)
+                <tr>
+                    <td>{{ $line['name'] ?? 'Xquisite platform subscription' }}</td>
+                    <td class="r">{{ $line['quantity'] ?? 1 }}</td>
+                    <td class="r">R {{ number_format($line['unit_price'] ?? $line['amount'] ?? 0, 2) }}</td>
+                    <td class="r">R {{ number_format($line['amount'] ?? 0, 2) }}</td>
+                </tr>
+            @endforeach
         </tbody>
     </table>
 
@@ -240,10 +237,15 @@
             default            => 'Payable by ' . $invoice->due_date->format('d F Y'),
         };
     @endphp
-    @if($paymentsReceived > 0)
+    @php
+        $showSummary = count($lines) > 1 || $vatAmount > 0 || $discount > 0 || $paymentsReceived > 0;
+    @endphp
+    @if($showSummary)
         <table class="sum num">
-            <tr><td class="k">Subtotal</td><td class="v">R {{ number_format($invoice->amount, 2) }}</td></tr>
-            <tr><td class="k">Payments received</td><td class="v">R {{ number_format($paymentsReceived, 2) }}</td></tr>
+            <tr><td class="k">Subtotal{{ $vatAmount > 0 ? ' (excl. VAT)' : '' }}</td><td class="v">R {{ number_format($subtotal, 2) }}</td></tr>
+            @if($vatAmount > 0)<tr><td class="k">VAT @ {{ $vatRateLabel }}%</td><td class="v">R {{ number_format($vatAmount, 2) }}</td></tr>@endif
+            @if($discount > 0)<tr><td class="k">Discount</td><td class="v">- R {{ number_format($discount, 2) }}</td></tr>@endif
+            @if($paymentsReceived > 0)<tr><td class="k">Payments received</td><td class="v">R {{ number_format($paymentsReceived, 2) }}</td></tr>@endif
         </table>
     @endif
 

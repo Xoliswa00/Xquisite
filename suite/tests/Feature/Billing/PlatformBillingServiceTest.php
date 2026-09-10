@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Billing;
 
+use App\Models\BillingSetting;
 use App\Models\PlatformModule;
 use App\Models\Tenant;
 use App\Services\PlatformBillingService;
@@ -11,6 +12,14 @@ use Tests\TestCase;
 class PlatformBillingServiceTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // BillingSetting::get caches for an hour; RefreshDatabase does not touch
+        // the cache, so clear it so vat_rate from one test can't leak into another.
+        cache()->flush();
+    }
 
     private function tenant(array $overrides = []): Tenant
     {
@@ -33,10 +42,15 @@ class PlatformBillingServiceTest extends TestCase
 
     private function platformModule(float $price): PlatformModule
     {
+        return $this->platformModuleKeyed('bookings', 'Bookings', $price);
+    }
+
+    private function platformModuleKeyed(string $key, string $name, float $price): PlatformModule
+    {
         return PlatformModule::create([
-            'key'         => 'bookings',
-            'name'        => 'Bookings',
-            'description' => 'Bookings module',
+            'key'         => $key,
+            'name'        => $name,
+            'description' => $name . ' module',
             'price'       => $price,
             'status'      => 'active',
         ]);
@@ -85,5 +99,51 @@ class PlatformBillingServiceTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         app(PlatformBillingService::class)->generateInvoice($tenant);
+    }
+
+    public function test_generate_invoice_snapshots_line_items_that_reconcile_with_the_amount(): void
+    {
+        $tenant = $this->tenant();
+        $tenant->activateModule($this->platformModuleKeyed('bookings', 'Bookings', 199)->key);
+        $tenant->activateModule($this->platformModuleKeyed('pos', 'Point of Sale', 150)->key);
+
+        $invoice = app(PlatformBillingService::class)->generateInvoice($tenant);
+
+        $this->assertIsArray($invoice->line_items);
+        $this->assertCount(2, $invoice->line_items);
+        $this->assertSame(349.0, (float) $invoice->amount);
+        $this->assertSame(349.0, (float) array_sum(array_column($invoice->line_items, 'amount')));
+        $this->assertEqualsCanonicalizing(
+            ['Bookings', 'Point of Sale'],
+            array_column($invoice->line_items, 'name'),
+        );
+    }
+
+    public function test_generate_invoice_has_no_vat_by_default(): void
+    {
+        $tenant = $this->tenant();
+        $tenant->activateModule($this->platformModule(200)->key);
+
+        $invoice = app(PlatformBillingService::class)->generateInvoice($tenant);
+
+        $this->assertSame(0.0, (float) $invoice->vat_amount);
+        $this->assertSame(200.0, (float) $invoice->subtotal);
+        $this->assertSame(200.0, (float) $invoice->amount);
+    }
+
+    public function test_generate_invoice_backs_out_inclusive_vat_when_a_rate_is_set(): void
+    {
+        BillingSetting::set('vat_rate', '15');
+
+        $tenant = $this->tenant();
+        $tenant->activateModule($this->platformModule(230)->key);
+
+        $invoice = app(PlatformBillingService::class)->generateInvoice($tenant);
+
+        // R230 already includes 15% VAT: VAT = 230 * 15/115 = 30, ex-VAT = 200,
+        // total charged is unchanged at 230.
+        $this->assertSame(230.0, (float) $invoice->amount);
+        $this->assertSame(30.0, (float) $invoice->vat_amount);
+        $this->assertSame(200.0, (float) $invoice->subtotal);
     }
 }

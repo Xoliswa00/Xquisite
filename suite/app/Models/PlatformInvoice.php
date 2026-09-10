@@ -12,14 +12,19 @@ class PlatformInvoice extends Model
     use Auditable;
 
     protected $fillable = [
-        'tenant_id', 'invoice_number', 'plan', 'amount', 'status',
-        'due_date', 'billing_period_start', 'billing_period_end',
+        'tenant_id', 'invoice_number', 'plan', 'amount',
+        'line_items', 'subtotal', 'vat_amount', 'discount_amount',
+        'status', 'due_date', 'billing_period_start', 'billing_period_end',
         'paid_at', 'payment_method', 'payment_reference', 'notes',
         'pop_path', 'pop_uploaded_at', 'pop_notes',
     ];
 
     protected $casts = [
         'amount'               => 'decimal:2',
+        'subtotal'             => 'decimal:2',
+        'vat_amount'           => 'decimal:2',
+        'discount_amount'      => 'decimal:2',
+        'line_items'           => 'array',
         'due_date'             => 'date',
         'billing_period_start' => 'date',
         'billing_period_end'   => 'date',

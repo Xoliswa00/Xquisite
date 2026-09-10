@@ -23,13 +23,34 @@ class PlatformBillingService
             throw new \RuntimeException("Tenant #{$tenant->id} already has an invoice for the billing period starting {$start}.");
         }
 
-        $amount = $tenant->monthlyTotal();
+        $lineItems = $tenant->monthlyLineItems();
+        $amount    = $tenant->monthlyTotal();
+
+        // The snapshot must reconcile with what's charged, always — this is the
+        // guarantee the frozen line_items exist to give.
+        $lineTotal = round(array_sum(array_column($lineItems, 'amount')), 2);
+        if (abs($lineTotal - round($amount, 2)) > 0.01) {
+            throw new \RuntimeException(
+                "Invoice line items (R{$lineTotal}) do not reconcile with the billed amount (R" . round($amount, 2) . ") for tenant #{$tenant->id}."
+            );
+        }
+
+        // VAT is inclusive: the module prices already contain it, so it is backed
+        // out of the total rather than added on top. vat_rate 0 (the default)
+        // means no VAT — the document then reads "Invoice", not "Tax Invoice".
+        $vatRate   = (float) (BillingSetting::get('vat_rate') ?? 0);
+        $vatAmount = $vatRate > 0 ? round($amount * $vatRate / (100 + $vatRate), 2) : 0.0;
+        $subtotal  = round($amount - $vatAmount, 2);
 
         $invoice = PlatformInvoice::create([
             'tenant_id'            => $tenant->id,
             'invoice_number'       => PlatformInvoice::generateNumber(),
             'plan'                 => 'modules',
             'amount'               => $amount,
+            'line_items'           => $lineItems,
+            'subtotal'             => $subtotal,
+            'vat_amount'           => $vatAmount,
+            'discount_amount'      => 0,
             'status'               => 'unpaid',
             'due_date'             => now()->addDays((int) (BillingSetting::get('invoice_due_days') ?? 7))->toDateString(),
             'billing_period_start' => $start,
