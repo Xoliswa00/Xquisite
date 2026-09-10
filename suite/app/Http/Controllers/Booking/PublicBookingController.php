@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Booking;
 
 use App\Http\Controllers\Controller;
 use App\Mail\AppointmentConfirmationEmail;
+use App\Models\PhotoReport;
 use App\Models\Promotion;
 use App\Models\ServiceCombo;
 use App\Modules\Booking\Models\Appointment;
 use App\Modules\Booking\Models\Service;
+use App\Modules\Booking\Models\ServicePhoto;
 use App\Models\Tenant;
 use App\Services\Booking\AvailabilityService;
 use App\Services\Notifications\BookingNotificationService;
@@ -31,12 +33,21 @@ class PublicBookingController extends Controller
     /** Step 1 — list services, combos, and promotions */
     public function index(string $slug)
     {
-        $tenant   = $this->resolveTenant($slug);
-        $services = Service::where('is_active', true)
-            ->whereHas('staff', fn($q) => $q->where('is_active', true))
-            ->with('category')
-            ->orderBy('created_at')
-            ->get();
+        $tenant = $this->resolveTenant($slug);
+
+        // The services + their visible photos change only when an admin edits them,
+        // so cache the collection per tenant and bust it from the Service / ServicePhoto
+        // model hooks. A booking link dropped into an Instagram story then costs one
+        // query set, not one per visitor.
+        $services = Cache::remember(
+            "book:index:services:{$tenant->id}",
+            now()->addMinutes(10),
+            fn() => Service::where('is_active', true)
+                ->whereHas('staff', fn($q) => $q->where('is_active', true))
+                ->with('category', 'visiblePhotos')
+                ->orderBy('created_at')
+                ->get()
+        );
 
         $bookableIds  = $services->pluck('id');
 
@@ -47,6 +58,10 @@ class PublicBookingController extends Controller
             'price'            => (float) $s->calculatePrice(),
             'pricing_type'     => $s->pricing_type,
             'unit_label'       => $s->unit_label ?? ($s->pricing_type === 'per_head' ? 'guests' : 'units'),
+            'photos'           => $s->visiblePhotos->map(fn($p) => [
+                'id'  => $p->id,
+                'url' => $p->displayUrl(),
+            ])->values()->all(),
         ])->values();
 
         // Only combos whose every service is bookable right now
@@ -76,11 +91,32 @@ class PublicBookingController extends Controller
         return view('booking.index', compact('tenant', 'slug', 'services', 'servicesJson', 'combos', 'combosJson', 'promotions'));
     }
 
+    /** A visitor flags a photo as inappropriate — throttled, one row per report. */
+    public function reportPhoto(string $slug, Request $request, ServicePhoto $photo)
+    {
+        $tenant = $this->resolveTenant($slug);
+
+        // ServicePhoto carries the HasTenant global scope (TenantContext is set in
+        // resolveTenant), so a photo from another tenant already 404s on binding.
+        abort_unless((int) $photo->tenant_id === (int) $tenant->id, 404);
+
+        $data = $request->validate(['reason' => 'nullable|string|max:500']);
+
+        PhotoReport::create([
+            'service_photo_id' => $photo->id,
+            'tenant_id'        => $tenant->id,
+            'reason'           => $data['reason'] ?? null,
+            'reporter_ip'      => $request->ip(),
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
     /** Step 2 — pick a date + time for selected services */
     public function service(string $slug, Request $request)
     {
         $tenant   = $this->resolveTenant($slug);
-        $services = Service::findMany($request->input('service_ids', []));
+        $services = Service::with('visiblePhotos')->findMany($request->input('service_ids', []));
 
         if ($services->isEmpty()) {
             return redirect()->route('book.index', $slug)
@@ -214,6 +250,10 @@ class PublicBookingController extends Controller
                 ->with('info', 'Please log in or create an account to complete your booking.');
         }
 
+        if ($tenant->require_booking_terms_acceptance && !$request->boolean('accepted_terms')) {
+            return back()->withErrors(['accepted_terms' => 'Please accept the terms and cancellation policy to continue.']);
+        }
+
         // Guards against the classic duplicate-booking cause: the customer double-clicks
         // "Confirm Booking" (or the request is just slow) before the first request has
         // cleared pending_booking from the session. Only one submission per logged-in
@@ -295,6 +335,7 @@ class PublicBookingController extends Controller
                         'combo_price'      => $comboPrice,
                         'promo_code'       => $promoCode,
                         'promo_discount'   => $promoDiscount,
+                        'terms_accepted_at' => $request->boolean('accepted_terms') ? now() : null,
                     ]);
 
                     $appt->services()->sync(

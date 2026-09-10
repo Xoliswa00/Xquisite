@@ -8,12 +8,23 @@ name: Standards audit
 # which machine or clone it came from, and (once this check is marked
 # required in branch protection) can't be skipped with --no-verify or
 # bypassed by a fresh clone.
+#
+# The `schedule` trigger below additionally runs the same checks once a day
+# against `dev` regardless of push/PR activity — catches drift that lands
+# without tripping the hooks (a rule added after a view went untouched, a
+# local hook someone bypassed, a merge that skipped CI) instead of only
+# ever checking freshly-pushed code. GitHub always runs `schedule` against
+# the repo's default branch, so the checkout step below pins it to `dev`
+# explicitly for that one trigger — don't remove the `ref:` override or a
+# schedule run silently starts auditing the wrong branch.
 
 on:
   push:
     branches: [main, dev]
   pull_request:
     branches: [main, dev]
+  schedule:
+    - cron: '0 4 * * *' # 04:00 UTC daily — off-peak, ~06:00 SAST
 
 jobs:
   audit:
@@ -23,6 +34,8 @@ jobs:
         working-directory: suite
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
 
       - uses: shivammathur/setup-php@v2
         with:

@@ -1,10 +1,10 @@
 <x-app-layout>
-    <x-slot name="header">Staff Management</x-slot>
+    <x-slot name="header">Staff</x-slot>
 
     <div class="space-y-5">
 
         <div class="flex items-center justify-between gap-4 flex-wrap">
-            <h1 class="text-xl font-bold text-[#D4AF37]">Staff Management</h1>
+            <p class="text-sm text-slate-400">Staff who can sign in to your business. <a href="{{ route('admin.users.team-guide') }}" class="text-[#0078D4] hover:text-[#B8D4F0]">What can each role do?</a></p>
             <a href="{{ route('admin.users.create') }}"
                class="shrink-0 px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-medium rounded-lg transition-colors">
                 + Add Staff Member
@@ -100,7 +100,7 @@
                                     </form>
                                 @endif
                                 <form method="POST" action="{{ route('admin.users.destroy', $user) }}"
-                                      onsubmit="return confirm('Soft-delete {{ addslashes($user->name) }}? They can be restored later.')">
+                                      onsubmit="return confirm('Soft-delete ' + {{ \Illuminate\Support\Js::from($user->name) }} + '? They can be restored later.')">
                                     @csrf @method('DELETE')
                                     <button class="text-xs px-3 py-1.5 rounded-lg border border-red-800 text-red-400 hover:bg-red-900/30">Delete</button>
                                 </form>
@@ -176,7 +176,7 @@
                                                 </form>
                                             @endif
                                             <form method="POST" action="{{ route('admin.users.destroy', $user) }}"
-                                                  onsubmit="return confirm('Soft-delete {{ addslashes($user->name) }}?')">
+                                                  onsubmit="return confirm('Soft-delete ' + {{ \Illuminate\Support\Js::from($user->name) }} + '?')">
                                                 @csrf @method('DELETE')
                                                 <button class="text-xs text-red-400 hover:text-red-300 font-medium">Delete</button>
                                             </form>

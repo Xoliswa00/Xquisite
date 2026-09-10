@@ -42,7 +42,7 @@ class DemoSeeder extends Seeder
         $owner->syncRoles(['tenant-owner']);
 
         // ── Activate all live modules for demo ────────────────────────────────
-        $modules = ['booking', 'pos', 'ecommerce', 'analytics', 'property_management'];
+        $modules = ['booking', 'pos', 'ecommerce', 'analytics', 'property_management', 'client_messaging'];
 
         foreach ($modules as $module) {
             TenantModule::updateOrCreate(
@@ -54,5 +54,8 @@ class DemoSeeder extends Seeder
                 ]
             );
         }
+
+        // Fill every module with a coherent, relative-dated fictional business.
+        $this->call(DemoContentSeeder::class);
     }
 }
