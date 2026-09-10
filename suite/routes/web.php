@@ -11,6 +11,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Booking\AppointmentController;
 use App\Http\Controllers\Booking\CustomerController;
 use App\Http\Controllers\Booking\ServiceController;
+use App\Http\Controllers\Booking\ServicePhotoController;
 use App\Http\Controllers\Booking\StaffController;
 use App\Http\Controllers\POS\PosController;
 use App\Http\Controllers\POS\SaleController;
@@ -156,7 +157,11 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::resource('customers', CustomerController::class);
         // Service catalogue + pricing — managers only (employees can't edit it).
         Route::middleware('can:manage-products')->group(function () {
+            Route::get('services/photos', [ServiceController::class, 'photos'])->name('services.photos.index');
             Route::resource('services', ServiceController::class)->except(['show']);
+            Route::post('services/{service}/photos', [ServicePhotoController::class, 'store'])->name('services.photos.store');
+            Route::patch('services/{service}/photos/{photo}/primary', [ServicePhotoController::class, 'setPrimary'])->name('services.photos.primary');
+            Route::delete('services/{service}/photos/{photo}', [ServicePhotoController::class, 'destroy'])->name('services.photos.destroy');
         });
         // Staff records + schedules — managers only.
         Route::middleware('can:manage-staff')->group(function () {
@@ -333,6 +338,11 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::patch('/reviews/{review}/status', [AdminReviewController::class, 'updateStatus'])->name('reviews.status');
             Route::patch('/reviews/{review}/featured', [AdminReviewController::class, 'toggleFeatured'])->name('reviews.featured');
 
+            // Service photo moderation
+            Route::get('/service-photos', [\App\Http\Controllers\Admin\ServicePhotoController::class, 'index'])->name('service-photos.index');
+            Route::patch('/service-photos/{photo}/hidden', [\App\Http\Controllers\Admin\ServicePhotoController::class, 'toggleHidden'])->name('service-photos.toggle-hidden');
+            Route::patch('/service-photos/reports/{report}/reviewed', [\App\Http\Controllers\Admin\ServicePhotoController::class, 'markReportReviewed'])->name('service-photos.reports.reviewed');
+
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
             Route::patch('/module-requests/{moduleRequest}/reject', [ModuleRequestController::class, 'reject'])->name('module-requests.reject');
@@ -420,6 +430,8 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
     Route::get('/',          [PublicBookingController::class, 'index'])->name('index');
     Route::get('/schedule',  [PublicBookingController::class, 'service'])->name('service'); // was /services/{service}
     Route::get('/slots',     [PublicBookingController::class, 'slots'])->name('slots');
+    Route::post('/photos/{photo}/report', [PublicBookingController::class, 'reportPhoto'])
+        ->name('photos.report')->middleware('throttle:6,60');
 
     // ── Customer auth routes (guests only — redirect if already logged in) ───
     Route::middleware('guest:customer')->group(function () {
