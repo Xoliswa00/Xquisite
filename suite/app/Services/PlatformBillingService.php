@@ -23,22 +23,22 @@ class PlatformBillingService
             throw new \RuntimeException("Tenant #{$tenant->id} already has an invoice for the billing period starting {$start}.");
         }
 
+        // The line items are the single source: `amount` is their sum by
+        // construction (monthlyTotal() sums the same list), so the frozen
+        // snapshot always reconciles with what's charged — no separate guard.
         $lineItems = $tenant->monthlyLineItems();
-        $amount    = $tenant->monthlyTotal();
-
-        // The snapshot must reconcile with what's charged, always — this is the
-        // guarantee the frozen line_items exist to give.
-        $lineTotal = round(array_sum(array_column($lineItems, 'amount')), 2);
-        if (abs($lineTotal - round($amount, 2)) > 0.01) {
-            throw new \RuntimeException(
-                "Invoice line items (R{$lineTotal}) do not reconcile with the billed amount (R" . round($amount, 2) . ") for tenant #{$tenant->id}."
-            );
-        }
+        $amount    = round(array_sum(array_column($lineItems, 'amount')), 2);
 
         // VAT is inclusive: the module prices already contain it, so it is backed
-        // out of the total rather than added on top. vat_rate 0 (the default)
-        // means no VAT — the document then reads "Invoice", not "Tax Invoice".
-        $vatRate   = (float) (BillingSetting::get('vat_rate') ?? 0);
+        // out of the total rather than added on top — turning VAT on never
+        // changes what a tenant is charged. vat_rate 0 (the default) means no
+        // VAT, and the document then reads "Invoice", not "Tax Invoice".
+        //
+        // IMPORTANT: this treats platform_modules.price as VAT-INCLUSIVE. Before
+        // vat_rate is ever set to a non-zero value, confirm with an accountant
+        // that (a) BrightFinance is VAT-registered and (b) module prices were
+        // entered inclusive of VAT — otherwise output VAT is under-declared.
+        $vatRate   = max(0.0, min(100.0, (float) (BillingSetting::get('vat_rate') ?? 0)));
         $vatAmount = $vatRate > 0 ? round($amount * $vatRate / (100 + $vatRate), 2) : 0.0;
         $subtotal  = round($amount - $vatAmount, 2);
 
@@ -50,7 +50,7 @@ class PlatformBillingService
             'line_items'           => $lineItems,
             'subtotal'             => $subtotal,
             'vat_amount'           => $vatAmount,
-            'discount_amount'      => 0,
+            'vat_rate'             => $vatRate,
             'status'               => 'unpaid',
             'due_date'             => now()->addDays((int) (BillingSetting::get('invoice_due_days') ?? 7))->toDateString(),
             'billing_period_start' => $start,

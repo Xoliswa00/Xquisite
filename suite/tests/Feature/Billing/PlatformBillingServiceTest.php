@@ -127,11 +127,13 @@ class PlatformBillingServiceTest extends TestCase
         $invoice = app(PlatformBillingService::class)->generateInvoice($tenant);
 
         $this->assertSame(0.0, (float) $invoice->vat_amount);
+        $this->assertSame(0.0, (float) $invoice->vat_rate);
         $this->assertSame(200.0, (float) $invoice->subtotal);
         $this->assertSame(200.0, (float) $invoice->amount);
+        $this->assertFalse($invoice->isTaxInvoice());
     }
 
-    public function test_generate_invoice_backs_out_inclusive_vat_when_a_rate_is_set(): void
+    public function test_generate_invoice_backs_out_inclusive_vat_and_freezes_the_rate(): void
     {
         BillingSetting::set('vat_rate', '15');
 
@@ -141,9 +143,43 @@ class PlatformBillingServiceTest extends TestCase
         $invoice = app(PlatformBillingService::class)->generateInvoice($tenant);
 
         // R230 already includes 15% VAT: VAT = 230 * 15/115 = 30, ex-VAT = 200,
-        // total charged is unchanged at 230.
+        // total charged is unchanged at 230. The rate is frozen onto the row so
+        // a later BillingSetting change can't reprint this invoice with a rate
+        // its own figures contradict.
         $this->assertSame(230.0, (float) $invoice->amount);
         $this->assertSame(30.0, (float) $invoice->vat_amount);
         $this->assertSame(200.0, (float) $invoice->subtotal);
+        $this->assertSame(15.0, (float) $invoice->vat_rate);
+
+        BillingSetting::set('vat_rate', '18');
+        $this->assertSame('15', $invoice->fresh()->vatRateLabel());
+    }
+
+    public function test_a_vat_amount_alone_is_not_a_tax_invoice_without_a_vat_number(): void
+    {
+        BillingSetting::set('vat_rate', '15');
+        $tenant = $this->tenant();
+        $tenant->activateModule($this->platformModule(230)->key);
+        $invoice = app(PlatformBillingService::class)->generateInvoice($tenant);
+
+        $this->assertFalse($invoice->isTaxInvoice());          // no company_vat set
+
+        BillingSetting::set('company_vat', '4820314765');
+        $this->assertTrue($invoice->isTaxInvoice());
+    }
+
+    public function test_vat_rate_setting_is_clamped_to_a_sane_range(): void
+    {
+        BillingSetting::set('vat_rate', 'not-a-number');
+        $tenant = $this->tenant();
+        $tenant->activateModule($this->platformModule(200)->key);
+        $invoice = app(PlatformBillingService::class)->generateInvoice($tenant);
+        $this->assertSame(0.0, (float) $invoice->vat_amount);
+
+        BillingSetting::set('vat_rate', '-5');
+        $tenant2 = $this->tenant();
+        $tenant2->activateModule($this->platformModuleKeyed('pos', 'Point of Sale', 200)->key);
+        $invoice2 = app(PlatformBillingService::class)->generateInvoice($tenant2);
+        $this->assertSame(0.0, (float) $invoice2->vat_amount);
     }
 }

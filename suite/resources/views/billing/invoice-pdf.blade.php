@@ -63,7 +63,8 @@
         table.items td.r { text-align: right; white-space: nowrap; }
         table.items tr:last-child td { border-bottom: none; }
         .item-sub { color: #6b6b66; }
-        .item-includes { font-size: 9px; color: #6b6b66; margin-top: 3px; }
+        .period-caption { font-size: 9px; color: #6b6b66; margin: 4px 0 0; }
+        .vat-note { font-size: 9px; color: #6b6b66; margin-top: 8px; }
         .col-qty { width: 46px; }
         .col-price { width: 96px; }
         .col-amt { width: 110px; }
@@ -120,22 +121,17 @@
         $companyWeb   = \App\Models\BillingSetting::get('company_website');
         $awaiting = $invoice->isAwaitingConfirmation();
 
-        // Money, from the frozen snapshot. Old invoices predate the columns, so
-        // fall back to a single line == amount. VAT is inclusive: subtotal is the
-        // ex-VAT value, vat_amount the portion already inside amount.
-        $lines     = $invoice->line_items ?: [[
-            'name' => 'Xquisite platform subscription', 'quantity' => 1,
-            'unit_price' => (float) $invoice->amount, 'amount' => (float) $invoice->amount,
-        ]];
-        $subtotal  = (float) ($invoice->subtotal ?? $invoice->amount);
-        $vatAmount = (float) ($invoice->vat_amount ?? 0);
-        $discount  = (float) ($invoice->discount_amount ?? 0);
-        $vatRate   = (float) (\App\Models\BillingSetting::get('vat_rate') ?? 0);
-        $vatRateLabel = rtrim(rtrim(number_format($vatRate, 2), '0'), '.');
-
-        // A "Tax Invoice" is only a tax invoice when it actually carries a VAT
-        // line; otherwise it is a plain "Invoice".
-        $docTitle = $vatAmount > 0 ? 'Tax Invoice' : 'Invoice';
+        // Money, from the frozen snapshot. Everything below reads the invoice's
+        // own columns, never a live setting — a later VAT-rate change must not
+        // reprint historical invoices with a rate their frozen figures don't match.
+        // VAT is inclusive: line amounts and `amount` are gross; `subtotal` is the
+        // ex-VAT value; `vat_amount` the portion already inside `amount`.
+        $lines        = array_values(array_filter($invoice->line_items ?: $invoice->fallbackLineItems(), 'is_array'));
+        $subtotal     = (float) ($invoice->subtotal ?? $invoice->amount);
+        $vatAmount    = (float) ($invoice->vat_amount ?? 0);
+        $vatRateLabel = $invoice->vatRateLabel();
+        $isTaxInvoice = $invoice->isTaxInvoice();
+        $docTitle     = $isTaxInvoice ? 'Tax Invoice' : 'Invoice';
 
         $periodLabel = ($invoice->billing_period_start && $invoice->billing_period_end)
             ? $invoice->billing_period_start->format('d M Y') . ' – ' . $invoice->billing_period_end->format('d M Y')
@@ -162,7 +158,6 @@
                     <tr><td class="k">Invoice No</td><td class="v">{{ $invoice->invoice_number }}</td></tr>
                     <tr><td class="k">Issue date</td><td class="v">{{ $invoice->created_at->format('d M Y') }}</td></tr>
                     <tr><td class="k">Due date</td><td class="v">{{ $invoice->due_date->format('d M Y') }}</td></tr>
-                    <tr><td class="k">Billing period</td><td class="v">{{ $periodLabel }}</td></tr>
                     <tr><td class="k">Terms</td><td class="v">Net {{ $dueDays }}</td></tr>
                     <tr><td class="k">Currency</td><td class="v">ZAR</td></tr>
                     <tr><td class="k">Status</td><td class="v {{ $statusClass }}">{{ $statusLabel }}</td></tr>
@@ -181,7 +176,7 @@
                 <div class="p-name">{{ $companyName }}</div>
                 @if($companyAddr)<div class="p-line">{{ $companyAddr }}</div>@endif
                 @if($companyReg)<div class="p-line">Reg {{ $companyReg }}</div>@endif
-                @if($companyVat)<div class="p-line">VAT {{ $companyVat }}</div>@endif
+                @if($companyVat)<div class="p-line">VAT No. {{ $companyVat }}</div>@endif
                 @if($companyPhone)<div class="p-line">{{ $companyPhone }}</div>@endif
                 @if($companyEmail)<div class="p-line">{{ $companyEmail }}</div>@endif
             </td>
@@ -189,7 +184,7 @@
                 <div class="p-label">Bill to</div>
                 <div class="p-name">{{ $invoice->tenant->name }}</div>
                 @if($invoice->tenant->address)<div class="p-line">{{ $invoice->tenant->address }}</div>@endif
-                @if($invoice->tenant->vat_number)<div class="p-line">VAT {{ $invoice->tenant->vat_number }}</div>@endif
+                @if($invoice->tenant->vat_number)<div class="p-line">VAT No. {{ $invoice->tenant->vat_number }}</div>@endif
                 @if($invoice->tenant->phone)<div class="p-line">{{ $invoice->tenant->phone }}</div>@endif
                 @if($invoice->tenant->email)<div class="p-line">{{ $invoice->tenant->email }}</div>@endif
             </td>
@@ -198,10 +193,11 @@
 
     <hr class="rule-hair" style="margin: 20px 0 0;">
 
-    {{-- Line items — the frozen per-module breakdown taken at issue time. It is
-         built from Tenant::monthlyLineItems() (the same source as the total) and
-         generateInvoice() asserts the two reconcile, so what's listed always
-         adds up to what's charged, even after the tenant later changes modules. --}}
+    {{-- Line items — the frozen per-module breakdown taken at issue time, from
+         Tenant::monthlyLineItems() (the same list the total is summed from), so
+         it always adds up to what's charged even after the tenant later changes
+         modules. Amounts are VAT-inclusive; the VAT portion is broken out below. --}}
+    <div class="period-caption">For the period {{ $periodLabel }}</div>
     <table class="items num">
         <thead>
             <tr>
@@ -215,15 +211,14 @@
             @foreach($lines as $line)
                 <tr>
                     <td>{{ $line['name'] ?? 'Xquisite platform subscription' }}</td>
-                    <td class="r">{{ $line['quantity'] ?? 1 }}</td>
-                    <td class="r">R {{ number_format($line['unit_price'] ?? $line['amount'] ?? 0, 2) }}</td>
-                    <td class="r">R {{ number_format($line['amount'] ?? 0, 2) }}</td>
+                    <td class="r">{{ (int) ($line['quantity'] ?? 1) }}</td>
+                    <td class="r">R {{ number_format((float) ($line['unit_price'] ?? $line['amount'] ?? 0), 2) }}</td>
+                    <td class="r">R {{ number_format((float) ($line['amount'] ?? 0), 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
     </table>
 
-    {{-- Summary — only meaningful once a payment has landed. --}}
     @php
         $isPaid = $invoice->status === 'paid';
         $paymentsReceived = $isPaid ? (float) $invoice->amount : 0.0;
@@ -237,15 +232,19 @@
             default            => 'Payable by ' . $invoice->due_date->format('d F Y'),
         };
     @endphp
-    @php
-        $showSummary = count($lines) > 1 || $vatAmount > 0 || $discount > 0 || $paymentsReceived > 0;
-    @endphp
-    @if($showSummary)
+
+    {{-- Summary. Prices are VAT-inclusive, so the total isn't rebuilt from an
+         ex-VAT base — the VAT already inside it is just stated. A Subtotal line
+         only appears when a payment splits it from the total. --}}
+    @if($vatAmount > 0 || $paymentsReceived > 0)
         <table class="sum num">
-            <tr><td class="k">Subtotal{{ $vatAmount > 0 ? ' (excl. VAT)' : '' }}</td><td class="v">R {{ number_format($subtotal, 2) }}</td></tr>
-            @if($vatAmount > 0)<tr><td class="k">VAT @ {{ $vatRateLabel }}%</td><td class="v">R {{ number_format($vatAmount, 2) }}</td></tr>@endif
-            @if($discount > 0)<tr><td class="k">Discount</td><td class="v">- R {{ number_format($discount, 2) }}</td></tr>@endif
-            @if($paymentsReceived > 0)<tr><td class="k">Payments received</td><td class="v">R {{ number_format($paymentsReceived, 2) }}</td></tr>@endif
+            @if($paymentsReceived > 0)
+                <tr><td class="k">Subtotal</td><td class="v">R {{ number_format((float) $invoice->amount, 2) }}</td></tr>
+                <tr><td class="k">Payments received</td><td class="v">R {{ number_format($paymentsReceived, 2) }}</td></tr>
+            @endif
+            @if($vatAmount > 0)
+                <tr><td class="k">Includes VAT @ {{ $vatRateLabel }}%</td><td class="v">R {{ number_format($vatAmount, 2) }}</td></tr>
+            @endif
         </table>
     @endif
 
@@ -267,6 +266,10 @@
             </td>
         </tr>
     </table>
+
+    @if($vatAmount > 0)
+        <div class="vat-note">This total includes VAT at {{ $vatRateLabel }}% (R {{ number_format($vatAmount, 2) }}).</div>
+    @endif
 
     {{-- Paid confirmation — method + reference (the date is already in the band) --}}
     @if($isPaid)
