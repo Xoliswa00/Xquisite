@@ -12,8 +12,6 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use App\Models\User;
 use App\Modules\Booking\Models\Appointment;
-use App\Modules\Booking\Models\Customer;
-use App\Modules\Booking\Observers\CustomerObserver;
 use App\Observers\AppointmentObserver;
 use App\Observers\UserObserver;
 
@@ -24,7 +22,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Appointment::observe(AppointmentObserver::class);
-        Customer::observe(CustomerObserver::class);
+        // Customer::observe() is intentionally NOT called here — CustomerObserver
+        // lives in App\Modules\Booking\Observers and is already picked up by
+        // BookingServiceProvider's ObserverRegistrar auto-scan. Registering it a
+        // second time here made every created()/updated() hook fire twice per
+        // event (harmless for Customer's idempotent Client-sync logic, but it's
+        // the same double-registration bug that silently duplicated appointment
+        // reminders — see the deleted Modules/Booking/Observers/AppointmentObserver).
         User::observe(UserObserver::class);
 
         $this->registerRateLimiters();

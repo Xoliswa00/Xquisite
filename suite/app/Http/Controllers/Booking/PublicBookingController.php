@@ -254,14 +254,23 @@ class PublicBookingController extends Controller
             return back()->withErrors(['accepted_terms' => 'Please accept the terms and cancellation policy to continue.']);
         }
 
-        // Guards against the classic duplicate-booking cause: the customer double-clicks
-        // "Confirm Booking" (or the request is just slow) before the first request has
-        // cleared pending_booking from the session. Only one submission per logged-in
-        // customer can be inside this block at a time — a second one either waits and
-        // then correctly finds the session already cleared, or times out with a friendly
-        // "already processing" message instead of creating a second appointment.
+        // Guards against two causes of duplicate/oversold bookings:
+        //  1. The customer double-clicks "Confirm Booking" (or the request is just
+        //     slow) before the first request has cleared pending_booking from the
+        //     session.
+        //  2. Two DIFFERENT customers targeting the exact same start time both pass
+        //     the availability check before either has inserted — availableSlots()
+        //     only sees committed appointments, so a slot that only one qualified
+        //     staff member can actually cover would otherwise get sold twice.
+        // Keying the lock on tenant + slot (not the customer) serializes anyone
+        // contending for that time; it still covers case 1 since a double-click is
+        // the same customer hitting the same slot. A second submission either waits
+        // and then correctly finds the slot no longer available, or times out with
+        // a friendly "already processing" message.
+        $lockKey = 'booking-slot:' . $tenant->id . ':' . Carbon::parse($pending['scheduled_at'])->format('YmdHi');
+
         try {
-            return Cache::lock('booking-submit:' . $customer->id, 15)->block(5, function () use (
+            return Cache::lock($lockKey, 15)->block(5, function () use (
                 $slug, $request, $availability, $notifications, $tenant, $pending, $customer
             ) {
                 $services      = Service::findMany($pending['service_ids']);
@@ -416,19 +425,35 @@ class PublicBookingController extends Controller
         $start      = Carbon::parse($request->scheduled_at);
         $serviceIds = $appointment->services->pluck('id')->all();
 
-        if (!$isMultiDay) {
-            $slots          = $availability->availableSlotsForDuration($totalDuration, $start->copy()->startOfDay(), $serviceIds);
-            $stillAvailable = $slots->contains(fn($s) => $s->format('Y-m-d H:i') === $start->format('Y-m-d H:i'));
+        if ($isMultiDay) {
+            $appointment->update(['scheduled_at' => $start]);
 
-            if (!$stillAvailable) {
-                return back()->withErrors(['scheduled_at' => 'That time slot is no longer available. Please choose another.']);
-            }
+            return redirect()->route('book.my-bookings', $slug)
+                ->with('success', 'Your appointment has been updated.');
         }
 
-        $appointment->update(['scheduled_at' => $start]);
+        // Same tenant+slot lock as new bookings — without it, a reschedule racing
+        // a new self-booking (or another reschedule) for the same start time could
+        // both pass availableSlotsForDuration() before either write lands.
+        $lockKey = 'booking-slot:' . $appointment->tenant_id . ':' . $start->format('YmdHi');
 
-        return redirect()->route('book.my-bookings', $slug)
-            ->with('success', 'Your appointment has been updated.');
+        try {
+            return Cache::lock($lockKey, 15)->block(5, function () use ($slug, $appointment, $availability, $start, $totalDuration, $serviceIds) {
+                $slots          = $availability->availableSlotsForDuration($totalDuration, $start->copy()->startOfDay(), $serviceIds);
+                $stillAvailable = $slots->contains(fn($s) => $s->format('Y-m-d H:i') === $start->format('Y-m-d H:i'));
+
+                if (!$stillAvailable) {
+                    return back()->withErrors(['scheduled_at' => 'That time slot is no longer available. Please choose another.']);
+                }
+
+                $appointment->update(['scheduled_at' => $start]);
+
+                return redirect()->route('book.my-bookings', $slug)
+                    ->with('success', 'Your appointment has been updated.');
+            });
+        } catch (LockTimeoutException) {
+            return back()->withErrors(['scheduled_at' => "We're still processing another booking for that time — please try again in a moment."]);
+        }
     }
 
     /** Customer edit page */

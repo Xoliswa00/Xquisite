@@ -143,18 +143,30 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         // Staff dashboard (realtime-ready)
         Route::get('staff/dashboard', [\App\Http\Controllers\Booking\StaffDashboardController::class, 'index'])->name('staff.dashboard');
 
-        Route::get('appointments/client-history', [\App\Http\Controllers\Booking\AppointmentController::class, 'clientHistory'])->name('appointments.client-history');
-        Route::resource('appointments', AppointmentController::class);
-        Route::get('appointments/{appointment}/availability', [\App\Http\Controllers\Booking\AppointmentController::class, 'availability'])->name('appointments.availability');
-        Route::patch('appointments/{appointment}/actual-duration', [\App\Http\Controllers\Booking\AppointmentController::class, 'setActualDuration'])->name('appointments.actual-duration');
-        Route::post('appointments/{appointment}/assign', [\App\Http\Controllers\Booking\AppointmentController::class, 'assign'])->name('appointments.assign');
-        Route::post('appointments/{appointment}/remind', [\App\Http\Controllers\Booking\AppointmentController::class, 'remind'])->name('appointments.remind');
-        Route::post('appointments/{appointment}/mark-paid', [\App\Http\Controllers\Booking\AppointmentController::class, 'markPaid'])->name('appointments.mark-paid');
-        Route::get('calendar/{date?}', [\App\Http\Controllers\Booking\AppointmentController::class, 'calendar'])->name('appointments.calendar');
-        // Registered before the resource route so "import" isn't swallowed by {customer}.
-        Route::get('customers/import', [CustomerController::class, 'importForm'])->name('customers.import');
-        Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import.store');
-        Route::resource('customers', CustomerController::class);
+        // Appointments — the `manage-appointments` permission already existed in
+        // PermissionRoleSeeder (granted to tenant-owner/manager/employee alike) but
+        // was never applied to a route; these previously had no gate beyond the
+        // module flag. Note this is still coarse: every business role holds
+        // manage-appointments, so it stops a non-business guard/role, not one
+        // employee touching another's appointments.
+        Route::middleware('can:manage-appointments')->group(function () {
+            Route::get('appointments/client-history', [\App\Http\Controllers\Booking\AppointmentController::class, 'clientHistory'])->name('appointments.client-history');
+            Route::resource('appointments', AppointmentController::class);
+            Route::get('appointments/{appointment}/availability', [\App\Http\Controllers\Booking\AppointmentController::class, 'availability'])->name('appointments.availability');
+            Route::patch('appointments/{appointment}/actual-duration', [\App\Http\Controllers\Booking\AppointmentController::class, 'setActualDuration'])->name('appointments.actual-duration');
+            Route::post('appointments/{appointment}/assign', [\App\Http\Controllers\Booking\AppointmentController::class, 'assign'])->name('appointments.assign');
+            Route::post('appointments/{appointment}/remind', [\App\Http\Controllers\Booking\AppointmentController::class, 'remind'])->name('appointments.remind');
+            Route::post('appointments/{appointment}/mark-paid', [\App\Http\Controllers\Booking\AppointmentController::class, 'markPaid'])->name('appointments.mark-paid');
+            Route::get('calendar/{date?}', [\App\Http\Controllers\Booking\AppointmentController::class, 'calendar'])->name('appointments.calendar');
+        });
+
+        // Customers — same gap, same fix, using the seeder's manage-customers permission.
+        Route::middleware('can:manage-customers')->group(function () {
+            // Registered before the resource route so "import" isn't swallowed by {customer}.
+            Route::get('customers/import', [CustomerController::class, 'importForm'])->name('customers.import');
+            Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import.store');
+            Route::resource('customers', CustomerController::class);
+        });
         // Service catalogue + pricing — managers only (employees can't edit it).
         Route::middleware('can:manage-products')->group(function () {
             Route::get('services/photos', [ServiceController::class, 'photos'])->name('services.photos.index');
