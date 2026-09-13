@@ -14,18 +14,43 @@
  *   to iOS Safari visitors who haven't already installed the page and
  *   haven't dismissed this before.
  *
- * Wire-up: a container carrying `data-install-banner`, with
- * `data-android-text` / `data-ios-text` for the copy to show in each case,
- * holding a `[data-install-text]` node, an `[data-install-action]` button
- * (Android only — hidden otherwise), and a `[data-install-dismiss]` control.
+ * Wire-up: a container carrying `data-install-banner` and `data-install-scope`
+ * (a short identifier unique to this portal instance, e.g. "book:demo" or
+ * "staff-app" — every portal shares one browser origin, so without a scoped
+ * key dismissing the banner on one tenant's portal would silently suppress
+ * it on every other portal too), with `data-android-text` / `data-ios-text`
+ * for the copy to show in each case, holding a `[data-install-text]` node,
+ * an `[data-install-action]` button (Android only — hidden otherwise), and
+ * a `[data-install-dismiss]` control.
+ *
+ * Registers the service worker itself, unconditionally, on every page load —
+ * this used to only happen inside push-notifications.js's manual "Enable
+ * notifications" click handler, which meant Chrome's install criteria (an
+ * active service worker registration is required before it will ever fire
+ * `beforeinstallprompt`) was never met on a first visit. The Android
+ * "Install" button existed in the DOM but had nothing to ever un-hide it.
+ * register() is idempotent — calling it again from push-notifications.js
+ * later just resolves to this same registration, no duplicate SW.
  */
 (function () {
-  var STORAGE_KEY = 'xq-install-banner-dismissed';
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(function () {
+      // Non-fatal: the install banner and iOS instructions still work
+      // without it — only the native Android install prompt needs this.
+    });
+  }
+
   var deferredPrompt = null;
+
+  function storageKey() {
+    var el = banner();
+    var scope = (el && el.dataset.installScope) || 'default';
+    return 'xq-install-banner-dismissed:' + scope;
+  }
 
   function dismissed() {
     try {
-      return localStorage.getItem(STORAGE_KEY) === '1';
+      return localStorage.getItem(storageKey()) === '1';
     } catch (e) {
       return false;
     }
@@ -33,7 +58,7 @@
 
   function remember() {
     try {
-      localStorage.setItem(STORAGE_KEY, '1');
+      localStorage.setItem(storageKey(), '1');
     } catch (e) {}
   }
 

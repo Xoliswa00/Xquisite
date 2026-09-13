@@ -562,6 +562,7 @@
                  instructions, since no such signal exists there). --}}
             <div hidden
                  data-install-banner
+                 data-install-scope="staff-app"
                  data-android-text="Install Xquisite for instant alerts on new bookings."
                  data-ios-text='On iPhone: tap Share, then "Add to Home Screen", to enable notifications.'
                  class="xq-flash mb-4 flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-900 border border-slate-800 text-sm text-slate-300">
