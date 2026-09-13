@@ -122,6 +122,6 @@
     </div>
 </footer>
 
-<script src="{{ asset('js/pwa-install.js') }}"></script>
+<script src="{{ asset('js/pwa-install.js') }}?v={{ filemtime(public_path('js/pwa-install.js')) }}"></script>
 </body>
 </html>
