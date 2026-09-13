@@ -87,13 +87,17 @@ Route::get('/about',   AboutController::class)->name('about');
 Route::get('/terms',   fn() => view('terms'))->name('terms');
 Route::get('/privacy', fn() => view('privacy'))->name('privacy');
 
-// Public "coming soon" launch pages — reusable for Founding 20 and future module launches
+// Public "coming soon" launch pages — reusable for future module launches. Not
+// registered at /founding-20 directly: the real Founding 20 questionnaire (a
+// separate, already-in-progress feature) owns that path, so this generic
+// mechanism is reached only via /launch/{key} to avoid a route collision —
+// two routes both matching the exact same path, with whichever is registered
+// first in this file silently winning every request, permanently shadowing
+// the other. See the 'founding-20' seed row's key for how it's still reached.
 Route::prefix('launch/{key}')->name('public-launch.')->group(function () {
     Route::get('/',            [PublicLaunchController::class, 'show'])->name('show');
     Route::post('/questions',  [PublicLaunchController::class, 'askQuestion'])->name('questions.store')->middleware('throttle:global');
 });
-Route::get('/founding-20',  [PublicLaunchController::class, 'show'])->name('founding-20.show')->defaults('key', 'founding-20');
-Route::post('/founding-20/questions', [PublicLaunchController::class, 'askQuestion'])->name('founding-20.questions.store')->defaults('key', 'founding-20')->middleware('throttle:global');
 
 Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(function () {
 

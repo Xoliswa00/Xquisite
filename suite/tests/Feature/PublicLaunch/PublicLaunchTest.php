@@ -18,7 +18,7 @@ class PublicLaunchTest extends TestCase
 
     public function test_active_launch_page_renders(): void
     {
-        $response = $this->get(route('founding-20.show'));
+        $response = $this->get(route('public-launch.show', 'founding-20'));
 
         $response->assertOk();
         $response->assertSee('Founding 20');
@@ -28,7 +28,7 @@ class PublicLaunchTest extends TestCase
     {
         PublicLaunch::where('key', 'founding-20')->update(['is_active' => false]);
 
-        $response = $this->get(route('founding-20.show'));
+        $response = $this->get(route('public-launch.show', 'founding-20'));
 
         $response->assertNotFound();
     }
@@ -42,7 +42,7 @@ class PublicLaunchTest extends TestCase
 
     public function test_visitor_can_ask_a_question(): void
     {
-        $response = $this->post(route('founding-20.questions.store'), [
+        $response = $this->post(route('public-launch.questions.store', 'founding-20'), [
             'asker_name'  => 'Jane',
             'asker_email' => 'jane@example.com',
             'question'    => 'When does this launch?',
@@ -58,7 +58,7 @@ class PublicLaunchTest extends TestCase
 
     public function test_question_requires_text(): void
     {
-        $response = $this->post(route('founding-20.questions.store'), ['question' => '']);
+        $response = $this->post(route('public-launch.questions.store', 'founding-20'), ['question' => '']);
 
         $response->assertSessionHasErrors('question');
         $this->assertSame(0, PublicQuestion::count());
@@ -68,7 +68,7 @@ class PublicLaunchTest extends TestCase
     {
         PublicLaunch::where('key', 'founding-20')->update(['qa_enabled' => false]);
 
-        $response = $this->post(route('founding-20.questions.store'), ['question' => 'Anything?']);
+        $response = $this->post(route('public-launch.questions.store', 'founding-20'), ['question' => 'Anything?']);
 
         $response->assertNotFound();
     }
@@ -81,7 +81,7 @@ class PublicLaunchTest extends TestCase
         $launch->questions()->create(['question' => 'Answered but hidden', 'answer' => 'Yes.', 'answered_at' => now(), 'is_published' => false]);
         $launch->questions()->create(['question' => 'Answered and public', 'answer' => 'Definitely.', 'answered_at' => now(), 'is_published' => true]);
 
-        $response = $this->get(route('founding-20.show'));
+        $response = $this->get(route('public-launch.show', 'founding-20'));
 
         $response->assertSee('Answered and public');
         $response->assertDontSee('Unanswered');
@@ -92,7 +92,7 @@ class PublicLaunchTest extends TestCase
     {
         PublicLaunch::where('key', 'founding-20')->update(['qa_enabled' => false]);
 
-        $response = $this->get(route('founding-20.show'));
+        $response = $this->get(route('public-launch.show', 'founding-20'));
 
         $response->assertOk();
         $response->assertDontSee('Ask your question');
