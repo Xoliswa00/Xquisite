@@ -95,6 +95,7 @@
 <main class="max-w-3xl mx-auto px-4 py-10">
     <div hidden
          data-install-banner
+         data-install-scope="rent:{{ $slug }}"
          data-android-text="Add {{ $tenant->name }} to your home screen for one-tap access and alerts."
          data-ios-text='Add {{ $tenant->name }} to your Home Screen to get notified about your lease and maintenance: tap Share, then "Add to Home Screen".'
          class="mb-6 flex items-center gap-3 p-3 sm:p-4 bg-white border border-slate-200 rounded-xl shadow-sm text-sm text-slate-700">

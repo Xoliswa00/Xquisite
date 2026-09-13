@@ -98,6 +98,7 @@
 <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-4">
     <div hidden
          data-install-banner
+         data-install-scope="book:{{ $slug }}"
          data-android-text="Add {{ $tenant->name }} to your home screen for one-tap booking and alerts."
          data-ios-text='Add {{ $tenant->name }} to your Home Screen to get notified about your appointments: tap Share, then "Add to Home Screen".'
          class="flex items-center gap-3 p-3 sm:p-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm text-slate-700">
