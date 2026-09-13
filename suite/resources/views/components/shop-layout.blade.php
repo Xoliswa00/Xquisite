@@ -9,6 +9,7 @@
     <title>{{ $title ?? ($tenant->name . ' — Shop') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet"/>
+    <link rel="manifest" href="{{ route('shop.manifest', $tenant->slug) }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-gray-50 text-gray-900">
@@ -50,6 +51,18 @@
 </header>
 
 <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+    <div hidden
+         data-install-banner
+         data-android-text="Add {{ $tenant->name }} to your home screen for one-tap shopping and order updates."
+         data-ios-text='Add {{ $tenant->name }} to your Home Screen to get notified about your order: tap Share, then "Add to Home Screen".'
+         class="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-gray-200 shadow-sm text-sm text-gray-700">
+        <svg class="w-5 h-5 shrink-0 text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+        <span data-install-text class="flex-1"></span>
+        <button type="button" data-install-action hidden class="shrink-0 bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">Install</button>
+        <button type="button" data-install-dismiss aria-label="Dismiss" class="shrink-0 text-gray-400 hover:text-gray-600 p-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
     @if(session('cart_success'))
         <div class="mb-4 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
             {{ session('cart_success') }}
@@ -84,5 +97,6 @@
     </div>
 </footer>
 
+<script src="{{ asset('js/pwa-install.js') }}"></script>
 </body>
 </html>

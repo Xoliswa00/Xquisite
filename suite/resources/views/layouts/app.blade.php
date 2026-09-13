@@ -556,6 +556,22 @@
 
         <!-- Page Content -->
         <main class="flex-1 p-4 sm:p-6">
+            {{-- Add-to-home-screen prompt — hidden by default, shown by
+                 pwa-install.js only when the browser signals it's actually
+                 installable (or, on iOS Safari, unconditionally with
+                 instructions, since no such signal exists there). --}}
+            <div hidden
+                 data-install-banner
+                 data-android-text="Install Xquisite for instant alerts on new bookings."
+                 data-ios-text='On iPhone: tap Share, then "Add to Home Screen", to enable notifications.'
+                 class="xq-flash mb-4 flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-900 border border-slate-800 text-sm text-slate-300">
+                <svg class="w-4 h-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+                <span data-install-text class="flex-1"></span>
+                <button type="button" data-install-action hidden class="shrink-0 bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">Install</button>
+                <button type="button" data-install-dismiss aria-label="Dismiss" class="shrink-0 text-slate-500 hover:text-slate-300 p-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
             @if($errors->any())
                 <div class="xq-flash mb-4 px-4 py-3 rounded-lg bg-red-900/50 border border-red-700/60 text-red-300 text-sm">
                     <div class="flex items-center gap-2 font-medium">
@@ -818,6 +834,7 @@
         })], {type:'application/json'}));
     });
     </script>
+    <script src="{{ asset('js/pwa-install.js') }}"></script>
     <script src="{{ asset('js/push-notifications.js') }}"></script>
 </body>
 </html>

@@ -19,7 +19,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="96x96" href="/img/favicon-96x96.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
-    <link rel="manifest" href="/img/manifest.json">
+    <link rel="manifest" href="{{ route('book.manifest', $slug) }}">
     <meta name="msapplication-TileColor" content="#002B5B">
     <meta name="msapplication-TileImage" content="/img/ms-icon-144x144.png">
     <meta name="theme-color" content="#002B5B">
@@ -90,6 +90,26 @@
     </div>
 </header>
 
+{{-- Add-to-home-screen prompt — hidden by default, shown by pwa-install.js
+     only when the browser signals it's actually installable (or, on iOS
+     Safari, unconditionally with instructions since no such signal exists
+     there). Getting this installed is the prerequisite for push
+     notifications to work at all on iPhone. --}}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 pt-4">
+    <div hidden
+         data-install-banner
+         data-android-text="Add {{ $tenant->name }} to your home screen for one-tap booking and alerts."
+         data-ios-text='Add {{ $tenant->name }} to your Home Screen to get notified about your appointments: tap Share, then "Add to Home Screen".'
+         class="flex items-center gap-3 p-3 sm:p-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm text-slate-700">
+        <svg class="w-5 h-5 shrink-0 text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+        <span data-install-text class="flex-1"></span>
+        <button type="button" data-install-action hidden class="shrink-0 bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">Install</button>
+        <button type="button" data-install-dismiss aria-label="Dismiss" class="shrink-0 text-slate-400 hover:text-slate-600 p-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+</div>
+
 {{-- Alerts --}}
 <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-4 space-y-3">
     @if(session('success'))
@@ -138,6 +158,7 @@
         })], {type:'application/json'}));
     });
     </script>
+    <script src="{{ asset('js/pwa-install.js') }}"></script>
     @auth('customer')
         <script src="{{ asset('js/push-notifications.js') }}"></script>
     @endauth
