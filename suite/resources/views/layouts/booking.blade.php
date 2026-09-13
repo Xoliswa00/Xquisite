@@ -30,7 +30,12 @@
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="font-sans antialiased text-slate-800">
+<body class="font-sans antialiased text-slate-800"
+      @auth('customer')
+      data-push-subscribe-url="{{ route('book.push.subscribe', $slug) }}"
+      data-push-unsubscribe-url="{{ route('book.push.unsubscribe', $slug) }}"
+      data-push-vapid-key="{{ config('webpush.vapid.public_key') }}"
+      @endauth>
 
 {{-- Header --}}
 <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
@@ -53,6 +58,13 @@
         <nav class="flex items-center gap-1 sm:gap-3 text-sm">
             @auth('customer')
                 @php $customer = auth('customer')->user(); $unread = $customer?->unreadNotifications()->count(); @endphp
+                <button type="button"
+                        onclick="Notification.permission === 'granted' ? disableBrowserNotifications() : requestBrowserNotificationPermission()"
+                        aria-label="Enable notifications on this device"
+                        title="Enable notifications on this device"
+                        class="hidden sm:flex items-center justify-center p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 5l-1.5 1.5M19 5l1.5 1.5M19 5V2"/></svg>
+                </button>
                 <a href="{{ route('book.notifications', $slug) }}" class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition {{ request()->routeIs('book.notifications') ? 'font-semibold text-[#0078D4] bg-[#0078D4]/10' : 'text-slate-600 hover:bg-slate-100' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                     <span class="hidden sm:inline">Notifications</span>
@@ -126,5 +138,8 @@
         })], {type:'application/json'}));
     });
     </script>
+    @auth('customer')
+        <script src="{{ asset('js/push-notifications.js') }}"></script>
+    @endauth
 </body>
 </html>

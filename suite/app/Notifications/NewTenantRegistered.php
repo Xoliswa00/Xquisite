@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Tenant;
 use App\Models\User;
+use App\Notifications\Concerns\SendsWebPush;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -11,7 +12,7 @@ use Illuminate\Notifications\Notification;
 
 class NewTenantRegistered extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, SendsWebPush;
 
     public function __construct(
         public readonly Tenant $tenant,
@@ -20,7 +21,7 @@ class NewTenantRegistered extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return $this->withWebPush(['database', 'mail'], $notifiable);
     }
 
     public function toMail(object $notifiable): MailMessage

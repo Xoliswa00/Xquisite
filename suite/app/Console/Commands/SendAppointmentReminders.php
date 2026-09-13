@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Mail\AppointmentReminderEmail;
+use App\Models\Tenant;
 use App\Modules\Booking\Models\AppointmentReminder;
+use App\Notifications\AppNotice;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
@@ -55,6 +57,20 @@ class SendAppointmentReminders extends Command
             try {
                 Mail::to($appt->customer->email)
                     ->queue(new AppointmentReminderEmail($appt, $reminder->type));
+
+                // AppNotice also reaches the customer's in-app notifications feed
+                // (previously reminders never showed up there at all) and, for
+                // anyone who's enabled browser push, their device — see
+                // AppNotice::via() / the SendsWebPush trait for the opt-in check.
+                $when      = $reminder->type === '1h' ? 'in 1 hour' : 'tomorrow';
+                $tenantSlug = Tenant::find($appt->tenant_id)?->slug;
+
+                $appt->customer->notify(new AppNotice(
+                    title: 'Appointment reminder',
+                    message: 'Your appointment is ' . $when . ' — ' . $appt->scheduled_at->format('D, d M \a\t H:i') . '.',
+                    url: $tenantSlug ? route('book.my-bookings', $tenantSlug) : null,
+                    level: 'info',
+                ));
 
                 $reminder->update(['status' => 'sent', 'sent_at' => now()]);
                 $this->line("  <fg=green>✓</> {$reminder->type} reminder → {$appt->customer->email}");
