@@ -835,7 +835,7 @@
         })], {type:'application/json'}));
     });
     </script>
-    <script src="{{ asset('js/pwa-install.js') }}"></script>
-    <script src="{{ asset('js/push-notifications.js') }}"></script>
+    <script src="{{ asset('js/pwa-install.js') }}?v={{ filemtime(public_path('js/pwa-install.js')) }}"></script>
+    <script src="{{ asset('js/push-notifications.js') }}?v={{ filemtime(public_path('js/push-notifications.js')) }}"></script>
 </body>
 </html>

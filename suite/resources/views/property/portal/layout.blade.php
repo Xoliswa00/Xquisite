@@ -123,6 +123,6 @@
         <span>Powered by <span class="font-semibold text-slate-500">Xquisite Creations</span></span>
     </a>
 </footer>
-<script src="{{ asset('js/pwa-install.js') }}"></script>
+<script src="{{ asset('js/pwa-install.js') }}?v={{ filemtime(public_path('js/pwa-install.js')) }}"></script>
 </body>
 </html>
