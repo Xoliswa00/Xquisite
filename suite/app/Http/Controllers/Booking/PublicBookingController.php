@@ -14,6 +14,7 @@ use App\Models\Tenant;
 use App\Services\Booking\AvailabilityService;
 use App\Services\Notifications\BookingNotificationService;
 use App\Services\Tenant\TenantContext;
+use App\Support\TenantManifest;
 use Carbon\Carbon;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\Request;
@@ -28,6 +29,21 @@ class PublicBookingController extends Controller
         $tenant = Tenant::where('slug', $slug)->where('is_active', true)->firstOrFail();
         TenantContext::set($tenant->id);
         return $tenant;
+    }
+
+    /**
+     * Per-tenant web app manifest — the whole point of this being dynamic
+     * rather than one static file is that when a customer adds THIS
+     * business's booking page to their home screen, the icon shows the
+     * business's own name (and logo, if they've uploaded one), not a
+     * generic "Xquisite" label. Public/unauthenticated — a browser fetches
+     * this automatically for anyone visiting the page, logged in or not.
+     */
+    public function manifest(string $slug)
+    {
+        $tenant = $this->resolveTenant($slug);
+
+        return TenantManifest::response($tenant, route('book.index', $slug));
     }
 
     /** Step 1 — list services, combos, and promotions */

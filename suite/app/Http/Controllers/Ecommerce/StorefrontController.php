@@ -6,9 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Modules\POS\Models\Product;
 use App\Services\Cart\CartService;
+use App\Support\TenantManifest;
 
 class StorefrontController extends Controller
 {
+    /** Public/unauthenticated — a browser fetches this before any login. */
+    public function manifest(string $tenantSlug)
+    {
+        $tenant = Tenant::where('slug', $tenantSlug)->where('is_active', true)->firstOrFail();
+
+        return TenantManifest::response($tenant, route('shop.index', $tenantSlug));
+    }
+
     public function index(string $tenantSlug)
     {
         $tenant = Tenant::where('slug', $tenantSlug)->where('is_active', true)->firstOrFail();

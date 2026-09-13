@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $tenant->name }} — Renter Portal</title>
+    <link rel="manifest" href="{{ route('rent.manifest', $slug) }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full font-sans antialiased text-slate-800">
@@ -92,6 +93,18 @@
 </header>
 
 <main class="max-w-3xl mx-auto px-4 py-10">
+    <div hidden
+         data-install-banner
+         data-android-text="Add {{ $tenant->name }} to your home screen for one-tap access and alerts."
+         data-ios-text='Add {{ $tenant->name }} to your Home Screen to get notified about your lease and maintenance: tap Share, then "Add to Home Screen".'
+         class="mb-6 flex items-center gap-3 p-3 sm:p-4 bg-white border border-slate-200 rounded-xl shadow-sm text-sm text-slate-700">
+        <svg class="w-5 h-5 shrink-0 text-[#0078D4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+        <span data-install-text class="flex-1"></span>
+        <button type="button" data-install-action hidden class="shrink-0 bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">Install</button>
+        <button type="button" data-install-dismiss aria-label="Dismiss" class="shrink-0 text-slate-400 hover:text-slate-600 p-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
     @if(session('success'))
         <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm">{{ session('success') }}</div>
     @endif
@@ -109,5 +122,6 @@
         <span>Powered by <span class="font-semibold text-slate-500">Xquisite Creations</span></span>
     </a>
 </footer>
+<script src="{{ asset('js/pwa-install.js') }}"></script>
 </body>
 </html>
