@@ -176,6 +176,7 @@
                 <a href="#modules"               class="hover:text-[#0078D4] transition-colors">Platform</a>
                 <a href="{{ route('about') }}"   class="hover:text-[#0078D4] transition-colors">About</a>
                 <a href="{{ route('demo') }}" class="hover:text-[#0078D4] transition-colors">Live Demo</a>
+                <a href="{{ route('founding-twenty.show') }}" class="font-semibold text-[#D4AF37] hover:text-[#b8932c] transition-colors">Founding 20</a>
             </nav>
 
             {{-- Auth --}}

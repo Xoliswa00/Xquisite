@@ -73,6 +73,11 @@ use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DemoController;
+use App\Http\Controllers\FoundingTwentyController;
+use App\Http\Controllers\FoundingTwentyCheckinController;
+use App\Http\Controllers\Admin\FoundingTwentyController as AdminFoundingTwentyController;
+use App\Http\Controllers\Admin\PromoCodeController;
+use App\Http\Controllers\Admin\OutreachCampaignController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -378,6 +383,33 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::patch('/public-launches/{publicLaunch}/questions/{publicQuestion}/toggle', [AdminPublicLaunchController::class, 'togglePublished'])->name('public-launches.questions.toggle');
             Route::delete('/public-launches/{publicLaunch}/questions/{publicQuestion}', [AdminPublicLaunchController::class, 'destroyQuestion'])->name('public-launches.questions.destroy');
 
+            // Founding 20 questionnaire applications
+            Route::get('/founding-twenty', [AdminFoundingTwentyController::class, 'index'])->name('founding-twenty.index');
+            Route::get('/founding-twenty/action-queue', [AdminFoundingTwentyController::class, 'actionQueue'])->name('founding-twenty.action-queue');
+            Route::get('/founding-twenty/{foundingTwenty}', [AdminFoundingTwentyController::class, 'show'])->name('founding-twenty.show');
+            Route::patch('/founding-twenty/{foundingTwenty}/status', [AdminFoundingTwentyController::class, 'updateStatus'])->name('founding-twenty.status');
+            Route::post('/founding-twenty/{foundingTwenty}/deposit/confirm', [AdminFoundingTwentyController::class, 'confirmDeposit'])->name('founding-twenty.deposit.confirm');
+            Route::post('/founding-twenty/{foundingTwenty}/deposit/refund', [AdminFoundingTwentyController::class, 'markDepositRefunded'])->name('founding-twenty.deposit.refund');
+            Route::get('/founding-twenty/{foundingTwenty}/deposit/pop', [AdminFoundingTwentyController::class, 'downloadPop'])->name('founding-twenty.deposit.pop');
+            Route::post('/founding-twenty/{foundingTwenty}/tenant', [AdminFoundingTwentyController::class, 'linkTenant'])->name('founding-twenty.tenant');
+            Route::post('/founding-twenty/{foundingTwenty}/milestone', [AdminFoundingTwentyController::class, 'markMilestone'])->name('founding-twenty.milestone');
+            Route::post('/founding-twenty/{foundingTwenty}/checkin', [AdminFoundingTwentyController::class, 'issueCheckin'])->name('founding-twenty.checkin.issue');
+            Route::post('/founding-twenty/{foundingTwenty}/referral-reward', [AdminFoundingTwentyController::class, 'processReferralReward'])->name('founding-twenty.referral-reward');
+
+            // Promo codes — track discounts issued and their rand value given away
+            Route::get('/promo-codes', [PromoCodeController::class, 'index'])->name('promo-codes.index');
+            Route::get('/promo-codes/create', [PromoCodeController::class, 'create'])->name('promo-codes.create');
+            Route::post('/promo-codes', [PromoCodeController::class, 'store'])->name('promo-codes.store');
+            Route::get('/promo-codes/{promoCode}', [PromoCodeController::class, 'show'])->name('promo-codes.show');
+            Route::post('/promo-codes/{promoCode}/redeem', [PromoCodeController::class, 'redeem'])->name('promo-codes.redeem');
+            Route::post('/promo-codes/{promoCode}/deactivate', [PromoCodeController::class, 'deactivate'])->name('promo-codes.deactivate');
+
+            // Outreach campaigns — plan a wave, then track it filling in by industry
+            Route::get('/outreach-campaigns', [OutreachCampaignController::class, 'index'])->name('outreach-campaigns.index');
+            Route::get('/outreach-campaigns/create', [OutreachCampaignController::class, 'create'])->name('outreach-campaigns.create');
+            Route::post('/outreach-campaigns', [OutreachCampaignController::class, 'store'])->name('outreach-campaigns.store');
+            Route::get('/outreach-campaigns/{outreachCampaign}', [OutreachCampaignController::class, 'show'])->name('outreach-campaigns.show');
+
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
             Route::patch('/module-requests/{moduleRequest}/reject', [ModuleRequestController::class, 'reject'])->name('module-requests.reject');
@@ -567,6 +599,24 @@ Route::prefix('apply/{slug}/{property}')->name('apply.')->group(function () {
     Route::get('/',        [PublicApplicationController::class, 'show'])->name('show');
     Route::post('/',       [PublicApplicationController::class, 'store'])->name('store')->middleware('throttle:auth');
     Route::get('/thanks',  [PublicApplicationController::class, 'thanks'])->name('thanks');
+});
+
+// Public "Founding 20" discovery questionnaire (no auth) — lead-capture funnel from
+// marketing (poster/TikTok/WhatsApp) into a scored, admin-reviewed applicant list.
+Route::prefix('founding-20')->name('founding-twenty.')->group(function () {
+    Route::get('/',       [FoundingTwentyController::class, 'show'])->name('show');
+    Route::post('/',      [FoundingTwentyController::class, 'store'])->name('store')->middleware('throttle:12,1');
+    Route::get('/thanks', [FoundingTwentyController::class, 'thanks'])->name('thanks');
+
+    // Reservation deposit — only reachable once an application has been marked
+    // "selected"; secured by an HMAC token (same pattern as public quote links).
+    Route::get('/reserve/{foundingTwenty}/{token}',  [FoundingTwentyController::class, 'reserve'])->name('reserve');
+    Route::post('/reserve/{foundingTwenty}/{token}', [FoundingTwentyController::class, 'reserveStore'])->name('reserve.store')->middleware('throttle:12,1');
+
+    // 30/60/90-day check-ins — token-secured against the checkin row itself, issued
+    // by an admin once a business has been onboarded.
+    Route::get('/checkin/{checkin}/{token}',  [FoundingTwentyCheckinController::class, 'show'])->name('checkin.show');
+    Route::post('/checkin/{checkin}/{token}', [FoundingTwentyCheckinController::class, 'store'])->name('checkin.store')->middleware('throttle:12,1');
 });
 
 // Public storefront (no auth)
