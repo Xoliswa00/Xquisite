@@ -29,6 +29,8 @@ use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\PlatformServiceController;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Admin\PublicLaunchController as AdminPublicLaunchController;
+use App\Http\Controllers\PublicLaunchController;
 use App\Http\Controllers\Admin\ModuleRequestController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\LogController;
@@ -85,6 +87,18 @@ Route::post('/demo',   [DemoController::class, 'login'])->name('demo.login');
 Route::get('/about',   AboutController::class)->name('about');
 Route::get('/terms',   fn() => view('terms'))->name('terms');
 Route::get('/privacy', fn() => view('privacy'))->name('privacy');
+
+// Public "coming soon" launch pages — reusable for future module launches. Not
+// registered at /founding-20 directly: the real Founding 20 questionnaire (a
+// separate, already-in-progress feature) owns that path, so this generic
+// mechanism is reached only via /launch/{key} to avoid a route collision —
+// two routes both matching the exact same path, with whichever is registered
+// first in this file silently winning every request, permanently shadowing
+// the other. See the 'founding-20' seed row's key for how it's still reached.
+Route::prefix('launch/{key}')->name('public-launch.')->group(function () {
+    Route::get('/',            [PublicLaunchController::class, 'show'])->name('show');
+    Route::post('/questions',  [PublicLaunchController::class, 'askQuestion'])->name('questions.store')->middleware('throttle:global');
+});
 
 Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(function () {
 
@@ -354,6 +368,15 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::get('/service-photos', [\App\Http\Controllers\Admin\ServicePhotoController::class, 'index'])->name('service-photos.index');
             Route::patch('/service-photos/{photo}/hidden', [\App\Http\Controllers\Admin\ServicePhotoController::class, 'toggleHidden'])->name('service-photos.toggle-hidden');
             Route::patch('/service-photos/reports/{report}/reviewed', [\App\Http\Controllers\Admin\ServicePhotoController::class, 'markReportReviewed'])->name('service-photos.reports.reviewed');
+
+            // Public launch / coming-soon pages (Founding 20 and future module launches)
+            Route::get('/public-launches', [AdminPublicLaunchController::class, 'index'])->name('public-launches.index');
+            Route::get('/public-launches/{publicLaunch}/edit', [AdminPublicLaunchController::class, 'edit'])->name('public-launches.edit');
+            Route::patch('/public-launches/{publicLaunch}', [AdminPublicLaunchController::class, 'update'])->name('public-launches.update');
+            Route::get('/public-launches/{publicLaunch}/questions', [AdminPublicLaunchController::class, 'questions'])->name('public-launches.questions');
+            Route::patch('/public-launches/{publicLaunch}/questions/{publicQuestion}', [AdminPublicLaunchController::class, 'answerQuestion'])->name('public-launches.questions.answer');
+            Route::patch('/public-launches/{publicLaunch}/questions/{publicQuestion}/toggle', [AdminPublicLaunchController::class, 'togglePublished'])->name('public-launches.questions.toggle');
+            Route::delete('/public-launches/{publicLaunch}/questions/{publicQuestion}', [AdminPublicLaunchController::class, 'destroyQuestion'])->name('public-launches.questions.destroy');
 
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
