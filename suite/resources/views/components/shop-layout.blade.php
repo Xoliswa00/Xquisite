@@ -53,6 +53,7 @@
 <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
     <div hidden
          data-install-banner
+         data-install-scope="shop:{{ $tenant->slug }}"
          data-android-text="Add {{ $tenant->name }} to your home screen for one-tap shopping and order updates."
          data-ios-text='Add {{ $tenant->name }} to your Home Screen to get notified about your order: tap Share, then "Add to Home Screen".'
          class="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-gray-200 shadow-sm text-sm text-gray-700">
