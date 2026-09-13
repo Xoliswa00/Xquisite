@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Modules\Property\Models\MaintenanceQuote;
 use App\Modules\Property\Models\MaintenanceRequest;
 use App\Services\Tenant\TenantContext;
+use App\Support\TenantManifest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,6 +18,14 @@ class ContractorPortalController extends Controller
         $tenant = Tenant::where('slug', $slug)->where('is_active', true)->firstOrFail();
         TenantContext::set($tenant->id);
         return $tenant;
+    }
+
+    /** Public/unauthenticated — a browser fetches this before login. */
+    public function manifest(string $slug)
+    {
+        $tenant = $this->resolveTenant($slug);
+
+        return TenantManifest::response($tenant, route('contractor.portal', $slug));
     }
 
     private function requireContractor(string $slug)

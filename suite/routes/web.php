@@ -445,6 +445,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
 Route::prefix('book/{slug}')->name('book.')->group(function () {
 
     Route::get('/',          [PublicBookingController::class, 'index'])->name('index');
+    Route::get('/manifest.json', [PublicBookingController::class, 'manifest'])->name('manifest');
     Route::get('/schedule',  [PublicBookingController::class, 'service'])->name('service'); // was /services/{service}
     Route::get('/slots',     [PublicBookingController::class, 'slots'])->name('slots');
     Route::post('/photos/{photo}/report', [PublicBookingController::class, 'reportPhoto'])
@@ -496,6 +497,8 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
 
 // ─── Renter portal (/rent/{slug}) ────────────────────────────────────────────
 Route::prefix('rent/{slug}')->name('rent.')->group(function () {
+    Route::get('/manifest.json', [RenterPortalController::class, 'manifest'])->name('manifest');
+
     // Public auth routes — no guard needed
     Route::get('/login',        [RenterAuthController::class, 'showLogin'])->name('login');
     Route::post('/login',       [RenterAuthController::class, 'login'])->name('login.post')->middleware('throttle:auth');
@@ -523,6 +526,8 @@ Route::prefix('rent/{slug}')->name('rent.')->group(function () {
 
 // ─── Contractor portal (/contractor/{slug}) ─────────────────────────────────
 Route::prefix('contractor/{slug}')->name('contractor.')->group(function () {
+    Route::get('/manifest.json', [ContractorPortalController::class, 'manifest'])->name('manifest');
+
     // Public auth routes — no guard needed
     Route::get('/login',   [ContractorAuthController::class, 'showLogin'])->name('login');
     Route::post('/login',  [ContractorAuthController::class, 'login'])->name('login.post')->middleware('throttle:auth');
@@ -559,6 +564,7 @@ Route::prefix('apply/{slug}/{property}')->name('apply.')->group(function () {
 
 // Public storefront (no auth)
 Route::prefix('shop/{tenantSlug}')->name('shop.')->group(function () {
+    Route::get('/manifest.json', [StorefrontController::class, 'manifest'])->name('manifest');
     Route::get('/', [StorefrontController::class, 'index'])->name('index');
     Route::get('/product/{productId}', [StorefrontController::class, 'product'])->name('product');
 
