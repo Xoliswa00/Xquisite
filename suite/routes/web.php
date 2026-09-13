@@ -490,6 +490,11 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
     Route::patch('/profile/business', [ProfileController::class, 'updateBusiness'])->name('profile.business.update');
     Route::post('/profile/logo', [ProfileController::class, 'updateLogo'])->name('profile.logo.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Push notification subscriptions (staff/admin side — shared controller,
+    // see book/{slug} group below for the customer-side counterpart)
+    Route::post('/push/subscribe', [\App\Http\Controllers\PushSubscriptionController::class, 'store'])->name('push.subscribe');
+    Route::delete('/push/subscribe', [\App\Http\Controllers\PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
 });
 
 Route::prefix('book/{slug}')->name('book.')->group(function () {
@@ -535,6 +540,12 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
         Route::post('/notifications/read-all',                          [CustomerPortalController::class, 'markNotificationsRead'])->name('notifications.read-all');
         Route::patch('/appointments/{appointment}/cancel',              [CustomerPortalController::class, 'cancel'])->name('cancel');
         Route::post('/appointments/{appointment}/payment-proof',        [CustomerPortalController::class, 'uploadPaymentProof'])->name('payment-proof');
+
+        // Push notification subscriptions — same controller as the staff-side
+        // route (routes/web.php, profile group); it resolves whichever guard
+        // authenticated the request.
+        Route::post('/push/subscribe', [\App\Http\Controllers\PushSubscriptionController::class, 'store'])->name('push.subscribe');
+        Route::delete('/push/subscribe', [\App\Http\Controllers\PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
     });
 });
 

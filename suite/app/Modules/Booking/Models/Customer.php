@@ -13,10 +13,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Notifications\Notifiable;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 class Customer extends Model implements AuthenticatableContract, CanResetPasswordContract
 {
-    use HasTenant, Auditable, Authenticatable, Notifiable, SoftDeletes, CanResetPassword;
+    use HasTenant, Auditable, Authenticatable, Notifiable, SoftDeletes, CanResetPassword, HasPushSubscriptions;
 
     protected $fillable = [
         'tenant_id',

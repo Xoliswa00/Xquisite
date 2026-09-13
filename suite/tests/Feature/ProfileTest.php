@@ -76,7 +76,12 @@ class ProfileTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertGuest();
-        $this->assertNull($user->fresh());
+
+        // User uses SoftDeletes (added after this test was written) — delete()
+        // sets deleted_at rather than removing the row, so fresh() (which
+        // deliberately bypasses scopes to show the true DB state) correctly
+        // returns the trashed record, not null. Assert the soft-delete instead.
+        $this->assertSoftDeleted($user);
     }
 
     public function test_correct_password_must_be_provided_to_delete_account(): void

@@ -3,14 +3,16 @@
 namespace App\Notifications;
 
 use App\Modules\Booking\Models\Appointment;
+use App\Notifications\Concerns\SendsWebPush;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\WebPush\WebPushMessage;
 
 class PaymentReminderNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, SendsWebPush;
 
     public function __construct(
         public Appointment $appointment,
@@ -19,7 +21,7 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return $this->withWebPush(['mail', 'database'], $notifiable);
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -45,5 +47,23 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
                 . ' — R' . number_format($this->amountDue, 2) . ' outstanding.',
             'type'           => 'payment_reminder',
         ];
+    }
+
+    // toDatabase() above has no 'title'/'url', so the trait's generic default
+    // doesn't fit — build the push payload directly instead. This notification
+    // goes to both the customer and the staff member who sent the reminder
+    // (AppointmentController::remind), and each needs a different link — the
+    // admin appointment page isn't reachable from the customer guard.
+    public function toWebPush($notifiable, $notification): WebPushMessage
+    {
+        $url = $notifiable instanceof \App\Modules\Booking\Models\Customer
+            ? route('book.my-bookings', $this->appointment->tenant->slug)
+            : route('appointments.show', $this->appointment);
+
+        return (new WebPushMessage)
+            ->title('Payment reminder')
+            ->icon('/img/android-icon-192x192.png')
+            ->body('R' . number_format($this->amountDue, 2) . ' outstanding for your ' . $this->appointment->scheduled_at->format('d M') . ' appointment.')
+            ->data(['url' => $url]);
     }
 }
