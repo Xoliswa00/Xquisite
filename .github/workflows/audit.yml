@@ -33,7 +33,7 @@ jobs:
       run:
         working-directory: suite
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
 
@@ -43,7 +43,7 @@ jobs:
           coverage: none
 
       - name: Cache composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: suite/vendor
           key: composer-${{ hashFiles('suite/composer.lock') }}
