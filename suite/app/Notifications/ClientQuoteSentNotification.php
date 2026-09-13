@@ -12,7 +12,7 @@ class ClientQuoteSentNotification extends MailNotification
 
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return $this->withWebPush(['database', 'mail'], $notifiable);
     }
 
     public function toMail(object $notifiable): MailMessage

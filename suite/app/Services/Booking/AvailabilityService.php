@@ -119,7 +119,7 @@ class AvailabilityService
      * @param  int              $duration  Duration in minutes
      * @return Collection<Carbon>
      */
-    public function availableSlots(Staff $staff, Carbon $date, int $duration): Collection
+    public function availableSlots(Staff $staff, Carbon $date, int $duration, ?int $excludeAppointmentId = null): Collection
     {
         $now = now();
 
@@ -138,6 +138,7 @@ class AvailabilityService
         $booked = Appointment::where('staff_id', $staff->id)
             ->whereNotIn('status', ['cancelled', 'no_show'])
             ->whereBetween('scheduled_at', [$workStart, $workEnd])
+            ->when($excludeAppointmentId, fn($q) => $q->where('id', '!=', $excludeAppointmentId))
             ->get();
 
         $blocks = $staff->blocks()
@@ -202,7 +203,7 @@ class AvailabilityService
      * @param  array            $serviceIds     Filter staff to those linked to these services
      * @return Collection<Carbon>
      */
-    public function availableSlotsForDuration(int $totalDuration, Carbon $date, array $serviceIds = []): Collection
+    public function availableSlotsForDuration(int $totalDuration, Carbon $date, array $serviceIds = [], ?int $excludeAppointmentId = null): Collection
     {
         $staffQuery = Staff::where('is_active', true)->with(['schedules', 'blocks']);
 
@@ -216,19 +217,56 @@ class AvailabilityService
             return collect();
         }
 
-        // Union: slot is offered if at least one staff member is free for the full duration
-        $allSlots = collect();
+        // Capacity per slot: how many of the qualified staff are individually
+        // free for the full duration. This already reflects every ASSIGNED
+        // appointment, since it's excluded from that staff member's own
+        // availableSlots() above.
+        $capacityBySlot = collect();
 
         foreach ($staff as $member) {
-            $memberSlots = $this->availableSlots($member, $date, $totalDuration);
-            foreach ($memberSlots as $slot) {
+            foreach ($this->availableSlots($member, $date, $totalDuration, $excludeAppointmentId) as $slot) {
                 $key = $slot->format('Y-m-d H:i');
-                if (!$allSlots->has($key)) {
-                    $allSlots->put($key, $slot);
-                }
+                $capacityBySlot->put($key, ($capacityBySlot->get($key) ?? 0) + 1);
             }
         }
 
-        return $allSlots->values()->sortBy(fn($s) => $s->timestamp)->values();
+        if ($capacityBySlot->isEmpty()) {
+            return collect();
+        }
+
+        // A public self-booking is created with staff_id = null until an admin
+        // assigns someone, so it never appears in any specific staff member's
+        // own booked list above. Without counting it here, the exact same slot
+        // would be offered to every next customer forever, no matter how many
+        // unassigned appointments already occupy it — not just under
+        // concurrency, on ordinary sequential bookings too. Each unassigned
+        // appointment overlapping a candidate slot claims one seat from the
+        // qualified-staff pool for that slot.
+        $dayStart = $date->copy()->startOfDay();
+        $dayEnd   = $date->copy()->endOfDay();
+
+        $unassignedDemand = Appointment::whereNull('staff_id')
+            ->whereNotIn('status', ['cancelled', 'no_show'])
+            ->whereBetween('scheduled_at', [$dayStart, $dayEnd])
+            ->when($excludeAppointmentId, fn($q) => $q->where('id', '!=', $excludeAppointmentId))
+            ->when(!empty($serviceIds), fn($q) => $q->whereHas('services', fn($q2) => $q2->whereIn('services.id', $serviceIds)))
+            ->get(['id', 'scheduled_at', 'duration_minutes']);
+
+        return $capacityBySlot
+            ->filter(function ($capacity, $key) use ($unassignedDemand, $totalDuration) {
+                $slotStart = Carbon::createFromFormat('Y-m-d H:i', $key);
+                $slotEnd   = $slotStart->copy()->addMinutes($totalDuration);
+
+                $demand = $unassignedDemand->filter(function ($appt) use ($slotStart, $slotEnd) {
+                    $apptEnd = $appt->scheduled_at->copy()->addMinutes($appt->duration_minutes);
+                    return $appt->scheduled_at->lt($slotEnd) && $apptEnd->gt($slotStart);
+                })->count();
+
+                return $demand < $capacity;
+            })
+            ->keys()
+            ->map(fn($key) => Carbon::createFromFormat('Y-m-d H:i', $key))
+            ->sortBy(fn($s) => $s->timestamp)
+            ->values();
     }
 }

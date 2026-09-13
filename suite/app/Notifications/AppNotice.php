@@ -2,14 +2,13 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Concerns\SendsWebPush;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\BroadcastMessage;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class AppNotice extends Notification
 {
-    use Queueable;
+    use Queueable, SendsWebPush;
 
     public function __construct(
         public string $title,
@@ -21,7 +20,7 @@ class AppNotice extends Notification
 
     public function via($notifiable): array
     {
-        return ['database'];
+        return $this->withWebPush(['database'], $notifiable);
     }
 
     public function toDatabase($notifiable): array

@@ -64,3 +64,6 @@ jobs:
 
       - name: Personal-data validation audit
         run: php artisan --no-ansi xq:audit-data-integrity
+
+      - name: PHPUnit test suite
+        run: php artisan test
