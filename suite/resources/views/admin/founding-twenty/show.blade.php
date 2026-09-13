@@ -372,6 +372,12 @@
                             @if($checkin->biggest_change)
                                 <p class="text-xs text-slate-400 mt-1 italic">"{{ Str::limit($checkin->biggest_change, 80) }}"</p>
                             @endif
+                            @if($checkin->continuation_driver)
+                                <p class="text-xs text-slate-400 mt-1"><span class="text-slate-500">Would continue if:</span> {{ Str::limit($checkin->continuation_driver, 80) }}</p>
+                            @endif
+                            @if($checkin->churn_driver)
+                                <p class="text-xs text-slate-400 mt-1"><span class="text-slate-500">Would cancel if:</span> {{ Str::limit($checkin->churn_driver, 80) }}</p>
+                            @endif
                         @else
                             <input type="text" readonly
                                    value="{{ route('founding-twenty.checkin.show', [$checkin, $checkin->checkinToken()]) }}"
