@@ -439,7 +439,10 @@ class PublicBookingController extends Controller
 
         try {
             return Cache::lock($lockKey, 15)->block(5, function () use ($slug, $appointment, $availability, $start, $totalDuration, $serviceIds) {
-                $slots          = $availability->availableSlotsForDuration($totalDuration, $start->copy()->startOfDay(), $serviceIds);
+                // Exclude the appointment's own current row — otherwise, now that
+                // unassigned appointments count as demand, it would count against
+                // its own new slot search whenever the old and new times overlap.
+                $slots          = $availability->availableSlotsForDuration($totalDuration, $start->copy()->startOfDay(), $serviceIds, $appointment->id);
                 $stillAvailable = $slots->contains(fn($s) => $s->format('Y-m-d H:i') === $start->format('Y-m-d H:i'));
 
                 if (!$stillAvailable) {
