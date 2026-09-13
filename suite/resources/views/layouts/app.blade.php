@@ -75,7 +75,10 @@
     </style>
 </head>
 
-<body class="font-sans antialiased bg-slate-950 text-slate-100">
+<body class="font-sans antialiased bg-slate-950 text-slate-100"
+      data-push-subscribe-url="{{ route('push.subscribe') }}"
+      data-push-unsubscribe-url="{{ route('push.unsubscribe') }}"
+      data-push-vapid-key="{{ config('webpush.vapid.public_key') }}">
 <x-demo-banner />
 <div class="min-h-screen flex" x-data="{ sidebarOpen: false }">
     @php
@@ -815,5 +818,6 @@
         })], {type:'application/json'}));
     });
     </script>
+    <script src="{{ asset('js/push-notifications.js') }}"></script>
 </body>
 </html>

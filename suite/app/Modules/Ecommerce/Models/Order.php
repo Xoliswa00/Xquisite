@@ -15,6 +15,7 @@ class Order extends Model
     protected $fillable = [
         'tenant_id',
         'reference',
+        'idempotency_key',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -30,6 +31,7 @@ class Order extends Model
         'notes',
         'payfast_payment_id',
         'paid_at',
+        'payment_initiated_at',
         'fulfilled_at',
     ];
 

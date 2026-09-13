@@ -11,7 +11,7 @@ class RentDueReminderNotification extends MailNotification
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return $this->withWebPush(['mail', 'database'], $notifiable);
     }
 
     public function toMail(object $notifiable): MailMessage
