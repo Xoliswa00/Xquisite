@@ -73,16 +73,18 @@ class FoundingTwentyCheckinTest extends TestCase
         $this->assertTrue($application->checkins()->create(['checkin_type' => '90_day'])->isFinalCheckin());
     }
 
-    public function test_public_form_no_longer_asks_continuation_questions_at_application_time(): void
+    public function test_public_form_no_longer_asks_continuation_or_value_questions_at_application_time(): void
     {
         $response = $this->get(route('founding-twenty.show'));
 
         $response->assertOk();
         $response->assertDontSee('What would make you cancel?');
         $response->assertDontSee('What would make you continue?');
+        $response->assertDontSee('What would Xquisite need to do for you to say');
+        $response->assertDontSee('If Xquisite could solve your biggest operational problem');
     }
 
-    public function test_application_can_be_submitted_without_continuation_fields(): void
+    public function test_application_can_be_submitted_without_continuation_or_value_fields(): void
     {
         $response = $this->post(route('founding-twenty.store'), [
             'business_name' => 'Test Salon',
@@ -93,7 +95,6 @@ class FoundingTwentyCheckinTest extends TestCase
             'pain_forgotten_appointments' => 3, 'pain_late_cancellations' => 3, 'pain_no_shows' => 3,
             'pain_double_bookings' => 3, 'pain_booking_enquiry_time' => 3, 'pain_staff_availability' => 3,
             'pain_tracking_balances' => 3, 'pain_revenue_visibility' => 3, 'pain_customer_data_organisation' => 3,
-            'value_rating' => 4,
             'privacy_consent' => '1',
         ]);
 
@@ -102,6 +103,7 @@ class FoundingTwentyCheckinTest extends TestCase
         $application = FoundingTwentyApplication::first();
         $this->assertNotNull($application);
         $this->assertNull($application->continuation_likelihood);
+        $this->assertNull($application->value_rating);
         $this->assertNotNull($application->score);
     }
 
@@ -133,6 +135,7 @@ class FoundingTwentyCheckinTest extends TestCase
 
         $response = $this->post(route('founding-twenty.checkin.store', [$checkin, $checkin->checkinToken()]), [
             'value_rating' => 4,
+            'value_open_text' => 'A clearer view of which clients are about to no-show.',
             'continuation_likelihood' => 'likely',
             'continuation_driver' => 'Keep saving me time on reminders.',
             'churn_driver' => 'If the price went up.',
@@ -140,6 +143,7 @@ class FoundingTwentyCheckinTest extends TestCase
 
         $response->assertRedirect();
         $checkin->refresh();
+        $this->assertSame('A clearer view of which clients are about to no-show.', $checkin->value_open_text);
         $this->assertSame('Keep saving me time on reminders.', $checkin->continuation_driver);
         $this->assertSame('If the price went up.', $checkin->churn_driver);
         $this->assertTrue($checkin->isComplete());

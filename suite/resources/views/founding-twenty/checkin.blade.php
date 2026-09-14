@@ -126,6 +126,10 @@
                 <div class="border-t border-slate-200 pt-4 space-y-4">
                     <p class="text-sm text-slate-500">Your free 3 months are up. The standard subscription from here is R200/month.</p>
                     <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">What would Xquisite need to do for you to say "this is worth R200/month"?</label>
+                        <textarea name="value_open_text" rows="2" class="w-full border-slate-300 rounded-xl text-sm">{{ old('value_open_text') }}</textarea>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">What would make you continue?</label>
                         <textarea name="continuation_driver" rows="2" class="w-full border-slate-300 rounded-xl text-sm">{{ old('continuation_driver') }}</textarea>
                     </div>
