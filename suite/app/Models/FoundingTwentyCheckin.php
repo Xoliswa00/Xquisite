@@ -14,7 +14,7 @@ class FoundingTwentyCheckin extends Model
         'founding_twenty_application_id', 'checkin_type',
         'monthly_appointments', 'no_shows_per_month', 'avg_appointment_value',
         'hours_booking_admin', 'hours_availability_messages', 'hours_manual_reminders',
-        'value_rating', 'continuation_likelihood', 'continuation_driver', 'churn_driver',
+        'value_rating', 'value_open_text', 'continuation_likelihood', 'continuation_driver', 'churn_driver',
         'biggest_change', 'would_recommend',
         'completed_at',
     ];

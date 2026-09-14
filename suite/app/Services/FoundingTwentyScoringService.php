@@ -48,7 +48,13 @@ class FoundingTwentyScoringService
 
         $technologyReadiness = $this->technologyReadinessScore($application);
 
-        $interest = round((($application->value_rating ?? 1) - 1) / 4 * 10, 1);
+        // value_rating no longer asked at application time (moved to the 90-day
+        // check-in, alongside continuation_likelihood, since "how valuable would
+        // this be" is more honestly answered after using the product). Every new
+        // application has no value here — default to the neutral midpoint (3/5)
+        // rather than the previous implicit worst-case default, so this factor
+        // stops discriminating between applicants instead of zeroing them all out.
+        $interest = round((($application->value_rating ?? 3) - 1) / 4 * 10, 1);
 
         $feedbackWillingness = $this->feedbackWillingnessScore($application);
 

@@ -84,9 +84,6 @@ class FoundingTwentyController extends Controller
             'top_priority_feature' => 'nullable|string|max:255',
             'automation_wishlist' => 'nullable|string|max:2000',
 
-            'value_rating' => 'required|integer|min:1|max:5',
-            'value_open_text' => 'nullable|string|max:2000',
-
             'wants_founding_twenty' => 'nullable|boolean',
             'willing_to_give_feedback' => 'nullable|boolean',
             'privacy_consent' => 'required|accepted',
