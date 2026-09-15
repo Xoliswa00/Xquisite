@@ -26,6 +26,7 @@ class Appointment extends Model
         'status',
         'pos_order_id',
         'notes',
+        'terms_accepted_at',
         'combo_id',
         'combo_price',
         'promo_code',
@@ -44,6 +45,7 @@ class Appointment extends Model
 
     protected $casts = [
         'scheduled_at'     => 'datetime',
+        'terms_accepted_at' => 'datetime',
         'setup_at'         => 'datetime',
         'breakdown_at'     => 'datetime',
         'duration_minutes' => 'integer',

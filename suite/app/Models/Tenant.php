@@ -32,6 +32,8 @@ class Tenant extends Model
         'shipping_enabled',
         'shipping_type',
         'shipping_cost',
+        'booking_terms',
+        'require_booking_terms_acceptance',
         'is_active',
         'is_demo',
         'trial_ends_at',
@@ -44,6 +46,7 @@ class Tenant extends Model
     protected $casts = [
         'shipping_enabled'           => 'boolean',
         'shipping_cost'              => 'decimal:2',
+        'require_booking_terms_acceptance' => 'boolean',
         'is_active'                  => 'boolean',
         'is_demo'                    => 'boolean',
         'custom_domain_verified'     => 'boolean',

@@ -28,6 +28,8 @@ use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\PlatformServiceController;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Admin\PublicLaunchController as AdminPublicLaunchController;
+use App\Http\Controllers\PublicLaunchController;
 use App\Http\Controllers\Admin\ModuleRequestController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\LogController;
@@ -89,6 +91,19 @@ Route::post('/demo',   [DemoController::class, 'login'])->name('demo.login');
 Route::get('/about',   AboutController::class)->name('about');
 Route::get('/terms',   fn() => view('terms'))->name('terms');
 Route::get('/privacy', fn() => view('privacy'))->name('privacy');
+
+// Public "coming soon" / programme-explainer launch pages — reusable for future
+// module launches via /launch/{key}. Founding 20 additionally gets a friendly
+// alias straight at /founding-20 (its own root): countdown, benefits, and public
+// Q&A, with a "Start Application" CTA leading to the actual questionnaire at
+// /founding-20/apply. No collision — the questionnaire no longer registers
+// anything at the /founding-20 root itself, only under /apply.
+Route::prefix('launch/{key}')->name('public-launch.')->group(function () {
+    Route::get('/',            [PublicLaunchController::class, 'show'])->name('show');
+    Route::post('/questions',  [PublicLaunchController::class, 'askQuestion'])->name('questions.store')->middleware('throttle:global');
+});
+Route::get('/founding-20',  [PublicLaunchController::class, 'show'])->name('founding-20.show')->defaults('key', 'founding-20');
+Route::post('/founding-20/questions', [PublicLaunchController::class, 'askQuestion'])->name('founding-20.questions.store')->defaults('key', 'founding-20')->middleware('throttle:global');
 
 Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(function () {
 
@@ -329,6 +344,15 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::patch('/reviews/{review}/status', [AdminReviewController::class, 'updateStatus'])->name('reviews.status');
             Route::patch('/reviews/{review}/featured', [AdminReviewController::class, 'toggleFeatured'])->name('reviews.featured');
 
+            // Public launch / coming-soon pages (Founding 20 and future module launches)
+            Route::get('/public-launches', [AdminPublicLaunchController::class, 'index'])->name('public-launches.index');
+            Route::get('/public-launches/{publicLaunch}/edit', [AdminPublicLaunchController::class, 'edit'])->name('public-launches.edit');
+            Route::patch('/public-launches/{publicLaunch}', [AdminPublicLaunchController::class, 'update'])->name('public-launches.update');
+            Route::get('/public-launches/{publicLaunch}/questions', [AdminPublicLaunchController::class, 'questions'])->name('public-launches.questions');
+            Route::patch('/public-launches/{publicLaunch}/questions/{publicQuestion}', [AdminPublicLaunchController::class, 'answerQuestion'])->name('public-launches.questions.answer');
+            Route::patch('/public-launches/{publicLaunch}/questions/{publicQuestion}/toggle', [AdminPublicLaunchController::class, 'togglePublished'])->name('public-launches.questions.toggle');
+            Route::delete('/public-launches/{publicLaunch}/questions/{publicQuestion}', [AdminPublicLaunchController::class, 'destroyQuestion'])->name('public-launches.questions.destroy');
+
             // Founding 20 questionnaire applications
             Route::get('/founding-twenty', [AdminFoundingTwentyController::class, 'index'])->name('founding-twenty.index');
             Route::get('/founding-twenty/action-queue', [AdminFoundingTwentyController::class, 'actionQueue'])->name('founding-twenty.action-queue');
@@ -540,9 +564,12 @@ Route::prefix('apply/{slug}/{property}')->name('apply.')->group(function () {
 
 // Public "Founding 20" discovery questionnaire (no auth) — lead-capture funnel from
 // marketing (poster/TikTok/WhatsApp) into a scored, admin-reviewed applicant list.
+// The questionnaire itself lives at /founding-20/apply, not the /founding-20 root —
+// that root is the programme explainer page (see PublicLaunchController below),
+// reached first, with a "Start Application" CTA leading here.
 Route::prefix('founding-20')->name('founding-twenty.')->group(function () {
-    Route::get('/',       [FoundingTwentyController::class, 'show'])->name('show');
-    Route::post('/',      [FoundingTwentyController::class, 'store'])->name('store')->middleware('throttle:12,1');
+    Route::get('/apply',  [FoundingTwentyController::class, 'show'])->name('show');
+    Route::post('/apply', [FoundingTwentyController::class, 'store'])->name('store')->middleware('throttle:12,1');
     Route::get('/thanks', [FoundingTwentyController::class, 'thanks'])->name('thanks');
 
     // Reservation deposit — only reachable once an application has been marked

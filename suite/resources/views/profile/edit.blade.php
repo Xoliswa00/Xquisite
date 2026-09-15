@@ -170,6 +170,13 @@
             <form method="POST" action="{{ route('profile.business.update') }}" class="px-8 py-8 space-y-8">
                 @csrf
                 @method('PATCH')
+                <input type="hidden" name="bank_name"           value="{{ $tenant->bank_name }}">
+                <input type="hidden" name="bank_account_type"   value="{{ $tenant->bank_account_type }}">
+                <input type="hidden" name="bank_account_holder" value="{{ $tenant->bank_account_holder }}">
+                <input type="hidden" name="bank_account_number" value="{{ $tenant->bank_account_number }}">
+                <input type="hidden" name="bank_branch_code"    value="{{ $tenant->bank_branch_code }}">
+                <input type="hidden" name="booking_terms"       value="{{ $tenant->booking_terms }}">
+                <input type="hidden" name="require_booking_terms_acceptance" value="{{ $tenant->require_booking_terms_acceptance ? '1' : '0' }}">
 
                 {{-- Business Identity --}}
                 <div>
@@ -303,6 +310,8 @@
                 <input type="hidden" name="email"         value="{{ $tenant->email }}">
                 <input type="hidden" name="phone"         value="{{ $tenant->phone }}">
                 <input type="hidden" name="address"       value="{{ $tenant->address }}">
+                <input type="hidden" name="booking_terms" value="{{ $tenant->booking_terms }}">
+                <input type="hidden" name="require_booking_terms_acceptance" value="{{ $tenant->require_booking_terms_acceptance ? '1' : '0' }}">
 
                 <div>
                     <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Bank Account</h3>
@@ -379,6 +388,62 @@
                     <button type="submit"
                             class="px-5 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-medium rounded-xl transition">
                         Save Banking Details
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {{-- ── BOOKING POLICY ──────────────────────────────────────────── --}}
+        <div id="booking-policy" class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/25">
+            <div class="border-b border-slate-800 px-8 py-6 bg-gradient-to-r from-slate-800/80 to-transparent">
+                <h2 class="text-xl font-semibold text-slate-100 tracking-tight">Booking Policy</h2>
+                <p class="mt-1 text-sm text-slate-400">Your cancellation, no-show, and deposit terms, shown to clients before they confirm a booking.</p>
+            </div>
+
+            <form method="POST" action="{{ route('profile.business.update') }}" class="px-8 py-8 space-y-6">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="business_name"       value="{{ $tenant->name }}">
+                <input type="hidden" name="slug"                value="{{ $tenant->slug }}">
+                <input type="hidden" name="email"               value="{{ $tenant->email }}">
+                <input type="hidden" name="phone"               value="{{ $tenant->phone }}">
+                <input type="hidden" name="address"             value="{{ $tenant->address }}">
+                <input type="hidden" name="bank_name"           value="{{ $tenant->bank_name }}">
+                <input type="hidden" name="bank_account_type"   value="{{ $tenant->bank_account_type }}">
+                <input type="hidden" name="bank_account_holder" value="{{ $tenant->bank_account_holder }}">
+                <input type="hidden" name="bank_account_number" value="{{ $tenant->bank_account_number }}">
+                <input type="hidden" name="bank_branch_code"    value="{{ $tenant->bank_branch_code }}">
+
+                <div class="space-y-1.5">
+                    <label for="booking_terms" class="flex items-center gap-2 text-sm font-medium text-slate-300">
+                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                        Terms &amp; Cancellation Policy
+                    </label>
+                    <textarea id="booking_terms" name="booking_terms" rows="6"
+                              placeholder="e.g. Cancellations within 24 hours of your appointment forfeit the deposit. No-shows may be charged in full. Please arrive 10 minutes early&hellip;"
+                              class="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0078D4]/50 focus:border-[#0078D4] transition resize-none @error('booking_terms') border-red-500 @enderror">{{ old('booking_terms', $tenant->booking_terms) }}</textarea>
+                    @error('booking_terms')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
+                    <p class="text-xs text-slate-500">Shown on the confirm step of your public booking page.</p>
+                </div>
+
+                <label class="flex items-start gap-3 rounded-xl border border-slate-700 bg-slate-800/40 px-4 py-3.5 cursor-pointer">
+                    <input type="checkbox" name="require_booking_terms_acceptance" value="1"
+                           @checked(old('require_booking_terms_acceptance', $tenant->require_booking_terms_acceptance))
+                           class="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-800 text-[#0078D4] focus:ring-[#0078D4]/50">
+                    <span>
+                        <span class="block text-sm font-medium text-slate-200">Require clients to accept before booking</span>
+                        <span class="block text-xs text-slate-500 mt-0.5">Adds a required checkbox on the confirm step. Leave off to just display the policy for reference.</span>
+                    </span>
+                </label>
+
+                <div class="flex justify-end gap-3 border-t border-slate-800 pt-6">
+                    <button type="button" onclick="location.reload()"
+                            class="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white bg-slate-800 border border-slate-700 hover:border-slate-500 rounded-xl transition">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-medium rounded-xl transition">
+                        Save Booking Policy
                     </button>
                 </div>
             </form>
