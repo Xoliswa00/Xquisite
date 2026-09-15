@@ -67,6 +67,20 @@
         <p class="text-center f-mont text-sm uppercase tracking-widest text-[#0078D4] font-semibold">Launching soon</p>
     @endif
 
+    {{-- Start application --}}
+    @if($launch->key === 'founding-20')
+        {{-- Carry outreach/referral tracking params through to the actual questionnaire,
+             so a referral link or campaign link landing here doesn't lose attribution. --}}
+        @php $applyParams = request()->only(['src', 'campaign', 'ref']); @endphp
+        <div class="text-center">
+            <a href="{{ route('founding-twenty.show', $applyParams) }}"
+               class="inline-flex items-center justify-center px-8 py-3.5 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition-colors text-base sm:text-lg">
+                Start Your Application
+            </a>
+            <p class="text-xs text-[#2D3748]/50 mt-2.5">Takes about 5–7 minutes. No commitment — we review every application before anyone's selected.</p>
+        </div>
+    @endif
+
     {{-- Benefits --}}
     @if(!empty($launch->benefits))
         <div class="bg-[#F8FAFC] border border-gray-100 rounded-2xl p-6 sm:p-10">

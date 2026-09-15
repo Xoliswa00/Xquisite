@@ -16,9 +16,9 @@
                    class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm font-medium transition">
                     Outreach campaigns
                 </a>
-                <a href="{{ route('founding-twenty.show') }}" target="_blank"
+                <a href="{{ route('founding-20.show') }}" target="_blank"
                    class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm font-medium transition">
-                    View public form
+                    View public page
                 </a>
             </div>
         </div>
