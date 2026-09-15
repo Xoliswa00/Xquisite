@@ -92,17 +92,18 @@ Route::get('/about',   AboutController::class)->name('about');
 Route::get('/terms',   fn() => view('terms'))->name('terms');
 Route::get('/privacy', fn() => view('privacy'))->name('privacy');
 
-// Public "coming soon" launch pages — reusable for future module launches. Not
-// registered at /founding-20 directly: the real Founding 20 questionnaire (a
-// separate, already-in-progress feature) owns that path, so this generic
-// mechanism is reached only via /launch/{key} to avoid a route collision —
-// two routes both matching the exact same path, with whichever is registered
-// first in this file silently winning every request, permanently shadowing
-// the other. See the 'founding-20' seed row's key for how it's still reached.
+// Public "coming soon" / programme-explainer launch pages — reusable for future
+// module launches via /launch/{key}. Founding 20 additionally gets a friendly
+// alias straight at /founding-20 (its own root): countdown, benefits, and public
+// Q&A, with a "Start Application" CTA leading to the actual questionnaire at
+// /founding-20/apply. No collision — the questionnaire no longer registers
+// anything at the /founding-20 root itself, only under /apply.
 Route::prefix('launch/{key}')->name('public-launch.')->group(function () {
     Route::get('/',            [PublicLaunchController::class, 'show'])->name('show');
     Route::post('/questions',  [PublicLaunchController::class, 'askQuestion'])->name('questions.store')->middleware('throttle:global');
 });
+Route::get('/founding-20',  [PublicLaunchController::class, 'show'])->name('founding-20.show')->defaults('key', 'founding-20');
+Route::post('/founding-20/questions', [PublicLaunchController::class, 'askQuestion'])->name('founding-20.questions.store')->defaults('key', 'founding-20')->middleware('throttle:global');
 
 Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(function () {
 
@@ -563,9 +564,12 @@ Route::prefix('apply/{slug}/{property}')->name('apply.')->group(function () {
 
 // Public "Founding 20" discovery questionnaire (no auth) — lead-capture funnel from
 // marketing (poster/TikTok/WhatsApp) into a scored, admin-reviewed applicant list.
+// The questionnaire itself lives at /founding-20/apply, not the /founding-20 root —
+// that root is the programme explainer page (see PublicLaunchController below),
+// reached first, with a "Start Application" CTA leading here.
 Route::prefix('founding-20')->name('founding-twenty.')->group(function () {
-    Route::get('/',       [FoundingTwentyController::class, 'show'])->name('show');
-    Route::post('/',      [FoundingTwentyController::class, 'store'])->name('store')->middleware('throttle:12,1');
+    Route::get('/apply',  [FoundingTwentyController::class, 'show'])->name('show');
+    Route::post('/apply', [FoundingTwentyController::class, 'store'])->name('store')->middleware('throttle:12,1');
     Route::get('/thanks', [FoundingTwentyController::class, 'thanks'])->name('thanks');
 
     // Reservation deposit — only reachable once an application has been marked
