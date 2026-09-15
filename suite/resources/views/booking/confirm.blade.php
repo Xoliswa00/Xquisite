@@ -232,6 +232,23 @@
                     <textarea name="notes" rows="3" placeholder="Any special requests or information&hellip;"
                               class="w-full border-slate-300 rounded-xl text-sm"></textarea>
                 </div>
+
+                @if($tenant->booking_terms)
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Terms &amp; Cancellation Policy</p>
+                    <div class="max-h-40 overflow-y-auto text-sm text-slate-600 whitespace-pre-line pr-1">{{ $tenant->booking_terms }}</div>
+                    @if($tenant->require_booking_terms_acceptance)
+                        <label class="flex items-start gap-2.5 pt-1">
+                            <input type="checkbox" name="accepted_terms" value="1" required
+                                   @checked(old('accepted_terms'))
+                                   class="mt-0.5 w-4 h-4 rounded border-slate-300 text-[#0078D4] focus:ring-[#0078D4]">
+                            <span class="text-sm text-slate-700">I have read and agree to the terms and cancellation policy above.</span>
+                        </label>
+                        @error('accepted_terms')<p class="text-red-600 text-xs">{{ $message }}</p>@enderror
+                    @endif
+                </div>
+                @endif
+
                 <button type="submit"
                         :disabled="submitting"
                         class="w-full py-3 bg-[#0078D4] hover:bg-[#0065B8] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition text-lg flex items-center justify-center gap-2">

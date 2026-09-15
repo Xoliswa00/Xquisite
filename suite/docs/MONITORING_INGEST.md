@@ -14,6 +14,20 @@ one small scheduled job pointed at this hub.
 
 ## Registering a reporter
 
+### Fastest: the artisan command (on this hub)
+
+```
+php artisan monitoring:register-instance <slug> --name="<Label>" --url=https://<reporter>/api/health
+```
+
+Creates the `MonitoredInstance` with a fresh `Str::random(48)` token, `is_active=true`,
+and prints the four `MONITORING_*` env lines to paste into the reporter. Idempotent —
+re-running with the same slug only fills gaps (keeps the token unless `--rotate-token`).
+Passing `--name` also adopts a pre-slug legacy row of that exact name instead of
+creating a duplicate. `--deactivate` flips `is_active` off.
+
+### Or the UI
+
 `/admin/monitoring` → **Add Instance** (permission: `manage-tenants`, i.e.
 super-admin):
 

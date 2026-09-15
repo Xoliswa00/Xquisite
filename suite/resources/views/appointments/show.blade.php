@@ -316,6 +316,13 @@
                 </div>
             @endif
 
+            @if($appointment->terms_accepted_at)
+                <div class="pt-2 border-t border-slate-700 flex items-center gap-2 text-sm">
+                    <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    <span class="text-slate-300">Booking policy accepted {{ $appointment->terms_accepted_at->format('d M Y, H:i') }}</span>
+                </div>
+            @endif
+
             {{-- Event Brief --}}
             @if($appointment->isEventBooking())
             <div class="pt-3 border-t border-slate-700">
