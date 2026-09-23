@@ -37,13 +37,6 @@
 
 <main class="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20 space-y-16">
 
-    {{-- Flash --}}
-    @if(session('success'))
-        <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3">
-            {{ session('success') }}
-        </div>
-    @endif
-
     {{-- Hero --}}
     <div class="text-center">
         <h1 class="f-mont text-3xl sm:text-5xl font-bold text-[#002B5B] mb-4">{{ $launch->title }}</h1>
@@ -64,7 +57,7 @@
             </template>
         </div>
     @else
-        <p class="text-center f-mont text-sm uppercase tracking-widest text-[#0078D4] font-semibold">Launching soon</p>
+        <p class="text-center f-mont text-sm uppercase tracking-widest text-[#0078D4] font-semibold">{{ $launch->key === 'founding-20' ? 'Applications are open' : 'Launching soon' }}</p>
     @endif
 
     {{-- Start application --}}
@@ -77,7 +70,28 @@
                class="inline-flex items-center justify-center px-8 py-3.5 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition-colors text-base sm:text-lg">
                 Start Your Application
             </a>
-            <p class="text-xs text-[#2D3748]/50 mt-2.5">Takes about 5–7 minutes. No commitment — we review every application before anyone's selected.</p>
+            <p class="text-sm text-[#2D3748]/60 mt-3">Takes about 5–7 minutes. Applying costs nothing, and we review every application before anyone is selected.</p>
+        </div>
+
+        {{-- How it works: the deposit is disclosed here, before anyone spends time on the form. --}}
+        <div>
+            <h2 class="f-mont text-xl font-bold text-[#002B5B] mb-6 text-center">How it works</h2>
+            <ol class="space-y-5 max-w-lg mx-auto">
+                @foreach([
+                    ['Tell us about your business', 'A short questionnaire about how you run things today. It takes about 5 to 7 minutes.'],
+                    ['We review every application', 'Only 20 businesses are selected, chosen for how well we can help them. We contact you on the WhatsApp number, call or email you choose.'],
+                    ['Hold your spot if you\'re selected', 'A fully refundable R100 deposit secures your place. It is asked only after you are selected, never when you apply.'],
+                    ['Start your 3 free months', 'We help you set up. After the 3 months it is R200 a month, and only if you decide to stay.'],
+                ] as $i => [$title, $text])
+                    <li class="flex items-start gap-4">
+                        <span class="flex items-center justify-center w-9 h-9 rounded-full bg-[#002B5B] text-white text-sm font-bold shrink-0">{{ $i + 1 }}</span>
+                        <div>
+                            <p class="font-semibold text-[#002B5B]">{{ $title }}</p>
+                            <p class="text-sm text-[#2D3748]/70 mt-0.5">{{ $text }}</p>
+                        </div>
+                    </li>
+                @endforeach
+            </ol>
         </div>
     @endif
 
@@ -98,8 +112,8 @@
 
     {{-- Q&A --}}
     @if($launch->qa_enabled)
-        <div class="space-y-8">
-            <h2 class="f-mont text-xl font-bold text-[#002B5B] text-center">Questions from the community</h2>
+        <div id="questions" class="space-y-8 scroll-mt-24">
+            <h2 class="f-mont text-xl font-bold text-[#002B5B] text-center">{{ $launch->publishedQuestions->isNotEmpty() ? 'Questions from the community' : 'Got a question first?' }}</h2>
 
             @if($launch->publishedQuestions->isNotEmpty())
                 <div class="space-y-5 max-w-xl mx-auto">
@@ -111,7 +125,13 @@
                     @endforeach
                 </div>
             @else
-                <p class="text-center text-sm text-[#2D3748]/50 max-w-xl mx-auto">No questions answered yet — be the first to ask.</p>
+                <p class="text-center text-sm text-[#2D3748]/60 max-w-xl mx-auto">Ask us anything about how the programme works. We answer every question, and the answers appear here for everyone.</p>
+            @endif
+
+            @if(session('success'))
+                <div role="status" class="max-w-xl mx-auto rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3">
+                    {{ session('success') }}
+                </div>
             @endif
 
             <form method="POST" action="{{ route('public-launch.questions.store', $launch->key) }}" class="max-w-xl mx-auto bg-[#F8FAFC] border border-gray-100 rounded-2xl p-6 space-y-4">
@@ -120,14 +140,15 @@
                 @error('question')<p class="text-red-600 text-xs">{{ $message }}</p>@enderror
 
                 <textarea name="question" rows="3" required maxlength="2000" placeholder="Ask anything about how it works…"
-                          class="w-full border-gray-200 rounded-xl text-sm focus:ring-[#0078D4] focus:border-[#0078D4]">{{ old('question') }}</textarea>
+                          class="w-full border-gray-200 rounded-xl text-base sm:text-sm focus:ring-[#0078D4] focus:border-[#0078D4]">{{ old('question') }}</textarea>
 
                 <div class="grid sm:grid-cols-2 gap-3">
-                    <input type="text" name="asker_name" value="{{ old('asker_name') }}" placeholder="Your name (optional)"
-                           class="w-full border-gray-200 rounded-xl text-sm focus:ring-[#0078D4] focus:border-[#0078D4]">
-                    <input type="email" name="asker_email" value="{{ old('asker_email') }}" placeholder="Email (optional — if you want a reply)"
-                           class="w-full border-gray-200 rounded-xl text-sm focus:ring-[#0078D4] focus:border-[#0078D4]">
+                    <input type="text" name="asker_name" value="{{ old('asker_name') }}" placeholder="Your name (optional)" autocomplete="name"
+                           class="w-full border-gray-200 rounded-xl text-base sm:text-sm focus:ring-[#0078D4] focus:border-[#0078D4]">
+                    <input type="email" inputmode="email" name="asker_email" value="{{ old('asker_email') }}" placeholder="Email, if you'd like a reply" autocomplete="email"
+                           class="w-full border-gray-200 rounded-xl text-base sm:text-sm focus:ring-[#0078D4] focus:border-[#0078D4]">
                 </div>
+                @error('asker_email')<p class="text-red-600 text-xs">That email address doesn't look right. Please check it.</p>@enderror
 
                 <button type="submit" class="w-full py-2.5 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm font-semibold rounded-xl transition">
                     Ask your question

@@ -158,6 +158,10 @@
 
 {{-- ─── NAV ──────────────────────────────────────────────────────────────── --}}
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+    {{-- Phones have no nav row, so without this the Founding 20 page can't be reached from here at all. --}}
+    <a href="{{ route('founding-20.show') }}" class="md:hidden block bg-[#002B5B] text-white text-center text-sm py-2.5 px-4">
+        Founding 20: 3 months free for 20 South African businesses. <span class="font-semibold text-[#D4AF37] underline underline-offset-2">See how it works</span>
+    </a>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16 lg:h-20 gap-4">
 
