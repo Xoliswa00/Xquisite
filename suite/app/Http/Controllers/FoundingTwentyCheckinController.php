@@ -27,7 +27,10 @@ class FoundingTwentyCheckinController extends Controller
             'hours_availability_messages' => 'nullable|in:<1,1-3,3-5,5-10,10+',
             'hours_manual_reminders' => 'nullable|in:<1,1-3,3-5,5-10,10+',
             'value_rating' => 'required|integer|min:1|max:5',
+            'value_open_text' => 'nullable|string|max:2000',
             'continuation_likelihood' => 'required|in:very_likely,likely,unsure,unlikely,very_unlikely',
+            'continuation_driver' => 'nullable|string|max:2000',
+            'churn_driver' => 'nullable|string|max:2000',
             'biggest_change' => 'nullable|string|max:2000',
             'would_recommend' => 'nullable|boolean',
         ]);
@@ -39,6 +42,6 @@ class FoundingTwentyCheckinController extends Controller
         ]);
 
         return redirect()->route('founding-twenty.checkin.show', [$checkin, $token])
-            ->with('success', 'Thanks for the update — really appreciate you taking the time.');
+            ->with('success', 'Thank you for the update. We really appreciate you taking the time.');
     }
 }

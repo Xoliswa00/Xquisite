@@ -26,7 +26,7 @@
         <h1 class="text-xl font-bold text-slate-900">{{ $application->business_name }}, you're in</h1>
         <p class="text-slate-500 text-sm mt-2">
             To hold your spot in the Founding 20 Programme, we ask for a small, fully refundable reservation deposit.
-            It's returned in full — this just confirms you're serious about actively using the platform for the 3 free months.
+            It's returned in full. It simply confirms you're serious about using the platform during the 3 free months.
         </p>
     </div>
 
@@ -51,13 +51,19 @@
         </dl>
 
         <p class="text-sm text-slate-500 border-t border-slate-100 pt-4">
-            We'll send you our banking details via {{ $application->preferred_contact_method }} — use the reference above
-            when you pay, then upload your proof of payment below.
+            @php
+                $contactPhrase = [
+                    'whatsapp' => "We'll send you our banking details on WhatsApp.",
+                    'call' => "We'll call you with our banking details.",
+                    'email' => "We'll email you our banking details.",
+                ][$application->preferred_contact_method] ?? "We'll send you our banking details.";
+            @endphp
+            {{ $contactPhrase }} Use the reference above when you pay, then upload a photo or PDF of your payment confirmation below.
         </p>
 
         @if($application->deposit_submitted_at)
             <div class="p-3 bg-blue-50 border border-blue-100 text-blue-700 rounded-xl text-sm">
-                Proof of payment received {{ $application->deposit_submitted_at->diffForHumans() }} — we'll confirm your spot shortly.
+                Proof of payment received {{ $application->deposit_submitted_at->diffForHumans() }}. We'll confirm your spot shortly.
                 You can upload a new file below if you need to replace it.
             </div>
         @endif
@@ -66,9 +72,9 @@
             @csrf
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Proof of payment</label>
-                <input type="file" name="proof_of_payment" required accept=".jpg,.jpeg,.png,.heic,.heif,.webp,.pdf" class="w-full text-sm border-slate-300 rounded-xl">
+                <input type="file" name="proof_of_payment" required accept=".jpg,.jpeg,.png,.heic,.heif,.webp,.pdf" class="w-full text-base sm:text-sm border-slate-300 rounded-xl">
             </div>
-            <button type="submit" class="w-full bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl py-3 text-sm transition">
+            <button type="submit" class="w-full bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl py-3.5 text-base transition">
                 Upload proof of payment
             </button>
         </form>

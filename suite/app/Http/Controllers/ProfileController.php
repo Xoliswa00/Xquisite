@@ -52,6 +52,8 @@ class ProfileController extends Controller
             'bank_account_holder' => 'nullable|string|max:100',
             'bank_account_number' => 'nullable|string|max:50',
             'bank_branch_code'    => 'nullable|string|max:20',
+            'booking_terms'       => 'nullable|string|max:5000',
+            'require_booking_terms_acceptance' => 'nullable|boolean',
         ], [
             'slug.regex' => 'Slug may only contain lowercase letters, numbers, and hyphens (no leading/trailing hyphens).',
         ]);
@@ -67,6 +69,8 @@ class ProfileController extends Controller
             'bank_account_holder' => $data['bank_account_holder'] ?? null,
             'bank_account_number' => $data['bank_account_number'] ?? null,
             'bank_branch_code'    => $data['bank_branch_code'] ?? null,
+            'booking_terms'       => $data['booking_terms'] ?? null,
+            'require_booking_terms_acceptance' => $request->boolean('require_booking_terms_acceptance'),
         ]);
 
         return Redirect::route('profile.edit')->with('status', 'business-updated');
