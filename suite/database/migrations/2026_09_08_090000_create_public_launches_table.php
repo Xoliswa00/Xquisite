@@ -28,9 +28,9 @@ return new class extends Migration
             'tagline'    => 'Twenty South African businesses. Three months free. No setup fee.',
             'benefits'   => json_encode([
                 '3 months on the full platform, free, no setup fee',
-                'A curated spot, not first-come — we build around your actual workflow',
+                'A curated spot, not first-come. We build around your actual workflow',
                 'Direct input into what gets built next',
-                'R200/month after, only if you stay — opt-in, no lock-in',
+                'R200/month after, only if you stay. Opt-in, no lock-in',
             ]),
             'launch_at'  => null,
             'is_active'  => true,

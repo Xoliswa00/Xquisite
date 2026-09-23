@@ -31,6 +31,6 @@ class PublicLaunchController extends Controller
 
         $launch->questions()->create($data);
 
-        return back()->with('success', "Thanks — we'll answer this soon.");
+        return back()->withFragment('questions')->with('success', "Thank you. We'll answer your question soon, and the answer will appear on this page.");
     }
 }
