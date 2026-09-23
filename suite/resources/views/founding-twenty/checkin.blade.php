@@ -25,8 +25,13 @@
             <div class="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-5">
                 <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
             </div>
-            <h1 class="text-xl font-bold text-slate-900">Already submitted</h1>
-            <p class="text-slate-500 text-sm mt-2">Thanks — we've already got your {{ $checkin->label() }}. Nothing more needed here.</p>
+            @if(session('success'))
+                <h1 class="text-xl font-bold text-slate-900">Thank you</h1>
+                <p class="text-slate-500 text-sm mt-2">{{ session('success') }}</p>
+            @else
+                <h1 class="text-xl font-bold text-slate-900">Already submitted</h1>
+                <p class="text-slate-500 text-sm mt-2">Thank you, we already have your {{ $checkin->label() }}. Nothing more is needed.</p>
+            @endif
         </div>
     @else
         <div class="mb-6">
@@ -48,7 +53,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Monthly appointments (approx.)</label>
-                <select name="monthly_appointments" class="w-full border-slate-300 rounded-xl text-sm">
+                <select name="monthly_appointments" class="w-full border-slate-300 rounded-xl text-base sm:text-sm">
                     <option value="">Select…</option>
                     @foreach(['0-50' => '0–50', '51-150' => '51–150', '151-300' => '151–300', '300+' => '300+'] as $value => $label)
                         <option value="{{ $value }}" @selected(old('monthly_appointments') === $value)>{{ $label }}</option>
@@ -57,7 +62,7 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">No-shows per month (approx.)</label>
-                <select name="no_shows_per_month" class="w-full border-slate-300 rounded-xl text-sm">
+                <select name="no_shows_per_month" class="w-full border-slate-300 rounded-xl text-base sm:text-sm">
                     <option value="">Select…</option>
                     @foreach(['0' => '0', '1-2' => '1–2', '3-5' => '3–5', '6-10' => '6–10', '10+' => '10+'] as $value => $label)
                         <option value="{{ $value }}" @selected(old('no_shows_per_month') === $value)>{{ $label }}</option>
@@ -66,7 +71,7 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Average appointment value</label>
-                <select name="avg_appointment_value" class="w-full border-slate-300 rounded-xl text-sm">
+                <select name="avg_appointment_value" class="w-full border-slate-300 rounded-xl text-base sm:text-sm">
                     <option value="">Select…</option>
                     @foreach(['0-100' => 'R0–R100', '101-250' => 'R101–R250', '251-500' => 'R251–R500', '501-1000' => 'R501–R1,000', '1000+' => 'R1,000+'] as $value => $label)
                         <option value="{{ $value }}" @selected(old('avg_appointment_value') === $value)>{{ $label }}</option>
@@ -82,7 +87,7 @@
             ] as $field => $label)
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">{{ $label }}</label>
-                    <select name="{{ $field }}" class="w-full border-slate-300 rounded-xl text-sm">
+                    <select name="{{ $field }}" class="w-full border-slate-300 rounded-xl text-base sm:text-sm">
                         <option value="">Select…</option>
                         @foreach($bucketLabels as $value => $bucketLabel)
                             <option value="{{ $value }}" @selected(old($field) === $value)>{{ $bucketLabel }}</option>
@@ -93,15 +98,18 @@
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Overall, how valuable has Xquisite been so far? *</label>
-                <div class="flex items-center gap-4">
-                    <span class="text-xs text-slate-400">Not valuable</span>
+                <div class="grid grid-cols-5 gap-2">
                     @for($i = 1; $i <= 5; $i++)
-                        <label class="flex flex-col items-center gap-1 text-xs text-slate-400 cursor-pointer">
-                            <input type="radio" name="value_rating" value="{{ $i }}" required @checked(old('value_rating') == $i) class="text-[#0078D4] focus:ring-[#0078D4]">
-                            {{ $i }}
+                        <label class="cursor-pointer">
+                            <input type="radio" name="value_rating" value="{{ $i }}" required @checked(old('value_rating') == $i) class="peer sr-only">
+                            <span class="flex items-center justify-center h-12 rounded-xl border border-slate-200 text-base font-medium text-slate-600 transition hover:border-[#0078D4]
+                                         peer-checked:bg-[#0078D4] peer-checked:border-[#0078D4] peer-checked:text-white
+                                         peer-focus-visible:ring-2 peer-focus-visible:ring-[#0078D4] peer-focus-visible:ring-offset-2">{{ $i }}</span>
                         </label>
                     @endfor
-                    <span class="text-xs text-slate-400">Very valuable</span>
+                </div>
+                <div class="flex justify-between text-[11px] text-slate-400 mt-1 px-1">
+                    <span>Not valuable</span><span>Very valuable</span>
                 </div>
             </div>
 
@@ -109,7 +117,7 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">How likely are you to continue after the free period? *</label>
                 <div class="grid grid-cols-2 gap-2">
                     @foreach(['very_likely' => 'Very likely', 'likely' => 'Likely', 'unsure' => 'Unsure', 'unlikely' => 'Unlikely', 'very_unlikely' => 'Very unlikely'] as $value => $label)
-                        <label class="flex items-center gap-2 text-sm border border-slate-200 rounded-xl px-3 py-2 cursor-pointer has-[:checked]:border-[#0078D4] has-[:checked]:bg-blue-50">
+                        <label class="flex items-center gap-2 text-sm border border-slate-200 rounded-xl px-3 py-3 cursor-pointer has-[:checked]:border-[#0078D4] has-[:checked]:bg-blue-50">
                             <input type="radio" name="continuation_likelihood" value="{{ $value }}" required @checked(old('continuation_likelihood') === $value) class="text-[#0078D4] focus:ring-[#0078D4]">
                             {{ $label }}
                         </label>
@@ -119,7 +127,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">What's the biggest change you've noticed?</label>
-                <textarea name="biggest_change" rows="3" class="w-full border-slate-300 rounded-xl text-sm">{{ old('biggest_change') }}</textarea>
+                <textarea name="biggest_change" rows="3" class="w-full border-slate-300 rounded-xl text-base sm:text-sm">{{ old('biggest_change') }}</textarea>
             </div>
 
             @if($checkin->isFinalCheckin())
@@ -127,15 +135,15 @@
                     <p class="text-sm text-slate-500">Your free 3 months are up. The standard subscription from here is R200/month.</p>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">What would Xquisite need to do for you to say "this is worth R200/month"?</label>
-                        <textarea name="value_open_text" rows="2" class="w-full border-slate-300 rounded-xl text-sm">{{ old('value_open_text') }}</textarea>
+                        <textarea name="value_open_text" rows="2" class="w-full border-slate-300 rounded-xl text-base sm:text-sm">{{ old('value_open_text') }}</textarea>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">What would make you continue?</label>
-                        <textarea name="continuation_driver" rows="2" class="w-full border-slate-300 rounded-xl text-sm">{{ old('continuation_driver') }}</textarea>
+                        <textarea name="continuation_driver" rows="2" class="w-full border-slate-300 rounded-xl text-base sm:text-sm">{{ old('continuation_driver') }}</textarea>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">What would make you cancel?</label>
-                        <textarea name="churn_driver" rows="2" class="w-full border-slate-300 rounded-xl text-sm">{{ old('churn_driver') }}</textarea>
+                        <textarea name="churn_driver" rows="2" class="w-full border-slate-300 rounded-xl text-base sm:text-sm">{{ old('churn_driver') }}</textarea>
                     </div>
                 </div>
             @endif

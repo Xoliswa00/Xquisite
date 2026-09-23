@@ -148,4 +148,21 @@ class FoundingTwentyCheckinTest extends TestCase
         $this->assertSame('If the price went up.', $checkin->churn_driver);
         $this->assertTrue($checkin->isComplete());
     }
+
+    public function test_a_fresh_submission_gets_a_thank_you_not_an_already_submitted_message(): void
+    {
+        $checkin = $this->application()->checkins()->create(['checkin_type' => '30_day']);
+
+        $response = $this->followingRedirects()->post(
+            route('founding-twenty.checkin.store', [$checkin, $checkin->checkinToken()]),
+            ['value_rating' => 4, 'continuation_likelihood' => 'likely']
+        );
+
+        $response->assertSee('Thank you');
+        $response->assertDontSee('Already submitted');
+
+        // Coming back later is the "already submitted" case.
+        $this->get(route('founding-twenty.checkin.show', [$checkin, $checkin->checkinToken()]))
+            ->assertSee('Already submitted');
+    }
 }

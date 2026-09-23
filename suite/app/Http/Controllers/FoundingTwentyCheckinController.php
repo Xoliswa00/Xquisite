@@ -42,6 +42,6 @@ class FoundingTwentyCheckinController extends Controller
         ]);
 
         return redirect()->route('founding-twenty.checkin.show', [$checkin, $token])
-            ->with('success', 'Thanks for the update — really appreciate you taking the time.');
+            ->with('success', 'Thank you for the update. We really appreciate you taking the time.');
     }
 }
