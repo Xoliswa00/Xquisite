@@ -173,8 +173,8 @@ class FoundingTwentyController extends Controller
             // isn't reliably detected by fileinfo and mimes: silently rejects valid files.
             'proof_of_payment' => ['required', 'file', 'extensions:jpg,jpeg,png,heic,heif,webp,pdf', 'max:15360'],
         ], [
-            'proof_of_payment.extensions' => 'That file type isn\'t supported — please upload a JPG, PNG, HEIC or PDF.',
-            'proof_of_payment.max' => 'That file is too large — please keep it under 15MB.',
+            'proof_of_payment.extensions' => 'That file type isn\'t supported. Please upload a JPG, PNG, HEIC or PDF.',
+            'proof_of_payment.max' => 'That file is too large. Please keep it under 15MB.',
         ]);
 
         if ($foundingTwenty->deposit_pop_path) {
@@ -193,6 +193,6 @@ class FoundingTwentyController extends Controller
         ]);
 
         return redirect()->route('founding-twenty.reserve', [$foundingTwenty, $token])
-            ->with('success', "Thanks — we've received your proof of payment and will confirm your spot shortly.");
+            ->with('success', "Thank you. We've received your proof of payment and will confirm your spot shortly.");
     }
 }
