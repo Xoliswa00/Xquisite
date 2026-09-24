@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Rules\SouthAfricanPhoneNumber;
 use App\Services\FoundingTwentyScoringService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -26,8 +27,21 @@ class FoundingTwentyController extends Controller
         'pain_customer_data_organisation' => 'Difficulty keeping customer information organised',
     ];
 
+    /** Session key holding the id of the lead currently working through step 2. */
+    private const LEAD_SESSION_KEY = 'founding_twenty_lead_id';
+
+    /**
+     * Step 1 of 2: who are we talking to. Short on purpose, because submitting it
+     * saves them as a lead: even if they never finish the questionnaire, we know who
+     * they are and how to reach them.
+     */
     public function show(Request $request)
     {
+        // Someone partway through goes straight back to where they were.
+        if ($this->leadFromSession($request)) {
+            return redirect()->route('founding-twenty.questions');
+        }
+
         $source = $request->query('src');
         $campaignId = filter_var($request->query('campaign'), FILTER_VALIDATE_INT);
 
@@ -36,21 +50,95 @@ class FoundingTwentyController extends Controller
             ? $referrerId
             : null;
 
-        return view('founding-twenty.show', compact('source', 'campaignId', 'referredByTenantId'));
+        return view('founding-twenty.start', compact('source', 'campaignId', 'referredByTenantId'));
     }
 
-    public function store(Request $request, FoundingTwentyScoringService $scoring)
+    public function store(Request $request)
     {
         $validated = $request->validate([
-            'business_name' => 'required|string|max:255',
             'owner_name' => 'required|string|max:255',
-            'email' => 'required_if:preferred_contact_method,email|nullable|email|max:255',
             'phone' => ['required', new SouthAfricanPhoneNumber],
+            'preferred_contact_method' => 'required|in:whatsapp,call,email',
+            'email' => 'required_if:preferred_contact_method,email|nullable|email|max:255',
+            'best_contact_time' => 'nullable|string|max:255',
+            'business_name' => 'required|string|max:255',
+            'applicant_role' => 'required|in:owner,manager,staff,other',
+            'why_founding_20' => 'nullable|string|max:1500',
+            'heard_about_via' => 'nullable|in:tiktok,whatsapp,instagram_facebook,friend,website,other',
+            'privacy_consent' => 'required|accepted',
+
+            'source' => 'nullable|string|max:100',
+            'outreach_campaign_id' => 'nullable|exists:outreach_campaigns,id',
+            'referred_by_tenant_id' => ['nullable', Rule::exists('tenants', 'id')->where('is_active', true)],
+        ], $this->validationMessages());
+
+        // The same person coming back with the same number is one lead, not two.
+        $last9 = substr(preg_replace('/\D/', '', $validated['phone']), -9);
+        $existing = FoundingTwentyApplication::query()->get(['id', 'phone', 'submitted_at'])
+            ->first(fn ($a) => substr(preg_replace('/\D/', '', (string) $a->phone), -9) === $last9);
+
+        if ($existing?->isSubmitted()) {
+            $message = "We already have an application from this number, so there's nothing more you need to do. We'll be in touch.";
+
+            return back()->withInput()->withErrors(array_fill_keys(['phone'], $message));
+        }
+
+        $details = [
+            'owner_name' => $validated['owner_name'],
+            'phone' => $validated['phone'],
+            'preferred_contact_method' => $validated['preferred_contact_method'],
+            'email' => $validated['email'] ?? null,
+            'best_contact_time' => $validated['best_contact_time'] ?? null,
+            'business_name' => $validated['business_name'],
+            'applicant_role' => $validated['applicant_role'],
+            'why_founding_20' => $validated['why_founding_20'] ?? null,
+            'heard_about_via' => $validated['heard_about_via'] ?? null,
+            'ip_address' => $request->ip(),
+            'privacy_consented_at' => now(),
+        ];
+        // Only overwrite where/how they arrived when this visit actually says so.
+        $tracking = array_filter(
+            Arr::only($validated, ['source', 'outreach_campaign_id', 'referred_by_tenant_id']),
+            fn ($v) => $v !== null && $v !== ''
+        );
+
+        if ($existing) {
+            $lead = FoundingTwentyApplication::findOrFail($existing->id);
+            $lead->update($details + $tracking);
+        } else {
+            $lead = FoundingTwentyApplication::create($details + $tracking);
+        }
+
+        $request->session()->put(self::LEAD_SESSION_KEY, $lead->id);
+
+        return redirect()->route('founding-twenty.questions');
+    }
+
+    /** Step 2 of 2: the questionnaire, for the lead in this session. */
+    public function questions(Request $request)
+    {
+        $lead = $this->leadFromSession($request);
+
+        if (! $lead) {
+            return redirect()->route('founding-twenty.show');
+        }
+
+        return view('founding-twenty.questions', ['lead' => $lead]);
+    }
+
+    public function submit(Request $request, FoundingTwentyScoringService $scoring)
+    {
+        $lead = $this->leadFromSession($request);
+
+        if (! $lead) {
+            return redirect()->route('founding-twenty.show')
+                ->withErrors(['session' => 'Your session timed out. Please enter your details again. If you use the same phone number, nothing is lost.']);
+        }
+
+        $validated = $request->validate([
             'business_type' => 'required|in:salon,beauty,wellness,fitness,service,other',
             'business_type_other' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
-            'preferred_contact_method' => 'required|in:whatsapp,call,email',
-            'best_contact_time' => 'nullable|string|max:255',
 
             'years_operating' => 'nullable|in:<1,1-3,3-5,5+',
             'staff_count' => 'nullable|in:1,2-5,6-10,10+',
@@ -99,25 +187,58 @@ class FoundingTwentyController extends Controller
 
             'wants_founding_twenty' => 'nullable|boolean',
             'willing_to_give_feedback' => 'nullable|boolean',
-            'privacy_consent' => 'required|accepted',
-
-            'source' => 'nullable|string|max:100',
-            'outreach_campaign_id' => 'nullable|exists:outreach_campaigns,id',
-            'referred_by_tenant_id' => ['nullable', Rule::exists('tenants', 'id')->where('is_active', true)],
         ], $this->validationMessages());
 
-        $application = FoundingTwentyApplication::create([
+        $lead->update([
             ...$validated,
             'wants_founding_twenty' => $request->boolean('wants_founding_twenty', true),
             'willing_to_give_feedback' => $request->boolean('willing_to_give_feedback'),
-            'ip_address' => $request->ip(),
-            'privacy_consented_at' => now(),
+            'submitted_at' => now(),
         ]);
+        $lead->update($scoring->score($lead));
 
-        $result = $scoring->score($application);
-        $application->update($result);
+        $request->session()->forget(self::LEAD_SESSION_KEY);
 
-        return redirect()->route('founding-twenty.thanks');
+        return redirect()->route('founding-twenty.thanks')->with('applicant_first_name', $lead->firstName());
+    }
+
+    /** Pick an unfinished application back up, on any device, from a link. */
+    public function resume(Request $request, FoundingTwentyApplication $foundingTwenty, string $token)
+    {
+        abort_unless(hash_equals($foundingTwenty->resumeToken(), $token), 403, 'Invalid or expired link.');
+
+        if ($foundingTwenty->isSubmitted()) {
+            return redirect()->route('founding-twenty.thanks')->with('applicant_first_name', $foundingTwenty->firstName());
+        }
+
+        $request->session()->put(self::LEAD_SESSION_KEY, $foundingTwenty->id);
+
+        return redirect()->route('founding-twenty.questions');
+    }
+
+    /** "Not you?" on step 2: forget this session's lead and start again. */
+    public function restart(Request $request)
+    {
+        $request->session()->forget(self::LEAD_SESSION_KEY);
+
+        return redirect()->route('founding-twenty.show');
+    }
+
+    private function leadFromSession(Request $request): ?FoundingTwentyApplication
+    {
+        $id = $request->session()->get(self::LEAD_SESSION_KEY);
+        if (! $id) {
+            return null;
+        }
+
+        $lead = FoundingTwentyApplication::find($id);
+        if (! $lead || $lead->isSubmitted()) {
+            $request->session()->forget(self::LEAD_SESSION_KEY);
+
+            return null;
+        }
+
+        return $lead;
     }
 
     /**
@@ -132,11 +253,13 @@ class FoundingTwentyController extends Controller
             'business_type.in' => 'Please choose the type of business you run.',
             'business_name.required' => 'Please tell us your business name.',
             'owner_name.required' => 'Please tell us your name.',
+            'applicant_role.required' => 'Please tell us your role in the business.',
+            'applicant_role.in' => 'Please tell us your role in the business.',
             'phone.required' => 'Please add your phone number so we can reach you.',
             'email.required_if' => 'Please add your email address, since you chose email as your preferred contact method.',
             'email.email' => 'That email address doesn\'t look right. Please check it.',
-            'privacy_consent.required' => 'Please tick the privacy box at the end to confirm you\'re happy for us to use your answers.',
-            'privacy_consent.accepted' => 'Please tick the privacy box at the end to confirm you\'re happy for us to use your answers.',
+            'privacy_consent.required' => 'Please tick the box to confirm you\'re happy for us to save your details and contact you.',
+            'privacy_consent.accepted' => 'Please tick the box to confirm you\'re happy for us to save your details and contact you.',
         ];
 
         foreach (self::PAIN_LABELS as $field => $label) {

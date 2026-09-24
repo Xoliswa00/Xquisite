@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\Auditable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +15,8 @@ class FoundingTwentyApplication extends Model
 
     protected $fillable = [
         'outreach_campaign_id',
-        'business_name', 'owner_name', 'email', 'phone', 'business_type', 'business_type_other',
+        'business_name', 'owner_name', 'applicant_role', 'why_founding_20', 'heard_about_via',
+        'email', 'phone', 'business_type', 'business_type_other',
         'location', 'preferred_contact_method', 'best_contact_time',
         'years_operating', 'staff_count', 'locations_count', 'monthly_customers', 'monthly_appointments',
         'booking_methods', 'appointment_management_methods', 'customer_data_methods',
@@ -31,7 +33,7 @@ class FoundingTwentyApplication extends Model
         'wants_founding_twenty', 'willing_to_give_feedback',
         'score', 'tier', 'status', 'source', 'ip_address',
         'reviewed_by', 'reviewed_at', 'admin_notes',
-        'privacy_consented_at',
+        'privacy_consented_at', 'submitted_at',
         'deposit_amount', 'deposit_reference', 'deposit_pop_path',
         'deposit_submitted_at', 'deposit_confirmed_at', 'deposit_refunded_at',
         'tenant_id', 'tenant_linked_at', 'first_value_milestone_at', 'first_value_milestone_note',
@@ -50,6 +52,7 @@ class FoundingTwentyApplication extends Model
         'willing_to_give_feedback' => 'boolean',
         'reviewed_at' => 'datetime',
         'privacy_consented_at' => 'datetime',
+        'submitted_at' => 'datetime',
         'deposit_amount' => 'decimal:2',
         'deposit_submitted_at' => 'datetime',
         'deposit_confirmed_at' => 'datetime',
@@ -92,5 +95,40 @@ class FoundingTwentyApplication extends Model
     public function reservationToken(): string
     {
         return hash_hmac('sha256', $this->id . '|' . $this->phone, config('app.key'));
+    }
+
+    /** A lead has given their details but hasn't submitted the questionnaire. */
+    public function isSubmitted(): bool
+    {
+        return $this->submitted_at !== null;
+    }
+
+    public function scopeSubmitted(Builder $query): Builder
+    {
+        return $query->whereNotNull('submitted_at');
+    }
+
+    public function scopeLeads(Builder $query): Builder
+    {
+        return $query->whereNull('submitted_at');
+    }
+
+    /**
+     * Lets someone pick their application back up on another device or after
+     * losing their session. Prefixed so it can never be reused as a deposit token.
+     */
+    public function resumeToken(): string
+    {
+        return hash_hmac('sha256', 'resume|' . $this->id . '|' . $this->phone, config('app.key'));
+    }
+
+    public function resumeUrl(): string
+    {
+        return route('founding-twenty.resume', [$this, $this->resumeToken()]);
+    }
+
+    public function firstName(): string
+    {
+        return trim(explode(' ', trim($this->owner_name))[0] ?? '') ?: 'there';
     }
 }

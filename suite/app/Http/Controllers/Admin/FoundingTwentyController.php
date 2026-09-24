@@ -15,7 +15,10 @@ class FoundingTwentyController extends Controller
 {
     public function index()
     {
-        $applications = FoundingTwentyApplication::latest('score')->latest()->get();
+        // Only submitted applications are scored and ranked. Leads (details given, questionnaire
+        // not finished) are listed separately so they can be followed up on, not lost.
+        $applications = FoundingTwentyApplication::submitted()->latest('score')->latest()->get();
+        $leads = FoundingTwentyApplication::leads()->latest()->get();
 
         $stats = [
             'total' => $applications->count(),
@@ -24,7 +27,7 @@ class FoundingTwentyController extends Controller
             'selected' => $applications->where('status', 'selected')->count(),
         ];
 
-        return view('admin.founding-twenty.index', compact('applications', 'stats'));
+        return view('admin.founding-twenty.index', compact('applications', 'stats', 'leads'));
     }
 
     public function actionQueue()
