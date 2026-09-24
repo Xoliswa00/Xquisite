@@ -70,7 +70,7 @@
                class="inline-flex items-center justify-center px-8 py-3.5 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition-colors text-base sm:text-lg">
                 Start Your Application
             </a>
-            <p class="text-sm text-[#2D3748]/60 mt-3">Takes about 5–7 minutes. Applying costs nothing, and we review every application before anyone is selected.</p>
+            <p class="text-sm text-[#2D3748]/60 mt-3">Step 1 takes about a minute and saves your place. The questions take another 5 to 7. Applying costs nothing, and we review every application before anyone is selected.</p>
         </div>
 
         {{-- How it works: the deposit is disclosed here, before anyone spends time on the form. --}}
@@ -78,7 +78,7 @@
             <h2 class="f-mont text-xl font-bold text-[#002B5B] mb-6 text-center">How it works</h2>
             <ol class="space-y-5 max-w-lg mx-auto">
                 @foreach([
-                    ['Tell us about your business', 'A short questionnaire about how you run things today. It takes about 5 to 7 minutes.'],
+                    ['Tell us who you are, then about your business', 'A minute to introduce yourself and how to reach you, then a short questionnaire about how you run things today.'],
                     ['We review every application', 'Only 20 businesses are selected, chosen for how well we can help them. We contact you on the WhatsApp number, call or email you choose.'],
                     ['Hold your spot if you\'re selected', 'A fully refundable R100 deposit secures your place. It is asked only after you are selected, never when you apply.'],
                     ['Start your 3 free months', 'We help you set up. After the 3 months it is R200 a month, and only if you decide to stay.'],

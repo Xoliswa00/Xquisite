@@ -36,7 +36,10 @@ class OutreachCampaign extends Model
      */
     public function industryBreakdown(): \Illuminate\Support\Collection
     {
+        // Leads haven't said what type of business they run yet, so they'd all land in one
+        // blank group. Only finished applications belong in an industry breakdown.
         return $this->applications
+            ->filter(fn ($app) => $app->isSubmitted())
             ->groupBy('business_type')
             ->map(fn ($apps) => [
                 'applied' => $apps->count(),
