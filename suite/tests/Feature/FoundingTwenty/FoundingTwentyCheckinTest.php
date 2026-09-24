@@ -75,7 +75,12 @@ class FoundingTwentyCheckinTest extends TestCase
 
     public function test_public_form_no_longer_asks_continuation_or_value_questions_at_application_time(): void
     {
-        $response = $this->get(route('founding-twenty.show'));
+        $lead = FoundingTwentyApplication::create([
+            'owner_name' => 'Test Owner', 'business_name' => 'Test Salon', 'applicant_role' => 'owner',
+            'phone' => '0821234567', 'preferred_contact_method' => 'whatsapp',
+        ]);
+
+        $response = $this->withSession(['founding_twenty_lead_id' => $lead->id])->get(route('founding-twenty.questions'));
 
         $response->assertOk();
         $response->assertDontSee('What would make you cancel?');
@@ -86,16 +91,16 @@ class FoundingTwentyCheckinTest extends TestCase
 
     public function test_application_can_be_submitted_without_continuation_or_value_fields(): void
     {
-        $response = $this->post(route('founding-twenty.store'), [
-            'business_name' => 'Test Salon',
-            'owner_name' => 'Test Owner',
-            'phone' => '0821234567',
+        $lead = FoundingTwentyApplication::create([
+            'owner_name' => 'Test Owner', 'business_name' => 'Test Salon', 'applicant_role' => 'owner',
+            'phone' => '0821234567', 'preferred_contact_method' => 'whatsapp',
+        ]);
+
+        $response = $this->withSession(['founding_twenty_lead_id' => $lead->id])->post(route('founding-twenty.submit'), [
             'business_type' => 'salon',
-            'preferred_contact_method' => 'whatsapp',
             'pain_forgotten_appointments' => 3, 'pain_late_cancellations' => 3, 'pain_no_shows' => 3,
             'pain_double_bookings' => 3, 'pain_booking_enquiry_time' => 3, 'pain_staff_availability' => 3,
             'pain_tracking_balances' => 3, 'pain_revenue_visibility' => 3, 'pain_customer_data_organisation' => 3,
-            'privacy_consent' => '1',
         ]);
 
         $response->assertRedirect(route('founding-twenty.thanks'));

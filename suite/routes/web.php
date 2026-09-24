@@ -568,8 +568,15 @@ Route::prefix('apply/{slug}/{property}')->name('apply.')->group(function () {
 // that root is the programme explainer page (see PublicLaunchController below),
 // reached first, with a "Start Application" CTA leading here.
 Route::prefix('founding-20')->name('founding-twenty.')->group(function () {
+    // Two steps. Step 1 (about you) saves them as a lead straight away; step 2 is the
+    // questionnaire, which completes that same application.
     Route::get('/apply',  [FoundingTwentyController::class, 'show'])->name('show');
     Route::post('/apply', [FoundingTwentyController::class, 'store'])->name('store')->middleware('throttle:12,1');
+    Route::get('/apply/questions',  [FoundingTwentyController::class, 'questions'])->name('questions');
+    Route::post('/apply/questions', [FoundingTwentyController::class, 'submit'])->name('submit')->middleware('throttle:12,1');
+    Route::post('/apply/restart',   [FoundingTwentyController::class, 'restart'])->name('restart');
+    // Pick an unfinished application back up from a link (sent by us, or saved by them).
+    Route::get('/continue/{foundingTwenty}/{token}', [FoundingTwentyController::class, 'resume'])->name('resume')->middleware('throttle:12,1');
     Route::get('/thanks', [FoundingTwentyController::class, 'thanks'])->name('thanks');
 
     // Reservation deposit — only reachable once an application has been marked

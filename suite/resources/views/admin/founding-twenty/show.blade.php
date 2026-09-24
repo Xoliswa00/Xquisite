@@ -31,6 +31,13 @@
             <a href="{{ route('admin.founding-twenty.index') }}" class="text-sm text-slate-400 hover:text-slate-200">&larr; Back to list</a>
         </div>
 
+        @unless($a->isSubmitted())
+            <div class="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+                <span>Started {{ $a->created_at->diffForHumans() }} but hasn't finished the questionnaire. There's no score yet.</span>
+                <x-whatsapp-link :phone="$a->phone" :message="'Hi ' . $a->firstName() . ', you started your Founding 20 application for ' . $a->business_name . ' with Xquisite Creations. You can pick up right where you left off here: ' . $a->resumeUrl()" class="text-amber-200 font-medium">Send a nudge with their link</x-whatsapp-link>
+            </div>
+        @endunless
+
         @php
             $isSelected = in_array($a->status, ['selected', 'converted']);
             $steps = [
@@ -100,6 +107,19 @@
 
         <div class="grid lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-6">
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-3">The person</h3>
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <dt class="text-slate-400">Role</dt><dd class="text-white">{{ ['owner' => 'Owns the business', 'manager' => 'Manages it', 'staff' => 'Works there', 'other' => 'Something else'][$a->applicant_role] ?? '—' }}</dd>
+                        <dt class="text-slate-400">Heard about it via</dt><dd class="text-white capitalize">{{ $a->heard_about_via ? str_replace('_', ' ', $a->heard_about_via) : '—' }}</dd>
+                        <dt class="text-slate-400">Best time to reach</dt><dd class="text-white">{{ $a->best_contact_time ?: '—' }}</dd>
+                    </dl>
+                    @if($a->why_founding_20)
+                        <p class="text-xs text-slate-400 mt-4 mb-1">Why they want to be part of Founding 20</p>
+                        <p class="text-sm text-white leading-relaxed">{{ $a->why_founding_20 }}</p>
+                    @endif
+                </div>
 
                 <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
                     <h3 class="text-sm font-semibold text-slate-300 mb-3">Business profile</h3>

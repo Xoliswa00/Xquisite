@@ -113,5 +113,36 @@
                 <p class="text-slate-400 text-sm mt-1">Responses will appear here as the questionnaire link goes out.</p>
             </div>
         @endif
+
+        {{-- Leads: gave their details, haven't finished the questionnaire --}}
+        @if($leads->isNotEmpty())
+            <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-700">
+                    <h3 class="text-sm font-semibold text-slate-300">Started, not finished ({{ $leads->count() }})</h3>
+                    <p class="text-xs text-slate-400 mt-1">These people gave their details but haven't completed the questionnaire. Send a nudge with their personal link to pick up where they left off.</p>
+                </div>
+                <div class="divide-y divide-slate-700">
+                    @foreach($leads as $lead)
+                        <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-white font-medium">{{ $lead->owner_name }} <span class="text-slate-400 font-normal">· {{ $lead->business_name }}</span></p>
+                                <p class="text-xs text-slate-400 mt-0.5">
+                                    {{ ['owner' => 'Owner', 'manager' => 'Manager', 'staff' => 'Staff member', 'other' => 'Other role'][$lead->applicant_role] ?? 'Role not given' }}
+                                    · started {{ $lead->created_at->diffForHumans() }}
+                                    @if($lead->heard_about_via) · via {{ str_replace('_', ' ', $lead->heard_about_via) }} @endif
+                                </p>
+                                @if($lead->why_founding_20)
+                                    <p class="text-xs text-slate-300 mt-1 italic">"{{ Str::limit($lead->why_founding_20, 140) }}"</p>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-3 shrink-0 text-sm">
+                                <x-whatsapp-link :phone="$lead->phone" :message="'Hi ' . $lead->firstName() . ', you started your Founding 20 application for ' . $lead->business_name . ' with Xquisite Creations. You can pick up right where you left off here: ' . $lead->resumeUrl()" class="text-slate-300">Send nudge</x-whatsapp-link>
+                                <a href="{{ route('admin.founding-twenty.show', $lead) }}" class="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition">View</a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
     </div>
 </x-app-layout>
