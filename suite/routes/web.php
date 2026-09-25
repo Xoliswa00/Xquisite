@@ -356,6 +356,11 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             // Founding 20 questionnaire applications
             Route::get('/founding-twenty', [AdminFoundingTwentyController::class, 'index'])->name('founding-twenty.index');
             Route::get('/founding-twenty/action-queue', [AdminFoundingTwentyController::class, 'actionQueue'])->name('founding-twenty.action-queue');
+            Route::get('/founding-twenty/funnel', [AdminFoundingTwentyController::class, 'funnel'])->name('founding-twenty.funnel');
+            Route::get('/founding-twenty/add', [AdminFoundingTwentyController::class, 'create'])->name('founding-twenty.create');
+            Route::post('/founding-twenty/add', [AdminFoundingTwentyController::class, 'storeDirect'])->name('founding-twenty.store-direct');
+            Route::post('/founding-twenty/{foundingTwenty}/message/{type}/email', [AdminFoundingTwentyController::class, 'sendMessage'])->name('founding-twenty.message.email');
+            Route::post('/founding-twenty/{foundingTwenty}/message/{type}/told', [AdminFoundingTwentyController::class, 'markMessaged'])->name('founding-twenty.message.told');
             Route::get('/founding-twenty/{foundingTwenty}', [AdminFoundingTwentyController::class, 'show'])->name('founding-twenty.show');
             Route::patch('/founding-twenty/{foundingTwenty}/status', [AdminFoundingTwentyController::class, 'updateStatus'])->name('founding-twenty.status');
             Route::post('/founding-twenty/{foundingTwenty}/deposit/confirm', [AdminFoundingTwentyController::class, 'confirmDeposit'])->name('founding-twenty.deposit.confirm');
@@ -575,6 +580,7 @@ Route::prefix('founding-20')->name('founding-twenty.')->group(function () {
     Route::get('/apply/questions',  [FoundingTwentyController::class, 'questions'])->name('questions');
     Route::post('/apply/questions', [FoundingTwentyController::class, 'submit'])->name('submit')->middleware('throttle:12,1');
     Route::post('/apply/restart',   [FoundingTwentyController::class, 'restart'])->name('restart');
+    Route::post('/apply/progress',  [FoundingTwentyController::class, 'progress'])->name('progress')->middleware('throttle:60,1');
     // Pick an unfinished application back up from a link (sent by us, or saved by them).
     Route::get('/continue/{foundingTwenty}/{token}', [FoundingTwentyController::class, 'resume'])->name('resume')->middleware('throttle:12,1');
     Route::get('/thanks', [FoundingTwentyController::class, 'thanks'])->name('thanks');

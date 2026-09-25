@@ -332,6 +332,21 @@
         var current = null;
         sections.forEach(function (p) { if (p.getBoundingClientRect().top < window.innerHeight * 0.45) current = p; });
         label.textContent = current ? current.textContent.trim() : '';
+        report(current);
+    }
+
+    // Tell us how far people get, so we can see which section loses them. Sent only when
+    // the person reaches a further section than before.
+    var reached = {{ (int) $lead->last_section_reached }};
+    function report(current) {
+        if (!current) return;
+        var n = parseInt(current.textContent.trim().split(' ')[1], 10);
+        if (!(n > reached)) return;
+        reached = n;
+        var body = new FormData();
+        body.append('section', n);
+        body.append('_token', '{{ csrf_token() }}');
+        try { navigator.sendBeacon('{{ route('founding-twenty.progress') }}', body); } catch (e) {}
     }
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
