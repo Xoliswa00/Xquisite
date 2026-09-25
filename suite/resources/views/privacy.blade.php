@@ -78,6 +78,7 @@
             <li><strong>Account information:</strong> your name, email address, phone number, and business details provided at registration.</li>
             <li><strong>Business data you upload:</strong> client records, appointment details, transaction history, product catalogues, and any other data you enter into the Platform.</li>
             <li><strong>Usage data:</strong> pages visited, features used, login timestamps, and device/browser information — collected to improve the Platform.</li>
+            <li><strong>Programme applications:</strong> if you apply to a programme such as the Founding 20, your name, role, phone number, email, business details, your answers to our questions, and the reasons you give for applying.</li>
             <li><strong>Payment information:</strong> billing amounts and payment status. Card details are processed directly by PayFast and are never stored on our servers.</li>
         </ul>
 
@@ -121,6 +122,11 @@
             further period as required by applicable law (typically 5 years for financial records).
             Upon account closure, you may request an export of your data within 30 days.
             After that period, data is securely deleted.
+        </p>
+        <p>
+            If you apply to a programme and are not selected, or you start an application and do not
+            finish it, we keep your application for up to 12 months so we can offer you a place if one
+            opens up, and then delete it. You can ask us to delete it sooner at any time.
         </p>
 
         <h2>7. Your Rights Under POPIA</h2>

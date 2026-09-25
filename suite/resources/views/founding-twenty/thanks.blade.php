@@ -29,7 +29,7 @@
         <ol class="space-y-4 text-sm text-slate-600">
             <li class="flex items-start gap-3">
                 <span class="flex items-center justify-center w-7 h-7 rounded-full bg-slate-900 text-white text-xs font-bold shrink-0">1</span>
-                <span>We read every application. Only 20 businesses are selected, so we take care over who fits best.</span>
+                <span>We read every application. Only 20 businesses are selected, so we take care over who fits best. You will hear from us within {{ config('founding_twenty.decision_within_days') }} days, whether or not you are selected.</span>
             </li>
             <li class="flex items-start gap-3">
                 <span class="flex items-center justify-center w-7 h-7 rounded-full bg-slate-900 text-white text-xs font-bold shrink-0">2</span>
