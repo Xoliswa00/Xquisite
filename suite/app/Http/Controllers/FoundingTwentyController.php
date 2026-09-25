@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\FoundingTwentyApplication;
 use App\Models\Tenant;
 use App\Rules\SouthAfricanPhoneNumber;
+use App\Notifications\FoundingTwentyApplicantMessage;
+use App\Services\FoundingTwentyMessages;
 use App\Services\FoundingTwentyScoringService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -199,7 +202,28 @@ class FoundingTwentyController extends Controller
 
         $request->session()->forget(self::LEAD_SESSION_KEY);
 
+        // Acknowledge straight away by email when we have one. Anyone without an email is
+        // listed in the admin action queue so we can acknowledge them on WhatsApp.
+        if ($lead->email) {
+            $message = FoundingTwentyMessages::received($lead);
+            Notification::route('mail', $lead->email)->notify(new FoundingTwentyApplicantMessage($message['subject'], $message['body']));
+            $lead->update(['received_notified_at' => now()]);
+        }
+
         return redirect()->route('founding-twenty.thanks')->with('applicant_first_name', $lead->firstName());
+    }
+
+    /** Beacon from the questionnaire: the furthest section this person has scrolled to. */
+    public function progress(Request $request)
+    {
+        $lead = $this->leadFromSession($request);
+        $section = (int) $request->input('section');
+
+        if ($lead && ! $lead->isSubmitted() && $section >= 1 && $section <= 8 && $section > (int) $lead->last_section_reached) {
+            $lead->update(['last_section_reached' => $section]);
+        }
+
+        return response()->noContent();
     }
 
     /** Pick an unfinished application back up, on any device, from a link. */
