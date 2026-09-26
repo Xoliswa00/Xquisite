@@ -53,7 +53,8 @@ class FoundingTwentyMessages
                     . "Good news. {$a->business_name} has been selected for the Xquisite Creations Founding 20.\n\n"
                     . 'To hold your spot, please use this link to pay the fully refundable R' . number_format((float) config('founding_twenty.deposit_amount'), 0) . " deposit and upload your proof of payment:\n"
                     . route('founding-twenty.reserve', [$a, $a->reservationToken()]) . "\n\n"
-                    . 'Once that is confirmed we set you up, and your 3 free months begin. Reply here if anything is unclear.',
+                    . 'The deposit is not a fee. When your free period ends you choose whether it is paid back to you or credited to your account, and we take care of the accounting.' . "\n\n"
+                    . 'Once your deposit is confirmed we set you up, and your 3 free months begin. Reply here if anything is unclear.',
             ],
             'waitlisted' => [
                 'subject' => "Your Founding 20 application: you're on the waiting list",
@@ -83,13 +84,15 @@ class FoundingTwentyMessages
     public static function conversion(FoundingTwentyApplication $a): array
     {
         $price = number_format((float) config('founding_twenty.monthly_price'), 0);
+        $deposit = number_format((float) config('founding_twenty.deposit_amount'), 0);
+        $lock = config('founding_twenty.price_lock_months');
 
         return [
             'subject' => "Your free months are nearly over: what happens next",
             'body' => "Hi {$a->firstName()},\n\n"
                 . "Your 3 free months with Xquisite Creations for {$a->business_name} finish in about two weeks.\n\n"
-                . "If Xquisite has been useful, you can carry on for R{$price} a month. If it has not, you can stop with no charge and no hard feelings, and your R"
-                . number_format((float) config('founding_twenty.deposit_amount'), 0) . " deposit is refunded either way.\n\n"
+                . "If Xquisite has been useful, you can carry on at R{$price} a month, and that price is locked for {$lock} months from the day your free period ends. If it has not, you can stop with no charge and no hard feelings.\n\n"
+                . "Your R{$deposit} deposit comes back to you either way. If you carry on, reply with the option you prefer: \"refund\" and we pay it back to your bank account, or \"credit\" and we take it off your first invoice. If you stop, we pay it back to your bank account. We take care of the accounting for both.\n\n"
                 . 'Either way, we would like to hear what worked and what did not. Reply here or tell us on your final check-in.',
         ];
     }

@@ -356,6 +356,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             // Founding 20 questionnaire applications
             Route::get('/founding-twenty', [AdminFoundingTwentyController::class, 'index'])->name('founding-twenty.index');
             Route::get('/founding-twenty/action-queue', [AdminFoundingTwentyController::class, 'actionQueue'])->name('founding-twenty.action-queue');
+            Route::get('/founding-twenty/deposits', [AdminFoundingTwentyController::class, 'depositLedger'])->name('founding-twenty.deposits');
             Route::get('/founding-twenty/funnel', [AdminFoundingTwentyController::class, 'funnel'])->name('founding-twenty.funnel');
             Route::get('/founding-twenty/add', [AdminFoundingTwentyController::class, 'create'])->name('founding-twenty.create');
             Route::post('/founding-twenty/add', [AdminFoundingTwentyController::class, 'storeDirect'])->name('founding-twenty.store-direct');
@@ -365,6 +366,8 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::patch('/founding-twenty/{foundingTwenty}/status', [AdminFoundingTwentyController::class, 'updateStatus'])->name('founding-twenty.status');
             Route::post('/founding-twenty/{foundingTwenty}/deposit/confirm', [AdminFoundingTwentyController::class, 'confirmDeposit'])->name('founding-twenty.deposit.confirm');
             Route::post('/founding-twenty/{foundingTwenty}/deposit/refund', [AdminFoundingTwentyController::class, 'markDepositRefunded'])->name('founding-twenty.deposit.refund');
+            Route::post('/founding-twenty/{foundingTwenty}/deposit/outcome', [AdminFoundingTwentyController::class, 'chooseDepositOutcome'])->name('founding-twenty.deposit.outcome');
+            Route::post('/founding-twenty/{foundingTwenty}/deposit/credit', [AdminFoundingTwentyController::class, 'applyDepositCredit'])->name('founding-twenty.deposit.credit');
             Route::get('/founding-twenty/{foundingTwenty}/deposit/pop', [AdminFoundingTwentyController::class, 'downloadPop'])->name('founding-twenty.deposit.pop');
             Route::post('/founding-twenty/{foundingTwenty}/tenant', [AdminFoundingTwentyController::class, 'linkTenant'])->name('founding-twenty.tenant');
             Route::post('/founding-twenty/{foundingTwenty}/milestone', [AdminFoundingTwentyController::class, 'markMilestone'])->name('founding-twenty.milestone');

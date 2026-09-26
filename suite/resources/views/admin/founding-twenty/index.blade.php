@@ -12,6 +12,10 @@
                    class="inline-flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 text-[#D4AF37] rounded-lg text-sm font-medium transition">
                     Action queue
                 </a>
+                <a href="{{ route('admin.founding-twenty.deposits') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm font-medium transition">
+                    Deposits
+                </a>
                 <a href="{{ route('admin.founding-twenty.funnel') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm font-medium transition">
                     Funnel
