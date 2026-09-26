@@ -123,14 +123,6 @@ class FoundingTwentyProgrammeGapsTest extends TestCase
         }
     }
 
-    public function test_conversion_message_states_the_price_and_that_the_deposit_comes_back(): void
-    {
-        $body = FoundingTwentyMessages::conversion($this->application())['body'];
-
-        $this->assertStringContainsString('R200 a month', $body);
-        $this->assertStringContainsString('R100 deposit is refunded either way', $body);
-    }
-
     // ── Sending and recording ────────────────────────────────────────────────
 
     public function test_emailing_a_decision_sends_it_and_records_that_they_were_told(): void

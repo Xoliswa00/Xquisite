@@ -25,7 +25,7 @@
         </div>
         <h1 class="text-xl font-bold text-slate-900">{{ $application->business_name }}, you're in</h1>
         <p class="text-slate-500 text-sm mt-2">
-            To hold your spot in the Founding 20 Programme, we ask for a small, fully refundable reservation deposit.
+            To hold your spot in the Founding 20 Programme, we ask for a small, fully refundable reservation deposit. When your free period ends you choose whether it is paid back to you or credited to your account.
             It's returned in full. It simply confirms you're serious about using the platform during the 3 free months.
         </p>
     </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\FoundingTwentyApplication;
 use App\Models\FoundingTwentyCheckin;
+use App\Models\PlatformInvoice;
 use App\Models\PromoCode;
 use App\Models\Tenant;
 use App\Notifications\FoundingTwentyApplicantMessage;
@@ -12,6 +13,7 @@ use App\Rules\SouthAfricanPhoneNumber;
 use App\Services\AuditService;
 use App\Services\FoundingTwentyMessages;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
@@ -127,13 +129,108 @@ class FoundingTwentyController extends Controller
         return back()->with('success', 'Deposit confirmed — this business can now be onboarded.');
     }
 
-    public function markDepositRefunded(FoundingTwentyApplication $foundingTwenty)
+    public function markDepositRefunded(Request $request, FoundingTwentyApplication $foundingTwenty)
     {
         abort_unless($foundingTwenty->deposit_confirmed_at !== null, 422, 'Deposit has not been confirmed yet.');
+        abort_if($foundingTwenty->isDepositSettled(), 422, 'This deposit has already been settled.');
 
-        $foundingTwenty->update(['deposit_refunded_at' => now()]);
+        $validated = $request->validate(['deposit_refund_reference' => 'nullable|string|max:100']);
+
+        $foundingTwenty->update([
+            'deposit_refunded_at' => now(),
+            'deposit_outcome' => 'refund',
+            'deposit_outcome_at' => $foundingTwenty->deposit_outcome_at ?? now(),
+            'deposit_refund_reference' => $validated['deposit_refund_reference'] ?? null,
+        ]);
 
         return back()->with('success', 'Deposit marked as refunded.');
+    }
+
+    /** Record whether they asked for the deposit back or credited to their account. */
+    public function chooseDepositOutcome(Request $request, FoundingTwentyApplication $foundingTwenty)
+    {
+        abort_unless($foundingTwenty->deposit_confirmed_at !== null, 422, 'Deposit has not been confirmed yet.');
+        abort_if($foundingTwenty->isDepositSettled(), 422, 'This deposit has already been settled.');
+
+        $validated = $request->validate(['deposit_outcome' => 'required|in:refund,credit']);
+
+        $foundingTwenty->update(['deposit_outcome' => $validated['deposit_outcome'], 'deposit_outcome_at' => now()]);
+
+        return back()->with('success', 'Their choice is recorded: ' . $validated['deposit_outcome'] . '.');
+    }
+
+    /** Take the deposit off one of their unpaid invoices, and note it on the invoice for the books. */
+    public function applyDepositCredit(Request $request, FoundingTwentyApplication $foundingTwenty)
+    {
+        abort_unless($foundingTwenty->deposit_confirmed_at !== null, 422, 'Deposit has not been confirmed yet.');
+        abort_if($foundingTwenty->isDepositSettled(), 422, 'This deposit has already been settled.');
+        abort_unless($foundingTwenty->tenant_id, 422, 'Link this application to a tenant first.');
+
+        $validated = $request->validate(['invoice_id' => 'required|integer']);
+
+        $error = DB::transaction(function () use ($foundingTwenty, $validated) {
+            $invoice = PlatformInvoice::where('id', $validated['invoice_id'])
+                ->where('tenant_id', $foundingTwenty->tenant_id)
+                ->whereIn('status', ['unpaid', 'overdue'])
+                ->lockForUpdate()->first();
+
+            if (! $invoice) {
+                return 'Pick one of this business\'s unpaid invoices.';
+            }
+
+            $credit = (float) $foundingTwenty->deposit_amount;
+            if ((float) $invoice->amount <= $credit) {
+                return 'That invoice is not larger than the credit. Pick a bigger one, or refund the deposit instead.';
+            }
+
+            $note = 'Founding 20 deposit credit of R' . number_format($credit, 2) . ' applied (ref ' . $foundingTwenty->deposit_reference . '). Invoiced amount was R' . number_format((float) $invoice->amount, 2) . '.';
+            $invoice->update([
+                'amount' => (float) $invoice->amount - $credit,
+                'notes' => trim(($invoice->notes ? $invoice->notes . "\n" : '') . $note),
+            ]);
+
+            $foundingTwenty->update([
+                'deposit_outcome' => 'credit',
+                'deposit_outcome_at' => $foundingTwenty->deposit_outcome_at ?? now(),
+                'deposit_credited_at' => now(),
+                'deposit_credit_invoice_id' => $invoice->id,
+            ]);
+
+            return null;
+        });
+
+        return $error ? back()->with('error', $error) : back()->with('success', 'Deposit credited to the invoice.');
+    }
+
+    /** Every deposit received and how it was settled, for the books. ?format=csv downloads it. */
+    public function depositLedger(Request $request)
+    {
+        $rows = FoundingTwentyApplication::whereNotNull('deposit_confirmed_at')->with('depositCreditInvoice')->orderBy('deposit_confirmed_at')->get();
+
+        $totals = [
+            'received' => (float) $rows->sum('deposit_amount'),
+            'refunded' => (float) $rows->whereNotNull('deposit_refunded_at')->sum('deposit_amount'),
+            'credited' => (float) $rows->whereNotNull('deposit_credited_at')->sum('deposit_amount'),
+        ];
+        $totals['held'] = $totals['received'] - $totals['refunded'] - $totals['credited'];
+
+        if ($request->query('format') === 'csv') {
+            return response()->streamDownload(function () use ($rows) {
+                $out = fopen('php://output', 'w');
+                fputcsv($out, ['Reference', 'Business', 'Amount', 'Received', 'Outcome', 'Settled', 'Refund reference', 'Credited to invoice'], ',', '"', '');
+                foreach ($rows as $a) {
+                    fputcsv($out, [
+                        $a->deposit_reference, $a->business_name, number_format((float) $a->deposit_amount, 2, '.', ''),
+                        $a->deposit_confirmed_at->toDateString(), $a->deposit_outcome ?? 'undecided',
+                        ($a->deposit_refunded_at ?? $a->deposit_credited_at)?->toDateString(),
+                        $a->deposit_refund_reference, $a->depositCreditInvoice?->invoice_number,
+                    ], ',', '"', '');
+                }
+                fclose($out);
+            }, 'founding-20-deposits-' . now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv']);
+        }
+
+        return view('admin.founding-twenty.deposits', compact('rows', 'totals'));
     }
 
     public function linkTenant(Request $request, FoundingTwentyApplication $foundingTwenty)

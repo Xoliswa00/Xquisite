@@ -55,14 +55,21 @@ Twenty businesses is a lot for one person. Set the pace before launch, not after
 
 The free period ends, and the risk is that they drift rather than decide.
 
-- Day 76: the conversion message goes out (Action queue), stating the price (R200 a month) and that the R100 deposit is refunded either way.
+- Day 76: the conversion message goes out (Action queue), stating the price (R200 a month, locked for 24 months) and that the R100 deposit comes back, paid back or credited at their choice.
 - Day 90: the final check-in asks what would make them continue or cancel.
 - Do not let anyone lapse silently. If they do not answer the day-76 message, phone them.
 
-Open decisions (need Xoliswa):
-- Is the R200 a month price locked for life for Founding 20, or only for the first year? The message currently says only "R200 a month". Say the lock in the message if there is one, because it is the best reason to stay.
-- What is the deposit refund trigger? The messages promise a refund "either way".
-- Do you want to offer an annual option at day 76?
+Decided (Xoliswa, 2026-09-26):
+- **Price:** R200 a month, locked for 24 months from the day the free period ends. The app shows the lock date on each application (onboarding date + 3 free months + 24 months). The conversion message states the lock.
+- **Deposit:** it always comes back. A business that continues chooses either to be **paid back** to their bank account or to have it **credited** to their account (taken off their first invoice). A business that stops is paid back. We do the accounting for both.
+
+How the deposit is settled (Admin > Founding 20 > an application > Reservation deposit):
+1. Record which they chose (they reply "refund" or "credit" to the day-76 message).
+2. Paid back: mark it paid back with the EFT reference.
+3. Credit: pick one of their unpaid invoices larger than R100. The invoice drops by R100 and gets a note with the deposit reference, so the invoice itself explains the difference.
+4. Admin > Founding 20 > Deposits shows received, paid back, credited and still held, and downloads as CSV for the accountant.
+
+Still open: whether to offer an annual option at day 76.
 
 ## 6. What competitors have that we do not
 
@@ -80,5 +87,6 @@ From the competitor audit (Fresha, Booksy, SimplyBook.me, Goldie): payment at bo
 2. The decision promise of 7 days (also shown on the thank-you page).
 3. The wording of the received, selected, waitlisted, rejected, check-in and conversion messages.
 4. The 12 month retention period, and whether to schedule the purge.
-5. Whether the R200 price is locked.
-6. Whether to tell rejected applicants you will keep them posted (the message currently offers it).
+5. Whether to tell rejected applicants you will keep them posted (the message currently offers it).
+
+Settled: the R200 price is locked for 24 months, and the deposit is paid back or credited, at the business's choice.
