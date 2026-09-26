@@ -35,6 +35,7 @@ class FoundingTwentyApplication extends Model
         'reviewed_by', 'reviewed_at', 'admin_notes',
         'privacy_consented_at', 'submitted_at',
         'received_notified_at', 'decision_notified_at', 'activation_nudge_sent_at', 'conversion_offer_sent_at', 'last_section_reached',
+        'deposit_outcome', 'deposit_outcome_at', 'deposit_refund_reference', 'deposit_credited_at', 'deposit_credit_invoice_id',
         'deposit_amount', 'deposit_reference', 'deposit_pop_path',
         'deposit_submitted_at', 'deposit_confirmed_at', 'deposit_refunded_at',
         'tenant_id', 'tenant_linked_at', 'first_value_milestone_at', 'first_value_milestone_note',
@@ -58,6 +59,8 @@ class FoundingTwentyApplication extends Model
         'decision_notified_at' => 'datetime',
         'activation_nudge_sent_at' => 'datetime',
         'conversion_offer_sent_at' => 'datetime',
+        'deposit_outcome_at' => 'datetime',
+        'deposit_credited_at' => 'datetime',
         'deposit_amount' => 'decimal:2',
         'deposit_submitted_at' => 'datetime',
         'deposit_confirmed_at' => 'datetime',
@@ -130,6 +133,23 @@ class FoundingTwentyApplication extends Model
     public function resumeUrl(): string
     {
         return route('founding-twenty.resume', [$this, $this->resumeToken()]);
+    }
+
+    /** The deposit has been paid back or credited: nothing is owed either way. */
+    public function isDepositSettled(): bool
+    {
+        return $this->deposit_refunded_at !== null || $this->deposit_credited_at !== null;
+    }
+
+    /** Monthly price is guaranteed until this date: the free period plus the lock, counted from onboarding. */
+    public function priceLockedUntil(): ?\Illuminate\Support\Carbon
+    {
+        return $this->tenant_linked_at?->copy()->addMonths(config('founding_twenty.free_months') + config('founding_twenty.price_lock_months'));
+    }
+
+    public function depositCreditInvoice()
+    {
+        return $this->belongsTo(PlatformInvoice::class, 'deposit_credit_invoice_id');
     }
 
     public function firstName(): string
