@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\Ecommerce;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tenant;
+use App\Http\Controllers\Ecommerce\Concerns\ResolvesShopTenant;
 use App\Modules\POS\Models\Product;
 use App\Services\Cart\CartService;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
+    use ResolvesShopTenant;
+
     public function view(string $tenantSlug)
     {
-        $tenant = Tenant::where('slug', $tenantSlug)->where('is_active', true)->firstOrFail();
-        $cart   = new CartService($tenantSlug);
+        $tenant = $this->activeShopTenant($tenantSlug);
+        $cart   = new CartService($tenant->id);
         $lines  = $cart->lines($tenant->id);
 
         return view('shop.cart', compact('tenant', 'cart', 'lines'));
@@ -21,7 +23,7 @@ class CartController extends Controller
 
     public function add(Request $request, string $tenantSlug)
     {
-        $tenant = Tenant::where('slug', $tenantSlug)->where('is_active', true)->firstOrFail();
+        $tenant = $this->activeShopTenant($tenantSlug);
 
         $request->validate([
             'product_id' => 'required|integer',
@@ -34,7 +36,7 @@ class CartController extends Controller
             ->where('is_available_online', true)
             ->firstOrFail();
 
-        $cart = new CartService($tenantSlug);
+        $cart = new CartService($tenant->id);
 
         // Enforce stock limit for tracked products
         $requestedQty = max(1, (int) $request->qty);
@@ -57,24 +59,28 @@ class CartController extends Controller
 
     public function update(Request $request, string $tenantSlug)
     {
+        $tenant = $this->activeShopTenant($tenantSlug);
+
         $request->validate([
             'product_id' => 'required|integer',
             'qty'        => 'required|integer|min:0|max:99',
         ]);
 
-        $cart = new CartService($tenantSlug);
+        $cart = new CartService($tenant->id);
         $cart->update((int) $request->product_id, (int) $request->qty);
 
-        return redirect()->route('shop.cart', $tenantSlug);
+        return redirect()->to($tenant->shopRoute('cart'));
     }
 
     public function remove(Request $request, string $tenantSlug)
     {
+        $tenant = $this->activeShopTenant($tenantSlug);
+
         $request->validate(['product_id' => 'required|integer']);
 
-        $cart = new CartService($tenantSlug);
+        $cart = new CartService($tenant->id);
         $cart->remove((int) $request->product_id);
 
-        return redirect()->route('shop.cart', $tenantSlug)->with('cart_success', 'Item removed.');
+        return redirect()->to($tenant->shopRoute('cart'))->with('cart_success', 'Item removed.');
     }
 }

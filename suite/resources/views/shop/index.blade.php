@@ -4,7 +4,7 @@
     <div class="mb-8 bg-gradient-to-r from-[#0078D4] to-[#002B5B] rounded-2xl px-6 py-10 text-center text-white">
         <h1 class="text-3xl font-bold">{{ $tenant->name }}</h1>
         <p class="mt-2 text-[#E8F2FA] text-sm">Shop our full range of products online</p>
-        <form action="{{ route('shop.index', $tenant->slug) }}" method="GET" class="mt-5 sm:hidden">
+        <form action="{{ $tenant->shopRoute('index') }}" method="GET" class="mt-5 sm:hidden">
             <input type="text" name="search" value="{{ $search }}"
                    placeholder="Search products…"
                    class="w-full max-w-sm bg-white/20 border border-white/30 text-white placeholder-[#B8D4F0] text-sm rounded-full px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-white/50">
@@ -19,14 +19,14 @@
                 <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Categories</h3>
                 <ul class="space-y-1">
                     <li>
-                        <a href="{{ route('shop.index', $tenant->slug) }}"
+                        <a href="{{ $tenant->shopRoute('index') }}"
                            class="block text-sm px-3 py-2 rounded-lg {{ !$category ? 'bg-[#0078D4] text-white font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
                             All Products
                         </a>
                     </li>
                     @foreach($categories as $cat)
                         <li>
-                            <a href="{{ route('shop.index', ['tenantSlug' => $tenant->slug, 'category' => $cat]) }}"
+                            <a href="{{ $tenant->shopRoute('index', ['category' => $cat]) }}"
                                class="block text-sm px-3 py-2 rounded-lg {{ $category === $cat ? 'bg-[#0078D4] text-white font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
                                 {{ $cat }}
                             </a>
@@ -42,12 +42,12 @@
             <!-- Mobile category filter -->
             @if($categories->count())
                 <div class="lg:hidden flex gap-2 overflow-x-auto pb-2 mb-4">
-                    <a href="{{ route('shop.index', $tenant->slug) }}"
+                    <a href="{{ $tenant->shopRoute('index') }}"
                        class="shrink-0 text-xs px-3 py-1.5 rounded-full {{ !$category ? 'bg-[#0078D4] text-white' : 'bg-gray-200 text-gray-600' }}">
                         All
                     </a>
                     @foreach($categories as $cat)
-                        <a href="{{ route('shop.index', ['tenantSlug' => $tenant->slug, 'category' => $cat]) }}"
+                        <a href="{{ $tenant->shopRoute('index', ['category' => $cat]) }}"
                            class="shrink-0 text-xs px-3 py-1.5 rounded-full {{ $category === $cat ? 'bg-[#0078D4] text-white' : 'bg-gray-200 text-gray-600' }}">
                             {{ $cat }}
                         </a>
@@ -66,7 +66,7 @@
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                     @foreach($products as $product)
                         <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden group hover:shadow-md transition-shadow">
-                            <a href="{{ route('shop.product', [$tenant->slug, $product->id]) }}" class="block">
+                            <a href="{{ $tenant->shopRoute('product', ['productId' => $product->id]) }}" class="block">
                                 <div class="aspect-square bg-gray-100 overflow-hidden">
                                     @if($product->image_url)
                                         <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
@@ -85,7 +85,7 @@
                                 @if($product->category)
                                     <p class="text-xs text-gray-400 mb-0.5">{{ $product->category }}</p>
                                 @endif
-                                <a href="{{ route('shop.product', [$tenant->slug, $product->id]) }}"
+                                <a href="{{ $tenant->shopRoute('product', ['productId' => $product->id]) }}"
                                    class="text-sm font-medium text-gray-900 hover:text-[#0078D4] leading-tight line-clamp-2 block">
                                     {{ $product->name }}
                                 </a>
@@ -94,7 +94,7 @@
                                 @if($product->track_stock && $product->stock_quantity <= 0)
                                     <span class="text-xs text-red-500 font-medium">Out of stock</span>
                                 @else
-                                    <form action="{{ route('shop.cart.add', $tenant->slug) }}" method="POST" class="mt-2">
+                                    <form action="{{ $tenant->shopRoute('cart.add') }}" method="POST" class="mt-2">
                                         @csrf
                                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                                         <input type="hidden" name="qty" value="1">

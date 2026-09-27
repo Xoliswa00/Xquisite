@@ -10,9 +10,15 @@ class CartService
 {
     private string $key;
 
-    public function __construct(private readonly string $tenantSlug)
+    /**
+     * Keyed by tenant ID, not slug/subdomain — the same tenant is now
+     * reachable via two different route identifiers (see
+     * ResolvesShopTenant), and keying by the raw identifier would give a
+     * shopper two different carts depending on which URL they used.
+     */
+    public function __construct(private readonly int $tenantId)
     {
-        $this->key = 'cart.' . $tenantSlug;
+        $this->key = 'cart.' . $tenantId;
     }
 
     /** [product_id => qty] */

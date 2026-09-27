@@ -73,6 +73,55 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DemoController;
 use Illuminate\Support\Facades\Route;
 
+// Tenant storefront route definitions — registered twice from this one
+// closure: once here, bound to {tenantSlug}.{app.domain} (a tenant's own
+// subdomain — no path segment needed, the domain itself carries the
+// tenant), and once further down under /shop/{tenantSlug} (the canonical
+// fallback, e.g. a tenant with no subdomain set — see that registration for
+// the module-gate middleware and full route list). Both bind the same
+// {tenantSlug} route parameter name so the controllers never have to
+// change, but the value means a different column depending on which one
+// matched — see Concerns\ResolvesShopTenant and Tenant::shopRoute(), which
+// is how every outbound link/redirect in this group picks the right one
+// back out instead of hard-coding shop.*.
+//
+// This domain-bound registration MUST come before every other route in this
+// file. A route with no ->domain() constraint (e.g. the marketing '/' route
+// right below) matches *any* host, including a tenant's subdomain — Laravel
+// tries routes in registration order and stops at the first full match, so
+// if that domain-less route were registered first, it would silently win
+// every request to mistenant.xquisite.co.za/ before this one is ever
+// checked, and the whole feature would never fire. The domain regex here
+// only matches an actual *.{app.domain} host, so it can never shadow
+// anything on the main apex domain — see StorefrontModuleGateTest /
+// ShopSubdomainRoutingTest for the coverage that pins this down.
+$registerShopRoutes = function () {
+    Route::get('/manifest.json', [StorefrontController::class, 'manifest'])->name('manifest');
+    Route::get('/', [StorefrontController::class, 'index'])->name('index');
+    Route::get('/product/{productId}', [StorefrontController::class, 'product'])->name('product');
+
+    // Cart
+    Route::get('/cart', [CartController::class, 'view'])->name('cart');
+    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
+    Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
+
+    // Checkout
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::post('/checkout', [CheckoutController::class, 'place'])->name('checkout.place');
+    Route::get('/order/{reference}/confirmed', [CheckoutController::class, 'confirmed'])->name('order.confirmed');
+
+    // PayFast callbacks
+    Route::post('/payfast/notify', [CheckoutController::class, 'payfastNotify'])->name('payfast.notify')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+    Route::get('/payfast/return', [CheckoutController::class, 'payfastReturn'])->name('payfast.return');
+    Route::get('/payfast/cancel', [CheckoutController::class, 'payfastCancel'])->name('payfast.cancel');
+};
+
+Route::domain('{tenantSlug}.' . config('app.domain', 'xquisite.co.za'))
+    ->name('shop.host.')
+    ->middleware('tenant-module:ecommerce')
+    ->group($registerShopRoutes);
+
 Route::get('/', function () {
     if (request()->user() !== null) {
         return redirect()->route('dashboard');
@@ -564,28 +613,12 @@ Route::prefix('apply/{slug}/{property}')->name('apply.')->group(function () {
 
 // Public storefront (no auth) — 404s if the tenant hasn't got the ecommerce
 // module active, so deactivating it actually takes the shop offline instead
-// of just hiding the staff-side order/settings pages.
-Route::prefix('shop/{tenantSlug}')->name('shop.')->middleware('tenant-module:ecommerce')->group(function () {
-    Route::get('/manifest.json', [StorefrontController::class, 'manifest'])->name('manifest');
-    Route::get('/', [StorefrontController::class, 'index'])->name('index');
-    Route::get('/product/{productId}', [StorefrontController::class, 'product'])->name('product');
-
-    // Cart
-    Route::get('/cart', [CartController::class, 'view'])->name('cart');
-    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
-    Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
-    Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
-
-    // Checkout
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
-    Route::post('/checkout', [CheckoutController::class, 'place'])->name('checkout.place');
-    Route::get('/order/{reference}/confirmed', [CheckoutController::class, 'confirmed'])->name('order.confirmed');
-
-    // PayFast callbacks
-    Route::post('/payfast/notify', [CheckoutController::class, 'payfastNotify'])->name('payfast.notify')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-    Route::get('/payfast/return', [CheckoutController::class, 'payfastReturn'])->name('payfast.return');
-    Route::get('/payfast/cancel', [CheckoutController::class, 'payfastCancel'])->name('payfast.cancel');
-});
+// of just hiding the staff-side order/settings pages. Registered from the
+// $registerShopRoutes closure defined near the top of this file (see the
+// comment there for why) — this is the /shop/{tenantSlug} half of it; the
+// {tenantSlug}.{app.domain} subdomain half is registered first, before any
+// other route in the app, so it wins the match on a tenant's own subdomain.
+Route::prefix('shop/{tenantSlug}')->name('shop.')->middleware('tenant-module:ecommerce')->group($registerShopRoutes);
 
 // ─── Public quote acceptance (no auth) ───────────────────────────────────────
 Route::prefix('q/{quote}')->name('public.quotes.')->group(function () {

@@ -3,24 +3,26 @@
 namespace App\Http\Controllers\Ecommerce;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tenant;
+use App\Http\Controllers\Ecommerce\Concerns\ResolvesShopTenant;
 use App\Modules\POS\Models\Product;
 use App\Services\Cart\CartService;
 use App\Support\TenantManifest;
 
 class StorefrontController extends Controller
 {
+    use ResolvesShopTenant;
+
     /** Public/unauthenticated — a browser fetches this before any login. */
     public function manifest(string $tenantSlug)
     {
-        $tenant = Tenant::where('slug', $tenantSlug)->where('is_active', true)->firstOrFail();
+        $tenant = $this->activeShopTenant($tenantSlug);
 
-        return TenantManifest::response($tenant, route('shop.index', $tenantSlug));
+        return TenantManifest::response($tenant, $tenant->shopRoute('index'));
     }
 
     public function index(string $tenantSlug)
     {
-        $tenant = Tenant::where('slug', $tenantSlug)->where('is_active', true)->firstOrFail();
+        $tenant = $this->activeShopTenant($tenantSlug);
 
         $query = Product::where('tenant_id', $tenant->id)
             ->where('is_active', true)
@@ -49,14 +51,14 @@ class StorefrontController extends Controller
             ->orderBy('category')
             ->pluck('category');
 
-        $cart = new CartService($tenantSlug);
+        $cart = new CartService($tenant->id);
 
         return view('shop.index', compact('tenant', 'products', 'categories', 'cart', 'category', 'search'));
     }
 
     public function product(string $tenantSlug, int $productId)
     {
-        $tenant = Tenant::where('slug', $tenantSlug)->where('is_active', true)->firstOrFail();
+        $tenant = $this->activeShopTenant($tenantSlug);
 
         $product = Product::where('tenant_id', $tenant->id)
             ->where('id', $productId)
@@ -73,7 +75,7 @@ class StorefrontController extends Controller
             ->limit(4)
             ->get();
 
-        $cart = new CartService($tenantSlug);
+        $cart = new CartService($tenant->id);
 
         return view('shop.product', compact('tenant', 'product', 'related', 'cart'));
     }

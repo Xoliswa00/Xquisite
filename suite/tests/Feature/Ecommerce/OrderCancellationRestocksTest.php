@@ -30,7 +30,7 @@ class OrderCancellationRestocksTest extends TestCase
 
     private function place(Tenant $tenant, Product $product): Order
     {
-        $cart = new CartService($tenant->slug);
+        $cart = new CartService($tenant->id);
         $cart->add($product->id, 1);
 
         return app(OrderService::class)->placeOrder($tenant, [

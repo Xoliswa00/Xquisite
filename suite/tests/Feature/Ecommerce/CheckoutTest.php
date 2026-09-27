@@ -57,7 +57,7 @@ class CheckoutTest extends TestCase
         $tenant  = $this->tenant();
         $product = $this->product($tenant, ['stock_quantity' => 5]);
 
-        $response = $this->withSession(['cart.test-store' => [$product->id => 2]])
+        $response = $this->withSession(['cart.' . $tenant->id => [$product->id => 2]])
             ->post(route('shop.checkout.place', 'test-store'), $this->checkoutPayload());
 
         $this->assertSame(1, Order::count());
@@ -75,7 +75,7 @@ class CheckoutTest extends TestCase
         $product = $this->product($tenant, ['stock_quantity' => 1]);
 
         // Cart asks for more than is in stock (e.g. tampered/stale session).
-        $response = $this->withSession(['cart.test-store' => [$product->id => 2]])
+        $response = $this->withSession(['cart.' . $tenant->id => [$product->id => 2]])
             ->post(route('shop.checkout.place', 'test-store'), $this->checkoutPayload());
 
         $response->assertRedirect(route('shop.cart', 'test-store'));
@@ -92,7 +92,7 @@ class CheckoutTest extends TestCase
         $product = $this->product($tenant, ['stock_quantity' => 10]);
         $service = app(OrderService::class);
 
-        $cart = new CartService('test-store');
+        $cart = new CartService($tenant->id);
         $cart->add($product->id, 1);
 
         $data = [
