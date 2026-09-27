@@ -148,6 +148,15 @@
             The Platform uses essential session cookies to keep you logged in and to protect against
             cross-site request forgery. We do not use third-party advertising or tracking cookies.
         </p>
+        <p>
+            We count visits to understand which pages are useful. This is done on our own servers without
+            cookies. We do not store your IP address, name or account details with a visit. Each visit is
+            tagged with a one-way code that changes every day, so a person cannot be followed from one day
+            to the next or identified from it. We record the page, how far it was scrolled, how long it was
+            open, where on the page clicks landed, and roughly where the visit came from (for example a
+            WhatsApp link). This information is deleted after 180 days. If your browser sends a Do Not Track
+            or Global Privacy Control signal, we do not count your visit at all.
+        </p>
 
         <h2>9. Children</h2>
         <p>
