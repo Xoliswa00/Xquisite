@@ -21,16 +21,19 @@
     </div>
 </header>
 
-<main class="max-w-md mx-auto px-4 py-14 sm:py-20">
-    <div class="text-center">
+<main class="max-w-md lg:max-w-4xl mx-auto px-4 py-14 sm:py-20">
+    <div class="text-center lg:max-w-2xl lg:mx-auto">
         <div class="w-14 h-14 rounded-2xl bg-[#111111] flex items-center justify-center mx-auto mb-5">
             <svg class="w-7 h-7 text-[#D4AF37]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
         </div>
-        <h1 class="f-mont text-2xl font-extrabold text-[#002B5B]">Thank you{{ session('applicant_first_name') ? ', ' . session('applicant_first_name') : '' }}, your application is in</h1>
+        <h1 class="f-mont text-2xl font-extrabold text-[#002B5B] text-balance">Thank you{{ session('applicant_first_name') ? ', ' . session('applicant_first_name') : '' }}, your application is in</h1>
         <p class="text-slate-500 text-base mt-2">We've received your answers. Nothing has been charged.</p>
     </div>
 
-    <div class="bg-[#111111] rounded-[20px] p-6 mt-8">
+    <div class="lg:grid lg:grid-cols-[1fr_280px] lg:gap-10 lg:mt-8">
+    <div>
+
+    <div class="bg-[#111111] rounded-[20px] p-6 mt-8 lg:mt-0">
         <h2 class="f-mont text-base font-bold text-white mb-4">What happens next</h2>
         <ol class="space-y-4 text-sm text-white/80">
             <li class="flex items-start gap-3">
@@ -54,6 +57,29 @@
             Ask us a question
         </a>
         <p><a href="{{ url('/') }}" class="text-sm text-[#0078D4] hover:underline">Back to Xquisite Creations</a></p>
+    </div>
+
+    </div>
+
+    {{-- Desktop only: freed side column answers the two questions someone is most
+         likely to have right after applying, instead of sitting empty. Copy matches
+         docs/marketing/founding-20-content.md's FAQ verbatim. --}}
+    <aside class="hidden lg:block">
+        <div class="bg-[#F8FAFC] border border-slate-100 rounded-2xl p-6 mt-8 lg:mt-0 lg:sticky lg:top-8">
+            <h2 class="f-mont text-base font-bold text-[#002B5B] mb-4">While you wait</h2>
+            <div class="space-y-4 text-sm">
+                <div>
+                    <p class="font-semibold text-slate-800">What if I'm not selected?</p>
+                    <p class="text-slate-500 mt-1">Nothing lost. You can still start a normal free trial, and we keep your answers on file for the next round.</p>
+                </div>
+                <div>
+                    <p class="font-semibold text-slate-800">Can I stop later?</p>
+                    <p class="text-slate-500 mt-1">Any time. The three months are free with no lock-in, and you can export your data if you leave.</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
     </div>
 </main>
 

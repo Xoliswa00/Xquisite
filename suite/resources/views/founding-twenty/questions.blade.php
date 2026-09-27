@@ -71,7 +71,11 @@
         $adoptionBarrierOptions = ['cost' => 'Cost', 'dont_know_which' => 'Don\'t know which one to choose', 'too_complicated' => 'Too complicated', 'too_small' => 'My business is too small', 'customers_prefer_whatsapp' => 'My customers prefer WhatsApp', 'dont_need_one' => "I don't need one", 'bad_experience' => 'Previous bad experience', 'dont_know_how' => "I don't know how to use one", 'other' => 'Other'];
         $featureOptions = ['online_booking' => 'Online customer booking', 'automated_reminders' => 'Automated reminders', 'staff_calendars' => 'Staff calendars', 'customer_profiles' => 'Customer profiles', 'appointment_management' => 'Appointment management', 'payments' => 'Payments', 'outstanding_balances' => 'Outstanding balances', 'pos' => 'POS', 'stock_management' => 'Stock management', 'business_reporting' => 'Business reporting', 'revenue_tracking' => 'Revenue tracking', 'customer_history' => 'Customer history', 'marketing_retention' => 'Marketing/customer retention', 'other' => 'Other'];
         $bucketLabels = ['<1' => 'Less than 1 hour', '1-3' => '1–3 hours', '3-5' => '3–5 hours', '5-10' => '5–10 hours', '10+' => '10+ hours'];
+        $sectionTitles = ['Your business', 'How you run things today', 'In the last 30 days', 'Quantifying the impact', 'Time cost', "What's stopped you before", 'What would help most', 'Founding 20 Programme'];
     @endphp
+
+    <div class="lg:grid lg:grid-cols-[1fr_280px] lg:gap-10">
+    <div>
 
     <form method="POST" action="{{ route('founding-twenty.submit') }}" class="space-y-6">
         @csrf
@@ -316,6 +320,28 @@
         </button>
         <p class="text-center text-xs text-slate-400 -mt-2">Nothing is charged when you apply.</p>
     </form>
+
+    </div>
+
+    {{-- Desktop only: the freed-up side column tracks progress through the 8 sections
+         instead of sitting empty. Highlighted section is kept in sync by the same
+         scroll-position script that already drives the top progress bar. --}}
+    <aside class="hidden lg:block">
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 lg:sticky lg:top-28">
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4] mb-3">Your progress</p>
+            <ol class="space-y-2 text-sm">
+                @foreach($sectionTitles as $i => $title)
+                    <li data-sidebar-section="{{ $i + 1 }}" class="flex items-center gap-2 text-slate-400 transition-colors">
+                        <span class="f-mont flex items-center justify-center w-5 h-5 rounded-full border border-slate-200 text-[10px] font-bold shrink-0">{{ $i + 1 }}</span>
+                        <span>{{ $title }}</span>
+                    </li>
+                @endforeach
+            </ol>
+            <p class="text-xs text-slate-400 mt-4 pt-4 border-t border-slate-100">Nothing is charged when you apply. Your answers save automatically as you go, and the link above works if you need to finish later.</p>
+        </div>
+    </aside>
+
+    </div>
 </main>
 
 <footer class="border-t border-slate-200 mt-10 py-6 text-center text-xs text-slate-400">
@@ -339,6 +365,24 @@
         sections.forEach(function (p) { if (p.getBoundingClientRect().top < window.innerHeight * 0.45) current = p; });
         label.textContent = current ? current.textContent.trim() : '';
         report(current);
+        highlightSidebar(current);
+    }
+
+    // Desktop sidebar "Your progress" list — mirrors the same current-section
+    // detection above, no separate tracking needed.
+    var sidebarItems = document.querySelectorAll('[data-sidebar-section]');
+    function highlightSidebar(current) {
+        if (!sidebarItems.length) return;
+        var n = current ? parseInt(current.textContent.trim().split(' ')[1], 10) : 0;
+        sidebarItems.forEach(function (li) {
+            var isCurrent = parseInt(li.dataset.sidebarSection, 10) === n;
+            li.classList.toggle('text-[#002B5B]', isCurrent);
+            li.classList.toggle('font-semibold', isCurrent);
+            li.classList.toggle('text-slate-400', !isCurrent);
+            li.querySelector('span').classList.toggle('border-[#0078D4]', isCurrent);
+            li.querySelector('span').classList.toggle('text-[#0078D4]', isCurrent);
+            li.querySelector('span').classList.toggle('border-slate-200', !isCurrent);
+        });
     }
 
     // Tell us how far people get, so we can see which section loses them. Sent only when

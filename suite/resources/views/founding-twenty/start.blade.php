@@ -27,7 +27,9 @@
     <div class="h-1 bg-slate-100" aria-hidden="true"><div class="h-1 bg-[#0078D4]" style="width:50%"></div></div>
 </header>
 
-<main class="max-w-xl mx-auto px-4 py-10">
+<main class="max-w-xl lg:max-w-5xl mx-auto px-4 py-10">
+    <div class="lg:grid lg:grid-cols-[1fr_320px] lg:gap-10">
+    <div>
 
     <div class="mb-8">
         <h1 class="f-mont text-2xl font-extrabold text-[#002B5B]">First, tell us who you are</h1>
@@ -140,6 +142,31 @@
         </button>
         <p class="text-center text-xs text-slate-400 -mt-2">Nothing is charged when you apply.</p>
     </form>
+
+    </div>
+
+    {{-- Desktop only: the freed-up side column carries trust context instead of empty margin. --}}
+    <aside class="hidden lg:block">
+        <div class="bg-[#111111] rounded-[20px] p-6 lg:sticky lg:top-28">
+            <h2 class="f-mont text-base font-extrabold text-white mb-4">What you're applying for</h2>
+            <ul class="space-y-4 text-sm text-white/80">
+                <li class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    <span><span class="text-white font-semibold">Three months free</span>, the whole platform. No setup fee.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    <span>A fully refundable <span class="text-[#D4AF37] font-semibold">R100</span> deposit, asked only if you're selected.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    <span>We read every application and reply within {{ config('founding_twenty.decision_within_days') }} days, whether or not you're selected.</span>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    </div>
 </main>
 
 <footer class="border-t border-slate-200 mt-10 py-6 text-center text-xs text-slate-400">

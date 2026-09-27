@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reserve Your Spot — Xquisite Creations Founding 20</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=montserrat:700,800&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- Only the new desktop-only sidebar below uses .f-mont — the existing mobile
+         content keeps its original font-sans so mobile stays pixel-identical. --}}
+    <style>.f-mont { font-family: 'Montserrat', sans-serif; }</style>
 </head>
 <body class="h-full font-sans antialiased text-slate-800">
 
@@ -18,8 +23,8 @@
     </div>
 </header>
 
-<main class="max-w-md mx-auto px-4 py-12">
-    <div class="mb-6 text-center">
+<main class="max-w-md lg:max-w-4xl mx-auto px-4 py-12">
+    <div class="mb-6 text-center lg:max-w-xl lg:mx-auto">
         <div class="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center mx-auto mb-4">
             <svg class="w-7 h-7 text-[#D4AF37]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
@@ -31,16 +36,19 @@
     </div>
 
     @if(session('success'))
-        <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm">
+        <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm lg:max-w-xl lg:mx-auto">
             {{ session('success') }}
         </div>
     @endif
 
     @if($errors->any())
-        <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm lg:max-w-xl lg:mx-auto">
             <ul class="space-y-1">@foreach($errors->all() as $e)<li>• {{ $e }}</li>@endforeach</ul>
         </div>
     @endif
+
+    <div class="lg:grid lg:grid-cols-[1fr_280px] lg:gap-10">
+    <div>
 
     <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
         <dl class="grid grid-cols-2 gap-y-2 text-sm">
@@ -78,6 +86,34 @@
                 Upload proof of payment
             </button>
         </form>
+    </div>
+
+    </div>
+
+    {{-- Desktop only: freed side column recaps what happens right after this step,
+         so the freed space carries the same reassurance the explainer page gives
+         at the equivalent moment ("How it works" steps 3-4), not empty margin. --}}
+    <aside class="hidden lg:block">
+        <div class="bg-[#111111] rounded-[20px] p-6 lg:sticky lg:top-8">
+            <h2 class="f-mont text-base font-extrabold text-white mb-4">After you upload</h2>
+            <ol class="space-y-3 text-sm text-white/80">
+                <li class="flex items-start gap-3">
+                    <span class="f-mont flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37] text-[#111111] text-xs font-extrabold shrink-0">1</span>
+                    <span>We confirm your payment and lock in your spot.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="f-mont flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37] text-[#111111] text-xs font-extrabold shrink-0">2</span>
+                    <span>We help you set up and move your existing bookings across.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="f-mont flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37] text-[#111111] text-xs font-extrabold shrink-0">3</span>
+                    <span>Your 3 free months begin.</span>
+                </li>
+            </ol>
+            <p class="text-xs text-white/70 mt-4 pt-4 border-t border-white/10">It's fully refundable. It just confirms you're serious about using the platform for the three months.</p>
+        </div>
+    </aside>
+
     </div>
 </main>
 
