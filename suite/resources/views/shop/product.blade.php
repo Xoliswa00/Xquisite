@@ -16,7 +16,7 @@
         <!-- Image -->
         <div class="aspect-square bg-gray-100 rounded-2xl overflow-hidden">
             @if($product->image_url)
-                <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                <img src="{{ $product->image_url }}" alt="{{ $product->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
             @else
                 <div class="w-full h-full flex items-center justify-center">
                     <svg class="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +99,7 @@
                        class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
                         <div class="aspect-square bg-gray-100">
                             @if($rel->image_url)
-                                <img src="{{ $rel->image_url }}" alt="{{ $rel->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                <img src="{{ $rel->image_url }}" alt="{{ $rel->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                             @endif
                         </div>
                         <div class="p-3">

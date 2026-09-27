@@ -562,8 +562,10 @@ Route::prefix('apply/{slug}/{property}')->name('apply.')->group(function () {
     Route::get('/thanks',  [PublicApplicationController::class, 'thanks'])->name('thanks');
 });
 
-// Public storefront (no auth)
-Route::prefix('shop/{tenantSlug}')->name('shop.')->group(function () {
+// Public storefront (no auth) — 404s if the tenant hasn't got the ecommerce
+// module active, so deactivating it actually takes the shop offline instead
+// of just hiding the staff-side order/settings pages.
+Route::prefix('shop/{tenantSlug}')->name('shop.')->middleware('tenant-module:ecommerce')->group(function () {
     Route::get('/manifest.json', [StorefrontController::class, 'manifest'])->name('manifest');
     Route::get('/', [StorefrontController::class, 'index'])->name('index');
     Route::get('/product/{productId}', [StorefrontController::class, 'product'])->name('product');

@@ -22,7 +22,7 @@
                         <!-- Image -->
                         <div class="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden shrink-0">
                             @if($line->product->image_url)
-                                <img src="{{ $line->product->image_url }}" alt="{{ $line->product->name }}" class="w-full h-full object-cover">
+                                <img src="{{ $line->product->image_url }}" alt="{{ $line->product->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
                             @endif
                         </div>
 

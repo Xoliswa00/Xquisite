@@ -55,6 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'module' => EnsureModuleActive::class,
+            'tenant-module' => \App\Http\Middleware\EnsureTenantModuleActive::class,
             'enforce-password-change' => EnforcePasswordChange::class,
             'company.suspension' => \App\Http\Middleware\CheckCompanySuspension::class,
             'monitored-instance' => \App\Http\Middleware\EnsureMonitoredInstance::class,
