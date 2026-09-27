@@ -21,6 +21,7 @@ class PurgeStaleFoundingTwentyApplications extends Command
                 $q->whereNull('submitted_at')->orWhereIn('status', ['rejected', 'waitlisted']);
             })
             ->whereNull('tenant_id')
+            ->whereNull('deposit_confirmed_at')
             ->get();
 
         foreach ($stale as $application) {

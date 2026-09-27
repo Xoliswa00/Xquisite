@@ -437,6 +437,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::get('/founding-twenty', [AdminFoundingTwentyController::class, 'index'])->name('founding-twenty.index');
             Route::get('/founding-twenty/action-queue', [AdminFoundingTwentyController::class, 'actionQueue'])->name('founding-twenty.action-queue');
             Route::get('/founding-twenty/deposits', [AdminFoundingTwentyController::class, 'depositLedger'])->name('founding-twenty.deposits');
+            Route::post('/founding-twenty/deposits/entries/{entry}/reverse', [AdminFoundingTwentyController::class, 'reverseDepositEntry'])->name('founding-twenty.deposits.reverse');
             Route::get('/founding-twenty/funnel', [AdminFoundingTwentyController::class, 'funnel'])->name('founding-twenty.funnel');
             Route::get('/founding-twenty/add', [AdminFoundingTwentyController::class, 'create'])->name('founding-twenty.create');
             Route::post('/founding-twenty/add', [AdminFoundingTwentyController::class, 'storeDirect'])->name('founding-twenty.store-direct');

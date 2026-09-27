@@ -60,6 +60,8 @@
         </div>
     </div>
 
+    @include('admin.founding-twenty._dashboard-panel', ['founding20' => $founding20])
+
     {{-- ── 6-month revenue trend (CSS bar chart) ── --}}
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
         <div class="flex items-center justify-between mb-6">
