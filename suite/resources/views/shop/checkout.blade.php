@@ -8,10 +8,27 @@
             @csrf
             <input type="hidden" name="idempotency_key" value="{{ $idempotencyKey }}">
 
-            <div class="grid lg:grid-cols-3 gap-6">
+            {{--
+                grid-cols-1 base is required, not decorative: without any
+                column template below `lg`, CSS Grid auto-placement puts the
+                two direct children into separate IMPLICIT columns side by
+                side (each auto-sized to its own content), not stacked —
+                grid only wraps into one column when told to. That's what
+                was actually forcing every card below to ~406px wide on a
+                390px viewport, not a text-wrapping issue in any one card.
+            --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
+                {{--
+                    min-w-0: a CSS Grid item defaults to min-width:auto, so any
+                    descendant's unwrapped min-content width (the payment-method
+                    description text below was the culprit) can force this whole
+                    column — and everything else in it — wider than the viewport
+                    instead of wrapping. Caps the shrink-to-fit at 0 so children
+                    respect the grid track's actual computed width.
+                --}}
                 <!-- Left — Customer + Delivery -->
-                <div class="lg:col-span-2 space-y-4">
+                <div class="lg:col-span-2 space-y-4 min-w-0">
 
                     <!-- Customer Details -->
                     <div class="bg-white rounded-2xl border border-gray-200 p-5">
@@ -119,7 +136,7 @@
                                    :class="payment === 'payfast' ? 'border-[#0078D4] bg-[#F0F7FF]' : 'border-gray-200'">
                                 <input type="radio" name="payment_method" value="payfast"
                                        x-model="payment" class="accent-[#0078D4]">
-                                <div class="flex-1">
+                                <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-gray-900">Pay Online</p>
                                     <p class="text-xs text-gray-400 mt-0.5">Card, EFT, SnapScan & more via PayFast</p>
                                 </div>
@@ -131,7 +148,7 @@
                                    :class="payment === 'eft' ? 'border-[#0078D4] bg-[#F0F7FF]' : 'border-gray-200'">
                                 <input type="radio" name="payment_method" value="eft"
                                        x-model="payment" class="accent-[#0078D4]">
-                                <div class="flex-1">
+                                <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-gray-900">Manual EFT</p>
                                     <p class="text-xs text-gray-400 mt-0.5">Pay via bank transfer. We'll confirm your order once received</p>
                                 </div>
@@ -143,7 +160,7 @@
                                    :class="payment === 'collection' ? 'border-[#0078D4] bg-[#F0F7FF]' : 'border-gray-200'">
                                 <input type="radio" name="payment_method" value="collection"
                                        x-model="payment" class="accent-[#0078D4]">
-                                <div class="flex-1">
+                                <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-gray-900">Pay on Collection</p>
                                     <p class="text-xs text-gray-400 mt-0.5">Pay cash or card when you collect</p>
                                 </div>
