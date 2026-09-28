@@ -67,11 +67,15 @@
              so a referral link or campaign link landing here doesn't lose attribution. --}}
         @php $applyParams = request()->only(['src', 'campaign', 'ref']); @endphp
         <div class="text-center">
-            <a href="{{ route('founding-twenty.show', $applyParams) }}"
-               class="inline-flex items-center justify-center px-8 py-3.5 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition-colors text-base sm:text-lg">
-                Start Your Application
-            </a>
-            <p class="text-sm text-[#2D3748]/60 mt-3 max-w-md mx-auto">Step 1 takes about a minute and saves your place. The questions take another 5 to 7. Applying costs nothing, and we review every application before anyone is selected.</p>
+            @if($launch->hasCountdown())
+                <p class="text-sm text-[#2D3748]/60 max-w-md mx-auto">Applications open the moment the countdown above reaches zero. Got a question while you wait? Ask below.</p>
+            @else
+                <a href="{{ route('founding-twenty.show', $applyParams) }}"
+                   class="inline-flex items-center justify-center px-8 py-3.5 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition-colors text-base sm:text-lg">
+                    Start Your Application
+                </a>
+                <p class="text-sm text-[#2D3748]/60 mt-3 max-w-md mx-auto">Step 1 takes about a minute and saves your place. The questions take another 5 to 7. Applying costs nothing, and we review every application before anyone is selected.</p>
+            @endif
         </div>
 
         {{-- How it works: the deposit is disclosed here, before anyone spends time on the form. --}}
@@ -95,7 +99,9 @@
             </div>
         </div>
 
-        {{-- Closing CTA: the same copy from the approved content pack, framed as the poster's closing black banner. --}}
+        {{-- Closing CTA: the same copy from the approved content pack, framed as the poster's closing black banner.
+             Only while applications are actually open — there is nothing to click through to otherwise. --}}
+        @if(! $launch->hasCountdown())
         <div class="relative bg-[#111111] rounded-[20px] p-6 sm:p-8 text-center max-w-lg lg:max-w-2xl mx-auto overflow-hidden">
             <div class="absolute top-3 left-3 grid grid-cols-3 gap-1" aria-hidden="true">
                 @for($d = 0; $d < 9; $d++)<span class="block w-[6px] h-[6px] rounded-full bg-[#D4AF37]"></span>@endfor
@@ -106,6 +112,7 @@
                 Start Your Application
             </a>
         </div>
+        @endif
     @endif
 
     {{-- Benefits --}}

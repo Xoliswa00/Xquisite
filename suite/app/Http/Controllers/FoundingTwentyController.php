@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FoundingTwentyApplication;
+use App\Models\PublicLaunch;
 use App\Models\Tenant;
 use App\Rules\SouthAfricanPhoneNumber;
 use App\Notifications\FoundingTwentyApplicantMessage;
@@ -40,6 +41,10 @@ class FoundingTwentyController extends Controller
      */
     public function show(Request $request)
     {
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
         // Someone partway through goes straight back to where they were.
         if ($this->leadFromSession($request)) {
             return redirect()->route('founding-twenty.questions');
@@ -58,6 +63,10 @@ class FoundingTwentyController extends Controller
 
     public function store(Request $request)
     {
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
         $validated = $request->validate([
             'owner_name' => 'required|string|max:255',
             'phone' => ['required', new SouthAfricanPhoneNumber],
@@ -120,6 +129,10 @@ class FoundingTwentyController extends Controller
     /** Step 2 of 2: the questionnaire, for the lead in this session. */
     public function questions(Request $request)
     {
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
         $lead = $this->leadFromSession($request);
 
         if (! $lead) {
@@ -131,6 +144,10 @@ class FoundingTwentyController extends Controller
 
     public function submit(Request $request, FoundingTwentyScoringService $scoring)
     {
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
         $lead = $this->leadFromSession($request);
 
         if (! $lead) {
@@ -229,6 +246,10 @@ class FoundingTwentyController extends Controller
     /** Pick an unfinished application back up, on any device, from a link. */
     public function resume(Request $request, FoundingTwentyApplication $foundingTwenty, string $token)
     {
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
         abort_unless(hash_equals($foundingTwenty->resumeToken(), $token), 403, 'Invalid or expired link.');
 
         if ($foundingTwenty->isSubmitted()) {
@@ -245,7 +266,31 @@ class FoundingTwentyController extends Controller
     {
         $request->session()->forget(self::LEAD_SESSION_KEY);
 
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
         return redirect()->route('founding-twenty.show');
+    }
+
+    /**
+     * Whether new applications are closed right now: driven entirely by the same
+     * `launch_at` the explainer page's countdown already reads, so there is nothing
+     * to hardcode or keep in sync — set the date on the Founding 20 PublicLaunch row
+     * (Admin > Launch Pages) and this closes automatically, then reopens the moment
+     * that date passes. Leads/applications already in progress before the gate was
+     * set are untouched; this only blocks new visits while it is active.
+     */
+    private function redirectIfClosed(): ?\Illuminate\Http\RedirectResponse
+    {
+        $launch = PublicLaunch::where('key', 'founding-20')->first();
+
+        if (! $launch || ! $launch->hasCountdown()) {
+            return null;
+        }
+
+        return redirect()->route('founding-20.show')
+            ->with('info', 'Applications open once the countdown on this page reaches zero.');
     }
 
     private function leadFromSession(Request $request): ?FoundingTwentyApplication
