@@ -32,13 +32,16 @@
                         <!-- Image + Info -->
                         <div class="flex items-center gap-4 flex-1 min-w-[180px]">
                             <div class="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden shrink-0">
-                                @if($line->product->image_url)
-                                    <img src="{{ $line->product->image_url }}" alt="{{ $line->product->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
+                                @if($line->variant?->effectiveImageUrl() ?? $line->product->image_url)
+                                    <img src="{{ $line->variant?->effectiveImageUrl() ?? $line->product->image_url }}" alt="{{ $line->product->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
                                 @endif
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium text-gray-900 truncate">{{ $line->product->name }}</p>
-                                <p class="text-xs text-gray-400">R{{ number_format($line->product->price, 2) }} each</p>
+                                @if($line->variant)
+                                    <p class="text-xs text-gray-500">{{ $line->variant->label }}</p>
+                                @endif
+                                <p class="text-xs text-gray-400">R{{ number_format($line->unit_price, 2) }} each</p>
                             </div>
                         </div>
 
@@ -47,6 +50,7 @@
                             <form action="{{ $tenant->shopRoute('cart.update') }}" method="POST" class="flex items-center gap-1">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $line->product->id }}">
+                                <input type="hidden" name="variant_id" value="{{ $line->variant?->id }}">
                                 <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden">
                                     <button type="submit" name="qty" value="{{ $line->qty - 1 }}"
                                             class="px-2 py-1 text-gray-400 hover:text-red-500 text-sm">−</button>
@@ -61,6 +65,7 @@
                                 <form action="{{ $tenant->shopRoute('cart.remove') }}" method="POST">
                                     @csrf
                                     <input type="hidden" name="product_id" value="{{ $line->product->id }}">
+                                    <input type="hidden" name="variant_id" value="{{ $line->variant?->id }}">
                                     <button type="submit" class="text-gray-300 hover:text-red-500 transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>

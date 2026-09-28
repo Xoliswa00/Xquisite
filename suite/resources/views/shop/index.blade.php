@@ -91,7 +91,17 @@
                                 </a>
                                 <p class="text-base font-bold text-[#0078D4] mt-1">R{{ number_format($product->price, 2) }}</p>
 
-                                @if($product->track_stock && $product->stock_quantity <= 0)
+                                @if($product->has_variants)
+                                    {{-- Variant products need a size/color pick first — send to the product page rather than a one-click add. --}}
+                                    @if(($product->variant_stock_sum ?? 0) > 0)
+                                        <a href="{{ $tenant->shopRoute('product', ['productId' => $product->id]) }}"
+                                           class="mt-2 block w-full text-center bg-[#0078D4] hover:bg-[#002B5B] text-white text-xs font-semibold py-2 rounded-xl transition-colors">
+                                            Select Options
+                                        </a>
+                                    @else
+                                        <span class="text-xs text-red-500 font-medium">Out of stock</span>
+                                    @endif
+                                @elseif($product->track_stock && $product->stock_quantity <= 0)
                                     <span class="text-xs text-red-500 font-medium">Out of stock</span>
                                 @else
                                     <form action="{{ $tenant->shopRoute('cart.add') }}" method="POST" class="mt-2">

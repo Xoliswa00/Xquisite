@@ -85,7 +85,10 @@
                             <p class="text-xs text-slate-400 mb-1" x-text="product.category"></p>
                             <p class="text-sm font-medium text-white leading-tight" x-text="product.name"></p>
                             <p class="text-sm font-bold text-emerald-400 mt-1.5" x-text="'R' + product.price.toFixed(2)"></p>
-                            <template x-if="product.tracked">
+                            <template x-if="product.has_variants">
+                                <p class="text-xs text-[#0078D4] mt-0.5">Select options →</p>
+                            </template>
+                            <template x-if="!product.has_variants && product.tracked">
                                 <p class="text-xs text-slate-500 mt-0.5" x-text="'Stock: ' + product.stock"></p>
                             </template>
                         </button>
@@ -231,6 +234,51 @@
             </div>
         </div>
     </div>
+
+    <!-- Variant picker modal — opened by addProduct() for a has_variants product -->
+    <div x-show="variantModal.open" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+         @click.self="closeVariantModal()">
+        <div class="bg-slate-800 rounded-2xl p-6 w-full max-w-sm" x-show="variantModal.open" x-transition>
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div>
+                    <p class="text-sm font-semibold text-white" x-text="variantModal.product?.name"></p>
+                    <p class="text-xs text-slate-400 mt-0.5">Select options</p>
+                </div>
+                <button @click="closeVariantModal()" class="text-slate-500 hover:text-white text-lg leading-none">×</button>
+            </div>
+
+            <template x-for="optionName in variantModal.optionNames" :key="optionName">
+                <div class="mb-4">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2" x-text="optionName"></p>
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="value in variantModal.product?.options[optionName] || []" :key="value">
+                            <button type="button"
+                                    @click="chooseVariantOption(optionName, value)"
+                                    :disabled="!variantOptionAvailable(optionName, value)"
+                                    :class="{
+                                        'border-[#0078D4] bg-[#001A3A]/50 text-[#B8D4F0]': variantModal.selected[optionName] === value,
+                                        'border-slate-600 text-slate-300 hover:border-slate-500': variantModal.selected[optionName] !== value && variantOptionAvailable(optionName, value),
+                                        'border-slate-700 text-slate-600 cursor-not-allowed line-through': !variantOptionAvailable(optionName, value),
+                                    }"
+                                    class="px-3 py-1.5 text-sm font-medium border-2 rounded-lg transition-colors"
+                                    x-text="value"></button>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <p class="text-xs mb-4" :class="selectedModalVariant() ? (selectedModalVariant().tracked && selectedModalVariant().stock <= 0 ? 'text-red-400' : 'text-emerald-400') : 'text-slate-500'"
+               x-text="selectedModalVariant() ? (selectedModalVariant().tracked ? selectedModalVariant().stock + ' in stock' : 'In stock') : 'Select every option'"></p>
+
+            <button type="button" @click="confirmVariantSelection()"
+                    :disabled="!selectedModalVariant() || (selectedModalVariant().tracked && selectedModalVariant().stock <= 0)"
+                    :class="(!selectedModalVariant() || (selectedModalVariant().tracked && selectedModalVariant().stock <= 0)) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-[#0078D4] hover:bg-[#0065B8] text-white'"
+                    class="w-full font-semibold py-2.5 rounded-lg text-sm transition-colors">
+                Add to Order
+            </button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -244,6 +292,7 @@ function pos() {
         items: @json($preloadItems),
         allProducts: @json($products),
         suggestions: @json($serviceSuggestions),
+        variantModal: { open: false, product: null, optionNames: [], selected: {} },
 
         get categories() {
             return [...new Set(this.allProducts.map(p => p.category))].filter(Boolean).sort();
@@ -268,12 +317,18 @@ function pos() {
         },
 
         addProduct(product) {
-            const existing = this.items.findIndex(i => i.type === 'product' && i.id === product.id);
+            if (product.has_variants) {
+                this.openVariantModal(product);
+                return;
+            }
+
+            const existing = this.items.findIndex(i => i.type === 'product' && i.id === product.id && !i.variant_id);
             if (existing >= 0) {
                 this.updateQty(existing, this.items[existing].qty + 1);
             } else {
                 this.items.push({
                     id:         product.id,
+                    variant_id: null,
                     type:       'product',
                     name:       product.name,
                     unit_price: product.price,
@@ -281,6 +336,68 @@ function pos() {
                     subtotal:   product.price,
                 });
             }
+        },
+
+        // ── Variant picker modal ────────────────────────────────
+        openVariantModal(product) {
+            this.variantModal.product = product;
+            this.variantModal.optionNames = Object.keys(product.options || {});
+            const first = product.variants.find(v => !v.tracked || v.stock > 0) || product.variants[0];
+            this.variantModal.selected = {};
+            if (first) {
+                this.variantModal.optionNames.forEach(name => { this.variantModal.selected[name] = first.attributes[name]; });
+            }
+            this.variantModal.open = true;
+        },
+
+        closeVariantModal() {
+            this.variantModal = { open: false, product: null, optionNames: [], selected: {} };
+        },
+
+        variantMatches(variant, partial) {
+            return Object.entries(partial).every(([k, v]) => variant.attributes[k] === v);
+        },
+
+        // Same "no dead-end combinations" rule as the online store's picker.
+        variantOptionAvailable(optionName, value) {
+            const partial = { ...this.variantModal.selected, [optionName]: value };
+            return this.variantModal.product.variants.some(v => this.variantMatches(v, partial));
+        },
+
+        chooseVariantOption(optionName, value) {
+            if (!this.variantOptionAvailable(optionName, value)) return;
+            this.variantModal.selected = { ...this.variantModal.selected, [optionName]: value };
+        },
+
+        selectedModalVariant() {
+            if (!this.variantModal.product) return null;
+            if (this.variantModal.optionNames.some(n => !this.variantModal.selected[n])) return null;
+            return this.variantModal.product.variants.find(v => this.variantMatches(v, this.variantModal.selected)) || null;
+        },
+
+        confirmVariantSelection() {
+            const variant = this.selectedModalVariant();
+            if (!variant || (variant.tracked && variant.stock <= 0)) return;
+
+            const product = this.variantModal.product;
+            const label = `${product.name} (${variant.label})`;
+
+            const existing = this.items.findIndex(i => i.type === 'product' && i.id === product.id && i.variant_id === variant.id);
+            if (existing >= 0) {
+                this.updateQty(existing, this.items[existing].qty + 1);
+            } else {
+                this.items.push({
+                    id:         product.id,
+                    variant_id: variant.id,
+                    type:       'product',
+                    name:       label,
+                    unit_price: variant.price,
+                    qty:        1,
+                    subtotal:   variant.price,
+                });
+            }
+
+            this.closeVariantModal();
         },
 
         removeItem(index) {
@@ -307,6 +424,9 @@ function pos() {
                     [`items[${i}][price]`]: item.unit_price,
                     [`items[${i}][qty]`]:   item.qty,
                 };
+                if (item.variant_id) {
+                    fields[`items[${i}][variant_id]`] = item.variant_id;
+                }
                 Object.entries(fields).forEach(([name, value]) => {
                     const inp = document.createElement('input');
                     inp.type  = 'hidden';

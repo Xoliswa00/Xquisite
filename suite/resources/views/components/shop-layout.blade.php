@@ -35,6 +35,77 @@
             badge.innerHTML = '<span class="text-white font-bold text-sm">' + initial + '</span>';
             img.replaceWith(badge);
         };
+
+        // Alpine component backing the product page's size/color/etc.
+        // selector — see resources/views/shop/product.blade.php. Defined
+        // here (in <head>) for the same reason as the two functions above:
+        // it must exist before Alpine scans the DOM and evaluates
+        // x-data="variantPicker(...)".
+        window.variantPicker = function (options, variants, fallbackImage) {
+            const optionNames = Object.keys(options || {});
+
+            return {
+                options: options || {},
+                optionNames,
+                variants: variants || [],
+                selected: {},
+                qty: 1,
+
+                init() {
+                    // Pre-select the first in-stock combination so the page
+                    // never opens with an empty "Select Options" state.
+                    const first = this.variants.find(v => !v.track_stock || v.stock > 0) || this.variants[0];
+                    if (first) {
+                        optionNames.forEach(name => { this.selected[name] = first.attributes[name]; });
+                    }
+                },
+
+                matches(variant, partial) {
+                    return Object.entries(partial).every(([k, v]) => variant.attributes[k] === v);
+                },
+
+                // A value is pickable if at least one variant exists with
+                // that value AND every other option axis as currently
+                // selected — stops the picker offering a Size/Color
+                // combination that was never actually stocked.
+                isAvailable(optionName, value) {
+                    const partial = { ...this.selected, [optionName]: value };
+                    return this.variants.some(v => this.matches(v, partial));
+                },
+
+                choose(optionName, value) {
+                    if (!this.isAvailable(optionName, value)) return;
+                    this.selected = { ...this.selected, [optionName]: value };
+                    this.qty = 1;
+                },
+
+                get selectedVariant() {
+                    if (optionNames.some(name => !this.selected[name])) return null;
+                    return this.variants.find(v => this.matches(v, this.selected)) || null;
+                },
+
+                get price() {
+                    return this.selectedVariant ? this.selectedVariant.price : (this.variants[0]?.price || 0);
+                },
+
+                get sku() {
+                    return this.selectedVariant ? this.selectedVariant.sku : '';
+                },
+
+                get image() {
+                    return (this.selectedVariant && this.selectedVariant.image_url) || fallbackImage || null;
+                },
+
+                get maxQty() {
+                    if (!this.selectedVariant) return 1;
+                    return this.selectedVariant.track_stock ? Math.max(1, this.selectedVariant.stock) : 99;
+                },
+
+                get canAddToCart() {
+                    return !!this.selectedVariant && (!this.selectedVariant.track_stock || this.selectedVariant.stock > 0);
+                },
+            };
+        };
     </script>
 </head>
 <body class="font-sans antialiased bg-gray-50 text-gray-900">

@@ -189,12 +189,15 @@
                             @foreach($lines as $line)
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0">
-                                        @if($line->product->image_url)
-                                            <img src="{{ $line->product->image_url }}" alt="{{ $line->product->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
+                                        @if($line->variant?->effectiveImageUrl() ?? $line->product->image_url)
+                                            <img src="{{ $line->variant?->effectiveImageUrl() ?? $line->product->image_url }}" alt="{{ $line->product->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
                                         @endif
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-xs font-medium text-gray-900 truncate">{{ $line->product->name }}</p>
+                                        @if($line->variant)
+                                            <p class="text-xs text-gray-500 truncate">{{ $line->variant->label }}</p>
+                                        @endif
                                         <p class="text-xs text-gray-400">× {{ $line->qty }}</p>
                                     </div>
                                     <p class="text-xs font-semibold text-gray-900 shrink-0">R{{ number_format($line->subtotal, 2) }}</p>
