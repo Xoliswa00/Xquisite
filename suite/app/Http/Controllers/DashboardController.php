@@ -131,10 +131,7 @@ class DashboardController extends Controller
 
     private function reorderCount(): int
     {
-        return Product::where('track_stock', true)
-            ->where('reorder_level', '>', 0)
-            ->whereColumn('stock_quantity', '<=', 'reorder_level')
-            ->count();
+        return Product::reorderAlertCount();
     }
 
     private function bookingStats(int $tenantId, bool $hasPos): array

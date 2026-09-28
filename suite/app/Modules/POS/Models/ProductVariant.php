@@ -27,17 +27,21 @@ class ProductVariant extends Model
         'attributes',
         'price_override',
         'stock_quantity',
+        'reorder_level',
+        'reorder_quantity',
         'track_stock',
         'image_url',
         'is_active',
     ];
 
     protected $casts = [
-        'attributes'      => 'array',
-        'price_override'  => 'decimal:2',
-        'stock_quantity'  => 'integer',
-        'track_stock'     => 'boolean',
-        'is_active'       => 'boolean',
+        'attributes'       => 'array',
+        'price_override'   => 'decimal:2',
+        'stock_quantity'   => 'integer',
+        'reorder_level'    => 'integer',
+        'reorder_quantity' => 'integer',
+        'track_stock'      => 'boolean',
+        'is_active'        => 'boolean',
     ];
 
     public function product()
@@ -58,6 +62,17 @@ class ProductVariant extends Model
     public function effectiveImageUrl(): ?string
     {
         return $this->image_url ?: $this->product?->image_url;
+    }
+
+    /** Demand genuinely differs by size/color — this variant's own reorder_level if set, else the parent product's. */
+    public function effectiveReorderLevel(): int
+    {
+        return (int) ($this->reorder_level ?? $this->product?->reorder_level ?? 0);
+    }
+
+    public function effectiveReorderQuantity(): int
+    {
+        return (int) ($this->reorder_quantity ?? $this->product?->reorder_quantity ?? 0);
     }
 
     /** "Size: M, Color: Red" — order follows the parent product's declared option order. */
@@ -86,8 +101,8 @@ class ProductVariant extends Model
     public function getNeedsReorderAttribute(): bool
     {
         return $this->track_stock
-            && $this->product?->reorder_level > 0
-            && $this->stock_quantity <= $this->product->reorder_level;
+            && $this->effectiveReorderLevel() > 0
+            && $this->stock_quantity <= $this->effectiveReorderLevel();
     }
 
     public function getStockStatusAttribute(): string

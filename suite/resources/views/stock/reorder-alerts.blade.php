@@ -3,10 +3,10 @@
 
     <div class="max-w-4xl space-y-4">
 
-        @if($products->count())
+        @if($rows->count())
             <div class="bg-amber-900/20 border border-amber-700/50 rounded-xl px-5 py-4 flex flex-wrap items-center gap-3">
                 <div class="text-sm text-amber-300 flex-1">
-                    <strong>{{ $products->count() }} {{ $products->count() === 1 ? 'product' : 'products' }}</strong>
+                    <strong>{{ $rows->count() }} {{ $rows->count() === 1 ? 'item' : 'items' }}</strong>
                     at or below reorder level. Create a purchase order to restock.
                 </div>
                 <a href="{{ route('purchase-orders.create', ['from_reorder' => 1]) }}"
@@ -16,13 +16,13 @@
             </div>
         @else
             <div class="bg-emerald-900/20 border border-emerald-700/50 rounded-xl px-5 py-4 text-sm text-emerald-300">
-                All products are above their reorder levels. No action needed right now.
+                Everything is above its reorder level. No action needed right now.
             </div>
         @endif
 
         <div class="bg-slate-800 rounded-xl overflow-hidden">
             <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
-                <h3 class="text-sm font-medium text-slate-300">Products Needing Restock</h3>
+                <h3 class="text-sm font-medium text-slate-300">Needing Restock</h3>
                 <a href="{{ route('purchase-orders.index') }}" class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">View all POs →</a>
             </div>
 
@@ -40,32 +40,34 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-700">
-                    @forelse($products as $product)
+                    @forelse($rows as $row)
                         <tr class="hover:bg-slate-700/30">
                             <td class="px-4 py-3">
-                                <p class="font-medium text-white">{{ $product->name }}</p>
-                                @if($product->sku)
-                                    <p class="text-xs text-slate-500">{{ $product->sku }}</p>
+                                <p class="font-medium text-white">{{ $row->name }}</p>
+                                @if($row->sku)
+                                    <p class="text-xs text-slate-500">{{ $row->sku }}</p>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-slate-400">{{ $product->category ?? '—' }}</td>
-                            <td class="px-4 py-3 text-right font-bold {{ $product->stock_quantity <= 0 ? 'text-red-400' : 'text-yellow-400' }}">
-                                {{ $product->stock_quantity }}
+                            <td class="px-4 py-3 text-slate-400">{{ $row->category ?? '—' }}</td>
+                            <td class="px-4 py-3 text-right font-bold {{ $row->stock_quantity <= 0 ? 'text-red-400' : 'text-yellow-400' }}">
+                                {{ $row->stock_quantity }}
                             </td>
-                            <td class="px-4 py-3 text-right text-slate-400">{{ $product->reorder_level }}</td>
+                            <td class="px-4 py-3 text-right text-slate-400">{{ $row->reorder_level }}</td>
                             <td class="px-4 py-3 text-right text-slate-300">
-                                {{ $product->reorder_quantity > 0 ? $product->reorder_quantity : '—' }}
+                                {{ $row->reorder_quantity > 0 ? $row->reorder_quantity : '—' }}
                             </td>
-                            <td class="px-4 py-3 text-slate-400">{{ $product->supplier ?? '—' }}</td>
+                            <td class="px-4 py-3 text-slate-400">{{ $row->supplier ?? '—' }}</td>
                             <td class="px-4 py-3 text-right">
-                                <a href="{{ route('stock.history', $product) }}"
-                                   class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">History</a>
+                                @if($row->history_url)
+                                    <a href="{{ $row->history_url }}"
+                                       class="text-xs text-[#0078D4] hover:text-[#B8D4F0]">History</a>
+                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="7" class="px-4 py-10 text-center text-slate-500">
-                                No products need reordering.
+                                Nothing needs reordering.
                             </td>
                         </tr>
                     @endforelse

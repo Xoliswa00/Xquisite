@@ -131,6 +131,38 @@ class Product extends Model
         return $this->variants()->where('track_stock', true)->sum('stock_quantity');
     }
 
+    /**
+     * Single source of truth for "how many things need reordering right
+     * now" — plain products below their own reorder_level, plus variants
+     * below theirs (has_variants products are excluded from the plain
+     * half; their own reorder_level/stock_quantity aren't authoritative).
+     * Used by the sidebar badge, the dashboard low-stock card, and
+     * StockController::reorderAlerts() — previously each computed this
+     * independently and only the plain-product half, so the sidebar badge
+     * silently undercounted the moment any variant went low (found while
+     * verifying the variant reorder-alerts page: badge said 1, page said 2).
+     */
+    public static function reorderAlertCount(): int
+    {
+        $plain = static::where('track_stock', true)
+            ->where('has_variants', false)
+            ->where('reorder_level', '>', 0)
+            ->whereColumn('stock_quantity', '<=', 'reorder_level')
+            ->count();
+
+        // Can't express in a single whereColumn — a variant's effective
+        // reorder_level falls back to its parent product's when null, same
+        // reasoning as StockController::trackedStockRows().
+        $variants = ProductVariant::where('track_stock', true)
+            ->where('is_active', true)
+            ->with('product')
+            ->get()
+            ->filter(fn (ProductVariant $v) => $v->needs_reorder)
+            ->count();
+
+        return $plain + $variants;
+    }
+
     public function getStockStatusAttribute(): string
     {
         if ($this->has_variants) {

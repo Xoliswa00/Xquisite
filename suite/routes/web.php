@@ -267,6 +267,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('/stock/take', [StockController::class, 'saveStockTake'])->name('stock.take.save');
             Route::get('/stock/reorder-alerts', [StockController::class, 'reorderAlerts'])->name('stock.reorder-alerts');
             Route::post('/products/{product}/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
+            Route::post('/products/{product}/variants/{variant}/stock/adjust', [StockController::class, 'adjustVariant'])->name('stock.variant.adjust');
             Route::get('/products/{product}/stock/history', [StockController::class, 'history'])->name('stock.history');
 
             Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
