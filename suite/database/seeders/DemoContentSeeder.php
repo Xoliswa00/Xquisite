@@ -636,7 +636,7 @@ class DemoContentSeeder extends Seeder
                 'emergency_contact_phone'=> $this->phone(30 + $i),
             ]);
 
-            $start = $this->today->copy()->subMonths(8)->startOfMonth();
+            $start = $this->today->copy()->subMonthsNoOverflow(8)->startOfMonth();
             $lease = Lease::create([
                 'tenant_id'      => $this->tid,
                 'property_id'    => $property->id,
@@ -651,9 +651,14 @@ class DemoContentSeeder extends Seeder
                 'status'         => 'active',
             ]);
 
-            // Rent history: 8 settled months, then the current month.
+            // Rent history: 8 settled months, then the current month. subMonthsNoOverflow
+            // matters here, not just cosmetically: plain subMonths() on a day that doesn't
+            // exist in the target month (e.g. the 29th minus 7 from Sep lands on "Feb 29" in
+            // a non-leap year) overflows into the next month instead of clamping — which
+            // silently produced two rent_payments for the same period and broke the unique
+            // (lease_id, period) constraint the moment this seeder ran on such a date.
             for ($m = 8; $m >= 1; $m--) {
-                $period = $this->today->copy()->subMonths($m);
+                $period = $this->today->copy()->subMonthsNoOverflow($m);
                 RentPayment::create([
                     'tenant_id'      => $this->tid,
                     'lease_id'       => $lease->id,
