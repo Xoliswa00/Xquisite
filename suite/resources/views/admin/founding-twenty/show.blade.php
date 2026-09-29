@@ -283,5 +283,83 @@
                 </div>
             </div>
         </div>
+
+        @php
+            $checkinTypes = ['30_day' => '30-day', '60_day' => '60-day', '90_day' => '90-day'];
+            $metricRows = [
+                'monthly_appointments' => 'Monthly appointments',
+                'no_shows_per_month' => 'No-shows/month',
+                'avg_appointment_value' => 'Avg. appointment value',
+                'hours_booking_admin' => 'Hours on booking admin/week',
+                'hours_availability_messages' => 'Hours on availability msgs/week',
+                'hours_manual_reminders' => 'Hours on manual reminders/week',
+                'value_rating' => 'Value rating',
+                'continuation_likelihood' => 'Continuation likelihood',
+            ];
+        @endphp
+        <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+            <h3 class="text-sm font-semibold text-slate-300 mb-4">30/60/90-day check-ins</h3>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-700">
+                            <th class="text-left py-2 pr-4 text-slate-400 font-medium">Metric</th>
+                            <th class="text-left py-2 px-4 text-slate-400 font-medium">Baseline</th>
+                            @foreach($checkinTypes as $type => $label)
+                                <th class="text-left py-2 px-4 text-slate-400 font-medium">{{ $label }}</th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700/50">
+                        @foreach($metricRows as $field => $label)
+                            <tr>
+                                <td class="py-2 pr-4 text-slate-400">{{ $label }}</td>
+                                <td class="py-2 px-4 text-white">{{ $field === 'continuation_likelihood' ? str_replace('_', ' ', $a->{$field} ?? '—') : ($a->{$field} ?? '—') }}</td>
+                                @foreach($checkinTypes as $type => $label2)
+                                    @php $checkin = $a->checkins->firstWhere('checkin_type', $type); @endphp
+                                    <td class="py-2 px-4 {{ $checkin?->isComplete() ? 'text-white' : 'text-slate-600' }}">
+                                        @if($checkin?->isComplete())
+                                            {{ $field === 'continuation_likelihood' ? str_replace('_', ' ', $checkin->{$field} ?? '—') : ($checkin->{$field} ?? '—') }}
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid sm:grid-cols-3 gap-3 mt-5 pt-4 border-t border-slate-700">
+                @foreach($checkinTypes as $type => $label)
+                    @php $checkin = $a->checkins->firstWhere('checkin_type', $type); @endphp
+                    <div class="bg-slate-900/50 rounded-lg p-3">
+                        <p class="text-xs font-semibold text-slate-300 mb-2">{{ $label }} check-in</p>
+                        @if(!$checkin)
+                            <form method="POST" action="{{ route('admin.founding-twenty.checkin.issue', $a) }}">
+                                @csrf
+                                <input type="hidden" name="checkin_type" value="{{ $type }}">
+                                <button type="submit" class="w-full px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition">
+                                    Issue link
+                                </button>
+                            </form>
+                        @elseif($checkin->isComplete())
+                            <p class="text-xs text-emerald-400">Completed {{ $checkin->completed_at->diffForHumans() }}</p>
+                            @if($checkin->biggest_change)
+                                <p class="text-xs text-slate-400 mt-1 italic">"{{ Str::limit($checkin->biggest_change, 80) }}"</p>
+                            @endif
+                        @else
+                            <input type="text" readonly
+                                   value="{{ route('founding-twenty.checkin.show', [$checkin, $checkin->checkinToken()]) }}"
+                                   onclick="this.select()"
+                                   class="w-full bg-slate-900 border-slate-700 text-slate-300 rounded-lg text-xs">
+                            <p class="text-xs text-amber-400 mt-1">Awaiting response</p>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
     </div>
 </x-app-layout>
