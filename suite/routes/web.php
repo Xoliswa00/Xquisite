@@ -152,6 +152,7 @@ Route::prefix('launch/{key}')->name('public-launch.')->group(function () {
     Route::get('/',            [PublicLaunchController::class, 'show'])->name('show');
     Route::post('/questions',  [PublicLaunchController::class, 'askQuestion'])->name('questions.store')->middleware('throttle:global');
 });
+Route::post('/t', [\App\Http\Controllers\TrafficBeaconController::class, 'store'])->name('traffic.beacon')->middleware('throttle:120,1');
 Route::get('/founding-20',  [PublicLaunchController::class, 'show'])->name('founding-20.show')->defaults('key', 'founding-20');
 Route::post('/founding-20/questions', [PublicLaunchController::class, 'askQuestion'])->name('founding-20.questions.store')->defaults('key', 'founding-20')->middleware('throttle:global');
 
@@ -432,6 +433,10 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::patch('/public-launches/{publicLaunch}/questions/{publicQuestion}', [AdminPublicLaunchController::class, 'answerQuestion'])->name('public-launches.questions.answer');
             Route::patch('/public-launches/{publicLaunch}/questions/{publicQuestion}/toggle', [AdminPublicLaunchController::class, 'togglePublished'])->name('public-launches.questions.toggle');
             Route::delete('/public-launches/{publicLaunch}/questions/{publicQuestion}', [AdminPublicLaunchController::class, 'destroyQuestion'])->name('public-launches.questions.destroy');
+
+            // Site traffic: visitors, pages, clicks, click heat map
+            Route::get('/traffic', [\App\Http\Controllers\Admin\TrafficController::class, 'index'])->name('traffic.index');
+            Route::get('/traffic/heatmap', [\App\Http\Controllers\Admin\TrafficController::class, 'heatmap'])->name('traffic.heatmap');
 
             // Founding 20 questionnaire applications
             Route::get('/founding-twenty', [AdminFoundingTwentyController::class, 'index'])->name('founding-twenty.index');

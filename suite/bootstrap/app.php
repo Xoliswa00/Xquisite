@@ -44,11 +44,13 @@ return Application::configure(basePath: dirname(__DIR__))
             DemoModeMiddleware::class,
             \App\Http\Middleware\CheckCompanySuspension::class,
             SecurityHeaders::class,
+            \App\Http\Middleware\TrackPageView::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
             '/js-error',
             '/ingest/logs',
+            '/t',
         ]);
 
         $middleware->redirectGuestsTo($portalLoginRedirect);
