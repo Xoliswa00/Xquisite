@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class FoundingTwentyApplication extends Model
 {
@@ -31,6 +32,7 @@ class FoundingTwentyApplication extends Model
         'privacy_consented_at',
         'deposit_amount', 'deposit_reference', 'deposit_pop_path',
         'deposit_submitted_at', 'deposit_confirmed_at', 'deposit_refunded_at',
+        'tenant_id', 'first_value_milestone_at', 'first_value_milestone_note',
     ];
 
     protected $casts = [
@@ -49,11 +51,22 @@ class FoundingTwentyApplication extends Model
         'deposit_submitted_at' => 'datetime',
         'deposit_confirmed_at' => 'datetime',
         'deposit_refunded_at' => 'datetime',
+        'first_value_milestone_at' => 'datetime',
     ];
 
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    public function promoCodeRedemption(): HasOne
+    {
+        return $this->hasOne(PromoCodeRedemption::class);
     }
 
     public function reservationToken(): string
