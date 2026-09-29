@@ -128,6 +128,55 @@
                     @endif
                 </div>
 
+                @if($a->deposit_amount !== null)
+                    @php
+                        $reserveUrl = route('founding-twenty.reserve', [$a, $a->reservationToken()]);
+                        $depositStatus = match(true) {
+                            $a->deposit_refunded_at !== null => ['label' => 'Refunded', 'color' => 'text-slate-400'],
+                            $a->deposit_confirmed_at !== null => ['label' => 'Confirmed', 'color' => 'text-emerald-400'],
+                            $a->deposit_submitted_at !== null => ['label' => 'POP submitted — awaiting review', 'color' => 'text-amber-400'],
+                            default => ['label' => 'Awaiting payment', 'color' => 'text-slate-400'],
+                        };
+                    @endphp
+                    <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-3">
+                        <h3 class="text-sm font-semibold text-slate-300">Reservation deposit</h3>
+                        <p class="text-sm text-slate-300">Amount: <span class="text-white">R{{ number_format($a->deposit_amount, 2) }}</span></p>
+                        <p class="text-sm text-slate-300">Reference: <span class="text-white font-mono">{{ $a->deposit_reference }}</span></p>
+                        <p class="text-sm text-slate-300">Status: <span class="{{ $depositStatus['color'] }} font-medium">{{ $depositStatus['label'] }}</span></p>
+
+                        <div class="pt-1">
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Reservation link — send via {{ $a->preferred_contact_method }}</label>
+                            <input type="text" readonly value="{{ $reserveUrl }}" onclick="this.select()" class="w-full bg-slate-900 border-slate-700 text-slate-300 rounded-lg text-xs">
+                        </div>
+
+                        @if($a->deposit_pop_path)
+                            <a href="{{ route('admin.founding-twenty.deposit.pop', $a) }}"
+                               class="inline-flex items-center px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition">
+                                Download proof of payment
+                            </a>
+                        @endif
+
+                        <div class="flex gap-2 pt-1">
+                            @if($a->deposit_submitted_at && !$a->deposit_confirmed_at)
+                                <form method="POST" action="{{ route('admin.founding-twenty.deposit.confirm', $a) }}">
+                                    @csrf
+                                    <button type="submit" class="px-3 py-1.5 text-xs bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 rounded transition">
+                                        Confirm deposit
+                                    </button>
+                                </form>
+                            @endif
+                            @if($a->deposit_confirmed_at && !$a->deposit_refunded_at)
+                                <form method="POST" action="{{ route('admin.founding-twenty.deposit.refund', $a) }}">
+                                    @csrf
+                                    <button type="submit" class="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition">
+                                        Mark refunded
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
                 <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
                     <h3 class="text-sm font-semibold text-slate-300 mb-3">Review</h3>
                     <form method="POST" action="{{ route('admin.founding-twenty.status', $a) }}" class="space-y-3">
