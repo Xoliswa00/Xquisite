@@ -26,7 +26,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-2xl font-bold text-white">{{ $a->business_name }}</h2>
-                <p class="text-slate-400 text-sm mt-1">{{ $a->owner_name }} · {{ $a->phone }} @if($a->email) · {{ $a->email }} @endif</p>
+                <p class="text-slate-400 text-sm mt-1">{{ $a->owner_name }} · <x-whatsapp-link :phone="$a->phone" class="text-slate-300" />@if($a->email) · <a href="mailto:{{ $a->email }}" class="text-slate-300 hover:text-white">{{ $a->email }}</a>@endif</p>
             </div>
             <a href="{{ route('admin.founding-twenty.index') }}" class="text-sm text-slate-400 hover:text-slate-200">&larr; Back to list</a>
         </div>
@@ -117,11 +117,11 @@
                 <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
                     <h3 class="text-sm font-semibold text-slate-300 mb-3">Current operations</h3>
                     <dl class="space-y-2 text-sm">
-                        <div><dt class="text-slate-400 inline">Booking:</dt> <dd class="text-white inline">{{ implode(', ', $a->booking_methods ?? []) ?: '—' }}</dd></div>
-                        <div><dt class="text-slate-400 inline">Appointment mgmt:</dt> <dd class="text-white inline">{{ implode(', ', $a->appointment_management_methods ?? []) ?: '—' }}</dd></div>
-                        <div><dt class="text-slate-400 inline">Customer data:</dt> <dd class="text-white inline">{{ implode(', ', $a->customer_data_methods ?? []) ?: '—' }}</dd></div>
-                        <div><dt class="text-slate-400 inline">Payment tracking:</dt> <dd class="text-white inline">{{ implode(', ', $a->payment_tracking_methods ?? []) ?: '—' }}</dd></div>
-                        <div><dt class="text-slate-400 inline">Balance tracking:</dt> <dd class="text-white inline">{{ implode(', ', $a->balance_tracking_methods ?? []) ?: '—' }}</dd></div>
+                        <div><dt class="text-slate-400 inline">Booking:</dt> <dd class="text-white inline">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->booking_methods ?? [])) ?: '—' }}</dd></div>
+                        <div><dt class="text-slate-400 inline">Appointment mgmt:</dt> <dd class="text-white inline">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->appointment_management_methods ?? [])) ?: '—' }}</dd></div>
+                        <div><dt class="text-slate-400 inline">Customer data:</dt> <dd class="text-white inline">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->customer_data_methods ?? [])) ?: '—' }}</dd></div>
+                        <div><dt class="text-slate-400 inline">Payment tracking:</dt> <dd class="text-white inline">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->payment_tracking_methods ?? [])) ?: '—' }}</dd></div>
+                        <div><dt class="text-slate-400 inline">Balance tracking:</dt> <dd class="text-white inline">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->balance_tracking_methods ?? [])) ?: '—' }}</dd></div>
                         <div><dt class="text-slate-400 inline">Card payment device:</dt> <dd class="text-white inline">{{ $a->card_payment_device ?: '—' }}</dd></div>
                     </dl>
                 </div>
@@ -148,11 +148,11 @@
 
                 <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-3">
                     <h3 class="text-sm font-semibold text-slate-300">Alternatives &amp; priorities</h3>
-                    <p class="text-sm"><span class="text-slate-400">Adoption barriers:</span> <span class="text-white">{{ implode(', ', $a->adoption_barriers ?? []) ?: '—' }}{{ $a->adoption_barrier_other ? " ({$a->adoption_barrier_other})" : '' }}</span></p>
+                    <p class="text-sm"><span class="text-slate-400">Adoption barriers:</span> <span class="text-white">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->adoption_barriers ?? [])) ?: '—' }}{{ $a->adoption_barrier_other ? " ({$a->adoption_barrier_other})" : '' }}</span></p>
                     @if($a->past_solution_frustration)
                         <p class="text-sm"><span class="text-slate-400">Past frustration:</span> <span class="text-white">{{ $a->past_solution_frustration }}</span></p>
                     @endif
-                    <p class="text-sm"><span class="text-slate-400">Priority features:</span> <span class="text-white">{{ implode(', ', $a->priority_features ?? []) ?: '—' }}</span></p>
+                    <p class="text-sm"><span class="text-slate-400">Priority features:</span> <span class="text-white">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->priority_features ?? [])) ?: '—' }}</span></p>
                     <p class="text-sm"><span class="text-slate-400">Biggest single difference:</span> <span class="text-white">{{ $a->top_priority_feature ?? '—' }}</span></p>
                     @if($a->automation_wishlist)
                         <p class="text-sm"><span class="text-slate-400">Automation wishlist:</span> <span class="text-white">{{ $a->automation_wishlist }}</span></p>
@@ -161,6 +161,9 @@
 
                 <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-3">
                     <h3 class="text-sm font-semibold text-slate-300">Value &amp; commercial signal</h3>
+                    @if($a->value_rating === null && $a->continuation_likelihood === null)
+                        <p class="text-sm text-slate-400">Not asked at application. These are collected at the 30/60/90-day check-ins instead (see the table below).</p>
+                    @else
                     <p class="text-sm"><span class="text-slate-400">Value rating:</span> <span class="text-white">{{ $a->value_rating ?? '—' }}/5</span></p>
                     @if($a->value_open_text)
                         <p class="text-sm"><span class="text-slate-400">What would justify R200/month:</span> <span class="text-white">{{ $a->value_open_text }}</span></p>
@@ -171,6 +174,7 @@
                     @endif
                     @if($a->churn_driver)
                         <p class="text-sm"><span class="text-slate-400">Would cancel if:</span> <span class="text-white">{{ $a->churn_driver }}</span></p>
+                    @endif
                     @endif
                 </div>
             </div>
@@ -186,7 +190,7 @@
                     <h3 class="text-sm font-semibold text-slate-300">Founding 20 opt-in</h3>
                     <p class="text-sm text-slate-300">Wants to join: <span class="text-white">{{ $a->wants_founding_twenty ? 'Yes' : 'No' }}</span></p>
                     <p class="text-sm text-slate-300">Willing to give feedback: <span class="text-white">{{ $a->willing_to_give_feedback ? 'Yes' : 'No' }}</span></p>
-                    <p class="text-sm text-slate-300">Preferred contact: <span class="text-white capitalize">{{ $a->preferred_contact_method }}</span></p>
+                    <p class="text-sm text-slate-300">Preferred contact: <span class="text-white">{{ ['whatsapp' => 'WhatsApp', 'call' => 'phone call', 'email' => 'email'][$a->preferred_contact_method] ?? $a->preferred_contact_method }}</span></p>
                     @if($a->best_contact_time)
                         <p class="text-sm text-slate-300">Best time: <span class="text-white">{{ $a->best_contact_time }}</span></p>
                     @endif
@@ -215,7 +219,7 @@
                         <p class="text-sm text-slate-300">Status: <span class="{{ $depositStatus['color'] }} font-medium">{{ $depositStatus['label'] }}</span></p>
 
                         <div class="pt-1">
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Reservation link — send via {{ $a->preferred_contact_method }}</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Reservation link (send via {{ ['whatsapp' => 'WhatsApp', 'call' => 'phone call', 'email' => 'email'][$a->preferred_contact_method] ?? $a->preferred_contact_method }})</label>
                             <input type="text" readonly value="{{ $reserveUrl }}" onclick="this.select()" class="w-full bg-slate-900 border-slate-700 text-slate-300 rounded-lg text-xs">
                         </div>
 
@@ -371,6 +375,15 @@
                             <p class="text-xs text-emerald-400">Completed {{ $checkin->completed_at->diffForHumans() }}</p>
                             @if($checkin->biggest_change)
                                 <p class="text-xs text-slate-400 mt-1 italic">"{{ Str::limit($checkin->biggest_change, 80) }}"</p>
+                            @endif
+                            @if($checkin->value_open_text)
+                                <p class="text-xs text-slate-400 mt-1"><span class="text-slate-500">Worth R200/month if:</span> {{ Str::limit($checkin->value_open_text, 80) }}</p>
+                            @endif
+                            @if($checkin->continuation_driver)
+                                <p class="text-xs text-slate-400 mt-1"><span class="text-slate-500">Would continue if:</span> {{ Str::limit($checkin->continuation_driver, 80) }}</p>
+                            @endif
+                            @if($checkin->churn_driver)
+                                <p class="text-xs text-slate-400 mt-1"><span class="text-slate-500">Would cancel if:</span> {{ Str::limit($checkin->churn_driver, 80) }}</p>
                             @endif
                         @else
                             <input type="text" readonly

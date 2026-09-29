@@ -13,6 +13,19 @@ use Illuminate\Validation\Rule;
 
 class FoundingTwentyController extends Controller
 {
+    /** The nine "how often have you experienced…" statements. Shared with the view so error messages can quote them. */
+    public const PAIN_LABELS = [
+        'pain_forgotten_appointments' => 'Clients forgetting appointments',
+        'pain_late_cancellations' => 'Clients cancelling at the last minute',
+        'pain_no_shows' => 'Clients not showing up at all',
+        'pain_double_bookings' => 'Double bookings or scheduling conflicts',
+        'pain_booking_enquiry_time' => 'Spending significant time responding to booking enquiries',
+        'pain_staff_availability' => 'Struggling to know which staff member is available',
+        'pain_tracking_balances' => 'Difficulty tracking what customers owe you',
+        'pain_revenue_visibility' => 'Difficulty knowing how much revenue your business generated',
+        'pain_customer_data_organisation' => 'Difficulty keeping customer information organised',
+    ];
+
     public function show(Request $request)
     {
         $source = $request->query('src');
@@ -31,7 +44,7 @@ class FoundingTwentyController extends Controller
         $validated = $request->validate([
             'business_name' => 'required|string|max:255',
             'owner_name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
+            'email' => 'required_if:preferred_contact_method,email|nullable|email|max:255',
             'phone' => ['required', new SouthAfricanPhoneNumber],
             'business_type' => 'required|in:salon,beauty,wellness,fitness,service,other',
             'business_type_other' => 'nullable|string|max:255',
@@ -84,13 +97,6 @@ class FoundingTwentyController extends Controller
             'top_priority_feature' => 'nullable|string|max:255',
             'automation_wishlist' => 'nullable|string|max:2000',
 
-            'value_rating' => 'required|integer|min:1|max:5',
-            'value_open_text' => 'nullable|string|max:2000',
-
-            'continuation_likelihood' => 'required|in:very_likely,likely,unsure,unlikely,very_unlikely',
-            'continuation_driver' => 'nullable|string|max:2000',
-            'churn_driver' => 'nullable|string|max:2000',
-
             'wants_founding_twenty' => 'nullable|boolean',
             'willing_to_give_feedback' => 'nullable|boolean',
             'privacy_consent' => 'required|accepted',
@@ -98,7 +104,7 @@ class FoundingTwentyController extends Controller
             'source' => 'nullable|string|max:100',
             'outreach_campaign_id' => 'nullable|exists:outreach_campaigns,id',
             'referred_by_tenant_id' => ['nullable', Rule::exists('tenants', 'id')->where('is_active', true)],
-        ]);
+        ], $this->validationMessages());
 
         $application = FoundingTwentyApplication::create([
             ...$validated,
@@ -112,6 +118,35 @@ class FoundingTwentyController extends Controller
         $application->update($result);
 
         return redirect()->route('founding-twenty.thanks');
+    }
+
+    /**
+     * Messages written for the person filling the form in, not for a developer.
+     * The default "The pain forgotten appointments field is required." tells a
+     * business owner nothing about which question they skipped.
+     */
+    private function validationMessages(): array
+    {
+        $messages = [
+            'business_type.required' => 'Please choose the type of business you run.',
+            'business_type.in' => 'Please choose the type of business you run.',
+            'business_name.required' => 'Please tell us your business name.',
+            'owner_name.required' => 'Please tell us your name.',
+            'phone.required' => 'Please add your phone number so we can reach you.',
+            'email.required_if' => 'Please add your email address, since you chose email as your preferred contact method.',
+            'email.email' => 'That email address doesn\'t look right. Please check it.',
+            'privacy_consent.required' => 'Please tick the privacy box at the end to confirm you\'re happy for us to use your answers.',
+            'privacy_consent.accepted' => 'Please tick the privacy box at the end to confirm you\'re happy for us to use your answers.',
+        ];
+
+        foreach (self::PAIN_LABELS as $field => $label) {
+            $messages["{$field}.required"] = "Please rate \"{$label}\" from 1 to 5 (Section 3).";
+            $messages["{$field}.integer"] = "Please rate \"{$label}\" from 1 to 5 (Section 3).";
+            $messages["{$field}.min"] = "Please rate \"{$label}\" from 1 to 5 (Section 3).";
+            $messages["{$field}.max"] = "Please rate \"{$label}\" from 1 to 5 (Section 3).";
+        }
+
+        return $messages;
     }
 
     public function thanks()
@@ -138,8 +173,8 @@ class FoundingTwentyController extends Controller
             // isn't reliably detected by fileinfo and mimes: silently rejects valid files.
             'proof_of_payment' => ['required', 'file', 'extensions:jpg,jpeg,png,heic,heif,webp,pdf', 'max:15360'],
         ], [
-            'proof_of_payment.extensions' => 'That file type isn\'t supported — please upload a JPG, PNG, HEIC or PDF.',
-            'proof_of_payment.max' => 'That file is too large — please keep it under 15MB.',
+            'proof_of_payment.extensions' => 'That file type isn\'t supported. Please upload a JPG, PNG, HEIC or PDF.',
+            'proof_of_payment.max' => 'That file is too large. Please keep it under 15MB.',
         ]);
 
         if ($foundingTwenty->deposit_pop_path) {
@@ -158,6 +193,6 @@ class FoundingTwentyController extends Controller
         ]);
 
         return redirect()->route('founding-twenty.reserve', [$foundingTwenty, $token])
-            ->with('success', "Thanks — we've received your proof of payment and will confirm your spot shortly.");
+            ->with('success', "Thank you. We've received your proof of payment and will confirm your spot shortly.");
     }
 }

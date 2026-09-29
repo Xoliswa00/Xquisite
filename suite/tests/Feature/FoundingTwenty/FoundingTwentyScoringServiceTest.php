@@ -97,6 +97,23 @@ class FoundingTwentyScoringServiceTest extends TestCase
         $this->assertSame('high', $result['tier']);
     }
 
+    public function test_missing_value_rating_scores_the_neutral_midpoint_not_zero(): void
+    {
+        // value_rating is no longer asked at application time (moved to the
+        // 90-day check-in), so every new application has it null — confirm the
+        // "interest" factor lands on a neutral midpoint rather than the old
+        // implicit worst-case default that would otherwise zero it out.
+        $withNoValueRating = $this->application(['value_rating' => null]);
+        $withMidValueRating = $this->application(['value_rating' => 3]);
+
+        $service = app(FoundingTwentyScoringService::class);
+
+        $this->assertSame(
+            $service->score($withMidValueRating)['score'],
+            $service->score($withNoValueRating)['score']
+        );
+    }
+
     public function test_score_never_exceeds_100_or_drops_below_0(): void
     {
         $application = $this->application([

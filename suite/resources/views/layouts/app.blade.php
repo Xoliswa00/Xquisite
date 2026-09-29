@@ -169,6 +169,7 @@
         $systemTenantsRoutes = ['admin.tenants.*'];
         $systemModuleRequestsRoutes = ['admin.module-requests.*'];
         $systemReviewsRoutes = ['admin.reviews.*'];
+        $systemPublicLaunchesRoutes = ['admin.public-launches.*'];
         $systemSyncRoutes = ['admin.sync.*'];
         $systemLogsRoutes = ['admin.logs.*'];
 
