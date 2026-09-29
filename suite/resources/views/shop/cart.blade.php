@@ -9,7 +9,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
                 <p class="text-gray-400 mb-4">Your cart is empty</p>
-                <a href="{{ route('shop.index', $tenant->slug) }}"
+                <a href="{{ $tenant->shopRoute('index') }}"
                    class="inline-block bg-[#0078D4] hover:bg-[#002B5B] text-white text-sm font-semibold px-6 py-3 rounded-xl">
                     Continue Shopping
                 </a>
@@ -33,7 +33,7 @@
                         </div>
 
                         <!-- Qty -->
-                        <form action="{{ route('shop.cart.update', $tenant->slug) }}" method="POST" class="flex items-center gap-1">
+                        <form action="{{ $tenant->shopRoute('cart.update') }}" method="POST" class="flex items-center gap-1">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $line->product->id }}">
                             <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden">
@@ -49,7 +49,7 @@
                         <p class="text-sm font-bold text-gray-900 w-20 text-right">R{{ number_format($line->subtotal, 2) }}</p>
 
                         <!-- Remove -->
-                        <form action="{{ route('shop.cart.remove', $tenant->slug) }}" method="POST">
+                        <form action="{{ $tenant->shopRoute('cart.remove') }}" method="POST">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $line->product->id }}">
                             <button type="submit" class="text-gray-300 hover:text-red-500 transition-colors">
@@ -79,11 +79,11 @@
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3">
-                <a href="{{ route('shop.index', $tenant->slug) }}"
+                <a href="{{ $tenant->shopRoute('index') }}"
                    class="flex-1 text-center border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-3 rounded-xl text-sm transition-colors">
                     Continue Shopping
                 </a>
-                <a href="{{ route('shop.checkout', $tenant->slug) }}"
+                <a href="{{ $tenant->shopRoute('checkout') }}"
                    class="flex-1 text-center bg-[#0078D4] hover:bg-[#002B5B] text-white font-semibold py-3 rounded-xl text-sm transition-colors">
                     Proceed to Checkout
                 </a>

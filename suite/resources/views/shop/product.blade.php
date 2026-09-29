@@ -2,10 +2,10 @@
 
     <!-- Breadcrumb -->
     <nav class="text-xs text-gray-400 mb-6 flex items-center gap-2">
-        <a href="{{ route('shop.index', $tenant->slug) }}" class="hover:text-[#0078D4]">Shop</a>
+        <a href="{{ $tenant->shopRoute('index') }}" class="hover:text-[#0078D4]">Shop</a>
         <span>/</span>
         @if($product->category)
-            <a href="{{ route('shop.index', ['tenantSlug' => $tenant->slug, 'category' => $product->category]) }}" class="hover:text-[#0078D4]">{{ $product->category }}</a>
+            <a href="{{ $tenant->shopRoute('index', ['category' => $product->category]) }}" class="hover:text-[#0078D4]">{{ $product->category }}</a>
             <span>/</span>
         @endif
         <span class="text-gray-700">{{ $product->name }}</span>
@@ -61,7 +61,7 @@
             @endif
 
             @if(!$product->track_stock || $product->stock_quantity > 0)
-                <form action="{{ route('shop.cart.add', $tenant->slug) }}" method="POST" class="flex gap-3 items-center">
+                <form action="{{ $tenant->shopRoute('cart.add') }}" method="POST" class="flex gap-3 items-center">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                     <div class="flex items-center border border-gray-300 rounded-xl overflow-hidden">
@@ -83,7 +83,7 @@
                 </button>
             @endif
 
-            <a href="{{ route('shop.cart', $tenant->slug) }}" class="mt-3 text-center text-sm text-[#0078D4] hover:text-[#002B5B]">
+            <a href="{{ $tenant->shopRoute('cart') }}" class="mt-3 text-center text-sm text-[#0078D4] hover:text-[#002B5B]">
                 View Cart ({{ $cart->count() }} items)
             </a>
         </div>
@@ -95,7 +95,7 @@
             <h2 class="text-lg font-semibold text-gray-900 mb-4">More in {{ $product->category }}</h2>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 @foreach($related as $rel)
-                    <a href="{{ route('shop.product', [$tenant->slug, $rel->id]) }}"
+                    <a href="{{ $tenant->shopRoute('product', ['productId' => $rel->id]) }}"
                        class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
                         <div class="aspect-square bg-gray-100">
                             @if($rel->image_url)

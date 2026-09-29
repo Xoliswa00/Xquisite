@@ -95,7 +95,7 @@
             @endif
         </div>
 
-        <a href="{{ route('shop.index', $tenant->slug) }}"
+        <a href="{{ $tenant->shopRoute('index') }}"
            class="inline-block bg-[#0078D4] hover:bg-[#002B5B] text-white font-semibold px-8 py-3 rounded-xl text-sm transition-colors">
             Continue Shopping
         </a>

@@ -223,14 +223,45 @@ class Tenant extends Model
 
     public function getStorefrontUrlAttribute(): string
     {
+        // Custom domains aren't live yet (module status: coming_soon — no
+        // verification flow exists to ever set custom_domain_verified=true),
+        // so this branch is informational only until that ships.
         if ($this->custom_domain && $this->custom_domain_verified) {
             return 'https://' . $this->custom_domain;
         }
 
+        return $this->shopRoute('index');
+    }
+
+    /**
+     * Build a URL to a shop.* route for this tenant, preferring the tenant's
+     * own subdomain (shop.host.* — the URI has no {tenantSlug} segment, but
+     * the {tenantSlug}.{app.domain} DOMAIN pattern still needs a value for
+     * it to build the host portion of the URL) and falling back to the
+     * canonical /shop/{slug} path for a tenant with no subdomain set.
+     *
+     * $name is the route's local name (e.g. 'index', 'cart', 'product') —
+     * the 'shop.' / 'shop.host.' prefix is added here, not by the caller.
+     */
+    public function shopRoute(string $name, array $params = []): string
+    {
         if ($this->subdomain) {
-            return 'https://' . $this->subdomain . '.' . config('app.domain', 'xquisite.co.za');
+            return route("shop.host.{$name}", ['tenantSlug' => $this->subdomain, ...$params]);
         }
 
-        return route('shop.index', $this->slug);
+        return route("shop.{$name}", ['tenantSlug' => $this->slug, ...$params]);
+    }
+
+    /**
+     * Resolve an active tenant for a public shop request, scoped to exactly
+     * one identifying column — never both at once. A tenant's slug and
+     * another tenant's subdomain could otherwise collide (each is validated
+     * unique independently, not cross-checked against the other column), so
+     * which column to match against must come from which route matched
+     * (path-based vs subdomain-based), not be guessed from the value itself.
+     */
+    public static function activeForShop(string $identifier, string $by = 'slug'): ?self
+    {
+        return static::where($by, $identifier)->where('is_active', true)->first();
     }
 }

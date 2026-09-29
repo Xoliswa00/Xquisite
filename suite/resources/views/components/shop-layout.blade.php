@@ -9,7 +9,7 @@
     <title>{{ $title ?? ($tenant->name . ' — Shop') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet"/>
-    <link rel="manifest" href="{{ route('shop.manifest', $tenant->slug) }}">
+    <link rel="manifest" href="{{ $tenant->shopRoute('manifest') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
         // Admin-entered image URLs (tenant logo, product photos — a typo, a
@@ -42,7 +42,7 @@
 <header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
-        <a href="{{ route('shop.index', $tenant->slug) }}" class="flex items-center gap-2">
+        <a href="{{ $tenant->shopRoute('index') }}" class="flex items-center gap-2">
             @if($tenant->logo_url)
                 <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}" onerror="shopLogoFallback(this, @js(strtoupper(substr($tenant->name, 0, 1))))" class="h-8 w-auto object-contain">
             @else
@@ -54,13 +54,13 @@
         </a>
 
         <div class="flex items-center gap-4">
-            <form action="{{ route('shop.index', $tenant->slug) }}" method="GET" class="hidden sm:block">
+            <form action="{{ $tenant->shopRoute('index') }}" method="GET" class="hidden sm:block">
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Search products…"
                        class="bg-gray-100 border-0 text-sm rounded-full px-4 py-2 w-48 focus:w-64 focus:ring-1 focus:ring-[#0078D4] focus:outline-none transition-all placeholder-gray-400">
             </form>
 
-            <a href="{{ route('shop.cart', $tenant->slug) }}" class="relative flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-[#0078D4]">
+            <a href="{{ $tenant->shopRoute('cart') }}" class="relative flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-[#0078D4]">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
@@ -78,7 +78,7 @@
 <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
     <div hidden
          data-install-banner
-         data-install-scope="shop:{{ $tenant->slug }}"
+         data-install-scope="shop:{{ $tenant->id }}"
          data-android-text="Add {{ $tenant->name }} to your home screen for one-tap shopping and order updates."
          data-ios-text='Add {{ $tenant->name }} to your Home Screen to get notified about your order: tap Share, then "Add to Home Screen".'
          class="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-gray-200 shadow-sm text-sm text-gray-700">

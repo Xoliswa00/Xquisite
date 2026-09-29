@@ -32,8 +32,8 @@
         <h1>Something went wrong</h1>
         <p>{{ $message ?? 'We could not complete your payment. No money has been taken.' }}</p>
         <div class="actions">
-            <a class="btn btn-primary" href="{{ route('shop.checkout', $tenant->slug) }}">Try again</a>
-            <a class="btn btn-ghost" href="{{ route('shop.index', $tenant->slug) }}">Back to shop</a>
+            <a class="btn btn-primary" href="{{ $tenant->shopRoute('checkout') }}">Try again</a>
+            <a class="btn btn-ghost" href="{{ $tenant->shopRoute('index') }}">Back to shop</a>
         </div>
     </div>
 </body>

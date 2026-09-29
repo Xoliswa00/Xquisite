@@ -3,7 +3,7 @@
     <div class="max-w-4xl mx-auto">
         <h1 class="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
 
-        <form action="{{ route('shop.checkout.place', $tenant->slug) }}" method="POST"
+        <form action="{{ $tenant->shopRoute('checkout.place') }}" method="POST"
               x-data="checkoutForm()" @submit.prevent="submitForm">
             @csrf
             <input type="hidden" name="idempotency_key" value="{{ $idempotencyKey }}">
