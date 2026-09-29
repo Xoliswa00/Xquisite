@@ -42,7 +42,10 @@ class StorefrontController extends Controller
             });
         }
 
-        $products   = $query->orderBy('category')->orderBy('name')->paginate(16)->withQueryString();
+        // withSum avoids an N+1 stock lookup per card for variant products —
+        // the index only ever needs "is anything in stock", not per-variant detail.
+        $products   = $query->withSum(['activeVariants as variant_stock_sum' => fn ($q) => $q->where('track_stock', true)], 'stock_quantity')
+            ->orderBy('category')->orderBy('name')->paginate(16)->withQueryString();
         $categories = Product::where('tenant_id', $tenant->id)
             ->where('is_active', true)
             ->where('is_available_online', true)
@@ -64,6 +67,7 @@ class StorefrontController extends Controller
             ->where('id', $productId)
             ->where('is_active', true)
             ->where('is_available_online', true)
+            ->with(['activeVariants' => fn ($q) => $q->orderBy('id')])
             ->firstOrFail();
 
         // Related: same category, up to 4
@@ -72,6 +76,7 @@ class StorefrontController extends Controller
             ->where('is_available_online', true)
             ->where('category', $product->category)
             ->where('id', '!=', $product->id)
+            ->withSum(['activeVariants as variant_stock_sum' => fn ($q) => $q->where('track_stock', true)], 'stock_quantity')
             ->limit(4)
             ->get();
 

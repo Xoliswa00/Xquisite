@@ -12,8 +12,22 @@
 --}}
 @props(['product', 'overlay' => true])
 
-@if($product->track_stock)
-    @if($product->stock_quantity <= 0)
+{{--
+    has_variants: stock lives per-variant, the product's own
+    stock_quantity/track_stock are not authoritative (see
+    Product::getStockStatusAttribute()/totalVariantStock()) — this badge
+    reads those instead of the raw columns so a variant product shown as a
+    related/card item doesn't show a stale or always-zero "Out of Stock"
+    from its own meaningless stock_quantity.
+--}}
+@php
+    $trackStock = $product->has_variants ? true : $product->track_stock;
+    $status     = $product->has_variants ? $product->stock_status : ($product->track_stock ? ($product->stock_quantity <= 0 ? 'out_of_stock' : ($product->stock_quantity <= 5 ? 'low' : 'ok')) : 'untracked');
+    $qty        = $product->has_variants ? $product->totalVariantStock() : $product->stock_quantity;
+@endphp
+
+@if($trackStock && $status !== 'untracked')
+    @if($status === 'out_of_stock')
         <span {{ $attributes->class([
             'text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-900/80 text-white' => $overlay,
             'inline-flex items-center gap-1.5 text-sm text-red-600 font-medium' => !$overlay,
@@ -21,13 +35,13 @@
             @unless($overlay)<span class="w-2 h-2 bg-red-500 rounded-full"></span>@endunless
             Out of Stock
         </span>
-    @elseif($product->stock_quantity <= 5)
+    @elseif($status === 'low')
         <span {{ $attributes->class([
             'text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500 text-white' => $overlay,
             'inline-flex items-center gap-1.5 text-sm text-amber-600 font-medium' => !$overlay,
         ]) }}>
             @unless($overlay)<span class="w-2 h-2 bg-amber-500 rounded-full"></span>@endunless
-            Only {{ $product->stock_quantity }} left
+            {{ $product->has_variants ? 'Low Stock' : "Only {$qty} left" }}
         </span>
     @elseif(!$overlay)
         <span class="inline-flex items-center gap-1.5 text-sm text-emerald-600 font-medium">

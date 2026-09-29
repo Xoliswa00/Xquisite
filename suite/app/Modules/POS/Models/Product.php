@@ -36,6 +36,8 @@ class Product extends Model
         'rental_rate',
         'total_units',
         'condition',
+        'variant_options',
+        'has_variants',
     ];
 
     protected $casts = [
@@ -46,6 +48,8 @@ class Product extends Model
         'is_active'           => 'boolean',
         'is_available_online' => 'boolean',
         'is_rentable'         => 'boolean',
+        'variant_options'     => 'array',
+        'has_variants'        => 'boolean',
     ];
 
     public function rentalOrders()
@@ -87,6 +91,16 @@ class Product extends Model
         return $this->hasMany(PurchaseOrderItem::class);
     }
 
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    public function activeVariants()
+    {
+        return $this->variants()->where('is_active', true);
+    }
+
     // ── Computed ───────────────────────────────────────────────
 
     public function getDurationLabelAttribute(): ?string
@@ -106,8 +120,27 @@ class Product extends Model
             && $this->stock_quantity <= $this->reorder_level;
     }
 
+    /**
+     * Once a product has variants, its own stock_quantity is not
+     * authoritative — each variant tracks its own. totalVariantStock()
+     * is the sum, used for listings/badges that just need "is this in
+     * stock at all" without caring which variant.
+     */
+    public function totalVariantStock(): int
+    {
+        return $this->variants()->where('track_stock', true)->sum('stock_quantity');
+    }
+
     public function getStockStatusAttribute(): string
     {
+        if ($this->has_variants) {
+            $tracked = $this->variants()->where('track_stock', true);
+            if (! $tracked->exists()) return 'untracked';
+            if ($tracked->sum('stock_quantity') <= 0) return 'out_of_stock';
+            if ($this->variants()->where('track_stock', true)->get()->contains(fn ($v) => $v->needs_reorder)) return 'low';
+            return 'ok';
+        }
+
         if (!$this->track_stock) return 'untracked';
         if ($this->stock_quantity <= 0) return 'out_of_stock';
         if ($this->reorder_level > 0 && $this->stock_quantity <= $this->reorder_level) return 'low';

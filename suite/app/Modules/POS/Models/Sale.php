@@ -77,9 +77,17 @@ class Sale extends Model
         $this->update(['status' => 'paid', 'paid_at' => now()]);
     }
 
+    /**
+     * ULID-suffixed, not the old max(id)+1 — Sale uses HasTenant, so
+     * max('id') is tenant-scoped, but `reference` has a *global* unique
+     * constraint. Every tenant's own first sale computed max('id')=null
+     * and generated the same 'SAL-00001', so any tenant's Nth sale
+     * collided with whichever other tenant already had N sales — a
+     * guaranteed collision, not a rare race. Order::generateReference()
+     * hit and fixed this exact class of bug already; same fix here.
+     */
     public static function generateReference(): string
     {
-        $last = static::max('id') ?? 0;
-        return 'SAL-' . str_pad($last + 1, 5, '0', STR_PAD_LEFT);
+        return 'SAL-' . strtoupper((string) \Illuminate\Support\Str::ulid());
     }
 }

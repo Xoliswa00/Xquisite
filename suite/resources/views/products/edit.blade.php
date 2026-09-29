@@ -126,6 +126,25 @@
             </form>
         </div>
 
+        <div class="bg-slate-800 rounded-xl p-4">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <p class="text-sm font-medium text-slate-100">Variants (Size, Color, etc.)</p>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        @if($product->has_variants)
+                            {{ $product->variants()->count() }} variant(s) — each tracks its own stock and can override the price above.
+                        @else
+                            Sell this product in multiple sizes/colors/etc., each with its own stock.
+                        @endif
+                    </p>
+                </div>
+                <a href="{{ route('products.variants.index', $product) }}"
+                   class="shrink-0 bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg">
+                    {{ $product->has_variants ? 'Manage Variants' : 'Add Variants' }}
+                </a>
+            </div>
+        </div>
+
         <div class="bg-slate-800 rounded-xl p-4 border border-red-900/50">
             <p class="text-sm text-slate-400 mb-3">Remove this product from the system.</p>
             <form method="POST" action="{{ route('products.destroy', $product) }}"

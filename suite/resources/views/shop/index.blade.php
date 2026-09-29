@@ -80,9 +80,15 @@
                                         </div>
                                     @endif
 
-                                    {{-- Product-level stock badge. Will need to become
-                                         variant-aware once per-variant stock exists. --}}
-                                    @if($product->track_stock && $product->stock_quantity <= 5)
+                                    {{--
+                                        has_variants: gate on the variant stock sum
+                                        (variant_stock_sum, see StorefrontController's
+                                        withSum), not the product's own stock_quantity —
+                                        not authoritative once a product has variants.
+                                        <x-shop.stock-badge> itself branches the same way
+                                        for the number/status it actually displays.
+                                    --}}
+                                    @if($product->has_variants ? ($product->variant_stock_sum ?? 0) <= 5 : ($product->track_stock && $product->stock_quantity <= 5))
                                         <div class="absolute top-2 left-2">
                                             <x-shop.stock-badge :product="$product" />
                                         </div>
@@ -110,7 +116,8 @@
                                         image_url: @js($product->image_url),
                                         category: @js($product->category),
                                         description: @js(\Illuminate\Support\Str::limit($product->description, 140)),
-                                        inStock: {{ (!$product->track_stock || $product->stock_quantity > 0) ? 'true' : 'false' }},
+                                        hasVariants: {{ $product->has_variants ? 'true' : 'false' }},
+                                        inStock: {{ $product->has_variants ? (($product->variant_stock_sum ?? 0) > 0 ? 'true' : 'false') : ((!$product->track_stock || $product->stock_quantity > 0) ? 'true' : 'false') }},
                                         url: '{{ $tenant->shopRoute('product', ['productId' => $product->id]) }}',
                                     })"
                                     class="absolute top-2 right-2 bg-white/90 hover:bg-white text-gray-600 hover:text-[#0078D4] rounded-full p-1.5 shadow-sm sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
@@ -131,7 +138,17 @@
                                 </a>
                                 <p class="text-base font-bold text-[#0078D4] mt-1">R{{ number_format($product->price, 2) }}</p>
 
-                                @if($product->track_stock && $product->stock_quantity <= 0)
+                                @if($product->has_variants)
+                                    {{-- Variant products need a size/color pick first — send to the product page rather than a one-click add. --}}
+                                    @if(($product->variant_stock_sum ?? 0) > 0)
+                                        <a href="{{ $tenant->shopRoute('product', ['productId' => $product->id]) }}"
+                                           class="mt-2 block w-full text-center bg-[#0078D4] hover:bg-[#002B5B] text-white text-xs font-semibold py-2 rounded-xl transition-colors">
+                                            Select Options
+                                        </a>
+                                    @else
+                                        <span class="text-xs text-red-500 font-medium">Out of stock</span>
+                                    @endif
+                                @elseif($product->track_stock && $product->stock_quantity <= 0)
                                     <span class="text-xs text-red-500 font-medium">Out of stock</span>
                                 @else
                                     <form action="{{ $tenant->shopRoute('cart.add') }}" method="POST" class="mt-2">
@@ -191,6 +208,7 @@
 
                         <div class="flex gap-3">
                             <a :href="quickView.url"
+                               x-show="!quickView.hasVariants"
                                class="flex-1 text-center border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 rounded-xl text-sm transition-colors">
                                 View Details
                             </a>
@@ -201,8 +219,14 @@
                                 normal full-page submit, not fetch. Keeps
                                 quick view's add-to-cart on the exact same
                                 data path as everywhere else on this page.
+                                Not shown for a has_variants product — there's
+                                no size/color picker in this modal, and
+                                cart.add requires a variant_id for those
+                                (see CartController::add); "Select Options"
+                                below sends them to the product page instead,
+                                same as the card's own button does.
                             --}}
-                            <form x-show="quickView.inStock" action="{{ $tenant->shopRoute('cart.add') }}" method="POST" class="flex-1">
+                            <form x-show="quickView.inStock && !quickView.hasVariants" action="{{ $tenant->shopRoute('cart.add') }}" method="POST" class="flex-1">
                                 @csrf
                                 <input type="hidden" name="qty" value="1">
                                 <input type="hidden" name="product_id" :value="quickView.id">
@@ -211,6 +235,10 @@
                                     Add to Cart
                                 </button>
                             </form>
+                            <a :href="quickView.url" x-show="quickView.hasVariants && quickView.inStock"
+                               class="flex-1 text-center bg-[#0078D4] hover:bg-[#002B5B] text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
+                                Select Options
+                            </a>
                             <button type="button" x-show="!quickView.inStock" disabled
                                     class="flex-1 bg-gray-200 text-gray-400 font-semibold py-2.5 rounded-xl text-sm cursor-not-allowed">
                                 Out of Stock
