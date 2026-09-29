@@ -48,7 +48,7 @@
 
     {{-- Countdown --}}
     @if($launch->hasCountdown())
-        <div x-data="publicLaunchCountdown('{{ $launch->launch_at->toIso8601String() }}')" x-init="tick(); setInterval(tick, 1000)"
+        <div x-data="publicLaunchCountdown('{{ $launch->launch_at->toIso8601String() }}')" x-init="start()"
              class="grid grid-cols-4 gap-3 sm:gap-6 max-w-lg mx-auto">
             <template x-for="unit in units" :key="unit.label">
                 <div class="bg-[#002B5B] rounded-2xl py-4 sm:py-6 text-center">
@@ -133,15 +133,18 @@
     {{-- Custom work: same offer, for businesses that don't run on bookings/appointments,
          so the questionnaire above (built entirely around that) isn't forced on them. --}}
     @if($launch->key === 'founding-20' && ! $launch->hasCountdown())
-        <div class="bg-[#F8FAFC] border border-gray-100 rounded-2xl p-6 sm:p-10">
-            <h2 class="f-mont text-xl font-bold text-[#002B5B] mb-2 text-center">Not a booking-based business?</h2>
-            <p class="text-sm text-[#2D3748]/70 text-center max-w-xl mx-auto mb-6">
-                The questions above are built around bookings and appointments. If that's not how your business runs but you'd still like a custom solution, tell us what you need — same offer, three months free, just a shorter form.
-            </p>
+        <div>
+            <div class="text-center max-w-xl mx-auto mb-8">
+                <h2 class="f-mont text-xl font-bold text-[#002B5B] mb-2">Not a booking-based business?</h2>
+                <p class="text-sm text-[#2D3748]/70">
+                    The questions above are built around bookings and appointments. If that's not how your business runs but you'd still like a custom solution, tell us what you need. Same offer, three months free, just a shorter form.
+                </p>
+            </div>
 
-            <form method="POST" action="{{ route('founding-twenty.custom-work.store') }}" class="max-w-xl mx-auto space-y-4">
+            <form method="POST" action="{{ route('founding-twenty.custom-work.store') }}" class="bg-[#F8FAFC] border border-gray-100 rounded-2xl p-6 sm:p-10 max-w-xl mx-auto space-y-4">
                 @csrf
                 <input type="hidden" name="source" value="custom-work-section">
+                <p class="f-mont text-base font-bold text-[#002B5B] -mt-1">Tell us about your business</p>
 
                 <div class="grid sm:grid-cols-2 gap-4">
                     <div>
@@ -274,6 +277,10 @@ function publicLaunchCountdown(target) {
             { label: 'Minutes', value: 0 },
             { label: 'Seconds', value: 0 },
         ],
+        start() {
+            this.tick();
+            setInterval(() => this.tick(), 1000);
+        },
         tick() {
             const diff = Math.max(0, new Date(target) - new Date());
             const days    = Math.floor(diff / 86400000);
