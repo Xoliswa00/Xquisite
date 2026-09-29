@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\FoundingTwentyApplication;
+use App\Models\Tenant;
 use App\Rules\SouthAfricanPhoneNumber;
 use App\Services\FoundingTwentyScoringService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class FoundingTwentyController extends Controller
 {
@@ -16,7 +18,12 @@ class FoundingTwentyController extends Controller
         $source = $request->query('src');
         $campaignId = filter_var($request->query('campaign'), FILTER_VALIDATE_INT);
 
-        return view('founding-twenty.show', compact('source', 'campaignId'));
+        $referrerId = filter_var($request->query('ref'), FILTER_VALIDATE_INT);
+        $referredByTenantId = $referrerId && Tenant::where('id', $referrerId)->where('is_active', true)->exists()
+            ? $referrerId
+            : null;
+
+        return view('founding-twenty.show', compact('source', 'campaignId', 'referredByTenantId'));
     }
 
     public function store(Request $request, FoundingTwentyScoringService $scoring)
@@ -90,6 +97,7 @@ class FoundingTwentyController extends Controller
 
             'source' => 'nullable|string|max:100',
             'outreach_campaign_id' => 'nullable|exists:outreach_campaigns,id',
+            'referred_by_tenant_id' => ['nullable', Rule::exists('tenants', 'id')->where('is_active', true)],
         ]);
 
         $application = FoundingTwentyApplication::create([

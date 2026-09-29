@@ -50,6 +50,15 @@
                 </dl>
             </div>
 
+            <!-- Referral link -->
+            <div class="bg-slate-800 rounded-2xl border border-slate-700 p-5">
+                <h2 class="text-sm font-semibold text-[#D4AF37] mb-2">Referral Link</h2>
+                <p class="text-xs text-slate-400 mb-3">Share this so {{ $tenant->name }} can refer another business — they get a free month, the new business gets a welcome discount, once it converts.</p>
+                <input type="text" readonly onclick="this.select()"
+                       value="{{ route('founding-twenty.show', ['ref' => $tenant->id]) }}"
+                       class="w-full bg-slate-700 border border-slate-600 text-slate-300 text-xs rounded-xl px-3 py-2.5 font-mono">
+            </div>
+
             <!-- Subdomain -->
             <div class="bg-slate-800 rounded-2xl border border-slate-700 p-5">
                 <h2 class="text-sm font-semibold text-[#D4AF37] mb-4">Domain Settings</h2>

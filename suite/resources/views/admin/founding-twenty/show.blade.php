@@ -259,6 +259,25 @@
                     @endif
                 </div>
 
+                @if($a->referredByTenant)
+                    <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-3">
+                        <h3 class="text-sm font-semibold text-slate-300">Referral</h3>
+                        <p class="text-sm text-slate-300">Referred by: <span class="text-white font-medium">{{ $a->referredByTenant->name }}</span></p>
+                        @if($a->referral_reward_processed_at)
+                            <p class="text-sm text-emerald-400">Reward processed {{ $a->referral_reward_processed_at->diffForHumans() }}</p>
+                        @elseif($a->tenant_id)
+                            <form method="POST" action="{{ route('admin.founding-twenty.referral-reward', $a) }}">
+                                @csrf
+                                <button type="submit" class="w-full px-3 py-2 text-sm bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 text-[#D4AF37] rounded-lg transition">
+                                    Process referral reward (1 free month + 50% welcome discount)
+                                </button>
+                            </form>
+                        @else
+                            <p class="text-sm text-slate-400">Link this application to a tenant before the reward can be processed.</p>
+                        @endif
+                    </div>
+                @endif
+
                 <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
                     <h3 class="text-sm font-semibold text-slate-300 mb-3">Review</h3>
                     <form method="POST" action="{{ route('admin.founding-twenty.status', $a) }}" class="space-y-3">
