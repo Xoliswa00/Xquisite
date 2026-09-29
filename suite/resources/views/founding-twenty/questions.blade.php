@@ -24,17 +24,27 @@
 <main class="max-w-3xl mx-auto px-4 py-10">
 
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-slate-900">Help us understand your business</h1>
+        <h1 class="text-2xl font-bold text-slate-900">Thanks, {{ $lead->firstName() }}. Now tell us about {{ $lead->business_name }}.</h1>
         <p class="text-slate-500 text-sm mt-2 leading-relaxed">
-            Running a small business isn't simple. We want to understand how business owners actually manage bookings,
-            customers, staff and payments, and use that to select 20 businesses for our Founding 20 Programme:
-            <strong class="text-slate-700">3 months free, no setup fee.</strong>
+            These questions help us understand how {{ $lead->business_name }} really runs, so we can choose the 20 businesses
+            we can help most. Takes about 5 to 7 minutes, and nothing is charged when you apply.
         </p>
-        <p class="text-slate-500 text-sm mt-2 leading-relaxed">Applying costs nothing. If you're selected, you'll hold your spot with a fully refundable R100 deposit, and only then.</p>
-        <p class="text-slate-400 text-xs mt-2">Takes about 5–7 minutes. Every answer helps us build a better platform for your industry.</p>
-        @isset($referredByTenantId)
-            <p class="text-xs text-[#D4AF37] font-medium mt-2">You're applying via a referral. Thanks for spreading the word!</p>
-        @endisset
+
+        <div class="mt-4 bg-white border border-slate-200 rounded-xl p-3">
+            <p class="text-xs text-slate-500 mb-2">Your details are saved. If you're interrupted, this link takes you back here on any phone:</p>
+            <div class="flex gap-2">
+                <input type="text" readonly id="resume-link" value="{{ $lead->resumeUrl() }}" onclick="this.select()"
+                       class="flex-1 min-w-0 border-slate-200 rounded-lg text-xs text-slate-500 bg-slate-50">
+                <button type="button" id="resume-copy"
+                        class="shrink-0 px-3 py-2 text-xs font-semibold text-[#0078D4] border border-[#0078D4]/30 rounded-lg hover:bg-blue-50 transition">
+                    Copy link
+                </button>
+            </div>
+        </div>
+        <form method="POST" action="{{ route('founding-twenty.restart') }}" class="mt-2">
+            @csrf
+            <button type="submit" class="text-xs text-slate-400 hover:text-slate-600 underline">Not {{ $lead->firstName() }}? Start again</button>
+        </form>
     </div>
 
     @if($errors->any())
@@ -57,11 +67,8 @@
         $bucketLabels = ['<1' => 'Less than 1 hour', '1-3' => '1–3 hours', '3-5' => '3–5 hours', '5-10' => '5–10 hours', '10+' => '10+ hours'];
     @endphp
 
-    <form method="POST" action="{{ route('founding-twenty.store') }}" class="space-y-6">
+    <form method="POST" action="{{ route('founding-twenty.submit') }}" class="space-y-6">
         @csrf
-        <input type="hidden" name="source" value="{{ old('source', $source) }}">
-        <input type="hidden" name="outreach_campaign_id" value="{{ old('outreach_campaign_id', $campaignId ?: '') }}">
-        <input type="hidden" name="referred_by_tenant_id" value="{{ old('referred_by_tenant_id', $referredByTenantId ?: '') }}">
 
         {{-- Section 1 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
@@ -82,26 +89,6 @@
             </div>
 
             <div class="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="business_name" class="block text-sm font-medium text-slate-700 mb-1">Business name *</label>
-                    <input type="text" id="business_name" name="business_name" value="{{ old('business_name') }}" required autocomplete="organization" class="w-full rounded-xl text-base sm:text-sm @error('business_name') border-red-400 @else border-slate-300 @enderror">
-                    @error('business_name')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label for="owner_name" class="block text-sm font-medium text-slate-700 mb-1">Your name *</label>
-                    <input type="text" id="owner_name" name="owner_name" value="{{ old('owner_name') }}" required autocomplete="name" class="w-full rounded-xl text-base sm:text-sm @error('owner_name') border-red-400 @else border-slate-300 @enderror">
-                    @error('owner_name')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">Phone (WhatsApp) *</label>
-                    <input type="tel" inputmode="tel" id="phone" name="phone" value="{{ old('phone') }}" required autocomplete="tel" placeholder="082 123 4567" class="w-full rounded-xl text-base sm:text-sm @error('phone') border-red-400 @else border-slate-300 @enderror">
-                    @error('phone')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                    <input type="email" inputmode="email" id="email" name="email" value="{{ old('email') }}" autocomplete="email" class="w-full rounded-xl text-base sm:text-sm @error('email') border-red-400 @else border-slate-300 @enderror">
-                    @error('email')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@else<p class="text-xs text-slate-400 mt-1">Needed only if you'd like us to reach you by email.</p>@enderror
-                </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Town/area</label>
                     <input type="text" name="location" value="{{ old('location') }}" class="w-full border-slate-300 rounded-xl text-base sm:text-sm">
@@ -316,27 +303,6 @@
                 <input type="checkbox" name="willing_to_give_feedback" value="1" @checked(old('willing_to_give_feedback')) class="mt-0.5 rounded text-[#D4AF37] focus:ring-[#D4AF37]">
                 <span>I'm willing to actively use the platform and provide feedback during the 3-month programme.</span>
             </label>
-
-            <div class="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="preferred_contact_method" class="block text-sm font-medium text-slate-700 mb-1">Preferred contact method</label>
-                    <select id="preferred_contact_method" name="preferred_contact_method" class="w-full border-slate-300 rounded-xl text-base sm:text-sm">
-                        @foreach(['whatsapp' => 'WhatsApp', 'call' => 'Phone call', 'email' => 'Email'] as $value => $label)
-                            <option value="{{ $value }}" @selected(old('preferred_contact_method', 'whatsapp') === $value)>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Best time to contact you</label>
-                    <input type="text" name="best_contact_time" value="{{ old('best_contact_time') }}" class="w-full border-slate-300 rounded-xl text-base sm:text-sm">
-                </div>
-            </div>
-
-            <label class="flex items-start gap-3 text-sm text-slate-600 border border-slate-200 rounded-xl px-4 py-3 cursor-pointer has-[:checked]:border-[#0078D4] has-[:checked]:bg-blue-50">
-                <input type="checkbox" name="privacy_consent" value="1" required @checked(old('privacy_consent')) class="mt-0.5 rounded text-[#0078D4] focus:ring-[#0078D4]">
-                <span>I consent to Xquisite Creations storing and using my answers, contact details and business information to evaluate this application and, if selected, to operate the Founding 20 Programme, as described in the <a href="{{ route('privacy') }}" target="_blank" class="text-[#0078D4] underline hover:no-underline">Privacy Policy</a>. *</span>
-            </label>
-            @error('privacy_consent')<p class="text-red-600 text-xs">Please tick the box to confirm you're happy for us to use your answers.</p>@enderror
         </div>
 
         <button type="submit" class="w-full bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl py-3.5 text-base transition">
@@ -371,12 +337,43 @@
     window.addEventListener('resize', update);
     update();
 
-    // If they choose email as their contact method, the email address becomes required.
-    var method = document.getElementById('preferred_contact_method');
-    var email = document.getElementById('email');
-    function syncEmail() { email.required = method.value === 'email'; }
-    method.addEventListener('change', syncEmail);
-    syncEmail();
+    // Keep answers on this device so a locked phone, refresh or dropped signal doesn't cost
+    // them the form. Cleared once the application is actually submitted.
+    var form = document.querySelector('form[action*="apply/questions"]');
+    var KEY = 'f20-draft-{{ $lead->id }}';
+    function save() {
+        var data = {};
+        form.querySelectorAll('input, select, textarea').forEach(function (el) {
+            if (!el.name || el.name === '_token') return;
+            if (el.type === 'radio') { if (el.checked) data[el.name] = el.value; }
+            else if (el.type === 'checkbox') { (data[el.name] = data[el.name] || []); if (el.checked) data[el.name].push(el.value); }
+            else { data[el.name] = el.value; }
+        });
+        try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+    }
+    function restore() {
+        var raw; try { raw = localStorage.getItem(KEY); } catch (e) {}
+        if (!raw || form.querySelector('[data-had-errors]')) return;
+        var data = JSON.parse(raw);
+        form.querySelectorAll('input, select, textarea').forEach(function (el) {
+            if (!el.name || !(el.name in data)) return;
+            if (el.type === 'radio') el.checked = data[el.name] === el.value;
+            else if (el.type === 'checkbox') el.checked = (data[el.name] || []).indexOf(el.value) !== -1;
+            else if (!el.value) el.value = data[el.name];
+        });
+    }
+    @if($errors->any()) form.setAttribute('data-had-errors', '1'); @endif
+    restore();
+    form.addEventListener('input', save);
+    form.addEventListener('change', save);
+    form.addEventListener('submit', function () { try { localStorage.removeItem(KEY); } catch (e) {} });
+
+    var copyBtn = document.getElementById('resume-copy');
+    copyBtn.addEventListener('click', function () {
+        var link = document.getElementById('resume-link');
+        var done = function () { copyBtn.textContent = 'Copied'; setTimeout(function () { copyBtn.textContent = 'Copy link'; }, 2000); };
+        if (navigator.clipboard) { navigator.clipboard.writeText(link.value).then(done); } else { link.select(); document.execCommand('copy'); done(); }
+    });
 
     // After a failed submit, bring the first problem into view.
     var err = document.getElementById('form-errors');

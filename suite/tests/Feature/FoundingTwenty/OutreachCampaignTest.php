@@ -25,6 +25,7 @@ class OutreachCampaignTest extends TestCase
             'pain_tracking_balances' => 1, 'pain_revenue_visibility' => 1, 'pain_customer_data_organisation' => 1,
             'value_rating' => 1,
             'status' => 'pending',
+            'submitted_at' => now(),
         ], $overrides));
     }
 

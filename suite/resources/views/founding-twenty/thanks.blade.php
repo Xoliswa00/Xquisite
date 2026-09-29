@@ -20,7 +20,7 @@
         <div class="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center mx-auto mb-5">
             <svg class="w-7 h-7 text-[#D4AF37]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
         </div>
-        <h1 class="text-2xl font-bold text-slate-900">Thank you, your application is in</h1>
+        <h1 class="text-2xl font-bold text-slate-900">Thank you{{ session('applicant_first_name') ? ', ' . session('applicant_first_name') : '' }}, your application is in</h1>
         <p class="text-slate-500 text-base mt-2">We've received your answers. Nothing has been charged.</p>
     </div>
 
