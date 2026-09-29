@@ -7,8 +7,12 @@ use App\Models\FoundingTwentyApplication;
 use App\Models\FoundingTwentyCheckin;
 use App\Models\PromoCode;
 use App\Models\Tenant;
+use App\Notifications\FoundingTwentyApplicantMessage;
+use App\Rules\SouthAfricanPhoneNumber;
 use App\Services\AuditService;
+use App\Services\FoundingTwentyMessages;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
 class FoundingTwentyController extends Controller
@@ -45,8 +49,38 @@ class FoundingTwentyController extends Controller
         $checkinsOverdue = $incompleteCheckins->filter(fn ($c) => $c->created_at->diffInDays(now()) > 7);
         $checkinsAwaitingResponse = $incompleteCheckins->filter(fn ($c) => $c->created_at->diffInDays(now()) <= 7);
 
+        $submitted = FoundingTwentyApplication::submitted();
+
+        // Applicants nobody has acknowledged yet (no email on file, so nothing went out automatically).
+        $toAcknowledge = (clone $submitted)->whereNull('received_notified_at')->where('status', 'pending')->orderBy('submitted_at')->get();
+
+        // Decided, but the applicant has not been told. The most damaging silence.
+        $toTellDecision = (clone $submitted)->whereIn('status', ['selected', 'waitlisted', 'rejected'])
+            ->whereNull('decision_notified_at')->orderBy('reviewed_at')->get();
+
+        // Waiting on a decision from us for longer than we promised.
+        $overduePromise = (clone $submitted)->where('status', 'pending')
+            ->where('submitted_at', '<', now()->subDays(config('founding_twenty.decision_within_days')))
+            ->orderBy('submitted_at')->get();
+
+        // Selected but gone quiet before paying the deposit.
+        $reservationChase = (clone $submitted)->where('status', 'selected')->whereNull('deposit_submitted_at')
+            ->where('decision_notified_at', '<', now()->subDays(config('founding_twenty.reservation_chase_days')))
+            ->orderBy('decision_notified_at')->get();
+
+        // Onboarded but no first win logged: the strongest early sign someone will not stay.
+        $stuckOnboarding = FoundingTwentyApplication::whereNotNull('tenant_linked_at')->whereNull('first_value_milestone_at')
+            ->where('tenant_linked_at', '<', now()->subDays(config('founding_twenty.activation_days')))
+            ->whereNull('activation_nudge_sent_at')->orderBy('tenant_linked_at')->get();
+
+        // Free period ending soon and they have not been told what happens next.
+        $conversionDue = FoundingTwentyApplication::whereNotNull('tenant_linked_at')->where('status', '!=', 'converted')
+            ->where('tenant_linked_at', '<=', now()->subDays(config('founding_twenty.conversion_notice_day')))
+            ->whereNull('conversion_offer_sent_at')->orderBy('tenant_linked_at')->get();
+
         return view('admin.founding-twenty.action-queue', compact(
-            'depositsAwaitingConfirmation', 'checkinsOverdue', 'checkinsAwaitingResponse'
+            'depositsAwaitingConfirmation', 'checkinsOverdue', 'checkinsAwaitingResponse',
+            'toAcknowledge', 'toTellDecision', 'overduePromise', 'reservationChase', 'stuckOnboarding', 'conversionDue'
         ));
     }
 
@@ -196,6 +230,122 @@ class FoundingTwentyController extends Controller
         $foundingTwenty->update(['referral_reward_processed_at' => now()]);
 
         return back()->with('success', "Referral reward processed — {$referrer->name} got a free month, {$newTenant->name} got a welcome discount.");
+    }
+
+    /** Email the applicant one of the standard messages (when they gave an email), and record that they were told. */
+    public function sendMessage(FoundingTwentyApplication $foundingTwenty, string $type)
+    {
+        $this->assertMessageType($foundingTwenty, $type);
+        abort_unless($foundingTwenty->email, 422, 'This applicant has no email address. Send it on WhatsApp instead.');
+
+        $message = FoundingTwentyMessages::for($type, $foundingTwenty);
+        Notification::route('mail', $foundingTwenty->email)->notify(new FoundingTwentyApplicantMessage($message['subject'], $message['body']));
+        $foundingTwenty->update([FoundingTwentyMessages::COLUMNS[$type] => now()]);
+
+        return back()->with('success', 'Email sent to ' . $foundingTwenty->email . '.');
+    }
+
+    /** Record that we told them another way (WhatsApp or a call). */
+    public function markMessaged(FoundingTwentyApplication $foundingTwenty, string $type)
+    {
+        $this->assertMessageType($foundingTwenty, $type);
+
+        $foundingTwenty->update([FoundingTwentyMessages::COLUMNS[$type] => now()]);
+
+        return back()->with('success', 'Marked as told.');
+    }
+
+    private function assertMessageType(FoundingTwentyApplication $a, string $type): void
+    {
+        abort_unless(in_array($type, FoundingTwentyMessages::TYPES, true), 404);
+        abort_if($type === 'decision' && ! in_array($a->status, ['selected', 'waitlisted', 'rejected', 'converted'], true), 422, 'Set the decision first (selected, waitlisted or rejected).');
+    }
+
+    /** Add a business we approached directly, so who applies is not only who filled in a form. */
+    public function create()
+    {
+        return view('admin.founding-twenty.create');
+    }
+
+    public function storeDirect(Request $request)
+    {
+        $validated = $request->validate([
+            'business_name' => 'required|string|max:255',
+            'owner_name' => 'required|string|max:255',
+            'phone' => ['required', new SouthAfricanPhoneNumber],
+            'email' => 'nullable|email|max:255',
+            'business_type' => 'nullable|in:salon,beauty,wellness,fitness,other_service,other',
+            'admin_notes' => 'nullable|string|max:2000',
+            'consent_confirmed' => 'accepted',
+        ], ['consent_confirmed.accepted' => 'Please confirm they agreed to us keeping their details.']);
+
+        $last9 = substr(preg_replace('/\D/', '', $validated['phone']), -9);
+        $existing = FoundingTwentyApplication::query()->get(['id', 'phone'])
+            ->first(fn ($a) => substr(preg_replace('/\D/', '', (string) $a->phone), -9) === $last9);
+
+        if ($existing) {
+            return redirect()->route('admin.founding-twenty.show', $existing)->with('error', 'This number is already in the programme. Here is their application.');
+        }
+
+        $application = FoundingTwentyApplication::create([
+            'business_name' => $validated['business_name'],
+            'owner_name' => $validated['owner_name'],
+            'phone' => $validated['phone'],
+            'email' => $validated['email'] ?? null,
+            'business_type' => $validated['business_type'] ?? null,
+            'admin_notes' => $validated['admin_notes'] ?? null,
+            'preferred_contact_method' => 'whatsapp',
+            'source' => 'direct',
+            'privacy_consented_at' => now(),
+            'submitted_at' => now(),
+            'received_notified_at' => now(),
+        ]);
+
+        return redirect()->route('admin.founding-twenty.show', $application)->with('success', 'Added. Review them like any other application.');
+    }
+
+    /** Where the programme leaks: stage by stage, by source, by questionnaire section, against targets. */
+    public function funnel()
+    {
+        $all = FoundingTwentyApplication::all();
+        $submitted = $all->filter(fn ($a) => $a->isSubmitted());
+        $selectedStatuses = ['selected', 'converted'];
+
+        $stages = [
+            'Gave their details' => $all->count(),
+            'Finished the questionnaire' => $submitted->count(),
+            'Selected' => $submitted->whereIn('status', $selectedStatuses)->count(),
+            'Deposit confirmed' => $submitted->whereNotNull('deposit_confirmed_at')->count(),
+            'Onboarded (tenant linked)' => $submitted->whereNotNull('tenant_linked_at')->count(),
+            'First win logged' => $submitted->whereNotNull('first_value_milestone_at')->count(),
+            'Converted to paying' => $submitted->where('status', 'converted')->count(),
+        ];
+
+        $bySource = $all->groupBy(fn ($a) => $a->source ?: 'unknown')->map(fn ($group) => [
+            'started' => $group->count(),
+            'finished' => $group->filter(fn ($a) => $a->isSubmitted())->count(),
+            'selected' => $group->whereIn('status', $selectedStatuses)->count(),
+            'converted' => $group->where('status', 'converted')->count(),
+        ])->sortByDesc('started');
+
+        $dropOff = $all->reject(fn ($a) => $a->isSubmitted())
+            ->groupBy(fn ($a) => (int) $a->last_section_reached)
+            ->map->count()->sortKeys();
+
+        $decided = $submitted->filter(fn ($a) => $a->reviewed_at);
+        $avgDaysToDecision = $decided->isEmpty() ? null : round($decided->avg(fn ($a) => $a->submitted_at->diffInHours($a->reviewed_at) / 24), 1);
+        $overdue = $submitted->where('status', 'pending')
+            ->filter(fn ($a) => $a->submitted_at->lt(now()->subDays(config('founding_twenty.decision_within_days'))))->count();
+
+        $targets = config('founding_twenty.targets');
+        $actuals = [
+            'applications' => $submitted->count(),
+            'selected' => $stages['Selected'],
+            'activated' => $stages['First win logged'],
+            'paying' => $stages['Converted to paying'],
+        ];
+
+        return view('admin.founding-twenty.funnel', compact('stages', 'bySource', 'dropOff', 'avgDaysToDecision', 'overdue', 'targets', 'actuals'));
     }
 
     public function downloadPop(FoundingTwentyApplication $foundingTwenty)

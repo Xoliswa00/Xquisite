@@ -302,6 +302,34 @@
                     </div>
                 @endif
 
+                @if($a->isSubmitted())
+                    <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-4">
+                        <h3 class="text-sm font-semibold text-slate-300">Messages to them</h3>
+                        <div>
+                            <p class="text-xs text-slate-400 mb-1">Application received</p>
+                            @include('admin.founding-twenty._tell-them', ['a' => $a, 'type' => 'received'])
+                        </div>
+                        @if(in_array($a->status, ['selected', 'waitlisted', 'rejected']))
+                            <div>
+                                <p class="text-xs text-slate-400 mb-1">Your decision ({{ $a->status }})</p>
+                                @include('admin.founding-twenty._tell-them', ['a' => $a, 'type' => 'decision'])
+                            </div>
+                        @else
+                            <p class="text-xs text-slate-500">Set a decision below and the message for it appears here.</p>
+                        @endif
+                        @if($a->tenant_linked_at)
+                            <div>
+                                <p class="text-xs text-slate-400 mb-1">Check on how it is going</p>
+                                @include('admin.founding-twenty._tell-them', ['a' => $a, 'type' => 'activation'])
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400 mb-1">Free period ending, what happens next</p>
+                                @include('admin.founding-twenty._tell-them', ['a' => $a, 'type' => 'conversion'])
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
                 <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
                     <h3 class="text-sm font-semibold text-slate-300 mb-3">Review</h3>
                     <form method="POST" action="{{ route('admin.founding-twenty.status', $a) }}" class="space-y-3">
