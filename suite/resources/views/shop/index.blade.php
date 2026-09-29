@@ -70,6 +70,7 @@
                                 <div class="aspect-square bg-gray-100 overflow-hidden">
                                     @if($product->image_url)
                                         <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
+                                             onerror="shopImgFallback(this)"
                                              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                     @else
                                         <div class="w-full h-full flex items-center justify-center">

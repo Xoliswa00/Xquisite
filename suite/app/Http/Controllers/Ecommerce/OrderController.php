@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Ecommerce;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Ecommerce\Models\Order;
+use App\Modules\Ecommerce\Services\OrderService;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    public function __construct(private readonly OrderService $orders) {}
+
     public function index(Request $request)
     {
         $query = Order::with(['items'])
@@ -57,7 +60,18 @@ class OrderController extends Controller
             $data['fulfilled_at'] = now();
         }
 
+        // Only release on the transition INTO cancelled — never re-release
+        // an order that was already cancelled (e.g. by the PayFast-failure
+        // path or the stale-order expiry job), and never on 'refunded',
+        // which follows fulfillment and is a separate returns decision.
+        $wasCancelled = $order->status === Order::STATUS_CANCELLED;
+
         $order->update($data);
+
+        if ($request->status === Order::STATUS_CANCELLED && !$wasCancelled) {
+            $order->load('items');
+            $this->orders->releaseInventory($order);
+        }
 
         return back()->with('success', 'Order status updated to ' . ucfirst($request->status) . '.');
     }

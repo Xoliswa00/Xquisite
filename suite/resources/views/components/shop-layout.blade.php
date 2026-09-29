@@ -11,6 +11,31 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet"/>
     <link rel="manifest" href="{{ route('shop.manifest', $tenant->slug) }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        // Admin-entered image URLs (tenant logo, product photos — a typo, a
+        // since-removed file, a dead host) can 404 or fail to load. Defined
+        // in <head> so it exists before any <img onerror> in <body> can
+        // fire: a local 404 resolves fast enough to race a script placed at
+        // the end of the body, firing "shopImgFallback is not defined"
+        // before the page ever executes it.
+        window.shopImgFallback = function (img) {
+            var box = document.createElement('div');
+            box.className = 'w-full h-full flex items-center justify-center';
+            box.innerHTML = '<svg class="w-2/5 h-2/5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>';
+            img.replaceWith(box);
+        };
+
+        // The header logo isn't inside a sized wrapper the way product images
+        // are, so it can't reuse shopImgFallback's "fill the parent" box —
+        // it falls back to the same initial-letter badge as a tenant with no
+        // logo_url at all.
+        window.shopLogoFallback = function (img, initial) {
+            var badge = document.createElement('div');
+            badge.className = 'w-8 h-8 bg-[#0078D4] rounded-lg flex items-center justify-center';
+            badge.innerHTML = '<span class="text-white font-bold text-sm">' + initial + '</span>';
+            img.replaceWith(badge);
+        };
+    </script>
 </head>
 <body class="font-sans antialiased bg-gray-50 text-gray-900">
 
@@ -19,7 +44,7 @@
 
         <a href="{{ route('shop.index', $tenant->slug) }}" class="flex items-center gap-2">
             @if($tenant->logo_url)
-                <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}" class="h-8 w-auto object-contain">
+                <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}" onerror="shopLogoFallback(this, @js(strtoupper(substr($tenant->name, 0, 1))))" class="h-8 w-auto object-contain">
             @else
                 <div class="w-8 h-8 bg-[#0078D4] rounded-lg flex items-center justify-center">
                     <span class="text-white font-bold text-sm">{{ strtoupper(substr($tenant->name, 0, 1)) }}</span>

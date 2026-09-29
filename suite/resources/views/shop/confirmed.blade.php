@@ -29,7 +29,7 @@
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0">
                             @if($item->product_image_url)
-                                <img src="{{ $item->product_image_url }}" alt="{{ $item->product_name }}" class="w-full h-full object-cover">
+                                <img src="{{ $item->product_image_url }}" alt="{{ $item->product_name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
                             @endif
                         </div>
                         <div class="flex-1 min-w-0">

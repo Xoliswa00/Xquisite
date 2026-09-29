@@ -17,11 +17,14 @@ class CheckoutTest extends TestCase
 
     private function tenant(): Tenant
     {
-        return Tenant::create([
+        $tenant = Tenant::create([
             'name'      => 'Test Store',
             'slug'      => 'test-store',
             'is_active' => true,
         ]);
+        $tenant->activateModule('ecommerce');
+
+        return $tenant;
     }
 
     private function product(Tenant $tenant, array $overrides = []): Product
