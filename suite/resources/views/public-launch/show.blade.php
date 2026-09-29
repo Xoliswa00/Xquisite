@@ -35,11 +35,12 @@
     </div>
 </header>
 
-<main class="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20 space-y-16">
+@php $isF20 = $launch->key === 'founding-20'; @endphp
+<main class="max-w-3xl {{ $isF20 ? 'lg:max-w-5xl' : '' }} mx-auto px-4 sm:px-6 py-12 sm:py-20 space-y-16">
 
     {{-- Hero --}}
     <div class="text-center">
-        <h1 class="f-mont text-3xl sm:text-5xl font-bold text-[#002B5B] mb-4">{{ $launch->title }}</h1>
+        <h1 class="f-mont text-3xl sm:text-5xl font-extrabold text-[#002B5B] mb-4">{{ $launch->title }}</h1>
         @if($launch->tagline)
             <p class="text-base sm:text-lg text-[#2D3748]/70 max-w-xl mx-auto">{{ $launch->tagline }}</p>
         @endif
@@ -70,28 +71,40 @@
                class="inline-flex items-center justify-center px-8 py-3.5 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition-colors text-base sm:text-lg">
                 Start Your Application
             </a>
-            <p class="text-sm text-[#2D3748]/60 mt-3">Step 1 takes about a minute and saves your place. The questions take another 5 to 7. Applying costs nothing, and we review every application before anyone is selected.</p>
+            <p class="text-sm text-[#2D3748]/60 mt-3 max-w-md mx-auto">Step 1 takes about a minute and saves your place. The questions take another 5 to 7. Applying costs nothing, and we review every application before anyone is selected.</p>
         </div>
 
         {{-- How it works: the deposit is disclosed here, before anyone spends time on the form. --}}
         <div>
-            <h2 class="f-mont text-xl font-bold text-[#002B5B] mb-6 text-center">How it works</h2>
-            <ol class="space-y-5 max-w-lg mx-auto">
+            <h2 class="f-mont text-xl font-extrabold text-[#002B5B] mb-6 text-center">How it works</h2>
+            <div class="grid gap-4 max-w-lg lg:max-w-none lg:grid-cols-2 lg:gap-5 mx-auto">
                 @foreach([
                     ['Tell us who you are, then about your business', 'A minute to introduce yourself and how to reach you, then a short questionnaire about how you run things today.'],
                     ['We review every application', 'Only 20 businesses are selected, chosen for how well we can help them. We contact you on the WhatsApp number, call or email you choose.'],
-                    ['Hold your spot if you\'re selected', 'A fully refundable R100 deposit secures your place. It is asked only after you are selected, never when you apply.'],
-                    ['Start your 3 free months', 'We help you set up. After the 3 months it is R200 a month, and only if you decide to stay.'],
+                    ['Hold your spot if you\'re selected', 'A fully refundable <span class="text-[#D4AF37] font-extrabold">R100</span> deposit secures your place. It is asked only after you are selected, never when you apply.'],
+                    ['Start your 3 free months', 'We help you set up. After the <span class="text-[#D4AF37] font-extrabold">3 free months</span> it is R200 a month, and only if you decide to stay.'],
                 ] as $i => [$title, $text])
-                    <li class="flex items-start gap-4">
-                        <span class="flex items-center justify-center w-9 h-9 rounded-full bg-[#002B5B] text-white text-sm font-bold shrink-0">{{ $i + 1 }}</span>
+                    <div class="flex items-start gap-4 bg-[#111111] rounded-[20px] p-5">
+                        <span class="f-mont shrink-0 text-3xl font-extrabold text-[#D4AF37] leading-none w-8">{{ $i + 1 }}</span>
                         <div>
-                            <p class="font-semibold text-[#002B5B]">{{ $title }}</p>
-                            <p class="text-sm text-[#2D3748]/70 mt-0.5">{{ $text }}</p>
+                            <p class="font-semibold text-white">{{ $title }}</p>
+                            <p class="text-sm text-white/80 mt-1">{!! $text !!}</p>
                         </div>
-                    </li>
+                    </div>
                 @endforeach
-            </ol>
+            </div>
+        </div>
+
+        {{-- Closing CTA: the same copy from the approved content pack, framed as the poster's closing black banner. --}}
+        <div class="relative bg-[#111111] rounded-[20px] p-6 sm:p-8 text-center max-w-lg lg:max-w-2xl mx-auto overflow-hidden">
+            <div class="absolute top-3 left-3 grid grid-cols-3 gap-1" aria-hidden="true">
+                @for($d = 0; $d < 9; $d++)<span class="block w-[6px] h-[6px] rounded-full bg-[#D4AF37]"></span>@endfor
+            </div>
+            <p class="f-mont text-lg sm:text-xl font-extrabold text-white">Twenty spots, and the questionnaire takes about seven minutes.</p>
+            <a href="{{ route('founding-twenty.show', $applyParams) }}"
+               class="inline-flex items-center justify-center mt-5 px-8 py-3.5 bg-[#D4AF37] hover:bg-[#B8892B] text-[#111111] font-bold rounded-xl transition-colors text-base">
+                Start Your Application
+            </a>
         </div>
     @endif
 
@@ -99,7 +112,7 @@
     @if(!empty($launch->benefits))
         <div class="bg-[#F8FAFC] border border-gray-100 rounded-2xl p-6 sm:p-10">
             <h2 class="f-mont text-xl font-bold text-[#002B5B] mb-6 text-center">What's included</h2>
-            <ul class="space-y-4 max-w-lg mx-auto">
+            <ul class="space-y-4 max-w-lg mx-auto {{ $isF20 ? 'lg:max-w-none lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-x-10 lg:gap-y-4' : '' }}">
                 @foreach($launch->benefits as $benefit)
                     <li class="flex items-start gap-3">
                         <svg class="w-5 h-5 text-[#0078D4] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
@@ -116,7 +129,7 @@
             <h2 class="f-mont text-xl font-bold text-[#002B5B] text-center">{{ $launch->publishedQuestions->isNotEmpty() ? 'Questions from the community' : 'Got a question first?' }}</h2>
 
             @if($launch->publishedQuestions->isNotEmpty())
-                <div class="space-y-5 max-w-xl mx-auto">
+                <div class="space-y-5 max-w-xl {{ $isF20 ? 'lg:max-w-2xl' : '' }} mx-auto">
                     @foreach($launch->publishedQuestions as $q)
                         <div class="border-b border-gray-100 pb-5">
                             <p class="font-semibold text-[#002B5B] text-sm sm:text-base">{{ $q->question }}</p>
@@ -129,12 +142,12 @@
             @endif
 
             @if(session('success'))
-                <div role="status" class="max-w-xl mx-auto rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3">
+                <div role="status" class="max-w-xl {{ $isF20 ? 'lg:max-w-2xl' : '' }} mx-auto rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3">
                     {{ session('success') }}
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('public-launch.questions.store', $launch->key) }}" class="max-w-xl mx-auto bg-[#F8FAFC] border border-gray-100 rounded-2xl p-6 space-y-4">
+            <form method="POST" action="{{ route('public-launch.questions.store', $launch->key) }}" class="max-w-xl {{ $isF20 ? 'lg:max-w-2xl' : '' }} mx-auto bg-[#F8FAFC] border border-gray-100 rounded-2xl p-6 space-y-4">
                 @csrf
                 <p class="text-sm font-semibold text-[#002B5B]">Have a question about the programme?</p>
                 @error('question')<p class="text-red-600 text-xs">{{ $message }}</p>@enderror

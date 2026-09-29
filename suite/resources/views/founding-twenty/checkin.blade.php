@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $checkin->label() }} — Xquisite Creations Founding 20</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=montserrat:700,800&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- Only the new desktop-only sidebar below uses .f-mont — the existing mobile
+         content keeps its original font-sans so mobile stays pixel-identical. --}}
+    <style>.f-mont { font-family: 'Montserrat', sans-serif; }</style>
 </head>
 <body class="h-full font-sans antialiased text-slate-800">
 
@@ -18,7 +23,7 @@
     </div>
 </header>
 
-<main class="max-w-md mx-auto px-4 py-12">
+<main class="max-w-md lg:max-w-4xl mx-auto px-4 py-12">
 
     @if($checkin->isComplete())
         <div class="text-center">
@@ -34,6 +39,9 @@
             @endif
         </div>
     @else
+    <div class="lg:grid lg:grid-cols-[1fr_280px] lg:gap-10">
+    <div>
+
         <div class="mb-6">
             <h1 class="text-xl font-bold text-slate-900">Quick {{ $checkin->label() }}</h1>
             <p class="text-slate-500 text-sm mt-2">A few of the same questions from your original application, so we can see what's actually changed. Takes about 2 minutes.</p>
@@ -157,6 +165,27 @@
                 Submit
             </button>
         </form>
+
+    </div>
+
+    {{-- Desktop only: freed side column gives context for why we're asking and, on the
+         final (90-day) check-in specifically, what continuing actually costs — the
+         playbook's decided price/deposit terms, not invented copy. --}}
+    <aside class="hidden lg:block">
+        <div class="bg-[#111111] rounded-[20px] p-6 lg:sticky lg:top-8">
+            @if($checkin->isFinalCheckin())
+                <h2 class="f-mont text-base font-extrabold text-white mb-3">If you decide to continue</h2>
+                <p class="text-sm text-white/80">R200 a month, locked for 24 months from today. Nothing is charged automatically, we'll confirm with you first.</p>
+                <p class="text-sm text-white/80 mt-3">Your R100 deposit always comes back, paid to your bank account or credited off your first invoice, whichever you choose.</p>
+            @else
+                <h2 class="f-mont text-base font-extrabold text-white mb-3">Why we ask</h2>
+                <p class="text-sm text-white/80">A few of the same questions as your original application, so we can see what's actually changed and keep building the right things.</p>
+                <p class="text-sm text-white/80 mt-3">Takes about 2 minutes, and nothing is charged.</p>
+            @endif
+        </div>
+    </aside>
+
+    </div>
     @endif
 </main>
 
