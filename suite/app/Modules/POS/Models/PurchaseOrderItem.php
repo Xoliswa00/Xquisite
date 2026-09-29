@@ -12,6 +12,8 @@ class PurchaseOrderItem extends Model
     protected $fillable = [
         'purchase_order_id',
         'product_id',
+        'product_variant_id',
+        'variant_attributes',
         'product_name',
         'quantity_ordered',
         'quantity_received',
@@ -20,8 +22,9 @@ class PurchaseOrderItem extends Model
     ];
 
     protected $casts = [
-        'unit_cost' => 'decimal:2',
-        'subtotal'  => 'decimal:2',
+        'unit_cost'          => 'decimal:2',
+        'subtotal'           => 'decimal:2',
+        'variant_attributes' => 'array',
     ];
 
     public function purchaseOrder()
@@ -32,6 +35,11 @@ class PurchaseOrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function productVariant()
+    {
+        return $this->belongsTo(ProductVariant::class);
     }
 
     public function getRemainingAttribute(): int
