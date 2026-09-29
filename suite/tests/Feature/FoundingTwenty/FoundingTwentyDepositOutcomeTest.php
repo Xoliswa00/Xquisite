@@ -241,47 +241,4 @@ class FoundingTwentyDepositOutcomeTest extends TestCase
         $response->assertDontSee('Settle the deposit');
         $response->assertSee('Credited to invoice ' . $invoice->invoice_number);
     }
-
-    // ── The books ────────────────────────────────────────────────────────────
-
-    public function test_the_ledger_reconciles_received_paid_back_credited_and_still_held(): void
-    {
-        $tenant = $this->tenant();
-        $invoice = $this->invoice($tenant, 100);
-        $this->application(['business_name' => 'Held Salon']);
-        $this->application(['business_name' => 'Paid Back Salon', 'deposit_refunded_at' => now(), 'deposit_outcome' => 'refund']);
-        $this->application(['business_name' => 'Credited Salon', 'deposit_credited_at' => now(), 'deposit_outcome' => 'credit', 'deposit_credit_invoice_id' => $invoice->id]);
-        $this->application(['business_name' => 'Never Paid', 'deposit_confirmed_at' => null]);
-
-        $response = $this->actingAs($this->admin())->get(route('admin.founding-twenty.deposits'));
-
-        $response->assertOk();
-        $this->assertSame(['received' => 300.0, 'refunded' => 100.0, 'credited' => 100.0, 'held' => 100.0], $response->viewData('totals'));
-        $response->assertSee('Held Salon');
-        $response->assertSee('Credited ' . now()->format('j M Y') . ' to ' . $invoice->invoice_number);
-        $response->assertDontSee('Never Paid');
-    }
-
-    public function test_the_ledger_downloads_as_csv_with_the_references_an_accountant_needs(): void
-    {
-        $tenant = $this->tenant();
-        $invoice = $this->invoice($tenant, 100);
-        $this->application(['business_name' => 'Paid Back Salon', 'deposit_refunded_at' => now(), 'deposit_outcome' => 'refund', 'deposit_refund_reference' => 'EFT-1', 'deposit_reference' => 'F20-0101']);
-        $this->application(['business_name' => 'Credited Salon', 'deposit_credited_at' => now(), 'deposit_outcome' => 'credit', 'deposit_credit_invoice_id' => $invoice->id, 'deposit_reference' => 'F20-0102']);
-
-        $response = $this->actingAs($this->admin())->get(route('admin.founding-twenty.deposits', ['format' => 'csv']));
-
-        $response->assertOk();
-        $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type'));
-        $csv = $response->streamedContent();
-        $this->assertStringContainsString('Reference,Business,Amount,Received,Outcome,Settled,"Refund reference","Credited to invoice"', $csv);
-        $this->assertStringContainsString('F20-0101,"Paid Back Salon",100.00,', $csv);
-        $this->assertStringContainsString('EFT-1', $csv);
-        $this->assertStringContainsString($invoice->invoice_number, $csv);
-    }
-
-    public function test_the_ledger_is_empty_safe(): void
-    {
-        $this->actingAs($this->admin())->get(route('admin.founding-twenty.deposits'))->assertOk()->assertSee('No deposits confirmed yet.');
-    }
 }

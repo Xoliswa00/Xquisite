@@ -147,6 +147,11 @@ class FoundingTwentyApplication extends Model
         return $this->tenant_linked_at?->copy()->addMonths(config('founding_twenty.free_months') + config('founding_twenty.price_lock_months'));
     }
 
+    public function depositEntries(): HasMany
+    {
+        return $this->hasMany(FoundingTwentyDepositEntry::class);
+    }
+
     public function depositCreditInvoice()
     {
         return $this->belongsTo(PlatformInvoice::class, 'deposit_credit_invoice_id');

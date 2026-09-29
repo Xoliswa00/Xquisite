@@ -11,7 +11,10 @@ use App\Models\Tenant;
 use App\Notifications\FoundingTwentyApplicantMessage;
 use App\Rules\SouthAfricanPhoneNumber;
 use App\Services\AuditService;
+use App\Models\FoundingTwentyDepositEntry;
+use App\Services\FoundingTwentyDepositLedger;
 use App\Services\FoundingTwentyMessages;
+use App\Services\FoundingTwentyProgrammeStats;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -36,54 +39,14 @@ class FoundingTwentyController extends Controller
         return view('admin.founding-twenty.index', compact('applications', 'stats', 'leads'));
     }
 
-    public function actionQueue()
+    public function actionQueue(FoundingTwentyProgrammeStats $stats)
     {
-        $depositsAwaitingConfirmation = FoundingTwentyApplication::whereNotNull('deposit_submitted_at')
-            ->whereNull('deposit_confirmed_at')
-            ->orderBy('deposit_submitted_at')
-            ->get();
+        $queue = $stats->queue();
 
-        $incompleteCheckins = FoundingTwentyCheckin::whereNull('completed_at')
-            ->with('application')
-            ->orderBy('created_at')
-            ->get();
+        $checkinsOverdue = $queue['incompleteCheckins']->filter(fn ($c) => $c->created_at->diffInDays(now()) > 7);
+        $checkinsAwaitingResponse = $queue['incompleteCheckins']->filter(fn ($c) => $c->created_at->diffInDays(now()) <= 7);
 
-        $checkinsOverdue = $incompleteCheckins->filter(fn ($c) => $c->created_at->diffInDays(now()) > 7);
-        $checkinsAwaitingResponse = $incompleteCheckins->filter(fn ($c) => $c->created_at->diffInDays(now()) <= 7);
-
-        $submitted = FoundingTwentyApplication::submitted();
-
-        // Applicants nobody has acknowledged yet (no email on file, so nothing went out automatically).
-        $toAcknowledge = (clone $submitted)->whereNull('received_notified_at')->where('status', 'pending')->orderBy('submitted_at')->get();
-
-        // Decided, but the applicant has not been told. The most damaging silence.
-        $toTellDecision = (clone $submitted)->whereIn('status', ['selected', 'waitlisted', 'rejected'])
-            ->whereNull('decision_notified_at')->orderBy('reviewed_at')->get();
-
-        // Waiting on a decision from us for longer than we promised.
-        $overduePromise = (clone $submitted)->where('status', 'pending')
-            ->where('submitted_at', '<', now()->subDays(config('founding_twenty.decision_within_days')))
-            ->orderBy('submitted_at')->get();
-
-        // Selected but gone quiet before paying the deposit.
-        $reservationChase = (clone $submitted)->where('status', 'selected')->whereNull('deposit_submitted_at')
-            ->where('decision_notified_at', '<', now()->subDays(config('founding_twenty.reservation_chase_days')))
-            ->orderBy('decision_notified_at')->get();
-
-        // Onboarded but no first win logged: the strongest early sign someone will not stay.
-        $stuckOnboarding = FoundingTwentyApplication::whereNotNull('tenant_linked_at')->whereNull('first_value_milestone_at')
-            ->where('tenant_linked_at', '<', now()->subDays(config('founding_twenty.activation_days')))
-            ->whereNull('activation_nudge_sent_at')->orderBy('tenant_linked_at')->get();
-
-        // Free period ending soon and they have not been told what happens next.
-        $conversionDue = FoundingTwentyApplication::whereNotNull('tenant_linked_at')->where('status', '!=', 'converted')
-            ->where('tenant_linked_at', '<=', now()->subDays(config('founding_twenty.conversion_notice_day')))
-            ->whereNull('conversion_offer_sent_at')->orderBy('tenant_linked_at')->get();
-
-        return view('admin.founding-twenty.action-queue', compact(
-            'depositsAwaitingConfirmation', 'checkinsOverdue', 'checkinsAwaitingResponse',
-            'toAcknowledge', 'toTellDecision', 'overduePromise', 'reservationChase', 'stuckOnboarding', 'conversionDue'
-        ));
+        return view('admin.founding-twenty.action-queue', $queue + compact('checkinsOverdue', 'checkinsAwaitingResponse'));
     }
 
     public function show(FoundingTwentyApplication $foundingTwenty)
@@ -120,28 +83,36 @@ class FoundingTwentyController extends Controller
         return back()->with('success', "Application marked as {$request->status}.");
     }
 
-    public function confirmDeposit(FoundingTwentyApplication $foundingTwenty)
+    public function confirmDeposit(Request $request, FoundingTwentyApplication $foundingTwenty, FoundingTwentyDepositLedger $ledger)
     {
         abort_unless($foundingTwenty->deposit_submitted_at !== null, 422, 'No proof of payment has been submitted yet.');
 
-        $foundingTwenty->update(['deposit_confirmed_at' => now()]);
+        if ($foundingTwenty->deposit_confirmed_at === null) {
+            DB::transaction(function () use ($foundingTwenty, $ledger, $request) {
+                $foundingTwenty->update(['deposit_confirmed_at' => now()]);
+                $ledger->record($foundingTwenty, 'received', $request->user()->id);
+            });
+        }
 
         return back()->with('success', 'Deposit confirmed — this business can now be onboarded.');
     }
 
-    public function markDepositRefunded(Request $request, FoundingTwentyApplication $foundingTwenty)
+    public function markDepositRefunded(Request $request, FoundingTwentyApplication $foundingTwenty, FoundingTwentyDepositLedger $ledger)
     {
         abort_unless($foundingTwenty->deposit_confirmed_at !== null, 422, 'Deposit has not been confirmed yet.');
         abort_if($foundingTwenty->isDepositSettled(), 422, 'This deposit has already been settled.');
 
         $validated = $request->validate(['deposit_refund_reference' => 'nullable|string|max:100']);
 
-        $foundingTwenty->update([
-            'deposit_refunded_at' => now(),
-            'deposit_outcome' => 'refund',
-            'deposit_outcome_at' => $foundingTwenty->deposit_outcome_at ?? now(),
-            'deposit_refund_reference' => $validated['deposit_refund_reference'] ?? null,
-        ]);
+        DB::transaction(function () use ($foundingTwenty, $validated, $ledger, $request) {
+            $foundingTwenty->update([
+                'deposit_refunded_at' => now(),
+                'deposit_outcome' => 'refund',
+                'deposit_outcome_at' => $foundingTwenty->deposit_outcome_at ?? now(),
+                'deposit_refund_reference' => $validated['deposit_refund_reference'] ?? null,
+            ]);
+            $ledger->record($foundingTwenty, 'refunded', $request->user()->id, null, $validated['deposit_refund_reference'] ?? null);
+        });
 
         return back()->with('success', 'Deposit marked as refunded.');
     }
@@ -160,7 +131,7 @@ class FoundingTwentyController extends Controller
     }
 
     /** Take the deposit off one of their unpaid invoices, and note it on the invoice for the books. */
-    public function applyDepositCredit(Request $request, FoundingTwentyApplication $foundingTwenty)
+    public function applyDepositCredit(Request $request, FoundingTwentyApplication $foundingTwenty, FoundingTwentyDepositLedger $ledger)
     {
         abort_unless($foundingTwenty->deposit_confirmed_at !== null, 422, 'Deposit has not been confirmed yet.');
         abort_if($foundingTwenty->isDepositSettled(), 422, 'This deposit has already been settled.');
@@ -168,7 +139,7 @@ class FoundingTwentyController extends Controller
 
         $validated = $request->validate(['invoice_id' => 'required|integer']);
 
-        $error = DB::transaction(function () use ($foundingTwenty, $validated) {
+        $error = DB::transaction(function () use ($foundingTwenty, $validated, $ledger, $request) {
             $invoice = PlatformInvoice::where('id', $validated['invoice_id'])
                 ->where('tenant_id', $foundingTwenty->tenant_id)
                 ->whereIn('status', ['unpaid', 'overdue'])
@@ -195,6 +166,7 @@ class FoundingTwentyController extends Controller
                 'deposit_credited_at' => now(),
                 'deposit_credit_invoice_id' => $invoice->id,
             ]);
+            $ledger->record($foundingTwenty, 'credited', $request->user()->id, $invoice->id);
 
             return null;
         });
@@ -202,35 +174,39 @@ class FoundingTwentyController extends Controller
         return $error ? back()->with('error', $error) : back()->with('success', 'Deposit credited to the invoice.');
     }
 
-    /** Every deposit received and how it was settled, for the books. ?format=csv downloads it. */
-    public function depositLedger(Request $request)
+    /** The deposit journal: every movement, balanced, never edited. ?format=csv downloads it. */
+    public function depositLedger(Request $request, FoundingTwentyDepositLedger $ledger)
     {
-        $rows = FoundingTwentyApplication::whereNotNull('deposit_confirmed_at')->with('depositCreditInvoice')->orderBy('deposit_confirmed_at')->get();
-
-        $totals = [
-            'received' => (float) $rows->sum('deposit_amount'),
-            'refunded' => (float) $rows->whereNotNull('deposit_refunded_at')->sum('deposit_amount'),
-            'credited' => (float) $rows->whereNotNull('deposit_credited_at')->sum('deposit_amount'),
-        ];
-        $totals['held'] = $totals['received'] - $totals['refunded'] - $totals['credited'];
+        $entries = FoundingTwentyDepositEntry::with(['application', 'invoice', 'recorder', 'reversal'])->orderBy('id')->get();
+        $totals = $ledger->totals();
+        $discrepancies = $ledger->discrepancies();
 
         if ($request->query('format') === 'csv') {
-            return response()->streamDownload(function () use ($rows) {
+            return response()->streamDownload(function () use ($entries) {
                 $out = fopen('php://output', 'w');
-                fputcsv($out, ['Reference', 'Business', 'Amount', 'Received', 'Outcome', 'Settled', 'Refund reference', 'Credited to invoice'], ',', '"', '');
-                foreach ($rows as $a) {
+                fputcsv($out, ['Entry', 'Date', 'Type', 'Reference', 'Business', 'Debit', 'Credit', 'Amount', 'Invoice', 'Reverses entry', 'Reason', 'Recorded by'], ',', '"', '');
+                foreach ($entries as $e) {
                     fputcsv($out, [
-                        $a->deposit_reference, $a->business_name, number_format((float) $a->deposit_amount, 2, '.', ''),
-                        $a->deposit_confirmed_at->toDateString(), $a->deposit_outcome ?? 'undecided',
-                        ($a->deposit_refunded_at ?? $a->deposit_credited_at)?->toDateString(),
-                        $a->deposit_refund_reference, $a->depositCreditInvoice?->invoice_number,
+                        $e->id, $e->entry_date->toDateString(), $e->type, $e->reference, $e->application?->business_name,
+                        FoundingTwentyDepositEntry::ACCOUNTS[$e->debit_account], FoundingTwentyDepositEntry::ACCOUNTS[$e->credit_account],
+                        number_format((float) $e->amount, 2, '.', ''), $e->invoice?->invoice_number, $e->reverses_entry_id, $e->reason, $e->recorder?->name,
                     ], ',', '"', '');
                 }
                 fclose($out);
-            }, 'founding-20-deposits-' . now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv']);
+            }, 'founding-20-deposit-journal-' . now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv']);
         }
 
-        return view('admin.founding-twenty.deposits', compact('rows', 'totals'));
+        return view('admin.founding-twenty.deposits', compact('entries', 'totals', 'discrepancies'));
+    }
+
+    /** Undo a journal entry by writing its opposite. Needs a reason, which stays on the record. */
+    public function reverseDepositEntry(Request $request, FoundingTwentyDepositEntry $entry, FoundingTwentyDepositLedger $ledger)
+    {
+        $validated = $request->validate(['reason' => 'required|string|min:5|max:500']);
+
+        $error = $ledger->reverse($entry, $validated['reason'], $request->user()->id);
+
+        return $error ? back()->with('error', $error) : back()->with('success', 'Reversed. The original entry stays on the record.');
     }
 
     public function linkTenant(Request $request, FoundingTwentyApplication $foundingTwenty)
