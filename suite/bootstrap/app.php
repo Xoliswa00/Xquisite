@@ -44,17 +44,20 @@ return Application::configure(basePath: dirname(__DIR__))
             DemoModeMiddleware::class,
             \App\Http\Middleware\CheckCompanySuspension::class,
             SecurityHeaders::class,
+            \App\Http\Middleware\TrackPageView::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
             '/js-error',
             '/ingest/logs',
+            '/t',
         ]);
 
         $middleware->redirectGuestsTo($portalLoginRedirect);
 
         $middleware->alias([
             'module' => EnsureModuleActive::class,
+            'tenant-module' => \App\Http\Middleware\EnsureTenantModuleActive::class,
             'enforce-password-change' => EnforcePasswordChange::class,
             'company.suspension' => \App\Http\Middleware\CheckCompanySuspension::class,
             'monitored-instance' => \App\Http\Middleware\EnsureMonitoredInstance::class,

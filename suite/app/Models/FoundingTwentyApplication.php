@@ -1,0 +1,186 @@
+<?php
+
+namespace App\Models;
+
+use App\Models\Traits\Auditable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
+class FoundingTwentyApplication extends Model
+{
+    use Auditable;
+
+    /**
+     * Match the DB column default in PHP too: Eloquent doesn't reflect a server-side
+     * default back onto a freshly created model unless it's refreshed, so without this
+     * a booking-track application's ->track would read null in the same request it was created.
+     */
+    protected $attributes = [
+        'track' => 'booking',
+    ];
+
+    protected $fillable = [
+        'outreach_campaign_id',
+        'business_name', 'owner_name', 'applicant_role', 'why_founding_20', 'heard_about_via',
+        'email', 'phone', 'business_type', 'business_type_other',
+        'location', 'preferred_contact_method', 'best_contact_time',
+        'years_operating', 'staff_count', 'locations_count', 'monthly_customers', 'monthly_appointments',
+        'booking_methods', 'appointment_management_methods', 'customer_data_methods',
+        'payment_tracking_methods', 'balance_tracking_methods', 'card_payment_device',
+        'pain_forgotten_appointments', 'pain_late_cancellations', 'pain_no_shows', 'pain_double_bookings',
+        'pain_booking_enquiry_time', 'pain_staff_availability', 'pain_tracking_balances',
+        'pain_revenue_visibility', 'pain_customer_data_organisation',
+        'no_shows_per_month', 'avg_appointment_value',
+        'hours_booking_admin', 'hours_availability_messages', 'hours_manual_reminders',
+        'adoption_barriers', 'adoption_barrier_other', 'past_solution_frustration',
+        'priority_features', 'top_priority_feature', 'automation_wishlist',
+        'value_rating', 'value_open_text',
+        'continuation_likelihood', 'continuation_driver', 'churn_driver',
+        'wants_founding_twenty', 'willing_to_give_feedback',
+        'score', 'tier', 'status', 'source', 'ip_address',
+        'reviewed_by', 'reviewed_at', 'admin_notes',
+        'privacy_consented_at', 'submitted_at',
+        'received_notified_at', 'decision_notified_at', 'activation_nudge_sent_at', 'conversion_offer_sent_at', 'last_section_reached',
+        'deposit_outcome', 'deposit_outcome_at', 'deposit_refund_reference', 'deposit_credited_at', 'deposit_credit_invoice_id',
+        'track', 'custom_solution_description', 'custom_monthly_price', 'custom_pricing_notes',
+        'deposit_amount', 'deposit_reference', 'deposit_pop_path',
+        'deposit_submitted_at', 'deposit_confirmed_at', 'deposit_refunded_at',
+        'tenant_id', 'tenant_linked_at', 'first_value_milestone_at', 'first_value_milestone_note',
+        'referred_by_tenant_id', 'referral_reward_processed_at',
+    ];
+
+    protected $casts = [
+        'booking_methods' => 'array',
+        'appointment_management_methods' => 'array',
+        'customer_data_methods' => 'array',
+        'payment_tracking_methods' => 'array',
+        'balance_tracking_methods' => 'array',
+        'adoption_barriers' => 'array',
+        'priority_features' => 'array',
+        'wants_founding_twenty' => 'boolean',
+        'willing_to_give_feedback' => 'boolean',
+        'reviewed_at' => 'datetime',
+        'privacy_consented_at' => 'datetime',
+        'submitted_at' => 'datetime',
+        'received_notified_at' => 'datetime',
+        'decision_notified_at' => 'datetime',
+        'activation_nudge_sent_at' => 'datetime',
+        'conversion_offer_sent_at' => 'datetime',
+        'deposit_outcome_at' => 'datetime',
+        'deposit_credited_at' => 'datetime',
+        'custom_monthly_price' => 'decimal:2',
+        'deposit_amount' => 'decimal:2',
+        'deposit_submitted_at' => 'datetime',
+        'deposit_confirmed_at' => 'datetime',
+        'deposit_refunded_at' => 'datetime',
+        'tenant_linked_at' => 'datetime',
+        'first_value_milestone_at' => 'datetime',
+        'referral_reward_processed_at' => 'datetime',
+    ];
+
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function outreachCampaign(): BelongsTo
+    {
+        return $this->belongsTo(OutreachCampaign::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    public function referredByTenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class, 'referred_by_tenant_id');
+    }
+
+    public function promoCodeRedemption(): HasOne
+    {
+        return $this->hasOne(PromoCodeRedemption::class);
+    }
+
+    public function checkins(): HasMany
+    {
+        return $this->hasMany(FoundingTwentyCheckin::class);
+    }
+
+    public function reservationToken(): string
+    {
+        return hash_hmac('sha256', $this->id . '|' . $this->phone, config('app.key'));
+    }
+
+    /** A lead has given their details but hasn't submitted the questionnaire. */
+    public function isSubmitted(): bool
+    {
+        return $this->submitted_at !== null;
+    }
+
+    public function scopeSubmitted(Builder $query): Builder
+    {
+        return $query->whereNotNull('submitted_at');
+    }
+
+    public function scopeLeads(Builder $query): Builder
+    {
+        return $query->whereNull('submitted_at');
+    }
+
+    /**
+     * Lets someone pick their application back up on another device or after
+     * losing their session. Prefixed so it can never be reused as a deposit token.
+     */
+    public function resumeToken(): string
+    {
+        return hash_hmac('sha256', 'resume|' . $this->id . '|' . $this->phone, config('app.key'));
+    }
+
+    public function resumeUrl(): string
+    {
+        return route('founding-twenty.resume', [$this, $this->resumeToken()]);
+    }
+
+    public function isCustomTrack(): bool
+    {
+        return $this->track === 'custom';
+    }
+
+    /** What they'll actually pay after the free period: the agreed module price if one's been set, otherwise the standard rate. */
+    public function monthlyPrice(): float
+    {
+        return (float) ($this->custom_monthly_price ?? config('founding_twenty.monthly_price'));
+    }
+
+    /** The deposit has been paid back or credited: nothing is owed either way. */
+    public function isDepositSettled(): bool
+    {
+        return $this->deposit_refunded_at !== null || $this->deposit_credited_at !== null;
+    }
+
+    /** Monthly price is guaranteed until this date: the free period plus the lock, counted from onboarding. */
+    public function priceLockedUntil(): ?\Illuminate\Support\Carbon
+    {
+        return $this->tenant_linked_at?->copy()->addMonths(config('founding_twenty.free_months') + config('founding_twenty.price_lock_months'));
+    }
+
+    public function depositEntries(): HasMany
+    {
+        return $this->hasMany(FoundingTwentyDepositEntry::class);
+    }
+
+    public function depositCreditInvoice()
+    {
+        return $this->belongsTo(PlatformInvoice::class, 'deposit_credit_invoice_id');
+    }
+
+    public function firstName(): string
+    {
+        return trim(explode(' ', trim($this->owner_name))[0] ?? '') ?: 'there';
+    }
+}

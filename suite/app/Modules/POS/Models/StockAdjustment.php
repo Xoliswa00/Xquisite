@@ -13,6 +13,7 @@ class StockAdjustment extends Model
     protected $fillable = [
         'tenant_id',
         'product_id',
+        'product_variant_id',
         'type',
         'quantity_before',
         'quantity_change',
@@ -33,6 +34,11 @@ class StockAdjustment extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function productVariant()
+    {
+        return $this->belongsTo(ProductVariant::class);
     }
 
     public function sale()

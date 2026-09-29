@@ -3,9 +3,9 @@
 
     <div class="max-w-4xl" x-data="createPO()" x-init="calcTotal()">
 
-        @if($preloadProducts->count())
+        @if($preloadItems->count())
             <div class="mb-4 bg-amber-900/20 border border-amber-700/50 rounded-xl px-5 py-3 text-sm text-amber-300">
-                Pre-filled with <strong>{{ $preloadProducts->count() }}</strong> products below reorder level. Adjust quantities and costs before saving.
+                Pre-filled with <strong>{{ $preloadItems->count() }}</strong> item(s) below reorder level. Adjust quantities and costs before saving.
             </div>
         @endif
 
@@ -94,6 +94,18 @@
                                             <option :value="p.id" x-text="p.name" :selected="item.product_id == p.id"></option>
                                         </template>
                                     </select>
+                                    <template x-if="productHasVariants(item.product_id)">
+                                        <select :name="'items[' + index + '][variant_id]'"
+                                                x-model="item.variant_id"
+                                                @change="onVariantChange(item)"
+                                                required
+                                                class="w-full mt-1.5 bg-slate-700 border border-slate-600 text-slate-100 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                                            <option value="">Select variant…</option>
+                                            <template x-for="v in variantsFor(item.product_id)" :key="v.id">
+                                                <option :value="v.id" x-text="v.label" :selected="item.variant_id == v.id"></option>
+                                            </template>
+                                        </select>
+                                    </template>
                                 </td>
                                 <td class="px-4 py-2">
                                     <input type="number"
@@ -164,29 +176,18 @@
 
     <script>
     function createPO() {
-        const products = @json($allProducts->map(fn($p) => [
-            'id'               => $p->id,
-            'name'             => $p->name,
-            'cost_price'       => (float) $p->cost_price,
-            'reorder_quantity' => (int) $p->reorder_quantity,
-        ]));
-
-        const preloaded = @json($preloadProducts->map(fn($p) => [
-            'product_id' => $p->id,
-            'qty'        => max(1, (int) $p->reorder_quantity),
-            'unit_cost'  => (float) $p->cost_price,
-            'subtotal'   => max(1, (int) $p->reorder_quantity) * (float) $p->cost_price,
-        ]));
+        const products = @json($productsForJs);
+        const preloaded = @json($preloadItems);
 
         return {
             products,
             items: preloaded.length
                 ? preloaded
-                : [{ product_id: '', qty: 1, unit_cost: 0, subtotal: 0 }],
+                : [{ product_id: '', variant_id: '', qty: 1, unit_cost: 0, subtotal: 0 }],
             total: 0,
 
             addItem() {
-                this.items.push({ product_id: '', qty: 1, unit_cost: 0, subtotal: 0 });
+                this.items.push({ product_id: '', variant_id: '', qty: 1, unit_cost: 0, subtotal: 0 });
             },
 
             removeItem(index) {
@@ -194,13 +195,33 @@
                 this.calcTotal();
             },
 
+            productHasVariants(productId) {
+                const p = this.products.find(p => p.id == productId);
+                return !!(p && p.has_variants);
+            },
+
+            variantsFor(productId) {
+                const p = this.products.find(p => p.id == productId);
+                return p ? p.variants : [];
+            },
+
             onProductChange(item) {
+                item.variant_id = '';
                 const p = this.products.find(p => p.id == item.product_id);
                 if (p && p.cost_price > 0) {
                     item.unit_cost = p.cost_price;
                 }
-                if (p && p.reorder_quantity > 0 && item.qty === 1) {
+                if (p && !p.has_variants && p.reorder_quantity > 0 && item.qty === 1) {
                     item.qty = p.reorder_quantity;
+                }
+                this.updateSubtotal(item);
+            },
+
+            onVariantChange(item) {
+                const p = this.products.find(p => p.id == item.product_id);
+                const v = p && p.variants.find(v => v.id == item.variant_id);
+                if (v && v.reorder_quantity > 0 && item.qty === 1) {
+                    item.qty = v.reorder_quantity;
                 }
                 this.updateSubtotal(item);
             },

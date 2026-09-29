@@ -2,6 +2,7 @@
 
 namespace App\Services\Payment;
 
+use App\Models\Tenant;
 use App\Modules\Ecommerce\Models\Order;
 use Illuminate\Http\Request;
 
@@ -27,16 +28,16 @@ class PayFastService
             : 'https://www.payfast.co.za/eng/process';
     }
 
-    public function buildPaymentData(Order $order, string $tenantSlug): array
+    public function buildPaymentData(Order $order, Tenant $tenant): array
     {
         $nameParts = explode(' ', $order->customer_name, 2);
 
         $data = [
             'merchant_id'   => $this->merchantId,
             'merchant_key'  => $this->merchantKey,
-            'return_url'    => route('shop.payfast.return', $tenantSlug),
-            'cancel_url'    => route('shop.payfast.cancel', $tenantSlug),
-            'notify_url'    => route('shop.payfast.notify', $tenantSlug),
+            'return_url'    => $tenant->shopRoute('payfast.return'),
+            'cancel_url'    => $tenant->shopRoute('payfast.cancel'),
+            'notify_url'    => $tenant->shopRoute('payfast.notify'),
             'name_first'    => $nameParts[0],
             'name_last'     => $nameParts[1] ?? '-',
             'email_address' => $order->customer_email,

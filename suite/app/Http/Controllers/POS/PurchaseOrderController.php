@@ -4,6 +4,7 @@ namespace App\Http\Controllers\POS;
 
 use App\Http\Controllers\Controller;
 use App\Modules\POS\Models\Product;
+use App\Modules\POS\Models\ProductVariant;
 use App\Modules\POS\Models\PurchaseOrder;
 use App\Modules\POS\Models\PurchaseOrderItem;
 use App\Modules\POS\Models\StockAdjustment;
@@ -24,18 +25,89 @@ class PurchaseOrderController extends Controller
 
     public function create(Request $request)
     {
-        $preloadProducts = collect();
+        // Unified preload rows for "Create PO for All" from the reorder
+        // alerts page — a plain {product_id, variant_id, qty, unit_cost}
+        // shape so the create form doesn't need to know a row came from a
+        // product or a variant. A has_variants product's own
+        // stock_quantity/reorder_level aren't authoritative, so it's
+        // excluded from the product half and covered by the variant half
+        // instead — same split as everywhere else variants touch stock.
+        $preloadItems = collect();
         if ($request->filled('from_reorder')) {
-            $preloadProducts = Product::where('track_stock', true)
+            $lowProducts = Product::where('track_stock', true)
+                ->where('has_variants', false)
                 ->where('reorder_level', '>', 0)
                 ->whereColumn('stock_quantity', '<=', 'reorder_level')
-                ->get();
+                ->get()
+                ->map(function (Product $p) {
+                    $qty = max(1, (int) $p->reorder_quantity);
+                    $unitCost = (float) $p->cost_price;
+
+                    return [
+                        'product_id' => $p->id,
+                        'variant_id' => '',
+                        'qty'        => $qty,
+                        'unit_cost'  => $unitCost,
+                        'subtotal'   => $qty * $unitCost,
+                    ];
+                });
+
+            $lowVariants = ProductVariant::where('track_stock', true)
+                ->where('is_active', true)
+                ->with('product')
+                ->get()
+                ->filter(fn (ProductVariant $v) => $v->needs_reorder)
+                ->map(function (ProductVariant $v) {
+                    $qty = max(1, $v->effectiveReorderQuantity());
+                    $unitCost = (float) ($v->product->cost_price ?? 0);
+
+                    return [
+                        'product_id' => $v->product_id,
+                        'variant_id' => $v->id,
+                        'qty'        => $qty,
+                        'unit_cost'  => $unitCost,
+                        'subtotal'   => $qty * $unitCost,
+                    ];
+                });
+
+            // Pre-resolved plain array, not remapped again in the view — a
+            // simple, un-nested @json($collection->map(fn($x) => [...])) in
+            // this Blade template's <script> block was ALSO enough to
+            // confuse Blade's directive-argument parser into a ParseError
+            // (not just the nested case above); passing an already-shaped
+            // array sidesteps that entirely rather than relying on exactly
+            // how simple a given @json(...->map(...)) has to stay to be safe.
+            $preloadItems = $lowProducts->concat($lowVariants)->values();
         }
 
-        $allProducts = Product::where('is_active', true)->orderBy('name')->get();
-        $suppliers   = Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $allProducts = Product::where('is_active', true)
+            ->orderBy('name')
+            ->with(['activeVariants' => fn ($q) => $q->orderBy('id')])
+            ->get();
 
-        return view('purchase-orders.create', compact('allProducts', 'preloadProducts', 'suppliers'));
+        // Pre-resolved to a plain nested array here, not built inline in the
+        // Blade template's @json(...) — a deeply nested map-of-maps of
+        // arrow-function closures inside a single directive call confused
+        // Blade's directive-argument parser into cutting the expression off
+        // mid-array, producing a ParseError ("'[' does not match ']'") on
+        // every load of this page. Passing an already-resolved plain array
+        // sidesteps that class of fragility entirely.
+        $productsForJs = $allProducts->map(fn (Product $p) => [
+            'id'               => $p->id,
+            'name'             => $p->name,
+            'cost_price'       => (float) $p->cost_price,
+            'reorder_quantity' => (int) $p->reorder_quantity,
+            'has_variants'     => (bool) $p->has_variants,
+            'variants'         => $p->activeVariants->map(fn (ProductVariant $v) => [
+                'id'               => $v->id,
+                'label'            => $v->label,
+                'reorder_quantity' => $v->effectiveReorderQuantity(),
+            ])->values(),
+        ])->values();
+
+        $suppliers = Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+
+        return view('purchase-orders.create', compact('productsForJs', 'preloadItems', 'suppliers'));
     }
 
     public function store(Request $request)
@@ -47,6 +119,7 @@ class PurchaseOrderController extends Controller
             'notes'             => 'nullable|string|max:1000',
             'items'             => 'required|array|min:1',
             'items.*.product_id'=> 'required|exists:products,id',
+            'items.*.variant_id'=> 'nullable|integer',
             'items.*.qty'       => 'required|integer|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0',
         ]);
@@ -70,13 +143,27 @@ class PurchaseOrderController extends Controller
             $total = 0;
             foreach ($request->items as $item) {
                 $product = Product::find($item['product_id']);
+
+                // A has_variants product can't be ordered without picking a
+                // variant — the create form always sends variant_id for
+                // these, so a missing one here means a tampered/stale
+                // request, not a real gap.
+                $variant = null;
+                if ($product->has_variants) {
+                    $variant = ProductVariant::where('product_id', $product->id)
+                        ->where('id', $item['variant_id'] ?? null)
+                        ->firstOrFail();
+                }
+
                 $subtotal = $item['qty'] * $item['unit_cost'];
                 $total   += $subtotal;
 
                 PurchaseOrderItem::create([
-                    'purchase_order_id' => $po->id,
-                    'product_id'        => $item['product_id'],
-                    'product_name'      => $product->name,
+                    'purchase_order_id'  => $po->id,
+                    'product_id'         => $item['product_id'],
+                    'product_variant_id' => $variant?->id,
+                    'variant_attributes' => $variant?->attributes,
+                    'product_name'       => $variant ? "{$product->name} — {$variant->label}" : $product->name,
                     'quantity_ordered'  => $item['qty'],
                     'quantity_received' => 0,
                     'unit_cost'         => $item['unit_cost'],
@@ -94,7 +181,7 @@ class PurchaseOrderController extends Controller
 
     public function show(PurchaseOrder $purchaseOrder)
     {
-        $purchaseOrder->load('items.product');
+        $purchaseOrder->load('items.product', 'items.productVariant');
 
         return view('purchase-orders.show', compact('purchaseOrder'));
     }
@@ -135,8 +222,11 @@ class PurchaseOrderController extends Controller
                     'quantity_received' => $item->quantity_received + $qty,
                 ]);
 
-                // Increment product stock
-                $item->product->incrementStock($qty, StockAdjustment::TYPE_RECEIVE, [
+                // Increment the specific variant's stock if this line was
+                // for one, otherwise the plain product's — same split as
+                // every other stock-mutating flow (checkout, POS sale).
+                $target = $item->product_variant_id ? $item->productVariant : $item->product;
+                $target?->incrementStock($qty, StockAdjustment::TYPE_RECEIVE, [
                     'purchase_order_id' => $purchaseOrder->id,
                     'reference'         => $purchaseOrder->reference,
                     'notes'             => "Received on PO {$purchaseOrder->reference}",

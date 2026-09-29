@@ -17,11 +17,14 @@ class CheckoutTest extends TestCase
 
     private function tenant(): Tenant
     {
-        return Tenant::create([
+        $tenant = Tenant::create([
             'name'      => 'Test Store',
             'slug'      => 'test-store',
             'is_active' => true,
         ]);
+        $tenant->activateModule('ecommerce');
+
+        return $tenant;
     }
 
     private function product(Tenant $tenant, array $overrides = []): Product
@@ -54,7 +57,7 @@ class CheckoutTest extends TestCase
         $tenant  = $this->tenant();
         $product = $this->product($tenant, ['stock_quantity' => 5]);
 
-        $response = $this->withSession(['cart.test-store' => [$product->id => 2]])
+        $response = $this->withSession(['cart.' . $tenant->id => ['p' . $product->id => ['product_id' => $product->id, 'variant_id' => null, 'qty' => 2]]])
             ->post(route('shop.checkout.place', 'test-store'), $this->checkoutPayload());
 
         $this->assertSame(1, Order::count());
@@ -72,7 +75,7 @@ class CheckoutTest extends TestCase
         $product = $this->product($tenant, ['stock_quantity' => 1]);
 
         // Cart asks for more than is in stock (e.g. tampered/stale session).
-        $response = $this->withSession(['cart.test-store' => [$product->id => 2]])
+        $response = $this->withSession(['cart.' . $tenant->id => ['p' . $product->id => ['product_id' => $product->id, 'variant_id' => null, 'qty' => 2]]])
             ->post(route('shop.checkout.place', 'test-store'), $this->checkoutPayload());
 
         $response->assertRedirect(route('shop.cart', 'test-store'));
@@ -89,8 +92,8 @@ class CheckoutTest extends TestCase
         $product = $this->product($tenant, ['stock_quantity' => 10]);
         $service = app(OrderService::class);
 
-        $cart = new CartService('test-store');
-        $cart->add($product->id, 1);
+        $cart = new CartService($tenant->id);
+        $cart->add($product->id, null, 1);
 
         $data = [
             'customer_name'    => 'Jane',

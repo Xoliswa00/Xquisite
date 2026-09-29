@@ -5,7 +5,7 @@
 
         <div class="bg-slate-800/50 border border-slate-700 rounded-xl px-5 py-4 text-sm text-slate-300">
             Enter the <strong class="text-white">physical count</strong> you find on the shelf for each product.
-            Leave a field blank to skip that product. The system will calculate the variance and update all levels when you save.
+            Leave a field blank to skip that item. The system will calculate the variance and update all levels when you save.
         </div>
 
         <form method="POST" action="{{ route('stock.take.save') }}" x-data="{ changed: false }">
@@ -14,7 +14,7 @@
             <div class="bg-slate-800 rounded-xl overflow-hidden">
                 <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
                     <h3 class="text-sm font-medium text-slate-300">Tracked Products</h3>
-                    <span class="text-xs text-slate-500">{{ $products->count() }} products</span>
+                    <span class="text-xs text-slate-500">{{ $rows->count() }} item(s)</span>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -30,31 +30,31 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-700" x-data="stockTake()">
-                        @forelse($products as $product)
-                            <tr class="hover:bg-slate-700/30" x-data="{ systemQty: {{ $product->stock_quantity }}, physicalQty: null }"
+                        @forelse($rows as $row)
+                            <tr class="hover:bg-slate-700/30" x-data="{ systemQty: {{ $row->stock_quantity }}, physicalQty: null }"
                                 :class="physicalQty !== null && physicalQty !== '' && parseInt(physicalQty) !== systemQty ? 'bg-yellow-900/10' : ''">
                                 <td class="px-4 py-3">
-                                    <p class="font-medium text-white">{{ $product->name }}</p>
-                                    @if($product->sku)
-                                        <p class="text-xs text-slate-500">{{ $product->sku }}</p>
+                                    <p class="font-medium text-white">{{ $row->name }}</p>
+                                    @if($row->sku)
+                                        <p class="text-xs text-slate-500">{{ $row->sku }}</p>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-slate-400">{{ $product->category ?? '—' }}</td>
+                                <td class="px-4 py-3 text-slate-400">{{ $row->category ?? '—' }}</td>
                                 <td class="px-4 py-3 text-right">
-                                    <span class="{{ $product->stock_status === 'out_of_stock' ? 'text-red-400' : ($product->stock_status === 'low' ? 'text-yellow-400' : 'text-white') }} font-medium">
-                                        {{ $product->stock_quantity }}
+                                    <span class="{{ $row->stock_status === 'out_of_stock' ? 'text-red-400' : ($row->stock_status === 'low' ? 'text-yellow-400' : 'text-white') }} font-medium">
+                                        {{ $row->stock_quantity }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-right text-slate-400">
-                                    {{ $product->reorder_level > 0 ? $product->reorder_level : '—' }}
+                                    {{ $row->reorder_level > 0 ? $row->reorder_level : '—' }}
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <input type="number"
-                                           name="counts[{{ $product->id }}]"
+                                           name="counts[{{ $row->form_key }}]"
                                            x-model="physicalQty"
                                            @change="changed = true"
                                            min="0"
-                                           placeholder="{{ $product->stock_quantity }}"
+                                           placeholder="{{ $row->stock_quantity }}"
                                            class="w-24 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 text-center focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
                                 </td>
                                 <td class="px-4 py-3 text-right font-medium">
@@ -79,7 +79,7 @@
                 </table>
             </div>
 
-            @if($products->count())
+            @if($rows->count())
                 <div class="flex items-start gap-4 mt-4">
                     <div class="flex-1">
                         <label class="block text-sm font-medium text-slate-300 mb-1">Notes (optional)</label>

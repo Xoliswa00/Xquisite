@@ -78,6 +78,7 @@
             <li><strong>Account information:</strong> your name, email address, phone number, and business details provided at registration.</li>
             <li><strong>Business data you upload:</strong> client records, appointment details, transaction history, product catalogues, and any other data you enter into the Platform.</li>
             <li><strong>Usage data:</strong> pages visited, features used, login timestamps, and device/browser information — collected to improve the Platform.</li>
+            <li><strong>Programme applications:</strong> if you apply to a programme such as the Founding 20, your name, role, phone number, email, business details, your answers to our questions, and the reasons you give for applying.</li>
             <li><strong>Payment information:</strong> billing amounts and payment status. Card details are processed directly by PayFast and are never stored on our servers.</li>
         </ul>
 
@@ -122,6 +123,11 @@
             Upon account closure, you may request an export of your data within 30 days.
             After that period, data is securely deleted.
         </p>
+        <p>
+            If you apply to a programme and are not selected, or you start an application and do not
+            finish it, we keep your application for up to 12 months so we can offer you a place if one
+            opens up, and then delete it. You can ask us to delete it sooner at any time.
+        </p>
 
         <h2>7. Your Rights Under POPIA</h2>
         <p>You have the right to:</p>
@@ -141,6 +147,15 @@
         <p>
             The Platform uses essential session cookies to keep you logged in and to protect against
             cross-site request forgery. We do not use third-party advertising or tracking cookies.
+        </p>
+        <p>
+            We count visits to understand which pages are useful. This is done on our own servers without
+            cookies. We do not store your IP address, name or account details with a visit. Each visit is
+            tagged with a one-way code that changes every day, so a person cannot be followed from one day
+            to the next or identified from it. We record the page, how far it was scrolled, how long it was
+            open, where on the page clicks landed, and roughly where the visit came from (for example a
+            WhatsApp link). This information is deleted after 180 days. If your browser sends a Do Not Track
+            or Global Privacy Control signal, we do not count your visit at all.
         </p>
 
         <h2>9. Children</h2>

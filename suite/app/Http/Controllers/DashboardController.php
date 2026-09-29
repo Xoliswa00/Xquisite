@@ -131,10 +131,7 @@ class DashboardController extends Controller
 
     private function reorderCount(): int
     {
-        return Product::where('track_stock', true)
-            ->where('reorder_level', '>', 0)
-            ->whereColumn('stock_quantity', '<=', 'reorder_level')
-            ->count();
+        return Product::reorderAlertCount();
     }
 
     private function bookingStats(int $tenantId, bool $hasPos): array
@@ -405,6 +402,9 @@ class DashboardController extends Controller
             ->orderByDesc('suspended_at')
             ->limit(8)->get();
 
+        // ── Founding 20 programme (money comes from the deposit journal) ──
+        $founding20 = app(\App\Services\FoundingTwentyProgrammeStats::class)->dashboard();
+
         // ── Recent sign-ups ───────────────────────────────────────
         $recentTenants = Tenant::with('tenantModules')->latest()->limit(8)->get();
 
@@ -416,7 +416,7 @@ class DashboardController extends Controller
             'outstandingTotal', 'overdueTotal', 'overdueCount', 'popPending',
             'revenueByMonth', 'signupsByMonth', 'months',
             'moduleStats', 'billingQueueCount', 'pendingModReqs', 'totalUsers',
-            'attentionTenants', 'recentTenants',
+            'attentionTenants', 'recentTenants', 'founding20',
         ));
     }
 }

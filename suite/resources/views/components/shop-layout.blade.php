@@ -9,17 +9,113 @@
     <title>{{ $title ?? ($tenant->name . ' — Shop') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet"/>
-    <link rel="manifest" href="{{ route('shop.manifest', $tenant->slug) }}">
+    <link rel="manifest" href="{{ $tenant->shopRoute('manifest') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        // Admin-entered image URLs (tenant logo, product photos — a typo, a
+        // since-removed file, a dead host) can 404 or fail to load. Defined
+        // in <head> so it exists before any <img onerror> in <body> can
+        // fire: a local 404 resolves fast enough to race a script placed at
+        // the end of the body, firing "shopImgFallback is not defined"
+        // before the page ever executes it.
+        window.shopImgFallback = function (img) {
+            var box = document.createElement('div');
+            box.className = 'w-full h-full flex items-center justify-center';
+            box.innerHTML = '<svg class="w-2/5 h-2/5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>';
+            img.replaceWith(box);
+        };
+
+        // The header logo isn't inside a sized wrapper the way product images
+        // are, so it can't reuse shopImgFallback's "fill the parent" box —
+        // it falls back to the same initial-letter badge as a tenant with no
+        // logo_url at all.
+        window.shopLogoFallback = function (img, initial) {
+            var badge = document.createElement('div');
+            badge.className = 'w-8 h-8 bg-[#0078D4] rounded-lg flex items-center justify-center';
+            badge.innerHTML = '<span class="text-white font-bold text-sm">' + initial + '</span>';
+            img.replaceWith(badge);
+        };
+
+        // Alpine component backing the product page's size/color/etc.
+        // selector — see resources/views/shop/product.blade.php. Defined
+        // here (in <head>) for the same reason as the two functions above:
+        // it must exist before Alpine scans the DOM and evaluates
+        // x-data="variantPicker(...)".
+        window.variantPicker = function (options, variants, fallbackImage) {
+            const optionNames = Object.keys(options || {});
+
+            return {
+                options: options || {},
+                optionNames,
+                variants: variants || [],
+                selected: {},
+                qty: 1,
+
+                init() {
+                    // Pre-select the first in-stock combination so the page
+                    // never opens with an empty "Select Options" state.
+                    const first = this.variants.find(v => !v.track_stock || v.stock > 0) || this.variants[0];
+                    if (first) {
+                        optionNames.forEach(name => { this.selected[name] = first.attributes[name]; });
+                    }
+                },
+
+                matches(variant, partial) {
+                    return Object.entries(partial).every(([k, v]) => variant.attributes[k] === v);
+                },
+
+                // A value is pickable if at least one variant exists with
+                // that value AND every other option axis as currently
+                // selected — stops the picker offering a Size/Color
+                // combination that was never actually stocked.
+                isAvailable(optionName, value) {
+                    const partial = { ...this.selected, [optionName]: value };
+                    return this.variants.some(v => this.matches(v, partial));
+                },
+
+                choose(optionName, value) {
+                    if (!this.isAvailable(optionName, value)) return;
+                    this.selected = { ...this.selected, [optionName]: value };
+                    this.qty = 1;
+                },
+
+                get selectedVariant() {
+                    if (optionNames.some(name => !this.selected[name])) return null;
+                    return this.variants.find(v => this.matches(v, this.selected)) || null;
+                },
+
+                get price() {
+                    return this.selectedVariant ? this.selectedVariant.price : (this.variants[0]?.price || 0);
+                },
+
+                get sku() {
+                    return this.selectedVariant ? this.selectedVariant.sku : '';
+                },
+
+                get image() {
+                    return (this.selectedVariant && this.selectedVariant.image_url) || fallbackImage || null;
+                },
+
+                get maxQty() {
+                    if (!this.selectedVariant) return 1;
+                    return this.selectedVariant.track_stock ? Math.max(1, this.selectedVariant.stock) : 99;
+                },
+
+                get canAddToCart() {
+                    return !!this.selectedVariant && (!this.selectedVariant.track_stock || this.selectedVariant.stock > 0);
+                },
+            };
+        };
+    </script>
 </head>
 <body class="font-sans antialiased bg-gray-50 text-gray-900">
 
 <header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
-        <a href="{{ route('shop.index', $tenant->slug) }}" class="flex items-center gap-2">
+        <a href="{{ $tenant->shopRoute('index') }}" class="flex items-center gap-2">
             @if($tenant->logo_url)
-                <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}" class="h-8 w-auto object-contain">
+                <img src="{{ $tenant->logo_url }}" alt="{{ $tenant->name }}" onerror="shopLogoFallback(this, @js(strtoupper(substr($tenant->name, 0, 1))))" class="h-8 w-auto object-contain">
             @else
                 <div class="w-8 h-8 bg-[#0078D4] rounded-lg flex items-center justify-center">
                     <span class="text-white font-bold text-sm">{{ strtoupper(substr($tenant->name, 0, 1)) }}</span>
@@ -29,13 +125,13 @@
         </a>
 
         <div class="flex items-center gap-4">
-            <form action="{{ route('shop.index', $tenant->slug) }}" method="GET" class="hidden sm:block">
+            <form action="{{ $tenant->shopRoute('index') }}" method="GET" class="hidden sm:block">
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Search products…"
                        class="bg-gray-100 border-0 text-sm rounded-full px-4 py-2 w-48 focus:w-64 focus:ring-1 focus:ring-[#0078D4] focus:outline-none transition-all placeholder-gray-400">
             </form>
 
-            <a href="{{ route('shop.cart', $tenant->slug) }}" class="relative flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-[#0078D4]">
+            <a href="{{ $tenant->shopRoute('cart') }}" class="relative flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-[#0078D4]">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
@@ -53,7 +149,7 @@
 <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
     <div hidden
          data-install-banner
-         data-install-scope="shop:{{ $tenant->slug }}"
+         data-install-scope="shop:{{ $tenant->id }}"
          data-android-text="Add {{ $tenant->name }} to your home screen for one-tap shopping and order updates."
          data-ios-text='Add {{ $tenant->name }} to your Home Screen to get notified about your order: tap Share, then "Add to Home Screen".'
          class="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-gray-200 shadow-sm text-sm text-gray-700">

@@ -16,6 +16,7 @@ use App\Http\Controllers\Booking\StaffController;
 use App\Http\Controllers\POS\PosController;
 use App\Http\Controllers\POS\SaleController;
 use App\Http\Controllers\POS\ProductController;
+use App\Http\Controllers\POS\ProductVariantController;
 use App\Http\Controllers\POS\StockController;
 use App\Http\Controllers\POS\PurchaseOrderController;
 use App\Http\Controllers\POS\SupplierController;
@@ -29,6 +30,8 @@ use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\PlatformServiceController;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Admin\PublicLaunchController as AdminPublicLaunchController;
+use App\Http\Controllers\PublicLaunchController;
 use App\Http\Controllers\Admin\ModuleRequestController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\LogController;
@@ -71,7 +74,61 @@ use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DemoController;
+use App\Http\Controllers\FoundingTwentyController;
+use App\Http\Controllers\FoundingTwentyCheckinController;
+use App\Http\Controllers\Admin\FoundingTwentyController as AdminFoundingTwentyController;
+use App\Http\Controllers\Admin\PromoCodeController;
+use App\Http\Controllers\Admin\OutreachCampaignController;
 use Illuminate\Support\Facades\Route;
+
+// Tenant storefront route definitions — registered twice from this one
+// closure: once here, bound to {tenantSlug}.{app.domain} (a tenant's own
+// subdomain — no path segment needed, the domain itself carries the
+// tenant), and once further down under /shop/{tenantSlug} (the canonical
+// fallback, e.g. a tenant with no subdomain set — see that registration for
+// the module-gate middleware and full route list). Both bind the same
+// {tenantSlug} route parameter name so the controllers never have to
+// change, but the value means a different column depending on which one
+// matched — see Concerns\ResolvesShopTenant and Tenant::shopRoute(), which
+// is how every outbound link/redirect in this group picks the right one
+// back out instead of hard-coding shop.*.
+//
+// This domain-bound registration MUST come before every other route in this
+// file. A route with no ->domain() constraint (e.g. the marketing '/' route
+// right below) matches *any* host, including a tenant's subdomain — Laravel
+// tries routes in registration order and stops at the first full match, so
+// if that domain-less route were registered first, it would silently win
+// every request to mistenant.xquisite.co.za/ before this one is ever
+// checked, and the whole feature would never fire. The domain regex here
+// only matches an actual *.{app.domain} host, so it can never shadow
+// anything on the main apex domain — see StorefrontModuleGateTest /
+// ShopSubdomainRoutingTest for the coverage that pins this down.
+$registerShopRoutes = function () {
+    Route::get('/manifest.json', [StorefrontController::class, 'manifest'])->name('manifest');
+    Route::get('/', [StorefrontController::class, 'index'])->name('index');
+    Route::get('/product/{productId}', [StorefrontController::class, 'product'])->name('product');
+
+    // Cart
+    Route::get('/cart', [CartController::class, 'view'])->name('cart');
+    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
+    Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
+
+    // Checkout
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::post('/checkout', [CheckoutController::class, 'place'])->name('checkout.place');
+    Route::get('/order/{reference}/confirmed', [CheckoutController::class, 'confirmed'])->name('order.confirmed');
+
+    // PayFast callbacks
+    Route::post('/payfast/notify', [CheckoutController::class, 'payfastNotify'])->name('payfast.notify')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+    Route::get('/payfast/return', [CheckoutController::class, 'payfastReturn'])->name('payfast.return');
+    Route::get('/payfast/cancel', [CheckoutController::class, 'payfastCancel'])->name('payfast.cancel');
+};
+
+Route::domain('{tenantSlug}.' . config('app.domain', 'xquisite.co.za'))
+    ->name('shop.host.')
+    ->middleware('tenant-module:ecommerce')
+    ->group($registerShopRoutes);
 
 Route::get('/', function () {
     if (request()->user() !== null) {
@@ -85,6 +142,20 @@ Route::post('/demo',   [DemoController::class, 'login'])->name('demo.login');
 Route::get('/about',   AboutController::class)->name('about');
 Route::get('/terms',   fn() => view('terms'))->name('terms');
 Route::get('/privacy', fn() => view('privacy'))->name('privacy');
+
+// Public "coming soon" / programme-explainer launch pages — reusable for future
+// module launches via /launch/{key}. Founding 20 additionally gets a friendly
+// alias straight at /founding-20 (its own root): countdown, benefits, and public
+// Q&A, with a "Start Application" CTA leading to the actual questionnaire at
+// /founding-20/apply. No collision — the questionnaire no longer registers
+// anything at the /founding-20 root itself, only under /apply.
+Route::prefix('launch/{key}')->name('public-launch.')->group(function () {
+    Route::get('/',            [PublicLaunchController::class, 'show'])->name('show');
+    Route::post('/questions',  [PublicLaunchController::class, 'askQuestion'])->name('questions.store')->middleware('throttle:global');
+});
+Route::post('/t', [\App\Http\Controllers\TrafficBeaconController::class, 'store'])->name('traffic.beacon')->middleware('throttle:120,1');
+Route::get('/founding-20',  [PublicLaunchController::class, 'show'])->name('founding-20.show')->defaults('key', 'founding-20');
+Route::post('/founding-20/questions', [PublicLaunchController::class, 'askQuestion'])->name('founding-20.questions.store')->defaults('key', 'founding-20')->middleware('throttle:global');
 
 Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(function () {
 
@@ -202,10 +273,22 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         Route::middleware('can:manage-products')->group(function () {
             Route::resource('products', ProductController::class)->except(['show']);
 
+            // Product variants (size/color/etc.) — a product opts in by
+            // getting its variant_options set here, everything else about
+            // it (name, category, base price/stock as the fallback) stays
+            // on the normal product edit form above.
+            Route::prefix('products/{product}/variants')->name('products.variants.')->group(function () {
+                Route::get('/', [ProductVariantController::class, 'index'])->name('index');
+                Route::post('/generate', [ProductVariantController::class, 'generate'])->name('generate');
+                Route::patch('/', [ProductVariantController::class, 'update'])->name('update');
+                Route::delete('/{variant}', [ProductVariantController::class, 'destroy'])->name('destroy');
+            });
+
             Route::get('/stock/take', [StockController::class, 'takePage'])->name('stock.take');
             Route::post('/stock/take', [StockController::class, 'saveStockTake'])->name('stock.take.save');
             Route::get('/stock/reorder-alerts', [StockController::class, 'reorderAlerts'])->name('stock.reorder-alerts');
             Route::post('/products/{product}/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
+            Route::post('/products/{product}/variants/{variant}/stock/adjust', [StockController::class, 'adjustVariant'])->name('stock.variant.adjust');
             Route::get('/products/{product}/stock/history', [StockController::class, 'history'])->name('stock.history');
 
             Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
@@ -354,6 +437,56 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::get('/service-photos', [\App\Http\Controllers\Admin\ServicePhotoController::class, 'index'])->name('service-photos.index');
             Route::patch('/service-photos/{photo}/hidden', [\App\Http\Controllers\Admin\ServicePhotoController::class, 'toggleHidden'])->name('service-photos.toggle-hidden');
             Route::patch('/service-photos/reports/{report}/reviewed', [\App\Http\Controllers\Admin\ServicePhotoController::class, 'markReportReviewed'])->name('service-photos.reports.reviewed');
+
+            // Public launch / coming-soon pages (Founding 20 and future module launches)
+            Route::get('/public-launches', [AdminPublicLaunchController::class, 'index'])->name('public-launches.index');
+            Route::get('/public-launches/{publicLaunch}/edit', [AdminPublicLaunchController::class, 'edit'])->name('public-launches.edit');
+            Route::patch('/public-launches/{publicLaunch}', [AdminPublicLaunchController::class, 'update'])->name('public-launches.update');
+            Route::get('/public-launches/{publicLaunch}/questions', [AdminPublicLaunchController::class, 'questions'])->name('public-launches.questions');
+            Route::patch('/public-launches/{publicLaunch}/questions/{publicQuestion}', [AdminPublicLaunchController::class, 'answerQuestion'])->name('public-launches.questions.answer');
+            Route::patch('/public-launches/{publicLaunch}/questions/{publicQuestion}/toggle', [AdminPublicLaunchController::class, 'togglePublished'])->name('public-launches.questions.toggle');
+            Route::delete('/public-launches/{publicLaunch}/questions/{publicQuestion}', [AdminPublicLaunchController::class, 'destroyQuestion'])->name('public-launches.questions.destroy');
+
+            // Site traffic: visitors, pages, clicks, click heat map
+            Route::get('/traffic', [\App\Http\Controllers\Admin\TrafficController::class, 'index'])->name('traffic.index');
+            Route::get('/traffic/heatmap', [\App\Http\Controllers\Admin\TrafficController::class, 'heatmap'])->name('traffic.heatmap');
+
+            // Founding 20 questionnaire applications
+            Route::get('/founding-twenty', [AdminFoundingTwentyController::class, 'index'])->name('founding-twenty.index');
+            Route::get('/founding-twenty/action-queue', [AdminFoundingTwentyController::class, 'actionQueue'])->name('founding-twenty.action-queue');
+            Route::get('/founding-twenty/deposits', [AdminFoundingTwentyController::class, 'depositLedger'])->name('founding-twenty.deposits');
+            Route::post('/founding-twenty/deposits/entries/{entry}/reverse', [AdminFoundingTwentyController::class, 'reverseDepositEntry'])->name('founding-twenty.deposits.reverse');
+            Route::get('/founding-twenty/funnel', [AdminFoundingTwentyController::class, 'funnel'])->name('founding-twenty.funnel');
+            Route::get('/founding-twenty/add', [AdminFoundingTwentyController::class, 'create'])->name('founding-twenty.create');
+            Route::post('/founding-twenty/add', [AdminFoundingTwentyController::class, 'storeDirect'])->name('founding-twenty.store-direct');
+            Route::post('/founding-twenty/{foundingTwenty}/message/{type}/email', [AdminFoundingTwentyController::class, 'sendMessage'])->name('founding-twenty.message.email');
+            Route::post('/founding-twenty/{foundingTwenty}/message/{type}/told', [AdminFoundingTwentyController::class, 'markMessaged'])->name('founding-twenty.message.told');
+            Route::get('/founding-twenty/{foundingTwenty}', [AdminFoundingTwentyController::class, 'show'])->name('founding-twenty.show');
+            Route::patch('/founding-twenty/{foundingTwenty}/status', [AdminFoundingTwentyController::class, 'updateStatus'])->name('founding-twenty.status');
+            Route::post('/founding-twenty/{foundingTwenty}/custom-price', [AdminFoundingTwentyController::class, 'setCustomPrice'])->name('founding-twenty.custom-price');
+            Route::post('/founding-twenty/{foundingTwenty}/deposit/confirm', [AdminFoundingTwentyController::class, 'confirmDeposit'])->name('founding-twenty.deposit.confirm');
+            Route::post('/founding-twenty/{foundingTwenty}/deposit/refund', [AdminFoundingTwentyController::class, 'markDepositRefunded'])->name('founding-twenty.deposit.refund');
+            Route::post('/founding-twenty/{foundingTwenty}/deposit/outcome', [AdminFoundingTwentyController::class, 'chooseDepositOutcome'])->name('founding-twenty.deposit.outcome');
+            Route::post('/founding-twenty/{foundingTwenty}/deposit/credit', [AdminFoundingTwentyController::class, 'applyDepositCredit'])->name('founding-twenty.deposit.credit');
+            Route::get('/founding-twenty/{foundingTwenty}/deposit/pop', [AdminFoundingTwentyController::class, 'downloadPop'])->name('founding-twenty.deposit.pop');
+            Route::post('/founding-twenty/{foundingTwenty}/tenant', [AdminFoundingTwentyController::class, 'linkTenant'])->name('founding-twenty.tenant');
+            Route::post('/founding-twenty/{foundingTwenty}/milestone', [AdminFoundingTwentyController::class, 'markMilestone'])->name('founding-twenty.milestone');
+            Route::post('/founding-twenty/{foundingTwenty}/checkin', [AdminFoundingTwentyController::class, 'issueCheckin'])->name('founding-twenty.checkin.issue');
+            Route::post('/founding-twenty/{foundingTwenty}/referral-reward', [AdminFoundingTwentyController::class, 'processReferralReward'])->name('founding-twenty.referral-reward');
+
+            // Promo codes — track discounts issued and their rand value given away
+            Route::get('/promo-codes', [PromoCodeController::class, 'index'])->name('promo-codes.index');
+            Route::get('/promo-codes/create', [PromoCodeController::class, 'create'])->name('promo-codes.create');
+            Route::post('/promo-codes', [PromoCodeController::class, 'store'])->name('promo-codes.store');
+            Route::get('/promo-codes/{promoCode}', [PromoCodeController::class, 'show'])->name('promo-codes.show');
+            Route::post('/promo-codes/{promoCode}/redeem', [PromoCodeController::class, 'redeem'])->name('promo-codes.redeem');
+            Route::post('/promo-codes/{promoCode}/deactivate', [PromoCodeController::class, 'deactivate'])->name('promo-codes.deactivate');
+
+            // Outreach campaigns — plan a wave, then track it filling in by industry
+            Route::get('/outreach-campaigns', [OutreachCampaignController::class, 'index'])->name('outreach-campaigns.index');
+            Route::get('/outreach-campaigns/create', [OutreachCampaignController::class, 'create'])->name('outreach-campaigns.create');
+            Route::post('/outreach-campaigns', [OutreachCampaignController::class, 'store'])->name('outreach-campaigns.store');
+            Route::get('/outreach-campaigns/{outreachCampaign}', [OutreachCampaignController::class, 'show'])->name('outreach-campaigns.show');
 
             Route::get('/module-requests', [ModuleRequestController::class, 'index'])->name('module-requests.index');
             Route::patch('/module-requests/{moduleRequest}/approve', [ModuleRequestController::class, 'approve'])->name('module-requests.approve');
@@ -562,28 +695,45 @@ Route::prefix('apply/{slug}/{property}')->name('apply.')->group(function () {
     Route::get('/thanks',  [PublicApplicationController::class, 'thanks'])->name('thanks');
 });
 
-// Public storefront (no auth)
-Route::prefix('shop/{tenantSlug}')->name('shop.')->group(function () {
-    Route::get('/manifest.json', [StorefrontController::class, 'manifest'])->name('manifest');
-    Route::get('/', [StorefrontController::class, 'index'])->name('index');
-    Route::get('/product/{productId}', [StorefrontController::class, 'product'])->name('product');
+// Public "Founding 20" discovery questionnaire (no auth) — lead-capture funnel from
+// marketing (poster/TikTok/WhatsApp) into a scored, admin-reviewed applicant list.
+// The questionnaire itself lives at /founding-20/apply, not the /founding-20 root —
+// that root is the programme explainer page (see PublicLaunchController below),
+// reached first, with a "Start Application" CTA leading here.
+Route::prefix('founding-20')->name('founding-twenty.')->group(function () {
+    // Two steps. Step 1 (about you) saves them as a lead straight away; step 2 is the
+    // questionnaire, which completes that same application.
+    Route::get('/apply',  [FoundingTwentyController::class, 'show'])->name('show');
+    Route::post('/apply', [FoundingTwentyController::class, 'store'])->name('store')->middleware('throttle:12,1');
+    Route::get('/apply/questions',  [FoundingTwentyController::class, 'questions'])->name('questions');
+    Route::post('/apply/questions', [FoundingTwentyController::class, 'submit'])->name('submit')->middleware('throttle:12,1');
+    Route::post('/apply/restart',   [FoundingTwentyController::class, 'restart'])->name('restart');
+    Route::post('/apply/progress',  [FoundingTwentyController::class, 'progress'])->name('progress')->middleware('throttle:60,1');
+    // A second, shorter intake for businesses that aren't booking-based — same offer, no questionnaire.
+    Route::post('/custom-work', [FoundingTwentyController::class, 'customWorkStore'])->name('custom-work.store')->middleware('throttle:12,1');
+    // Pick an unfinished application back up from a link (sent by us, or saved by them).
+    Route::get('/continue/{foundingTwenty}/{token}', [FoundingTwentyController::class, 'resume'])->name('resume')->middleware('throttle:12,1');
+    Route::get('/thanks', [FoundingTwentyController::class, 'thanks'])->name('thanks');
 
-    // Cart
-    Route::get('/cart', [CartController::class, 'view'])->name('cart');
-    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
-    Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
-    Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
+    // Reservation deposit — only reachable once an application has been marked
+    // "selected"; secured by an HMAC token (same pattern as public quote links).
+    Route::get('/reserve/{foundingTwenty}/{token}',  [FoundingTwentyController::class, 'reserve'])->name('reserve');
+    Route::post('/reserve/{foundingTwenty}/{token}', [FoundingTwentyController::class, 'reserveStore'])->name('reserve.store')->middleware('throttle:12,1');
 
-    // Checkout
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
-    Route::post('/checkout', [CheckoutController::class, 'place'])->name('checkout.place');
-    Route::get('/order/{reference}/confirmed', [CheckoutController::class, 'confirmed'])->name('order.confirmed');
-
-    // PayFast callbacks
-    Route::post('/payfast/notify', [CheckoutController::class, 'payfastNotify'])->name('payfast.notify')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-    Route::get('/payfast/return', [CheckoutController::class, 'payfastReturn'])->name('payfast.return');
-    Route::get('/payfast/cancel', [CheckoutController::class, 'payfastCancel'])->name('payfast.cancel');
+    // 30/60/90-day check-ins — token-secured against the checkin row itself, issued
+    // by an admin once a business has been onboarded.
+    Route::get('/checkin/{checkin}/{token}',  [FoundingTwentyCheckinController::class, 'show'])->name('checkin.show');
+    Route::post('/checkin/{checkin}/{token}', [FoundingTwentyCheckinController::class, 'store'])->name('checkin.store')->middleware('throttle:12,1');
 });
+
+// Public storefront (no auth) — 404s if the tenant hasn't got the ecommerce
+// module active, so deactivating it actually takes the shop offline instead
+// of just hiding the staff-side order/settings pages. Registered from the
+// $registerShopRoutes closure defined near the top of this file (see the
+// comment there for why) — this is the /shop/{tenantSlug} half of it; the
+// {tenantSlug}.{app.domain} subdomain half is registered first, before any
+// other route in the app, so it wins the match on a tenant's own subdomain.
+Route::prefix('shop/{tenantSlug}')->name('shop.')->middleware('tenant-module:ecommerce')->group($registerShopRoutes);
 
 // ─── Public quote acceptance (no auth) ───────────────────────────────────────
 Route::prefix('q/{quote}')->name('public.quotes.')->group(function () {

@@ -77,9 +77,35 @@ class Sale extends Model
         $this->update(['status' => 'paid', 'paid_at' => now()]);
     }
 
+    /**
+     * date + short random suffix, retried on collision — not the old
+     * max(id)+1 (Sale uses HasTenant, so max('id') is tenant-scoped, but
+     * `reference` has a *global* unique constraint: every tenant's own
+     * first sale computed max('id')=null and generated the same
+     * 'SAL-00001', so any tenant's Nth sale collided with whichever
+     * *other* tenant already had N sales — a guaranteed collision, not a
+     * rare race), and not a full ULID either (correct, but 26 characters
+     * is rough on a printed till receipt a customer might glance at).
+     * withoutGlobalScopes() on the uniqueness check is required, not
+     * optional — the constraint is global, checking only this tenant's
+     * own rows would silently reintroduce the exact bug this replaced.
+     */
     public static function generateReference(): string
     {
-        $last = static::max('id') ?? 0;
-        return 'SAL-' . str_pad($last + 1, 5, '0', STR_PAD_LEFT);
+        do {
+            $reference = 'SAL-' . now()->format('ymd') . '-' . static::randomSuffix();
+        } while (static::withoutGlobalScopes()->where('reference', $reference)->exists());
+
+        return $reference;
+    }
+
+    /** Excludes 0/O and 1/I/L — a receipt reference a customer reads aloud or a cashier retypes into search shouldn't hinge on telling those apart. */
+    private static function randomSuffix(int $length = 5): string
+    {
+        $alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+        return collect(range(1, $length))
+            ->map(fn () => $alphabet[random_int(0, strlen($alphabet) - 1)])
+            ->implode('');
     }
 }

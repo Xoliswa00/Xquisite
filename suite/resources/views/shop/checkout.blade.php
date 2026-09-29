@@ -1,17 +1,39 @@
 <x-shop-layout :tenant="$tenant" :cart="$cart">
 
     <div class="max-w-4xl mx-auto">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-gray-900">Checkout</h1>
+            <a href="{{ $tenant->shopRoute('cart') }}" class="text-sm text-[#0078D4] hover:text-[#002B5B] font-medium">
+                ← Edit Cart
+            </a>
+        </div>
 
-        <form action="{{ route('shop.checkout.place', $tenant->slug) }}" method="POST"
+        <form action="{{ $tenant->shopRoute('checkout.place') }}" method="POST"
               x-data="checkoutForm()" @submit.prevent="submitForm">
             @csrf
             <input type="hidden" name="idempotency_key" value="{{ $idempotencyKey }}">
 
-            <div class="grid lg:grid-cols-3 gap-6">
+            {{--
+                grid-cols-1 base is required, not decorative: without any
+                column template below `lg`, CSS Grid auto-placement puts the
+                two direct children into separate IMPLICIT columns side by
+                side (each auto-sized to its own content), not stacked —
+                grid only wraps into one column when told to. That's what
+                was actually forcing every card below to ~406px wide on a
+                390px viewport, not a text-wrapping issue in any one card.
+            --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
+                {{--
+                    min-w-0: a CSS Grid item defaults to min-width:auto, so any
+                    descendant's unwrapped min-content width (the payment-method
+                    description text below was the culprit) can force this whole
+                    column — and everything else in it — wider than the viewport
+                    instead of wrapping. Caps the shrink-to-fit at 0 so children
+                    respect the grid track's actual computed width.
+                --}}
                 <!-- Left — Customer + Delivery -->
-                <div class="lg:col-span-2 space-y-4">
+                <div class="lg:col-span-2 space-y-4 min-w-0">
 
                     <!-- Customer Details -->
                     <div class="bg-white rounded-2xl border border-gray-200 p-5">
@@ -119,7 +141,7 @@
                                    :class="payment === 'payfast' ? 'border-[#0078D4] bg-[#F0F7FF]' : 'border-gray-200'">
                                 <input type="radio" name="payment_method" value="payfast"
                                        x-model="payment" class="accent-[#0078D4]">
-                                <div class="flex-1">
+                                <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-gray-900">Pay Online</p>
                                     <p class="text-xs text-gray-400 mt-0.5">Card, EFT, SnapScan & more via PayFast</p>
                                 </div>
@@ -131,7 +153,7 @@
                                    :class="payment === 'eft' ? 'border-[#0078D4] bg-[#F0F7FF]' : 'border-gray-200'">
                                 <input type="radio" name="payment_method" value="eft"
                                        x-model="payment" class="accent-[#0078D4]">
-                                <div class="flex-1">
+                                <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-gray-900">Manual EFT</p>
                                     <p class="text-xs text-gray-400 mt-0.5">Pay via bank transfer. We'll confirm your order once received</p>
                                 </div>
@@ -143,7 +165,7 @@
                                    :class="payment === 'collection' ? 'border-[#0078D4] bg-[#F0F7FF]' : 'border-gray-200'">
                                 <input type="radio" name="payment_method" value="collection"
                                        x-model="payment" class="accent-[#0078D4]">
-                                <div class="flex-1">
+                                <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-gray-900">Pay on Collection</p>
                                     <p class="text-xs text-gray-400 mt-0.5">Pay cash or card when you collect</p>
                                 </div>
@@ -165,19 +187,32 @@
 
                 <!-- Right — Order Summary -->
                 <div class="lg:col-span-1">
-                    <div class="bg-white rounded-2xl border border-gray-200 p-5 sticky top-24">
+                    {{--
+                        lg:sticky, not sticky: at `lg` this column is a real
+                        sidebar next to a taller left column, so sticking it
+                        makes sense. Below `lg` the grid is a single stacked
+                        column (see the grid-cols-1 note above) — sticky
+                        there just pins the summary card mid-scroll over
+                        whatever form field the shopper is trying to reach
+                        next, which is worse UX than letting it scroll
+                        normally with everything else.
+                    --}}
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5 lg:sticky lg:top-24">
                         <h2 class="text-sm font-semibold text-gray-900 mb-4">Order Summary</h2>
 
                         <div class="space-y-3 mb-4">
                             @foreach($lines as $line)
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0">
-                                        @if($line->product->image_url)
-                                            <img src="{{ $line->product->image_url }}" alt="{{ $line->product->name }}" class="w-full h-full object-cover">
+                                        @if($line->variant?->effectiveImageUrl() ?? $line->product->image_url)
+                                            <img src="{{ $line->variant?->effectiveImageUrl() ?? $line->product->image_url }}" alt="{{ $line->product->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
                                         @endif
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-xs font-medium text-gray-900 truncate">{{ $line->product->name }}</p>
+                                        @if($line->variant)
+                                            <p class="text-xs text-gray-500 truncate">{{ $line->variant->label }}</p>
+                                        @endif
                                         <p class="text-xs text-gray-400">× {{ $line->qty }}</p>
                                     </div>
                                     <p class="text-xs font-semibold text-gray-900 shrink-0">R{{ number_format($line->subtotal, 2) }}</p>

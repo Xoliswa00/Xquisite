@@ -5,6 +5,7 @@ namespace App\Modules\Ecommerce\Actions;
 use App\Models\Tenant;
 use App\Modules\Ecommerce\Exceptions\InsufficientStockException;
 use App\Modules\POS\Models\Product;
+use App\Modules\POS\Models\ProductVariant;
 use App\Modules\POS\Services\InventoryService;
 use Illuminate\Support\Collection;
 
@@ -12,12 +13,13 @@ use Illuminate\Support\Collection;
  * Re-validates and reserves stock for a set of cart items.
  *
  * MUST be called inside a database transaction (OrderService provides one).
- * Actual stock reservation is delegated to InventoryService::reserve(), which
- * row-locks each product and rejects oversell. Prices are read fresh from the
- * product, never trusted from the client-side cart.
+ * Actual stock reservation is delegated to InventoryService::reserve()/
+ * reserveVariant(), which row-lock the product/variant and reject oversell.
+ * Prices are read fresh from the product/variant, never trusted from the
+ * client-side cart.
  *
- * @param  array<int,int>  $items  [product_id => qty]
- * @return Collection<int,object>  lines: {product, qty, unit_price, subtotal}
+ * @param  array<string,array{product_id:int,variant_id:?int,qty:int}>  $items  CartService::all()'s shape
+ * @return Collection<int,object>  lines: {product, variant, qty, unit_price, subtotal}
  */
 class ReserveInventory
 {
@@ -27,14 +29,14 @@ class ReserveInventory
     {
         $lines = collect();
 
-        foreach ($items as $productId => $qty) {
-            $qty = (int) $qty;
+        foreach ($items as $item) {
+            $qty = (int) ($item['qty'] ?? 0);
             if ($qty < 1) {
                 continue;
             }
 
             $product = Product::where('tenant_id', $tenant->id)
-                ->where('id', $productId)
+                ->where('id', $item['product_id'])
                 ->where('is_active', true)
                 ->where('is_available_online', true)
                 ->first();
@@ -44,14 +46,35 @@ class ReserveInventory
                 throw new InsufficientStockException('One of the items in your cart is no longer available. Please review your cart.');
             }
 
+            $variant = null;
+            if (!empty($item['variant_id'])) {
+                $variant = ProductVariant::where('tenant_id', $tenant->id)
+                    ->where('product_id', $product->id)
+                    ->where('id', $item['variant_id'])
+                    ->where('is_active', true)
+                    ->first();
+
+                // Variant was deactivated/deleted between browsing and checkout.
+                if (! $variant) {
+                    throw new InsufficientStockException('One of the items in your cart is no longer available. Please review your cart.');
+                }
+            }
+
             // Locks the row, revalidates, and decrements (or throws).
-            $this->inventory->reserve($product, $qty, $reference);
+            if ($variant) {
+                $this->inventory->reserveVariant($variant, $qty, $reference);
+            } else {
+                $this->inventory->reserve($product, $qty, $reference);
+            }
+
+            $unitPrice = $variant ? $variant->effectivePrice() : (float) $product->price;
 
             $lines->push((object) [
                 'product'    => $product,
+                'variant'    => $variant,
                 'qty'        => $qty,
-                'unit_price' => (float) $product->price,
-                'subtotal'   => (float) $product->price * $qty,
+                'unit_price' => $unitPrice,
+                'subtotal'   => $unitPrice * $qty,
             ]);
         }
 

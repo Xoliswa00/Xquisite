@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Ecommerce;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Ecommerce\Concerns\ResolvesShopTenant;
 use App\Mail\OrderConfirmationEmail;
 use App\Models\Tenant;
 use App\Modules\Ecommerce\Exceptions\InsufficientStockException;
@@ -18,34 +19,38 @@ use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
+    use ResolvesShopTenant;
+
     public function __construct(private readonly OrderService $orders) {}
 
     public function index(string $tenantSlug)
     {
-        $tenant = Tenant::where('slug', $tenantSlug)->where('is_active', true)->firstOrFail();
-        $cart   = new CartService($tenantSlug);
+        $tenant = $this->activeShopTenant($tenantSlug);
+        $cart   = new CartService($tenant->id);
 
         if ($cart->isEmpty()) {
-            return redirect()->route('shop.index', $tenantSlug)->with('info', 'Your cart is empty.');
+            return redirect()->to($tenant->shopRoute('index'))->with('info', 'Your cart is empty.');
         }
 
         $lines    = $cart->lines($tenant->id);
         $subtotal = $cart->subtotal($tenant->id);
 
-        // One idempotency token per checkout attempt. Re-used across validation
-        // failures, regenerated only after a successful order.
-        $idempotencyKey = $this->idempotencyKey($tenantSlug);
+        // One idempotency token per checkout attempt, keyed by tenant ID so
+        // it's the same token regardless of which URL (path or subdomain)
+        // the shopper is on. Re-used across validation failures, regenerated
+        // only after a successful order.
+        $idempotencyKey = $this->idempotencyKey($tenant->id);
 
         return view('shop.checkout', compact('tenant', 'cart', 'lines', 'subtotal', 'idempotencyKey'));
     }
 
     public function place(Request $request, string $tenantSlug)
     {
-        $tenant = Tenant::where('slug', $tenantSlug)->where('is_active', true)->firstOrFail();
-        $cart   = new CartService($tenantSlug);
+        $tenant = $this->activeShopTenant($tenantSlug);
+        $cart   = new CartService($tenant->id);
 
         if ($cart->isEmpty()) {
-            return redirect()->route('shop.index', $tenantSlug)->with('info', 'Your cart is empty.');
+            return redirect()->to($tenant->shopRoute('index'))->with('info', 'Your cart is empty.');
         }
 
         $data = $request->validate([
@@ -63,12 +68,12 @@ class CheckoutController extends Controller
 
         // The server-side session token is authoritative — a forged form field
         // cannot bypass idempotency.
-        $idempotencyKey = $this->idempotencyKey($tenantSlug);
+        $idempotencyKey = $this->idempotencyKey($tenant->id);
 
         try {
             $order = $this->orders->placeOrder($tenant, $data, $cart, $idempotencyKey);
         } catch (InsufficientStockException $e) {
-            return redirect()->route('shop.cart', $tenantSlug)->with('error', $e->getMessage());
+            return redirect()->to($tenant->shopRoute('cart'))->with('error', $e->getMessage());
         } catch (\Throwable $e) {
             Log::error('Online checkout failed', [
                 'tenant' => $tenant->id,
@@ -83,7 +88,7 @@ class CheckoutController extends Controller
 
         // Order is committed. Safe to clear the cart and rotate the token.
         $cart->clear();
-        $this->forgetIdempotencyKey($tenantSlug);
+        $this->forgetIdempotencyKey($tenant->id);
         $order->load('items');
 
         // EFT / collection — confirm immediately. Only email on first creation
@@ -96,18 +101,18 @@ class CheckoutController extends Controller
                 $this->safeMail($order, $tenant);
             }
 
-            return redirect()->route('shop.order.confirmed', [$tenantSlug, $order->reference]);
+            return redirect()->to($tenant->shopRoute('order.confirmed', ['reference' => $order->reference]));
         }
 
         // Already paid (idempotent replay of a completed PayFast order) — skip the gateway.
         if ($order->isPaid()) {
-            return redirect()->route('shop.order.confirmed', [$tenantSlug, $order->reference]);
+            return redirect()->to($tenant->shopRoute('order.confirmed', ['reference' => $order->reference]));
         }
 
         // PayFast — hand off to the gateway.
         try {
             $payfast     = new PayFastService();
-            $paymentData = $payfast->buildPaymentData($order, $tenantSlug);
+            $paymentData = $payfast->buildPaymentData($order, $tenant);
 
             return view('shop.payfast-redirect', [
                 'paymentUrl'  => $payfast->getPaymentUrl(),
@@ -129,7 +134,7 @@ class CheckoutController extends Controller
 
     public function confirmed(string $tenantSlug, string $reference)
     {
-        $tenant = Tenant::where('slug', $tenantSlug)->firstOrFail();
+        $tenant = $this->activeShopTenant($tenantSlug);
         $order  = Order::where('tenant_id', $tenant->id)
             ->where('reference', $reference)
             ->with('items')
@@ -140,7 +145,7 @@ class CheckoutController extends Controller
 
     public function payfastNotify(Request $request, string $tenantSlug)
     {
-        $tenant  = Tenant::where('slug', $tenantSlug)->firstOrFail();
+        $tenant  = $this->activeShopTenant($tenantSlug);
         $payfast = new PayFastService();
 
         if (! $payfast->validateIpn($request, $tenantSlug)) {
@@ -203,21 +208,26 @@ class CheckoutController extends Controller
 
     public function payfastReturn(string $tenantSlug)
     {
-        return redirect()->route('shop.index', $tenantSlug)
+        $tenant = $this->activeShopTenant($tenantSlug);
+
+        return redirect()->to($tenant->shopRoute('index'))
             ->with('info', 'Thank you! Your payment is being processed. You will receive a confirmation email shortly.');
     }
 
     public function payfastCancel(string $tenantSlug)
     {
-        return redirect()->route('shop.checkout', $tenantSlug)
+        $tenant = $this->activeShopTenant($tenantSlug);
+
+        return redirect()->to($tenant->shopRoute('checkout'))
             ->with('error', 'Payment was cancelled. Your order is saved as pending — you can try paying again.');
     }
 
     // ── Helpers ────────────────────────────────────────────────
 
-    private function idempotencyKey(string $tenantSlug): string
+    /** Keyed by tenant ID — see CartService for why not the raw route identifier. */
+    private function idempotencyKey(int $tenantId): string
     {
-        $sessionKey = 'checkout_idem.' . $tenantSlug;
+        $sessionKey = 'checkout_idem.' . $tenantId;
 
         if (! session()->has($sessionKey)) {
             session([$sessionKey => (string) Str::uuid()]);
@@ -226,9 +236,9 @@ class CheckoutController extends Controller
         return session($sessionKey);
     }
 
-    private function forgetIdempotencyKey(string $tenantSlug): void
+    private function forgetIdempotencyKey(int $tenantId): void
     {
-        session()->forget('checkout_idem.' . $tenantSlug);
+        session()->forget('checkout_idem.' . $tenantId);
     }
 
     private function safeMail(Order $order, Tenant $tenant): void

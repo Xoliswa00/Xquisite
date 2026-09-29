@@ -132,10 +132,7 @@
 
         $sidebarReorderCount = 0;
         if ($authTenant && $authTenant->hasModule('pos')) {
-            $sidebarReorderCount = \App\Modules\POS\Models\Product::where('track_stock', true)
-                ->where('reorder_level', '>', 0)
-                ->whereColumn('stock_quantity', '<=', 'reorder_level')
-                ->count();
+            $sidebarReorderCount = \App\Modules\POS\Models\Product::reorderAlertCount();
         }
 
         if ($sidebarReorderCount > 0) {
@@ -169,6 +166,7 @@
         $systemTenantsRoutes = ['admin.tenants.*'];
         $systemModuleRequestsRoutes = ['admin.module-requests.*'];
         $systemReviewsRoutes = ['admin.reviews.*'];
+        $systemPublicLaunchesRoutes = ['admin.public-launches.*'];
         $systemSyncRoutes = ['admin.sync.*'];
         $systemLogsRoutes = ['admin.logs.*'];
 

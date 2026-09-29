@@ -1,0 +1,525 @@
+@php
+    $a = $application;
+    $tierColor = match($a->tier) {
+        'high' => 'text-emerald-400',
+        'good' => 'text-[#0078D4]',
+        'potential' => 'text-amber-400',
+        default => 'text-slate-400',
+    };
+    $painQuestions = [
+        'pain_forgotten_appointments' => 'Clients forgetting appointments',
+        'pain_late_cancellations' => 'Clients cancelling at the last minute',
+        'pain_no_shows' => 'Clients not showing up at all',
+        'pain_double_bookings' => 'Double bookings or scheduling conflicts',
+        'pain_booking_enquiry_time' => 'Time spent on booking enquiries',
+        'pain_staff_availability' => 'Knowing which staff member is available',
+        'pain_tracking_balances' => 'Tracking what customers owe',
+        'pain_revenue_visibility' => 'Knowing how much revenue was generated',
+        'pain_customer_data_organisation' => 'Keeping customer information organised',
+    ];
+@endphp
+
+<x-app-layout>
+    <x-slot name="header">Founding 20 Application</x-slot>
+
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    {{ $a->business_name }}
+                    @if($a->isCustomTrack())
+                        <span class="text-xs font-semibold uppercase tracking-wide text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-full px-2 py-0.5">Custom</span>
+                    @endif
+                </h2>
+                <p class="text-slate-400 text-sm mt-1">{{ $a->owner_name }} · <x-whatsapp-link :phone="$a->phone" class="text-slate-300" />@if($a->email) · <a href="mailto:{{ $a->email }}" class="text-slate-300 hover:text-white">{{ $a->email }}</a>@endif</p>
+            </div>
+            <a href="{{ route('admin.founding-twenty.index') }}" class="text-sm text-slate-400 hover:text-slate-200">&larr; Back to list</a>
+        </div>
+
+        @unless($a->isSubmitted())
+            <div class="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+                <span>Started {{ $a->created_at->diffForHumans() }} but hasn't finished the questionnaire. There's no score yet.</span>
+                <x-whatsapp-link :phone="$a->phone" :message="'Hi ' . $a->firstName() . ', you started your Founding 20 application for ' . $a->business_name . ' with Xquisite Creations. You can pick up right where you left off here: ' . $a->resumeUrl()" class="text-amber-200 font-medium">Send a nudge with their link</x-whatsapp-link>
+            </div>
+        @endunless
+
+        @php
+            $isSelected = in_array($a->status, ['selected', 'converted']);
+            $steps = [
+                ['label' => 'Selected for the programme', 'done' => $isSelected],
+                ['label' => 'Deposit confirmed', 'done' => $a->deposit_confirmed_at !== null],
+                ['label' => 'Tenant account linked', 'done' => $a->tenant_id !== null],
+                ['label' => 'Promo code issued', 'done' => $a->promoCodeRedemption !== null],
+                ['label' => 'First-value milestone hit', 'done' => $a->first_value_milestone_at !== null],
+            ];
+        @endphp
+        <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+            <h3 class="text-sm font-semibold text-slate-300 mb-4">Onboarding checklist</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-5">
+                @foreach($steps as $step)
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center shrink-0 {{ $step['done'] ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-500' }}">
+                            @if($step['done'])
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            @else
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+                            @endif
+                        </span>
+                        <span class="{{ $step['done'] ? 'text-slate-300' : 'text-slate-500' }}">{{ $step['label'] }}</span>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4 pt-4 border-t border-slate-700">
+                <div>
+                    @if($a->tenant)
+                        <p class="text-sm text-slate-300">Linked tenant: <span class="text-white font-medium">{{ $a->tenant->name }}</span></p>
+                    @else
+                        <div class="space-y-2">
+                            <form method="POST" action="{{ route('admin.founding-twenty.tenant', $a) }}" class="flex items-end gap-2">
+                                @csrf
+                                <div class="flex-1">
+                                    <label class="block text-xs font-medium text-slate-400 mb-1">Link to an existing tenant</label>
+                                    <select name="tenant_id" required class="w-full bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
+                                        <option value="">Select…</option>
+                                        @foreach($tenants as $t)
+                                            <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <button type="submit" class="px-3 py-2 text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition">Link</button>
+                            </form>
+                            <a href="{{ route('admin.tenants.create', ['founding_twenty' => $a->id]) }}" class="text-xs text-[#0078D4] hover:underline">or create a new tenant from this application &rarr;</a>
+                        </div>
+                    @endif
+                </div>
+                <div>
+                    @if($a->first_value_milestone_at)
+                        <p class="text-sm text-slate-300">First win: <span class="text-white">{{ $a->first_value_milestone_note }}</span> <span class="text-slate-500">({{ $a->first_value_milestone_at->diffForHumans() }})</span></p>
+                    @else
+                        <form method="POST" action="{{ route('admin.founding-twenty.milestone', $a) }}" class="flex items-end gap-2">
+                            @csrf
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Log first-value win (day 1-7 goal)</label>
+                                <input type="text" name="first_value_milestone_note" required placeholder="e.g. sent first automated reminder" class="w-full bg-slate-900 border-slate-700 text-white placeholder-slate-500 rounded-lg text-sm">
+                            </div>
+                            <button type="submit" class="px-3 py-2 text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition">Log</button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-3">The person</h3>
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <dt class="text-slate-400">Role</dt><dd class="text-white">{{ ['owner' => 'Owns the business', 'manager' => 'Manages it', 'staff' => 'Works there', 'other' => 'Something else'][$a->applicant_role] ?? '—' }}</dd>
+                        <dt class="text-slate-400">Heard about it via</dt><dd class="text-white capitalize">{{ $a->heard_about_via ? str_replace('_', ' ', $a->heard_about_via) : '—' }}</dd>
+                        <dt class="text-slate-400">Best time to reach</dt><dd class="text-white">{{ $a->best_contact_time ?: '—' }}</dd>
+                    </dl>
+                    @if($a->why_founding_20)
+                        <p class="text-xs text-slate-400 mt-4 mb-1">Why they want to be part of Founding 20</p>
+                        <p class="text-sm text-white leading-relaxed">{{ $a->why_founding_20 }}</p>
+                    @endif
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-3">Business profile</h3>
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <dt class="text-slate-400">Type</dt><dd class="text-white capitalize">{{ $a->business_type }}{{ $a->business_type_other ? " ({$a->business_type_other})" : '' }}</dd>
+                        <dt class="text-slate-400">Location</dt><dd class="text-white">{{ $a->location ?? '—' }}</dd>
+                        <dt class="text-slate-400">Years operating</dt><dd class="text-white">{{ $a->years_operating ?? '—' }}</dd>
+                        <dt class="text-slate-400">Staff</dt><dd class="text-white">{{ $a->staff_count ?? '—' }}</dd>
+                        <dt class="text-slate-400">Locations</dt><dd class="text-white">{{ $a->locations_count ?? '—' }}</dd>
+                        <dt class="text-slate-400">Monthly customers</dt><dd class="text-white">{{ $a->monthly_customers ?? '—' }}</dd>
+                        <dt class="text-slate-400">Monthly appointments</dt><dd class="text-white">{{ $a->monthly_appointments ?? '—' }}</dd>
+                    </dl>
+                </div>
+
+                @if($a->isCustomTrack())
+                    <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-300 mb-1">What they need</h3>
+                            <p class="text-sm text-white leading-relaxed">{{ $a->custom_solution_description }}</p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-700">
+                            <p class="text-xs font-medium text-slate-400 mb-2">
+                                Module price
+                                @if($a->custom_monthly_price !== null)
+                                    <span class="text-emerald-400">— set at R{{ number_format($a->custom_monthly_price, 2) }}/month</span>
+                                @else
+                                    <span class="text-amber-400">— not set yet, conversion message will say "we'll confirm your price"</span>
+                                @endif
+                            </p>
+                            <form method="POST" action="{{ route('admin.founding-twenty.custom-price', $a) }}" class="flex flex-wrap items-end gap-2">
+                                @csrf
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">R / month once built</label>
+                                    <input type="number" name="custom_monthly_price" step="0.01" min="0" value="{{ old('custom_monthly_price', $a->custom_monthly_price) }}" required class="w-32 bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
+                                </div>
+                                <div class="flex-1 min-w-[10rem]">
+                                    <label class="block text-xs text-slate-400 mb-1">Notes (e.g. turned into a reusable module)</label>
+                                    <input type="text" name="custom_pricing_notes" value="{{ old('custom_pricing_notes', $a->custom_pricing_notes) }}" maxlength="2000" class="w-full bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
+                                </div>
+                                <button type="submit" class="px-3 py-2 text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition">Save price</button>
+                            </form>
+                        </div>
+                    </div>
+                @endif
+
+                @unless($a->isCustomTrack())
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-3">Current operations</h3>
+                    <dl class="space-y-2 text-sm">
+                        <div><dt class="text-slate-400 inline">Booking:</dt> <dd class="text-white inline">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->booking_methods ?? [])) ?: '—' }}</dd></div>
+                        <div><dt class="text-slate-400 inline">Appointment mgmt:</dt> <dd class="text-white inline">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->appointment_management_methods ?? [])) ?: '—' }}</dd></div>
+                        <div><dt class="text-slate-400 inline">Customer data:</dt> <dd class="text-white inline">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->customer_data_methods ?? [])) ?: '—' }}</dd></div>
+                        <div><dt class="text-slate-400 inline">Payment tracking:</dt> <dd class="text-white inline">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->payment_tracking_methods ?? [])) ?: '—' }}</dd></div>
+                        <div><dt class="text-slate-400 inline">Balance tracking:</dt> <dd class="text-white inline">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->balance_tracking_methods ?? [])) ?: '—' }}</dd></div>
+                        <div><dt class="text-slate-400 inline">Card payment device:</dt> <dd class="text-white inline">{{ $a->card_payment_device ?: '—' }}</dd></div>
+                    </dl>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-3">Pain frequency <span class="text-slate-500 font-normal">(1 = never, 5 = very often)</span></h3>
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        @foreach($painQuestions as $field => $label)
+                            <dt class="text-slate-400">{{ $label }}</dt><dd class="text-white">{{ $a->{$field} ?? '—' }}</dd>
+                        @endforeach
+                    </dl>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-3">Impact &amp; time cost</h3>
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <dt class="text-slate-400">No-shows/month</dt><dd class="text-white">{{ $a->no_shows_per_month ?? '—' }}</dd>
+                        <dt class="text-slate-400">Avg. appointment value</dt><dd class="text-white">{{ $a->avg_appointment_value ?? '—' }}</dd>
+                        <dt class="text-slate-400">Hours on booking admin/week</dt><dd class="text-white">{{ $a->hours_booking_admin ?? '—' }}</dd>
+                        <dt class="text-slate-400">Hours on availability msgs/week</dt><dd class="text-white">{{ $a->hours_availability_messages ?? '—' }}</dd>
+                        <dt class="text-slate-400">Hours on manual reminders/week</dt><dd class="text-white">{{ $a->hours_manual_reminders ?? '—' }}</dd>
+                    </dl>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-3">
+                    <h3 class="text-sm font-semibold text-slate-300">Alternatives &amp; priorities</h3>
+                    <p class="text-sm"><span class="text-slate-400">Adoption barriers:</span> <span class="text-white">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->adoption_barriers ?? [])) ?: '—' }}{{ $a->adoption_barrier_other ? " ({$a->adoption_barrier_other})" : '' }}</span></p>
+                    @if($a->past_solution_frustration)
+                        <p class="text-sm"><span class="text-slate-400">Past frustration:</span> <span class="text-white">{{ $a->past_solution_frustration }}</span></p>
+                    @endif
+                    <p class="text-sm"><span class="text-slate-400">Priority features:</span> <span class="text-white">{{ implode(', ', array_map(fn ($v) => str_replace('_', ' ', $v), $a->priority_features ?? [])) ?: '—' }}</span></p>
+                    <p class="text-sm"><span class="text-slate-400">Biggest single difference:</span> <span class="text-white">{{ $a->top_priority_feature ?? '—' }}</span></p>
+                    @if($a->automation_wishlist)
+                        <p class="text-sm"><span class="text-slate-400">Automation wishlist:</span> <span class="text-white">{{ $a->automation_wishlist }}</span></p>
+                    @endif
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-3">
+                    <h3 class="text-sm font-semibold text-slate-300">Value &amp; commercial signal</h3>
+                    @if($a->value_rating === null && $a->continuation_likelihood === null)
+                        <p class="text-sm text-slate-400">Not asked at application. These are collected at the 30/60/90-day check-ins instead (see the table below).</p>
+                    @else
+                    <p class="text-sm"><span class="text-slate-400">Value rating:</span> <span class="text-white">{{ $a->value_rating ?? '—' }}/5</span></p>
+                    @if($a->value_open_text)
+                        <p class="text-sm"><span class="text-slate-400">What would justify R200/month:</span> <span class="text-white">{{ $a->value_open_text }}</span></p>
+                    @endif
+                    <p class="text-sm"><span class="text-slate-400">Continuation likelihood:</span> <span class="text-white capitalize">{{ str_replace('_', ' ', $a->continuation_likelihood ?? '—') }}</span></p>
+                    @if($a->continuation_driver)
+                        <p class="text-sm"><span class="text-slate-400">Would continue if:</span> <span class="text-white">{{ $a->continuation_driver }}</span></p>
+                    @endif
+                    @if($a->churn_driver)
+                        <p class="text-sm"><span class="text-slate-400">Would cancel if:</span> <span class="text-white">{{ $a->churn_driver }}</span></p>
+                    @endif
+                    @endif
+                </div>
+                @endunless
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 text-center">
+                    <p class="text-slate-400 text-sm">Score</p>
+                    <p class="text-4xl font-bold {{ $tierColor }} mt-1">{{ $a->score ?? '—' }}<span class="text-lg text-slate-500">/100</span></p>
+                    <p class="text-xs uppercase tracking-wide {{ $tierColor }} mt-1">{{ $a->tier ?? 'unscored' }}</p>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-3">
+                    <h3 class="text-sm font-semibold text-slate-300">Founding 20 opt-in</h3>
+                    <p class="text-sm text-slate-300">Wants to join: <span class="text-white">{{ $a->wants_founding_twenty ? 'Yes' : 'No' }}</span></p>
+                    <p class="text-sm text-slate-300">Willing to give feedback: <span class="text-white">{{ $a->willing_to_give_feedback ? 'Yes' : 'No' }}</span></p>
+                    <p class="text-sm text-slate-300">Preferred contact: <span class="text-white">{{ ['whatsapp' => 'WhatsApp', 'call' => 'phone call', 'email' => 'email'][$a->preferred_contact_method] ?? $a->preferred_contact_method }}</span></p>
+                    @if($a->best_contact_time)
+                        <p class="text-sm text-slate-300">Best time: <span class="text-white">{{ $a->best_contact_time }}</span></p>
+                    @endif
+                    @if($a->source)
+                        <p class="text-sm text-slate-300">Source: <span class="text-white">{{ $a->source }}</span></p>
+                    @endif
+                    @if($a->outreachCampaign)
+                        <p class="text-sm text-slate-300">Campaign: <a href="{{ route('admin.outreach-campaigns.show', $a->outreachCampaign) }}" class="text-[#0078D4] hover:underline">{{ $a->outreachCampaign->name }}</a></p>
+                    @endif
+                </div>
+
+                @if($a->deposit_amount !== null)
+                    @php
+                        $reserveUrl = route('founding-twenty.reserve', [$a, $a->reservationToken()]);
+                        $depositStatus = match(true) {
+                            $a->deposit_refunded_at !== null => ['label' => 'Refunded' . ($a->deposit_refund_reference ? ' (ref ' . $a->deposit_refund_reference . ')' : ''), 'color' => 'text-slate-400'],
+                            $a->deposit_credited_at !== null => ['label' => 'Credited to invoice ' . ($a->depositCreditInvoice?->invoice_number ?? ''), 'color' => 'text-slate-400'],
+                            $a->deposit_confirmed_at !== null => ['label' => 'Confirmed', 'color' => 'text-emerald-400'],
+                            $a->deposit_submitted_at !== null => ['label' => 'POP submitted — awaiting review', 'color' => 'text-amber-400'],
+                            default => ['label' => 'Awaiting payment', 'color' => 'text-slate-400'],
+                        };
+                    @endphp
+                    <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-3">
+                        <h3 class="text-sm font-semibold text-slate-300">Reservation deposit</h3>
+                        <p class="text-sm text-slate-300">Amount: <span class="text-white">R{{ number_format($a->deposit_amount, 2) }}</span></p>
+                        <p class="text-sm text-slate-300">Reference: <span class="text-white font-mono">{{ $a->deposit_reference }}</span></p>
+                        <p class="text-sm text-slate-300">Status: <span class="{{ $depositStatus['color'] }} font-medium">{{ $depositStatus['label'] }}</span></p>
+
+                        <div class="pt-1">
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Reservation link (send via {{ ['whatsapp' => 'WhatsApp', 'call' => 'phone call', 'email' => 'email'][$a->preferred_contact_method] ?? $a->preferred_contact_method }})</label>
+                            <input type="text" readonly value="{{ $reserveUrl }}" onclick="this.select()" class="w-full bg-slate-900 border-slate-700 text-slate-300 rounded-lg text-xs">
+                        </div>
+
+                        @if($a->deposit_pop_path)
+                            <a href="{{ route('admin.founding-twenty.deposit.pop', $a) }}"
+                               class="inline-flex items-center px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition">
+                                Download proof of payment
+                            </a>
+                        @endif
+
+                        <div class="flex gap-2 pt-1">
+                            @if($a->deposit_submitted_at && !$a->deposit_confirmed_at)
+                                <form method="POST" action="{{ route('admin.founding-twenty.deposit.confirm', $a) }}">
+                                    @csrf
+                                    <button type="submit" class="px-3 py-1.5 text-xs bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 rounded transition">
+                                        Confirm deposit
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+
+                        @if($a->deposit_confirmed_at && !$a->isDepositSettled())
+                            @php $unpaidInvoices = $a->tenant_id ? \App\Models\PlatformInvoice::where('tenant_id', $a->tenant_id)->whereIn('status', ['unpaid', 'overdue'])->orderBy('due_date')->get() : collect(); @endphp
+                            <div class="pt-3 border-t border-slate-700 space-y-3">
+                                <p class="text-xs font-medium text-slate-400">Settle the deposit{{ $a->deposit_outcome ? ' (they asked for: ' . $a->deposit_outcome . ')' : '' }}</p>
+
+                                <form method="POST" action="{{ route('admin.founding-twenty.deposit.outcome', $a) }}" class="flex flex-wrap items-center gap-3 text-sm text-slate-300">
+                                    @csrf
+                                    <label class="inline-flex items-center gap-1.5"><input type="radio" name="deposit_outcome" value="refund" required @checked($a->deposit_outcome === 'refund') class="text-[#0078D4]"> Pay back</label>
+                                    <label class="inline-flex items-center gap-1.5"><input type="radio" name="deposit_outcome" value="credit" required @checked($a->deposit_outcome === 'credit') class="text-[#0078D4]"> Credit to account</label>
+                                    <button type="submit" class="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition">Record their choice</button>
+                                </form>
+
+                                <form method="POST" action="{{ route('admin.founding-twenty.deposit.refund', $a) }}" class="flex flex-wrap items-end gap-2">
+                                    @csrf
+                                    <div class="flex-1 min-w-[10rem]">
+                                        <label class="block text-xs text-slate-400 mb-1">EFT reference (optional)</label>
+                                        <input type="text" name="deposit_refund_reference" maxlength="100" class="w-full bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
+                                    </div>
+                                    <button type="submit" class="px-3 py-2 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition">Mark paid back</button>
+                                </form>
+
+                                @if($unpaidInvoices->isNotEmpty())
+                                    <form method="POST" action="{{ route('admin.founding-twenty.deposit.credit', $a) }}" class="flex flex-wrap items-end gap-2">
+                                        @csrf
+                                        <div class="flex-1 min-w-[10rem]">
+                                            <label class="block text-xs text-slate-400 mb-1">Take R{{ number_format($a->deposit_amount, 2) }} off invoice</label>
+                                            <select name="invoice_id" required class="w-full bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
+                                                @foreach($unpaidInvoices as $inv)
+                                                    <option value="{{ $inv->id }}">{{ $inv->invoice_number }} (R{{ number_format($inv->amount, 2) }}, due {{ $inv->due_date->format('j M') }})</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="px-3 py-2 text-xs bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg transition">Apply credit</button>
+                                    </form>
+                                @elseif($a->tenant_id)
+                                    <p class="text-xs text-slate-500">No unpaid invoices yet. Credit can be applied once their first invoice exists.</p>
+                                @else
+                                    <p class="text-xs text-slate-500">Link a tenant to credit the deposit to their account.</p>
+                                @endif
+                            </div>
+                        @endif
+
+                        @if($a->priceLockedUntil())
+                            <p class="text-xs text-slate-400 pt-1">Monthly price locked until <span class="text-white">{{ $a->priceLockedUntil()->format('j F Y') }}</span> ({{ config('founding_twenty.price_lock_months') }} months after the free period).</p>
+                        @endif
+                    </div>
+                @endif
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-3">
+                    <h3 class="text-sm font-semibold text-slate-300">Promo code</h3>
+                    @if($a->promoCodeRedemption)
+                        <p class="text-sm text-slate-300">Code: <span class="text-white font-mono">{{ $a->promoCodeRedemption->promoCode->code }}</span></p>
+                        <p class="text-sm text-slate-300">Value given: <span class="text-[#D4AF37] font-medium">R{{ number_format($a->promoCodeRedemption->financial_value, 2) }}</span></p>
+                        <a href="{{ route('admin.promo-codes.show', $a->promoCodeRedemption->promoCode) }}" class="text-xs text-[#0078D4] hover:underline">View code details &rarr;</a>
+                    @else
+                        <p class="text-sm text-slate-400">No promo code issued yet.</p>
+                        <a href="{{ route('admin.promo-codes.index') }}" class="text-xs text-[#0078D4] hover:underline">Go to promo codes &rarr;</a>
+                    @endif
+                </div>
+
+                @if($a->referredByTenant)
+                    <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-3">
+                        <h3 class="text-sm font-semibold text-slate-300">Referral</h3>
+                        <p class="text-sm text-slate-300">Referred by: <span class="text-white font-medium">{{ $a->referredByTenant->name }}</span></p>
+                        @if($a->referral_reward_processed_at)
+                            <p class="text-sm text-emerald-400">Reward processed {{ $a->referral_reward_processed_at->diffForHumans() }}</p>
+                        @elseif($a->tenant_id)
+                            <form method="POST" action="{{ route('admin.founding-twenty.referral-reward', $a) }}">
+                                @csrf
+                                <button type="submit" class="w-full px-3 py-2 text-sm bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 text-[#D4AF37] rounded-lg transition">
+                                    Process referral reward (1 free month + 50% welcome discount)
+                                </button>
+                            </form>
+                        @else
+                            <p class="text-sm text-slate-400">Link this application to a tenant before the reward can be processed.</p>
+                        @endif
+                    </div>
+                @endif
+
+                @if($a->isSubmitted())
+                    <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-4">
+                        <h3 class="text-sm font-semibold text-slate-300">Messages to them</h3>
+                        <div>
+                            <p class="text-xs text-slate-400 mb-1">Application received</p>
+                            @include('admin.founding-twenty._tell-them', ['a' => $a, 'type' => 'received'])
+                        </div>
+                        @if(in_array($a->status, ['selected', 'waitlisted', 'rejected']))
+                            <div>
+                                <p class="text-xs text-slate-400 mb-1">Your decision ({{ $a->status }})</p>
+                                @include('admin.founding-twenty._tell-them', ['a' => $a, 'type' => 'decision'])
+                            </div>
+                        @else
+                            <p class="text-xs text-slate-500">Set a decision below and the message for it appears here.</p>
+                        @endif
+                        @if($a->tenant_linked_at)
+                            <div>
+                                <p class="text-xs text-slate-400 mb-1">Check on how it is going</p>
+                                @include('admin.founding-twenty._tell-them', ['a' => $a, 'type' => 'activation'])
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400 mb-1">Free period ending, what happens next</p>
+                                @include('admin.founding-twenty._tell-them', ['a' => $a, 'type' => 'conversion'])
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-3">Review</h3>
+                    <form method="POST" action="{{ route('admin.founding-twenty.status', $a) }}" class="space-y-3">
+                        @csrf
+                        @method('PATCH')
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Status</label>
+                            <select name="status" class="w-full bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
+                                @foreach(['pending', 'reviewing', 'selected', 'waitlisted', 'rejected', 'converted'] as $status)
+                                    <option value="{{ $status }}" @selected($a->status === $status)>{{ ucfirst($status) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Notes</label>
+                            <textarea name="admin_notes" rows="3" class="w-full bg-slate-900 border-slate-700 text-white rounded-lg text-sm">{{ $a->admin_notes }}</textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg py-2 text-sm font-medium transition">
+                            Save
+                        </button>
+                        @if($a->reviewer)
+                            <p class="text-xs text-slate-500">Last reviewed by {{ $a->reviewer->name }} {{ $a->reviewed_at?->diffForHumans() }}</p>
+                        @endif
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @php
+            $checkinTypes = ['30_day' => '30-day', '60_day' => '60-day', '90_day' => '90-day'];
+            $metricRows = [
+                'monthly_appointments' => 'Monthly appointments',
+                'no_shows_per_month' => 'No-shows/month',
+                'avg_appointment_value' => 'Avg. appointment value',
+                'hours_booking_admin' => 'Hours on booking admin/week',
+                'hours_availability_messages' => 'Hours on availability msgs/week',
+                'hours_manual_reminders' => 'Hours on manual reminders/week',
+                'value_rating' => 'Value rating',
+                'continuation_likelihood' => 'Continuation likelihood',
+            ];
+        @endphp
+        <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+            <h3 class="text-sm font-semibold text-slate-300 mb-4">30/60/90-day check-ins</h3>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-700">
+                            <th class="text-left py-2 pr-4 text-slate-400 font-medium">Metric</th>
+                            <th class="text-left py-2 px-4 text-slate-400 font-medium">Baseline</th>
+                            @foreach($checkinTypes as $type => $label)
+                                <th class="text-left py-2 px-4 text-slate-400 font-medium">{{ $label }}</th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700/50">
+                        @foreach($metricRows as $field => $label)
+                            <tr>
+                                <td class="py-2 pr-4 text-slate-400">{{ $label }}</td>
+                                <td class="py-2 px-4 text-white">{{ $field === 'continuation_likelihood' ? str_replace('_', ' ', $a->{$field} ?? '—') : ($a->{$field} ?? '—') }}</td>
+                                @foreach($checkinTypes as $type => $label2)
+                                    @php $checkin = $a->checkins->firstWhere('checkin_type', $type); @endphp
+                                    <td class="py-2 px-4 {{ $checkin?->isComplete() ? 'text-white' : 'text-slate-600' }}">
+                                        @if($checkin?->isComplete())
+                                            {{ $field === 'continuation_likelihood' ? str_replace('_', ' ', $checkin->{$field} ?? '—') : ($checkin->{$field} ?? '—') }}
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid sm:grid-cols-3 gap-3 mt-5 pt-4 border-t border-slate-700">
+                @foreach($checkinTypes as $type => $label)
+                    @php $checkin = $a->checkins->firstWhere('checkin_type', $type); @endphp
+                    <div class="bg-slate-900/50 rounded-lg p-3">
+                        <p class="text-xs font-semibold text-slate-300 mb-2">{{ $label }} check-in</p>
+                        @if(!$checkin)
+                            <form method="POST" action="{{ route('admin.founding-twenty.checkin.issue', $a) }}">
+                                @csrf
+                                <input type="hidden" name="checkin_type" value="{{ $type }}">
+                                <button type="submit" class="w-full px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition">
+                                    Issue link
+                                </button>
+                            </form>
+                        @elseif($checkin->isComplete())
+                            <p class="text-xs text-emerald-400">Completed {{ $checkin->completed_at->diffForHumans() }}</p>
+                            @if($checkin->biggest_change)
+                                <p class="text-xs text-slate-400 mt-1 italic">"{{ Str::limit($checkin->biggest_change, 80) }}"</p>
+                            @endif
+                            @if($checkin->value_open_text)
+                                <p class="text-xs text-slate-400 mt-1"><span class="text-slate-500">Worth R200/month if:</span> {{ Str::limit($checkin->value_open_text, 80) }}</p>
+                            @endif
+                            @if($checkin->continuation_driver)
+                                <p class="text-xs text-slate-400 mt-1"><span class="text-slate-500">Would continue if:</span> {{ Str::limit($checkin->continuation_driver, 80) }}</p>
+                            @endif
+                            @if($checkin->churn_driver)
+                                <p class="text-xs text-slate-400 mt-1"><span class="text-slate-500">Would cancel if:</span> {{ Str::limit($checkin->churn_driver, 80) }}</p>
+                            @endif
+                        @else
+                            <input type="text" readonly
+                                   value="{{ route('founding-twenty.checkin.show', [$checkin, $checkin->checkinToken()]) }}"
+                                   onclick="this.select()"
+                                   class="w-full bg-slate-900 border-slate-700 text-slate-300 rounded-lg text-xs">
+                            <p class="text-xs text-amber-400 mt-1">Awaiting response</p>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</x-app-layout>
