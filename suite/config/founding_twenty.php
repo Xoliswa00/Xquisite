@@ -6,6 +6,10 @@ return [
     // What a business pays per month once the free period ends.
     'monthly_price' => env('FOUNDING_TWENTY_MONTHLY_PRICE', 200),
 
+    // Free months at the start, and how long the monthly price is guaranteed after they end.
+    'free_months' => 3,
+    'price_lock_months' => 24,
+
     // Promise made to every applicant on the thank-you page and in the received message.
     'decision_within_days' => 7,
 
