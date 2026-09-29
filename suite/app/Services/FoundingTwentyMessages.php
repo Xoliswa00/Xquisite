@@ -83,15 +83,18 @@ class FoundingTwentyMessages
 
     public static function conversion(FoundingTwentyApplication $a): array
     {
-        $price = number_format((float) config('founding_twenty.monthly_price'), 0);
         $deposit = number_format((float) config('founding_twenty.deposit_amount'), 0);
         $lock = config('founding_twenty.price_lock_months');
+
+        $priceLine = ($a->isCustomTrack() && $a->custom_monthly_price === null)
+            ? 'If what we built has been useful, we will confirm your monthly price based on it before your free months end.'
+            : "If Xquisite has been useful, you can carry on at R" . number_format($a->monthlyPrice(), 0) . " a month, and that price is locked for {$lock} months from the day your free period ends.";
 
         return [
             'subject' => "Your free months are nearly over: what happens next",
             'body' => "Hi {$a->firstName()},\n\n"
                 . "Your 3 free months with Xquisite Creations for {$a->business_name} finish in about two weeks.\n\n"
-                . "If Xquisite has been useful, you can carry on at R{$price} a month, and that price is locked for {$lock} months from the day your free period ends. If it has not, you can stop with no charge and no hard feelings.\n\n"
+                . "{$priceLine} If it has not been useful, you can stop with no charge and no hard feelings.\n\n"
                 . "Your R{$deposit} deposit comes back to you either way. If you carry on, reply with the option you prefer: \"refund\" and we pay it back to your bank account, or \"credit\" and we take it off your first invoice. If you stop, we pay it back to your bank account. We take care of the accounting for both.\n\n"
                 . 'Either way, we would like to hear what worked and what did not. Reply here or tell us on your final check-in.',
         ];

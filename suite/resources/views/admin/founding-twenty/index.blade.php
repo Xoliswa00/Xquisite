@@ -156,5 +156,27 @@
                 </div>
             </div>
         @endif
+
+        {{-- Custom work: same offer, a different intake — no score, reviewed on the description. --}}
+        @if($customRequests->isNotEmpty())
+            <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-700">
+                    <h3 class="text-sm font-semibold text-slate-300">Custom work requests ({{ $customRequests->count() }})</h3>
+                    <p class="text-xs text-slate-400 mt-1">Not booking-based businesses — reviewed on what they described, not scored.</p>
+                </div>
+                <div class="divide-y divide-slate-700">
+                    @foreach($customRequests as $request)
+                        <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-start gap-3">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-white font-medium">{{ $request->business_name }} <span class="text-slate-400 font-normal">· {{ $request->owner_name }}</span></p>
+                                <p class="text-xs text-slate-400 mt-0.5">{{ $request->business_type_other }} · applied {{ $request->submitted_at->diffForHumans() }}</p>
+                                <p class="text-sm text-slate-300 mt-1.5">{{ Str::limit($request->custom_solution_description, 160) }}</p>
+                            </div>
+                            <a href="{{ route('admin.founding-twenty.show', $request) }}" class="shrink-0 px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition">Review</a>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
     </div>
 </x-app-layout>

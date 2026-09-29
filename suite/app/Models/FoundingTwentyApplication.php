@@ -13,6 +13,15 @@ class FoundingTwentyApplication extends Model
 {
     use Auditable;
 
+    /**
+     * Match the DB column default in PHP too: Eloquent doesn't reflect a server-side
+     * default back onto a freshly created model unless it's refreshed, so without this
+     * a booking-track application's ->track would read null in the same request it was created.
+     */
+    protected $attributes = [
+        'track' => 'booking',
+    ];
+
     protected $fillable = [
         'outreach_campaign_id',
         'business_name', 'owner_name', 'applicant_role', 'why_founding_20', 'heard_about_via',
@@ -36,6 +45,7 @@ class FoundingTwentyApplication extends Model
         'privacy_consented_at', 'submitted_at',
         'received_notified_at', 'decision_notified_at', 'activation_nudge_sent_at', 'conversion_offer_sent_at', 'last_section_reached',
         'deposit_outcome', 'deposit_outcome_at', 'deposit_refund_reference', 'deposit_credited_at', 'deposit_credit_invoice_id',
+        'track', 'custom_solution_description', 'custom_monthly_price', 'custom_pricing_notes',
         'deposit_amount', 'deposit_reference', 'deposit_pop_path',
         'deposit_submitted_at', 'deposit_confirmed_at', 'deposit_refunded_at',
         'tenant_id', 'tenant_linked_at', 'first_value_milestone_at', 'first_value_milestone_note',
@@ -61,6 +71,7 @@ class FoundingTwentyApplication extends Model
         'conversion_offer_sent_at' => 'datetime',
         'deposit_outcome_at' => 'datetime',
         'deposit_credited_at' => 'datetime',
+        'custom_monthly_price' => 'decimal:2',
         'deposit_amount' => 'decimal:2',
         'deposit_submitted_at' => 'datetime',
         'deposit_confirmed_at' => 'datetime',
@@ -133,6 +144,17 @@ class FoundingTwentyApplication extends Model
     public function resumeUrl(): string
     {
         return route('founding-twenty.resume', [$this, $this->resumeToken()]);
+    }
+
+    public function isCustomTrack(): bool
+    {
+        return $this->track === 'custom';
+    }
+
+    /** What they'll actually pay after the free period: the agreed module price if one's been set, otherwise the standard rate. */
+    public function monthlyPrice(): float
+    {
+        return (float) ($this->custom_monthly_price ?? config('founding_twenty.monthly_price'));
     }
 
     /** The deposit has been paid back or credited: nothing is owed either way. */

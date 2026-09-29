@@ -450,6 +450,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('/founding-twenty/{foundingTwenty}/message/{type}/told', [AdminFoundingTwentyController::class, 'markMessaged'])->name('founding-twenty.message.told');
             Route::get('/founding-twenty/{foundingTwenty}', [AdminFoundingTwentyController::class, 'show'])->name('founding-twenty.show');
             Route::patch('/founding-twenty/{foundingTwenty}/status', [AdminFoundingTwentyController::class, 'updateStatus'])->name('founding-twenty.status');
+            Route::post('/founding-twenty/{foundingTwenty}/custom-price', [AdminFoundingTwentyController::class, 'setCustomPrice'])->name('founding-twenty.custom-price');
             Route::post('/founding-twenty/{foundingTwenty}/deposit/confirm', [AdminFoundingTwentyController::class, 'confirmDeposit'])->name('founding-twenty.deposit.confirm');
             Route::post('/founding-twenty/{foundingTwenty}/deposit/refund', [AdminFoundingTwentyController::class, 'markDepositRefunded'])->name('founding-twenty.deposit.refund');
             Route::post('/founding-twenty/{foundingTwenty}/deposit/outcome', [AdminFoundingTwentyController::class, 'chooseDepositOutcome'])->name('founding-twenty.deposit.outcome');
@@ -695,6 +696,8 @@ Route::prefix('founding-20')->name('founding-twenty.')->group(function () {
     Route::post('/apply/questions', [FoundingTwentyController::class, 'submit'])->name('submit')->middleware('throttle:12,1');
     Route::post('/apply/restart',   [FoundingTwentyController::class, 'restart'])->name('restart');
     Route::post('/apply/progress',  [FoundingTwentyController::class, 'progress'])->name('progress')->middleware('throttle:60,1');
+    // A second, shorter intake for businesses that aren't booking-based — same offer, no questionnaire.
+    Route::post('/custom-work', [FoundingTwentyController::class, 'customWorkStore'])->name('custom-work.store')->middleware('throttle:12,1');
     // Pick an unfinished application back up from a link (sent by us, or saved by them).
     Route::get('/continue/{foundingTwenty}/{token}', [FoundingTwentyController::class, 'resume'])->name('resume')->middleware('throttle:12,1');
     Route::get('/thanks', [FoundingTwentyController::class, 'thanks'])->name('thanks');
