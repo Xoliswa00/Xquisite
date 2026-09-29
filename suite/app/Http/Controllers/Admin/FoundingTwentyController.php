@@ -24,10 +24,14 @@ class FoundingTwentyController extends Controller
 {
     public function index()
     {
-        // Only submitted applications are scored and ranked. Leads (details given, questionnaire
-        // not finished) are listed separately so they can be followed up on, not lost.
-        $applications = FoundingTwentyApplication::submitted()->latest('score')->latest()->get();
+        // Only submitted, booking-track applications are scored and ranked — a custom-track
+        // application has no score, so it never belongs in this ranking, not even at the bottom.
+        $applications = FoundingTwentyApplication::submitted()->where('track', 'booking')->latest('score')->latest()->get();
+        // Leads (details given, questionnaire not finished) are listed separately so they can be
+        // followed up on, not lost. Custom-track requests are always "finished" in one step, so
+        // this is booking-track leads only.
         $leads = FoundingTwentyApplication::leads()->latest()->get();
+        $customRequests = FoundingTwentyApplication::submitted()->where('track', 'custom')->latest()->get();
 
         $stats = [
             'total' => $applications->count(),
@@ -36,7 +40,7 @@ class FoundingTwentyController extends Controller
             'selected' => $applications->where('status', 'selected')->count(),
         ];
 
-        return view('admin.founding-twenty.index', compact('applications', 'stats', 'leads'));
+        return view('admin.founding-twenty.index', compact('applications', 'stats', 'leads', 'customRequests'));
     }
 
     public function actionQueue(FoundingTwentyProgrammeStats $stats)
@@ -56,6 +60,21 @@ class FoundingTwentyController extends Controller
         $tenants = Tenant::orderBy('name')->get(['id', 'name']);
 
         return view('admin.founding-twenty.show', ['application' => $foundingTwenty, 'tenants' => $tenants]);
+    }
+
+    /** Once a custom build turns out to be a reusable module, this is the price it converts to. */
+    public function setCustomPrice(Request $request, FoundingTwentyApplication $foundingTwenty)
+    {
+        abort_unless($foundingTwenty->isCustomTrack(), 422, 'This application is not on the custom-work track.');
+
+        $validated = $request->validate([
+            'custom_monthly_price' => 'required|numeric|min:0|max:99999',
+            'custom_pricing_notes' => 'nullable|string|max:2000',
+        ]);
+
+        $foundingTwenty->update($validated);
+
+        return back()->with('success', 'Monthly price set for ' . $foundingTwenty->business_name . '.');
     }
 
     public function updateStatus(Request $request, FoundingTwentyApplication $foundingTwenty)

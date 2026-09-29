@@ -67,11 +67,15 @@
              so a referral link or campaign link landing here doesn't lose attribution. --}}
         @php $applyParams = request()->only(['src', 'campaign', 'ref']); @endphp
         <div class="text-center">
-            <a href="{{ route('founding-twenty.show', $applyParams) }}"
-               class="inline-flex items-center justify-center px-8 py-3.5 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition-colors text-base sm:text-lg">
-                Start Your Application
-            </a>
-            <p class="text-sm text-[#2D3748]/60 mt-3 max-w-md mx-auto">Step 1 takes about a minute and saves your place. The questions take another 5 to 7. Applying costs nothing, and we review every application before anyone is selected.</p>
+            @if($launch->hasCountdown())
+                <p class="text-sm text-[#2D3748]/60 max-w-md mx-auto">Applications open the moment the countdown above reaches zero. Got a question while you wait? Ask below.</p>
+            @else
+                <a href="{{ route('founding-twenty.show', $applyParams) }}"
+                   class="inline-flex items-center justify-center px-8 py-3.5 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition-colors text-base sm:text-lg">
+                    Start Your Application
+                </a>
+                <p class="text-sm text-[#2D3748]/60 mt-3 max-w-md mx-auto">Step 1 takes about a minute and saves your place. The questions take another 5 to 7. Applying costs nothing, and we review every application before anyone is selected.</p>
+            @endif
         </div>
 
         {{-- How it works: the deposit is disclosed here, before anyone spends time on the form. --}}
@@ -95,7 +99,9 @@
             </div>
         </div>
 
-        {{-- Closing CTA: the same copy from the approved content pack, framed as the poster's closing black banner. --}}
+        {{-- Closing CTA: the same copy from the approved content pack, framed as the poster's closing black banner.
+             Only while applications are actually open — there is nothing to click through to otherwise. --}}
+        @if(! $launch->hasCountdown())
         <div class="relative bg-[#111111] rounded-[20px] p-6 sm:p-8 text-center max-w-lg lg:max-w-2xl mx-auto overflow-hidden">
             <div class="absolute top-3 left-3 grid grid-cols-3 gap-1" aria-hidden="true">
                 @for($d = 0; $d < 9; $d++)<span class="block w-[6px] h-[6px] rounded-full bg-[#D4AF37]"></span>@endfor
@@ -106,6 +112,7 @@
                 Start Your Application
             </a>
         </div>
+        @endif
     @endif
 
     {{-- Benefits --}}
@@ -120,6 +127,88 @@
                     </li>
                 @endforeach
             </ul>
+        </div>
+    @endif
+
+    {{-- Custom work: same offer, for businesses that don't run on bookings/appointments,
+         so the questionnaire above (built entirely around that) isn't forced on them. --}}
+    @if($launch->key === 'founding-20' && ! $launch->hasCountdown())
+        <div class="bg-[#F8FAFC] border border-gray-100 rounded-2xl p-6 sm:p-10">
+            <h2 class="f-mont text-xl font-bold text-[#002B5B] mb-2 text-center">Not a booking-based business?</h2>
+            <p class="text-sm text-[#2D3748]/70 text-center max-w-xl mx-auto mb-6">
+                The questions above are built around bookings and appointments. If that's not how your business runs but you'd still like a custom solution, tell us what you need — same offer, three months free, just a shorter form.
+            </p>
+
+            <form method="POST" action="{{ route('founding-twenty.custom-work.store') }}" class="max-w-xl mx-auto space-y-4">
+                @csrf
+                <input type="hidden" name="source" value="custom-work-section">
+
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="cw_owner_name" class="block text-sm font-medium text-[#2D3748] mb-1">Your name *</label>
+                        <input type="text" id="cw_owner_name" name="owner_name" value="{{ old('owner_name') }}" required autocomplete="name"
+                               class="w-full rounded-xl text-base sm:text-sm border-gray-200 focus:ring-[#0078D4] focus:border-[#0078D4]">
+                        @error('owner_name')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label for="cw_business_name" class="block text-sm font-medium text-[#2D3748] mb-1">Business name *</label>
+                        <input type="text" id="cw_business_name" name="business_name" value="{{ old('business_name') }}" required autocomplete="organization"
+                               class="w-full rounded-xl text-base sm:text-sm border-gray-200 focus:ring-[#0078D4] focus:border-[#0078D4]">
+                        @error('business_name')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
+                <div>
+                    <label for="cw_business_type_other" class="block text-sm font-medium text-[#2D3748] mb-1">What does your business do? *</label>
+                    <input type="text" id="cw_business_type_other" name="business_type_other" value="{{ old('business_type_other') }}" required placeholder="e.g. a retail store, a logistics company, an accounting practice"
+                           class="w-full rounded-xl text-base sm:text-sm border-gray-200 focus:ring-[#0078D4] focus:border-[#0078D4]">
+                    @error('business_type_other')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label for="cw_description" class="block text-sm font-medium text-[#2D3748] mb-1">What would you like us to build? *</label>
+                    <textarea id="cw_description" name="custom_solution_description" rows="3" required minlength="20" maxlength="2000" placeholder="A sentence or two is enough for us to start the conversation."
+                              class="w-full rounded-xl text-base sm:text-sm border-gray-200 focus:ring-[#0078D4] focus:border-[#0078D4]">{{ old('custom_solution_description') }}</textarea>
+                    @error('custom_solution_description')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="cw_phone" class="block text-sm font-medium text-[#2D3748] mb-1">Phone (WhatsApp) *</label>
+                        <input type="tel" inputmode="tel" id="cw_phone" name="phone" value="{{ old('phone') }}" required autocomplete="tel" placeholder="082 123 4567"
+                               class="w-full rounded-xl text-base sm:text-sm border-gray-200 focus:ring-[#0078D4] focus:border-[#0078D4]">
+                        @error('phone')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label for="cw_email" class="block text-sm font-medium text-[#2D3748] mb-1">Email <span class="font-normal text-[#2D3748]/50">(needed if you'd rather we email you)</span></label>
+                        <input type="email" inputmode="email" id="cw_email" name="email" value="{{ old('email') }}" autocomplete="email"
+                               class="w-full rounded-xl text-base sm:text-sm border-gray-200 focus:ring-[#0078D4] focus:border-[#0078D4]">
+                        @error('email')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
+                <div>
+                    <p class="block text-sm font-medium text-[#2D3748] mb-2">How should we reach you? *</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        @foreach(['whatsapp' => 'WhatsApp', 'call' => 'Phone call', 'email' => 'Email'] as $value => $label)
+                            <label class="flex items-center justify-center text-center gap-2 text-sm border border-gray-200 rounded-xl px-2 py-3 cursor-pointer has-[:checked]:border-[#0078D4] has-[:checked]:bg-blue-50">
+                                <input type="radio" name="preferred_contact_method" value="{{ $value }}" required @checked(old('preferred_contact_method', 'whatsapp') === $value) class="sr-only">
+                                <span>{{ $label }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <label class="flex items-start gap-3 text-sm text-[#2D3748]/80 border border-gray-200 rounded-xl px-4 py-3 cursor-pointer has-[:checked]:border-[#0078D4] has-[:checked]:bg-blue-50">
+                    <input type="checkbox" name="privacy_consent" value="1" required @checked(old('privacy_consent')) class="mt-0.5 rounded text-[#0078D4] focus:ring-[#0078D4]">
+                    <span>I'm happy for Xquisite Creations to save my details and contact me about this, as described in the <a href="{{ route('privacy') }}" target="_blank" class="text-[#0078D4] underline hover:no-underline">Privacy Policy</a>. *</span>
+                </label>
+                @error('privacy_consent')<p class="text-red-600 text-xs -mt-2">{{ $message }}</p>@enderror
+
+                <button type="submit" class="w-full py-3 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition text-base sm:text-sm">
+                    Tell us what you need
+                </button>
+            </form>
         </div>
     @endif
 
