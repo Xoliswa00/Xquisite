@@ -105,7 +105,7 @@ class TenantController extends Controller
             if ($application && $application->tenant_id === null) {
                 // Loaded instance, not a query-builder update, so this still fires the
                 // Auditable model events — every other write to this table is audited.
-                $application->update(['tenant_id' => $tenant->id]);
+                $application->update(['tenant_id' => $tenant->id, 'tenant_linked_at' => now()]);
             } elseif ($application) {
                 $successMessage .= " Note: application #{$application->id} was already linked to another tenant — this new tenant was not linked automatically.";
             }

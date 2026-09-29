@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\FoundingTwentyApplication;
+use App\Models\FoundingTwentyCheckin;
 use App\Models\PromoCode;
 use App\Models\Tenant;
 use App\Services\AuditService;
@@ -24,6 +25,26 @@ class FoundingTwentyController extends Controller
         ];
 
         return view('admin.founding-twenty.index', compact('applications', 'stats'));
+    }
+
+    public function actionQueue()
+    {
+        $depositsAwaitingConfirmation = FoundingTwentyApplication::whereNotNull('deposit_submitted_at')
+            ->whereNull('deposit_confirmed_at')
+            ->orderBy('deposit_submitted_at')
+            ->get();
+
+        $incompleteCheckins = FoundingTwentyCheckin::whereNull('completed_at')
+            ->with('application')
+            ->orderBy('created_at')
+            ->get();
+
+        $checkinsOverdue = $incompleteCheckins->filter(fn ($c) => $c->created_at->diffInDays(now()) > 7);
+        $checkinsAwaitingResponse = $incompleteCheckins->filter(fn ($c) => $c->created_at->diffInDays(now()) <= 7);
+
+        return view('admin.founding-twenty.action-queue', compact(
+            'depositsAwaitingConfirmation', 'checkinsOverdue', 'checkinsAwaitingResponse'
+        ));
     }
 
     public function show(FoundingTwentyApplication $foundingTwenty)
@@ -86,7 +107,7 @@ class FoundingTwentyController extends Controller
             'tenant_id' => 'required|exists:tenants,id',
         ]);
 
-        $foundingTwenty->update($validated);
+        $foundingTwenty->update([...$validated, 'tenant_linked_at' => now()]);
 
         return back()->with('success', 'Tenant linked to this application.');
     }
