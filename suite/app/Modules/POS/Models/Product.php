@@ -147,6 +147,20 @@ class Product extends Model
         return 'ok';
     }
 
+    /**
+     * Storefront gallery images. There is no multi-image field on this model
+     * yet — this accessor exists purely so shop views can already loop over
+     * "the product's images" without knowing that today there's only ever
+     * one. When a real gallery (a product_images table, or a JSON column)
+     * ships, only this accessor needs to change to return the full set —
+     * every Blade view that already loops over gallery_images picks it up
+     * for free, no view changes required.
+     */
+    public function getGalleryImagesAttribute(): array
+    {
+        return $this->image_url ? [$this->image_url] : [];
+    }
+
     // ── Stock mutation helpers ─────────────────────────────────
 
     // Stock mutations are delegated to InventoryService, which row-locks the

@@ -20,6 +20,17 @@
                 'sku' => $v->sku,
             ])->values();
         @endphp
+        {{--
+            A has_variants product gets its own dedicated image/stock
+            handling here (image reactive to the *selected variant*, stock
+            text reading the selected variant's own numbers) rather than
+            the static productGallery()/<x-shop.stock-badge> used below for
+            a plain product — picking "Blue" has to swap to the blue photo
+            and that variant's own stock, which a gallery built for
+            browsing a fixed set of photos on one fixed stock number can't
+            express. Two genuinely different jobs, so two implementations;
+            see the @else branch for the plain-product one.
+        --}}
         <div x-data="variantPicker(@js($product->variant_options ?? []), @js($variantsForJs), @js($product->image_url))"
              class="grid md:grid-cols-2 gap-8 mb-12">
 
@@ -123,17 +134,38 @@
     @else
         <div class="grid md:grid-cols-2 gap-8 mb-12">
 
-            <!-- Image -->
-            <div class="aspect-square bg-gray-100 rounded-2xl overflow-hidden">
-                @if($product->image_url)
-                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
-                @else
-                    <div class="w-full h-full flex items-center justify-center">
-                        <svg class="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                        </svg>
-                    </div>
-                @endif
+            {{--
+                Gallery: the product model only has a single image_url today —
+                gallery_images is a computed accessor that wraps it in a
+                one-item array (see Product::getGalleryImagesAttribute) so this
+                markup is already shaped for a real multi-image gallery later.
+                With one image the thumbnail strip below simply never renders
+                (x-show="images.length > 1"), so there's no visual change now.
+                Scoped to its own small x-data — purely a client-side image
+                switcher, no cart/data-flow involvement at all.
+            --}}
+            <div x-data="productGallery(@js($product->gallery_images))">
+                <div class="aspect-square bg-gray-100 rounded-2xl overflow-hidden">
+                    <template x-if="activeImage">
+                        <img :src="activeImage" alt="{{ $product->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
+                    </template>
+                    <template x-if="!activeImage">
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
+                        </div>
+                    </template>
+                </div>
+                <div class="mt-3 grid grid-cols-5 gap-2" x-show="images.length > 1">
+                    <template x-for="(img, i) in images" :key="i">
+                        <button type="button" @click="activeImage = img"
+                                class="aspect-square rounded-lg overflow-hidden border-2"
+                                :class="activeImage === img ? 'border-[#0078D4]' : 'border-transparent'">
+                            <img :src="img" class="w-full h-full object-cover" onerror="shopImgFallback(this)">
+                        </button>
+                    </template>
+                </div>
             </div>
 
             <!-- Details -->
@@ -154,22 +186,16 @@
                 @endif
 
                 <!-- Stock -->
-                @if($product->track_stock)
-                    @if($product->stock_quantity <= 0)
-                        <div class="inline-flex items-center gap-1.5 text-sm text-red-600 font-medium mb-4">
-                            <span class="w-2 h-2 bg-red-500 rounded-full"></span> Out of Stock
-                        </div>
-                    @elseif($product->stock_quantity <= 5)
-                        <div class="inline-flex items-center gap-1.5 text-sm text-amber-600 font-medium mb-4">
-                            <span class="w-2 h-2 bg-amber-500 rounded-full"></span> Only {{ $product->stock_quantity }} left
-                        </div>
-                    @else
-                        <div class="inline-flex items-center gap-1.5 text-sm text-emerald-600 font-medium mb-4">
-                            <span class="w-2 h-2 bg-emerald-500 rounded-full"></span> In Stock
-                        </div>
-                    @endif
-                @endif
+                <div class="mb-4">
+                    <x-shop.stock-badge :product="$product" :overlay="false" />
+                </div>
 
+                {{--
+                    Unchanged from before this pass: a plain <form method="POST">
+                    to cart.add with the original vanilla-JS qty +/- stepper
+                    (no fetch, no Alpine, no dependency on how the cart is
+                    keyed). Left exactly as-is deliberately.
+                --}}
                 @if(!$product->track_stock || $product->stock_quantity > 0)
                     <form action="{{ $tenant->shopRoute('cart.add') }}" method="POST" class="flex gap-3 items-center">
                         @csrf
@@ -200,6 +226,20 @@
         </div>
     @endif
 
+    <script>
+        // Image gallery only — swaps the main image on thumbnail click.
+        // Deliberately has nothing to do with cart/add-to-cart, which stays
+        // on the original plain-form flow above. Used by the plain-product
+        // (non-variant) branch only — a has_variants product uses
+        // variantPicker() instead, whose image swaps with the selected variant.
+        function productGallery(images) {
+            return {
+                images: images || [],
+                activeImage: (images && images[0]) || null,
+            };
+        }
+    </script>
+
     <!-- Related products -->
     @if($related->count())
         <div>
@@ -207,10 +247,16 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 @foreach($related as $rel)
                     <a href="{{ $tenant->shopRoute('product', ['productId' => $rel->id]) }}"
-                       class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
-                        <div class="aspect-square bg-gray-100">
+                       class="relative bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
+                        <div class="relative aspect-square bg-gray-100">
                             @if($rel->image_url)
                                 <img src="{{ $rel->image_url }}" alt="{{ $rel->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            @endif
+                            {{-- Same has_variants split as the index card badge — see StorefrontController's withSum for $rel->variant_stock_sum. --}}
+                            @if($rel->has_variants ? ($rel->variant_stock_sum ?? 0) <= 5 : ($rel->track_stock && $rel->stock_quantity <= 5))
+                                <div class="absolute top-2 left-2">
+                                    <x-shop.stock-badge :product="$rel" />
+                                </div>
                             @endif
                         </div>
                         <div class="p-3">

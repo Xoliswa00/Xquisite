@@ -76,6 +76,7 @@ class StorefrontController extends Controller
             ->where('is_available_online', true)
             ->where('category', $product->category)
             ->where('id', '!=', $product->id)
+            ->withSum(['activeVariants as variant_stock_sum' => fn ($q) => $q->where('track_stock', true)], 'stock_quantity')
             ->limit(4)
             ->get();
 
