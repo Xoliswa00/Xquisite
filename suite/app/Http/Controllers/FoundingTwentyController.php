@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FoundingTwentyApplication;
+use App\Models\PublicLaunch;
 use App\Models\Tenant;
 use App\Rules\SouthAfricanPhoneNumber;
 use App\Notifications\FoundingTwentyApplicantMessage;
@@ -40,6 +41,10 @@ class FoundingTwentyController extends Controller
      */
     public function show(Request $request)
     {
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
         // Someone partway through goes straight back to where they were.
         if ($this->leadFromSession($request)) {
             return redirect()->route('founding-twenty.questions');
@@ -58,6 +63,10 @@ class FoundingTwentyController extends Controller
 
     public function store(Request $request)
     {
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
         $validated = $request->validate([
             'owner_name' => 'required|string|max:255',
             'phone' => ['required', new SouthAfricanPhoneNumber],
@@ -76,9 +85,7 @@ class FoundingTwentyController extends Controller
         ], $this->validationMessages());
 
         // The same person coming back with the same number is one lead, not two.
-        $last9 = substr(preg_replace('/\D/', '', $validated['phone']), -9);
-        $existing = FoundingTwentyApplication::query()->get(['id', 'phone', 'submitted_at'])
-            ->first(fn ($a) => substr(preg_replace('/\D/', '', (string) $a->phone), -9) === $last9);
+        $existing = $this->findByPhone($validated['phone']);
 
         if ($existing?->isSubmitted()) {
             $message = "We already have an application from this number, so there's nothing more you need to do. We'll be in touch.";
@@ -120,6 +127,10 @@ class FoundingTwentyController extends Controller
     /** Step 2 of 2: the questionnaire, for the lead in this session. */
     public function questions(Request $request)
     {
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
         $lead = $this->leadFromSession($request);
 
         if (! $lead) {
@@ -131,6 +142,10 @@ class FoundingTwentyController extends Controller
 
     public function submit(Request $request, FoundingTwentyScoringService $scoring)
     {
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
         $lead = $this->leadFromSession($request);
 
         if (! $lead) {
@@ -229,6 +244,10 @@ class FoundingTwentyController extends Controller
     /** Pick an unfinished application back up, on any device, from a link. */
     public function resume(Request $request, FoundingTwentyApplication $foundingTwenty, string $token)
     {
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
         abort_unless(hash_equals($foundingTwenty->resumeToken(), $token), 403, 'Invalid or expired link.');
 
         if ($foundingTwenty->isSubmitted()) {
@@ -245,7 +264,103 @@ class FoundingTwentyController extends Controller
     {
         $request->session()->forget(self::LEAD_SESSION_KEY);
 
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
         return redirect()->route('founding-twenty.show');
+    }
+
+    /**
+     * A second, shorter intake into the same programme, for businesses that don't
+     * run on bookings/appointments — the scored questionnaire above assumes they do.
+     * One step, no scoring: submitted straight away, reviewed manually like any
+     * other application, same admin pipeline, same 3-months-free offer.
+     */
+    public function customWorkStore(Request $request)
+    {
+        if ($closed = $this->redirectIfClosed()) {
+            return $closed;
+        }
+
+        $validated = $request->validate([
+            'owner_name' => 'required|string|max:255',
+            'business_name' => 'required|string|max:255',
+            'phone' => ['required', new SouthAfricanPhoneNumber],
+            'preferred_contact_method' => 'required|in:whatsapp,call,email',
+            'email' => 'required_if:preferred_contact_method,email|nullable|email|max:255',
+            'business_type_other' => 'required|string|max:255',
+            'custom_solution_description' => 'required|string|min:20|max:2000',
+            'privacy_consent' => 'required|accepted',
+        ], $this->validationMessages() + [
+            'business_type_other.required' => 'Please tell us what your business does.',
+            'custom_solution_description.required' => 'Please tell us what you\'d like us to build.',
+            'custom_solution_description.min' => 'A bit more detail helps — a sentence or two is enough.',
+        ]);
+
+        $existing = $this->findByPhone($validated['phone']);
+        if ($existing?->isSubmitted()) {
+            $message = "We already have an application from this number, so there's nothing more you need to do. We'll be in touch.";
+
+            return back()->withInput()->withErrors(array_fill_keys(['phone'], $message));
+        }
+
+        $details = [
+            'owner_name' => $validated['owner_name'],
+            'business_name' => $validated['business_name'],
+            'phone' => $validated['phone'],
+            'preferred_contact_method' => $validated['preferred_contact_method'],
+            'email' => $validated['email'] ?? null,
+            'business_type' => 'other',
+            'business_type_other' => $validated['business_type_other'],
+            'track' => 'custom',
+            'custom_solution_description' => $validated['custom_solution_description'],
+            'ip_address' => $request->ip(),
+            'privacy_consented_at' => now(),
+            'submitted_at' => now(),
+            'source' => $request->input('source', 'custom-work-section'),
+        ];
+
+        $lead = $existing
+            ? tap(FoundingTwentyApplication::findOrFail($existing->id))->update($details)
+            : FoundingTwentyApplication::create($details);
+
+        if ($lead->email) {
+            $message = FoundingTwentyMessages::received($lead);
+            Notification::route('mail', $lead->email)->notify(new FoundingTwentyApplicantMessage($message['subject'], $message['body']));
+            $lead->update(['received_notified_at' => now()]);
+        }
+
+        return redirect()->route('founding-twenty.thanks')->with('applicant_first_name', $lead->firstName());
+    }
+
+    /** The same person coming back with the same number is one lead, not two — shared by both intakes. */
+    private function findByPhone(string $phone): ?FoundingTwentyApplication
+    {
+        $last9 = substr(preg_replace('/\D/', '', $phone), -9);
+
+        return FoundingTwentyApplication::query()->get(['id', 'phone', 'submitted_at'])
+            ->first(fn ($a) => substr(preg_replace('/\D/', '', (string) $a->phone), -9) === $last9);
+    }
+
+    /**
+     * Whether new applications are closed right now: driven entirely by the same
+     * `launch_at` the explainer page's countdown already reads, so there is nothing
+     * to hardcode or keep in sync — set the date on the Founding 20 PublicLaunch row
+     * (Admin > Launch Pages) and this closes automatically, then reopens the moment
+     * that date passes. Leads/applications already in progress before the gate was
+     * set are untouched; this only blocks new visits while it is active.
+     */
+    private function redirectIfClosed(): ?\Illuminate\Http\RedirectResponse
+    {
+        $launch = PublicLaunch::where('key', 'founding-20')->first();
+
+        if (! $launch || ! $launch->hasCountdown()) {
+            return null;
+        }
+
+        return redirect()->route('founding-20.show')
+            ->with('info', 'Applications open once the countdown on this page reaches zero.');
     }
 
     private function leadFromSession(Request $request): ?FoundingTwentyApplication

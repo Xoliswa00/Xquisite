@@ -5,15 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Founding 20 Questionnaire — Xquisite Creations</title>
     <meta name="description" content="Help us understand how your business really operates, and be considered for the Xquisite Creations Founding 20 Programme: 3 months free, no setup fee.">
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=montserrat:600,700,800|inter:400,500,600&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .f-mont { font-family: 'Montserrat', sans-serif; }
+    </style>
 </head>
-<body class="h-full font-sans antialiased text-slate-800">
+<body class="h-full antialiased text-slate-800">
 
 <header class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
     <div class="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
         <img src="/img/android-icon-96x96.png" alt="Xquisite Creations" class="w-9 h-9 rounded-lg object-contain shrink-0">
         <div class="min-w-0 flex-1">
-            <span class="block text-base font-bold text-slate-900 truncate">Xquisite Creations</span>
+            <span class="f-mont block text-base font-extrabold text-[#002B5B] truncate">Xquisite Creations</span>
             <span class="text-xs font-semibold uppercase tracking-wide text-[#D4AF37]">Founding 20 Programme</span>
         </div>
         <p id="progress-label" class="text-xs font-medium text-slate-500 shrink-0" aria-live="polite"></p>
@@ -24,7 +30,7 @@
 <main class="max-w-3xl mx-auto px-4 py-10">
 
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-slate-900">Thanks, {{ $lead->firstName() }}. Now tell us about {{ $lead->business_name }}.</h1>
+        <h1 class="f-mont text-2xl font-extrabold text-[#002B5B]">Thanks, {{ $lead->firstName() }}. Now tell us about {{ $lead->business_name }}.</h1>
         <p class="text-slate-500 text-sm mt-2 leading-relaxed">
             These questions help us understand how {{ $lead->business_name }} really runs, so we can choose the 20 businesses
             we can help most. Takes about 5 to 7 minutes, and nothing is charged when you apply.
@@ -65,7 +71,11 @@
         $adoptionBarrierOptions = ['cost' => 'Cost', 'dont_know_which' => 'Don\'t know which one to choose', 'too_complicated' => 'Too complicated', 'too_small' => 'My business is too small', 'customers_prefer_whatsapp' => 'My customers prefer WhatsApp', 'dont_need_one' => "I don't need one", 'bad_experience' => 'Previous bad experience', 'dont_know_how' => "I don't know how to use one", 'other' => 'Other'];
         $featureOptions = ['online_booking' => 'Online customer booking', 'automated_reminders' => 'Automated reminders', 'staff_calendars' => 'Staff calendars', 'customer_profiles' => 'Customer profiles', 'appointment_management' => 'Appointment management', 'payments' => 'Payments', 'outstanding_balances' => 'Outstanding balances', 'pos' => 'POS', 'stock_management' => 'Stock management', 'business_reporting' => 'Business reporting', 'revenue_tracking' => 'Revenue tracking', 'customer_history' => 'Customer history', 'marketing_retention' => 'Marketing/customer retention', 'other' => 'Other'];
         $bucketLabels = ['<1' => 'Less than 1 hour', '1-3' => '1–3 hours', '3-5' => '3–5 hours', '5-10' => '5–10 hours', '10+' => '10+ hours'];
+        $sectionTitles = ['Your business', 'How you run things today', 'In the last 30 days', 'Quantifying the impact', 'Time cost', "What's stopped you before", 'What would help most', 'Founding 20 Programme'];
     @endphp
+
+    <div class="lg:grid lg:grid-cols-[1fr_280px] lg:gap-10">
+    <div>
 
     <form method="POST" action="{{ route('founding-twenty.submit') }}" class="space-y-6">
         @csrf
@@ -73,7 +83,7 @@
         {{-- Section 1 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 1 of 8</p>
-            <h2 class="text-base font-semibold text-slate-800">Your business</h2>
+            <h2 class="f-mont text-base font-bold text-slate-800">Your business</h2>
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">What type of business do you operate? *</label>
@@ -139,7 +149,7 @@
         {{-- Section 2 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 2 of 8</p>
-            <h2 class="text-base font-semibold text-slate-800">How you run things today</h2>
+            <h2 class="f-mont text-base font-bold text-slate-800">How you run things today</h2>
 
             @foreach([
                 ['name' => 'booking_methods', 'label' => 'How do customers book with you? (select all that apply)', 'options' => $bookingMethodOptions],
@@ -170,7 +180,7 @@
         {{-- Section 3 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 3 of 8</p>
-            <h2 class="text-base font-semibold text-slate-800">In the last 30 days, how often have you experienced…</h2>
+            <h2 class="f-mont text-base font-bold text-slate-800">In the last 30 days, how often have you experienced…</h2>
             <p class="text-xs text-slate-500">1 means never, 5 means very often.</p>
 
             @foreach($painQuestions as $field => $label)
@@ -198,7 +208,7 @@
         {{-- Section 4 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 4 of 8</p>
-            <h2 class="text-base font-semibold text-slate-800">Quantifying the impact</h2>
+            <h2 class="f-mont text-base font-bold text-slate-800">Quantifying the impact</h2>
             <div class="grid sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">No-shows per month (approx.)</label>
@@ -224,7 +234,7 @@
         {{-- Section 5 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 5 of 8</p>
-            <h2 class="text-base font-semibold text-slate-800">Time cost</h2>
+            <h2 class="f-mont text-base font-bold text-slate-800">Time cost</h2>
             @foreach([
                 'hours_booking_admin' => 'How many hours per week do you spend managing appointments?',
                 'hours_availability_messages' => 'How many hours per week answering "Are you available?" messages?',
@@ -245,7 +255,7 @@
         {{-- Section 6 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 6 of 8</p>
-            <h2 class="text-base font-semibold text-slate-800">What's stopped you before</h2>
+            <h2 class="f-mont text-base font-bold text-slate-800">What's stopped you before</h2>
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">What prevents you from using a business management/booking platform?</label>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -267,7 +277,7 @@
         {{-- Section 7 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4]">Section 7 of 8</p>
-            <h2 class="text-base font-semibold text-slate-800">What would help most</h2>
+            <h2 class="f-mont text-base font-bold text-slate-800">What would help most</h2>
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Which would be most valuable to your business? (choose up to 5)</label>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -292,7 +302,7 @@
         {{-- Section 8 --}}
         <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-[#D4AF37]">Section 8 of 8</p>
-            <h2 class="text-base font-semibold text-slate-800">Founding 20 Programme</h2>
+            <h2 class="f-mont text-base font-bold text-slate-800">Founding 20 Programme</h2>
 
             <label class="flex items-start gap-3 text-sm text-slate-700 border border-slate-200 rounded-xl px-4 py-3 cursor-pointer has-[:checked]:border-[#D4AF37] has-[:checked]:bg-amber-50">
                 <input type="checkbox" name="wants_founding_twenty" value="1" @checked(old('wants_founding_twenty', true)) class="mt-0.5 rounded text-[#D4AF37] focus:ring-[#D4AF37]">
@@ -305,11 +315,33 @@
             </label>
         </div>
 
-        <button type="submit" class="w-full bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl py-3.5 text-base transition">
+        <button type="submit" class="f-mont w-full bg-[#0078D4] hover:bg-[#0065B8] text-white font-bold rounded-xl py-3.5 text-base transition">
             Submit my application
         </button>
         <p class="text-center text-xs text-slate-400 -mt-2">Nothing is charged when you apply.</p>
     </form>
+
+    </div>
+
+    {{-- Desktop only: the freed-up side column tracks progress through the 8 sections
+         instead of sitting empty. Highlighted section is kept in sync by the same
+         scroll-position script that already drives the top progress bar. --}}
+    <aside class="hidden lg:block">
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 lg:sticky lg:top-28">
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#0078D4] mb-3">Your progress</p>
+            <ol class="space-y-2 text-sm">
+                @foreach($sectionTitles as $i => $title)
+                    <li data-sidebar-section="{{ $i + 1 }}" class="flex items-center gap-2 text-slate-400 transition-colors">
+                        <span class="f-mont flex items-center justify-center w-5 h-5 rounded-full border border-slate-200 text-[10px] font-bold shrink-0">{{ $i + 1 }}</span>
+                        <span>{{ $title }}</span>
+                    </li>
+                @endforeach
+            </ol>
+            <p class="text-xs text-slate-400 mt-4 pt-4 border-t border-slate-100">Nothing is charged when you apply. Your answers save automatically as you go, and the link above works if you need to finish later.</p>
+        </div>
+    </aside>
+
+    </div>
 </main>
 
 <footer class="border-t border-slate-200 mt-10 py-6 text-center text-xs text-slate-400">
@@ -333,6 +365,24 @@
         sections.forEach(function (p) { if (p.getBoundingClientRect().top < window.innerHeight * 0.45) current = p; });
         label.textContent = current ? current.textContent.trim() : '';
         report(current);
+        highlightSidebar(current);
+    }
+
+    // Desktop sidebar "Your progress" list — mirrors the same current-section
+    // detection above, no separate tracking needed.
+    var sidebarItems = document.querySelectorAll('[data-sidebar-section]');
+    function highlightSidebar(current) {
+        if (!sidebarItems.length) return;
+        var n = current ? parseInt(current.textContent.trim().split(' ')[1], 10) : 0;
+        sidebarItems.forEach(function (li) {
+            var isCurrent = parseInt(li.dataset.sidebarSection, 10) === n;
+            li.classList.toggle('text-[#002B5B]', isCurrent);
+            li.classList.toggle('font-semibold', isCurrent);
+            li.classList.toggle('text-slate-400', !isCurrent);
+            li.querySelector('span').classList.toggle('border-[#0078D4]', isCurrent);
+            li.querySelector('span').classList.toggle('text-[#0078D4]', isCurrent);
+            li.querySelector('span').classList.toggle('border-slate-200', !isCurrent);
+        });
     }
 
     // Tell us how far people get, so we can see which section loses them. Sent only when

@@ -77,7 +77,9 @@ class FoundingTwentyLandingFlowTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('How it works');
-        $response->assertSee('fully refundable R100 deposit');
+        // R100 is wrapped in a <span> for the gold numeral treatment, so check the
+        // rendered text (tags stripped) rather than the raw HTML for this one.
+        $response->assertSeeText('fully refundable R100 deposit');
         $response->assertSee('Applications are open');
         $response->assertDontSee('Launching soon');
     }

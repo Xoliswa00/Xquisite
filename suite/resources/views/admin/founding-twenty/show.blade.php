@@ -25,7 +25,12 @@
     <div class="space-y-6">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-2xl font-bold text-white">{{ $a->business_name }}</h2>
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    {{ $a->business_name }}
+                    @if($a->isCustomTrack())
+                        <span class="text-xs font-semibold uppercase tracking-wide text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-full px-2 py-0.5">Custom</span>
+                    @endif
+                </h2>
                 <p class="text-slate-400 text-sm mt-1">{{ $a->owner_name }} · <x-whatsapp-link :phone="$a->phone" class="text-slate-300" />@if($a->email) · <a href="mailto:{{ $a->email }}" class="text-slate-300 hover:text-white">{{ $a->email }}</a>@endif</p>
             </div>
             <a href="{{ route('admin.founding-twenty.index') }}" class="text-sm text-slate-400 hover:text-slate-200">&larr; Back to list</a>
@@ -134,6 +139,38 @@
                     </dl>
                 </div>
 
+                @if($a->isCustomTrack())
+                    <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-300 mb-1">What they need</h3>
+                            <p class="text-sm text-white leading-relaxed">{{ $a->custom_solution_description }}</p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-700">
+                            <p class="text-xs font-medium text-slate-400 mb-2">
+                                Module price
+                                @if($a->custom_monthly_price !== null)
+                                    <span class="text-emerald-400">— set at R{{ number_format($a->custom_monthly_price, 2) }}/month</span>
+                                @else
+                                    <span class="text-amber-400">— not set yet, conversion message will say "we'll confirm your price"</span>
+                                @endif
+                            </p>
+                            <form method="POST" action="{{ route('admin.founding-twenty.custom-price', $a) }}" class="flex flex-wrap items-end gap-2">
+                                @csrf
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">R / month once built</label>
+                                    <input type="number" name="custom_monthly_price" step="0.01" min="0" value="{{ old('custom_monthly_price', $a->custom_monthly_price) }}" required class="w-32 bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
+                                </div>
+                                <div class="flex-1 min-w-[10rem]">
+                                    <label class="block text-xs text-slate-400 mb-1">Notes (e.g. turned into a reusable module)</label>
+                                    <input type="text" name="custom_pricing_notes" value="{{ old('custom_pricing_notes', $a->custom_pricing_notes) }}" maxlength="2000" class="w-full bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
+                                </div>
+                                <button type="submit" class="px-3 py-2 text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition">Save price</button>
+                            </form>
+                        </div>
+                    </div>
+                @endif
+
+                @unless($a->isCustomTrack())
                 <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
                     <h3 class="text-sm font-semibold text-slate-300 mb-3">Current operations</h3>
                     <dl class="space-y-2 text-sm">
@@ -197,6 +234,7 @@
                     @endif
                     @endif
                 </div>
+                @endunless
             </div>
 
             <div class="space-y-6">
@@ -226,7 +264,8 @@
                     @php
                         $reserveUrl = route('founding-twenty.reserve', [$a, $a->reservationToken()]);
                         $depositStatus = match(true) {
-                            $a->deposit_refunded_at !== null => ['label' => 'Refunded', 'color' => 'text-slate-400'],
+                            $a->deposit_refunded_at !== null => ['label' => 'Refunded' . ($a->deposit_refund_reference ? ' (ref ' . $a->deposit_refund_reference . ')' : ''), 'color' => 'text-slate-400'],
+                            $a->deposit_credited_at !== null => ['label' => 'Credited to invoice ' . ($a->depositCreditInvoice?->invoice_number ?? ''), 'color' => 'text-slate-400'],
                             $a->deposit_confirmed_at !== null => ['label' => 'Confirmed', 'color' => 'text-emerald-400'],
                             $a->deposit_submitted_at !== null => ['label' => 'POP submitted — awaiting review', 'color' => 'text-amber-400'],
                             default => ['label' => 'Awaiting payment', 'color' => 'text-slate-400'],
@@ -259,15 +298,53 @@
                                     </button>
                                 </form>
                             @endif
-                            @if($a->deposit_confirmed_at && !$a->deposit_refunded_at)
-                                <form method="POST" action="{{ route('admin.founding-twenty.deposit.refund', $a) }}">
-                                    @csrf
-                                    <button type="submit" class="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition">
-                                        Mark refunded
-                                    </button>
-                                </form>
-                            @endif
                         </div>
+
+                        @if($a->deposit_confirmed_at && !$a->isDepositSettled())
+                            @php $unpaidInvoices = $a->tenant_id ? \App\Models\PlatformInvoice::where('tenant_id', $a->tenant_id)->whereIn('status', ['unpaid', 'overdue'])->orderBy('due_date')->get() : collect(); @endphp
+                            <div class="pt-3 border-t border-slate-700 space-y-3">
+                                <p class="text-xs font-medium text-slate-400">Settle the deposit{{ $a->deposit_outcome ? ' (they asked for: ' . $a->deposit_outcome . ')' : '' }}</p>
+
+                                <form method="POST" action="{{ route('admin.founding-twenty.deposit.outcome', $a) }}" class="flex flex-wrap items-center gap-3 text-sm text-slate-300">
+                                    @csrf
+                                    <label class="inline-flex items-center gap-1.5"><input type="radio" name="deposit_outcome" value="refund" required @checked($a->deposit_outcome === 'refund') class="text-[#0078D4]"> Pay back</label>
+                                    <label class="inline-flex items-center gap-1.5"><input type="radio" name="deposit_outcome" value="credit" required @checked($a->deposit_outcome === 'credit') class="text-[#0078D4]"> Credit to account</label>
+                                    <button type="submit" class="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition">Record their choice</button>
+                                </form>
+
+                                <form method="POST" action="{{ route('admin.founding-twenty.deposit.refund', $a) }}" class="flex flex-wrap items-end gap-2">
+                                    @csrf
+                                    <div class="flex-1 min-w-[10rem]">
+                                        <label class="block text-xs text-slate-400 mb-1">EFT reference (optional)</label>
+                                        <input type="text" name="deposit_refund_reference" maxlength="100" class="w-full bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
+                                    </div>
+                                    <button type="submit" class="px-3 py-2 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition">Mark paid back</button>
+                                </form>
+
+                                @if($unpaidInvoices->isNotEmpty())
+                                    <form method="POST" action="{{ route('admin.founding-twenty.deposit.credit', $a) }}" class="flex flex-wrap items-end gap-2">
+                                        @csrf
+                                        <div class="flex-1 min-w-[10rem]">
+                                            <label class="block text-xs text-slate-400 mb-1">Take R{{ number_format($a->deposit_amount, 2) }} off invoice</label>
+                                            <select name="invoice_id" required class="w-full bg-slate-900 border-slate-700 text-white rounded-lg text-sm">
+                                                @foreach($unpaidInvoices as $inv)
+                                                    <option value="{{ $inv->id }}">{{ $inv->invoice_number }} (R{{ number_format($inv->amount, 2) }}, due {{ $inv->due_date->format('j M') }})</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="px-3 py-2 text-xs bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg transition">Apply credit</button>
+                                    </form>
+                                @elseif($a->tenant_id)
+                                    <p class="text-xs text-slate-500">No unpaid invoices yet. Credit can be applied once their first invoice exists.</p>
+                                @else
+                                    <p class="text-xs text-slate-500">Link a tenant to credit the deposit to their account.</p>
+                                @endif
+                            </div>
+                        @endif
+
+                        @if($a->priceLockedUntil())
+                            <p class="text-xs text-slate-400 pt-1">Monthly price locked until <span class="text-white">{{ $a->priceLockedUntil()->format('j F Y') }}</span> ({{ config('founding_twenty.price_lock_months') }} months after the free period).</p>
+                        @endif
                     </div>
                 @endif
 

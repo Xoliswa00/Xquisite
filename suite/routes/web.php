@@ -152,6 +152,7 @@ Route::prefix('launch/{key}')->name('public-launch.')->group(function () {
     Route::get('/',            [PublicLaunchController::class, 'show'])->name('show');
     Route::post('/questions',  [PublicLaunchController::class, 'askQuestion'])->name('questions.store')->middleware('throttle:global');
 });
+Route::post('/t', [\App\Http\Controllers\TrafficBeaconController::class, 'store'])->name('traffic.beacon')->middleware('throttle:120,1');
 Route::get('/founding-20',  [PublicLaunchController::class, 'show'])->name('founding-20.show')->defaults('key', 'founding-20');
 Route::post('/founding-20/questions', [PublicLaunchController::class, 'askQuestion'])->name('founding-20.questions.store')->defaults('key', 'founding-20')->middleware('throttle:global');
 
@@ -433,9 +434,15 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::patch('/public-launches/{publicLaunch}/questions/{publicQuestion}/toggle', [AdminPublicLaunchController::class, 'togglePublished'])->name('public-launches.questions.toggle');
             Route::delete('/public-launches/{publicLaunch}/questions/{publicQuestion}', [AdminPublicLaunchController::class, 'destroyQuestion'])->name('public-launches.questions.destroy');
 
+            // Site traffic: visitors, pages, clicks, click heat map
+            Route::get('/traffic', [\App\Http\Controllers\Admin\TrafficController::class, 'index'])->name('traffic.index');
+            Route::get('/traffic/heatmap', [\App\Http\Controllers\Admin\TrafficController::class, 'heatmap'])->name('traffic.heatmap');
+
             // Founding 20 questionnaire applications
             Route::get('/founding-twenty', [AdminFoundingTwentyController::class, 'index'])->name('founding-twenty.index');
             Route::get('/founding-twenty/action-queue', [AdminFoundingTwentyController::class, 'actionQueue'])->name('founding-twenty.action-queue');
+            Route::get('/founding-twenty/deposits', [AdminFoundingTwentyController::class, 'depositLedger'])->name('founding-twenty.deposits');
+            Route::post('/founding-twenty/deposits/entries/{entry}/reverse', [AdminFoundingTwentyController::class, 'reverseDepositEntry'])->name('founding-twenty.deposits.reverse');
             Route::get('/founding-twenty/funnel', [AdminFoundingTwentyController::class, 'funnel'])->name('founding-twenty.funnel');
             Route::get('/founding-twenty/add', [AdminFoundingTwentyController::class, 'create'])->name('founding-twenty.create');
             Route::post('/founding-twenty/add', [AdminFoundingTwentyController::class, 'storeDirect'])->name('founding-twenty.store-direct');
@@ -443,8 +450,11 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('/founding-twenty/{foundingTwenty}/message/{type}/told', [AdminFoundingTwentyController::class, 'markMessaged'])->name('founding-twenty.message.told');
             Route::get('/founding-twenty/{foundingTwenty}', [AdminFoundingTwentyController::class, 'show'])->name('founding-twenty.show');
             Route::patch('/founding-twenty/{foundingTwenty}/status', [AdminFoundingTwentyController::class, 'updateStatus'])->name('founding-twenty.status');
+            Route::post('/founding-twenty/{foundingTwenty}/custom-price', [AdminFoundingTwentyController::class, 'setCustomPrice'])->name('founding-twenty.custom-price');
             Route::post('/founding-twenty/{foundingTwenty}/deposit/confirm', [AdminFoundingTwentyController::class, 'confirmDeposit'])->name('founding-twenty.deposit.confirm');
             Route::post('/founding-twenty/{foundingTwenty}/deposit/refund', [AdminFoundingTwentyController::class, 'markDepositRefunded'])->name('founding-twenty.deposit.refund');
+            Route::post('/founding-twenty/{foundingTwenty}/deposit/outcome', [AdminFoundingTwentyController::class, 'chooseDepositOutcome'])->name('founding-twenty.deposit.outcome');
+            Route::post('/founding-twenty/{foundingTwenty}/deposit/credit', [AdminFoundingTwentyController::class, 'applyDepositCredit'])->name('founding-twenty.deposit.credit');
             Route::get('/founding-twenty/{foundingTwenty}/deposit/pop', [AdminFoundingTwentyController::class, 'downloadPop'])->name('founding-twenty.deposit.pop');
             Route::post('/founding-twenty/{foundingTwenty}/tenant', [AdminFoundingTwentyController::class, 'linkTenant'])->name('founding-twenty.tenant');
             Route::post('/founding-twenty/{foundingTwenty}/milestone', [AdminFoundingTwentyController::class, 'markMilestone'])->name('founding-twenty.milestone');
@@ -686,6 +696,8 @@ Route::prefix('founding-20')->name('founding-twenty.')->group(function () {
     Route::post('/apply/questions', [FoundingTwentyController::class, 'submit'])->name('submit')->middleware('throttle:12,1');
     Route::post('/apply/restart',   [FoundingTwentyController::class, 'restart'])->name('restart');
     Route::post('/apply/progress',  [FoundingTwentyController::class, 'progress'])->name('progress')->middleware('throttle:60,1');
+    // A second, shorter intake for businesses that aren't booking-based — same offer, no questionnaire.
+    Route::post('/custom-work', [FoundingTwentyController::class, 'customWorkStore'])->name('custom-work.store')->middleware('throttle:12,1');
     // Pick an unfinished application back up from a link (sent by us, or saved by them).
     Route::get('/continue/{foundingTwenty}/{token}', [FoundingTwentyController::class, 'resume'])->name('resume')->middleware('throttle:12,1');
     Route::get('/thanks', [FoundingTwentyController::class, 'thanks'])->name('thanks');

@@ -5,15 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Apply for Founding 20 — Xquisite Creations</title>
     <meta name="description" content="Apply for the Xquisite Creations Founding 20 Programme: 3 months free, no setup fee. Step 1 takes about a minute.">
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=montserrat:600,700,800|inter:400,500,600&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .f-mont { font-family: 'Montserrat', sans-serif; }
+    </style>
 </head>
-<body class="h-full font-sans antialiased text-slate-800">
+<body class="h-full antialiased text-slate-800">
 
 <header class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
     <div class="max-w-xl mx-auto px-4 py-3 flex items-center gap-3">
         <img src="/img/android-icon-96x96.png" alt="Xquisite Creations" class="w-9 h-9 rounded-lg object-contain shrink-0">
         <div class="min-w-0 flex-1">
-            <span class="block text-base font-bold text-slate-900 truncate">Xquisite Creations</span>
+            <span class="f-mont block text-base font-extrabold text-[#002B5B] truncate">Xquisite Creations</span>
             <span class="text-xs font-semibold uppercase tracking-wide text-[#D4AF37]">Founding 20 Programme</span>
         </div>
         <p class="text-xs font-medium text-slate-500 shrink-0">Step 1 of 2</p>
@@ -21,10 +27,12 @@
     <div class="h-1 bg-slate-100" aria-hidden="true"><div class="h-1 bg-[#0078D4]" style="width:50%"></div></div>
 </header>
 
-<main class="max-w-xl mx-auto px-4 py-10">
+<main class="max-w-xl lg:max-w-5xl mx-auto px-4 py-10">
+    <div class="lg:grid lg:grid-cols-[1fr_320px] lg:gap-10">
+    <div>
 
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-slate-900">First, tell us who you are</h1>
+        <h1 class="f-mont text-2xl font-extrabold text-[#002B5B]">First, tell us who you are</h1>
         <p class="text-slate-500 text-base mt-2 leading-relaxed">
             This takes about a minute and saves your place, so you can carry on later if you're interrupted.
             Applying costs nothing. If you're selected, you'll hold your spot with a fully refundable R100 deposit, and only then.
@@ -129,11 +137,36 @@
         </label>
         @error('privacy_consent')<p class="text-red-600 text-xs -mt-3">{{ $message }}</p>@enderror
 
-        <button type="submit" class="w-full bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl py-3.5 text-base transition">
+        <button type="submit" class="f-mont w-full bg-[#0078D4] hover:bg-[#0065B8] text-white font-bold rounded-xl py-3.5 text-base transition">
             Continue to the questions
         </button>
         <p class="text-center text-xs text-slate-400 -mt-2">Nothing is charged when you apply.</p>
     </form>
+
+    </div>
+
+    {{-- Desktop only: the freed-up side column carries trust context instead of empty margin. --}}
+    <aside class="hidden lg:block">
+        <div class="bg-[#111111] rounded-[20px] p-6 lg:sticky lg:top-28">
+            <h2 class="f-mont text-base font-extrabold text-white mb-4">What you're applying for</h2>
+            <ul class="space-y-4 text-sm text-white/80">
+                <li class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    <span><span class="text-white font-semibold">Three months free</span>, the whole platform. No setup fee.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    <span>A fully refundable <span class="text-[#D4AF37] font-semibold">R100</span> deposit, asked only if you're selected.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    <span>We read every application and reply within {{ config('founding_twenty.decision_within_days') }} days, whether or not you're selected.</span>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    </div>
 </main>
 
 <footer class="border-t border-slate-200 mt-10 py-6 text-center text-xs text-slate-400">

@@ -132,6 +132,24 @@
 
         <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-700">
+                <h3 class="text-sm font-semibold text-slate-300">Deposits to pay back or credit ({{ $depositsToSettle->count() }})</h3>
+                <p class="text-xs text-slate-400 mt-1">They told us how they want the R100 back. Do it, and it goes into the deposit journal.</p>
+            </div>
+            @forelse($depositsToSettle as $app)
+                <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-3 border-b border-slate-700 last:border-b-0">
+                    <div class="flex-1 min-w-0">
+                        <a href="{{ route('admin.founding-twenty.show', $app) }}" class="text-white font-medium hover:underline">{{ $app->business_name }}</a>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ $app->owner_name }} &middot; wants it {{ $app->deposit_outcome === 'credit' ? 'credited to their account' : 'paid back' }}</p>
+                    </div>
+                    <a href="{{ route('admin.founding-twenty.show', $app) }}" class="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition text-center">Settle</a>
+                </div>
+            @empty
+                <p class="px-6 py-6 text-sm text-slate-400 text-center">Nobody here. Good.</p>
+            @endforelse
+        </div>
+
+        <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700">
                 <h3 class="text-sm font-semibold text-slate-300">Deposits awaiting confirmation</h3>
             </div>
             @if($depositsAwaitingConfirmation->isNotEmpty())
