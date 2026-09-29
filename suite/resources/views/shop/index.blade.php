@@ -11,7 +11,7 @@
         </form>
     </div>
 
-    <div class="flex gap-6">
+    <div class="flex gap-6" x-data="shopIndex()">
 
         <!-- Categories sidebar -->
         @if($categories->count())
@@ -65,9 +65,9 @@
             @else
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                     @foreach($products as $product)
-                        <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden group hover:shadow-md transition-shadow">
+                        <div class="relative bg-white rounded-2xl border border-gray-200 overflow-hidden group hover:shadow-md transition-shadow">
                             <a href="{{ $tenant->shopRoute('product', ['productId' => $product->id]) }}" class="block">
-                                <div class="aspect-square bg-gray-100 overflow-hidden">
+                                <div class="relative aspect-square bg-gray-100 overflow-hidden">
                                     @if($product->image_url)
                                         <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                                              onerror="shopImgFallback(this)"
@@ -79,8 +79,48 @@
                                             </svg>
                                         </div>
                                     @endif
+
+                                    {{-- Product-level stock badge. Will need to become
+                                         variant-aware once per-variant stock exists. --}}
+                                    @if($product->track_stock && $product->stock_quantity <= 5)
+                                        <div class="absolute top-2 left-2">
+                                            <x-shop.stock-badge :product="$product" />
+                                        </div>
+                                    @endif
                                 </div>
                             </a>
+
+                            {{--
+                                Quick View: purely a bigger, faster look at the
+                                same server-rendered data already on this
+                                card — no extra request, no cart mutation.
+                                Its own "Add to Cart" button below is a real
+                                <form method="POST"> to the existing
+                                cart.add route, identical in shape to the
+                                card's own Add to Cart form beneath it.
+                                Opaque by default on touch screens (no hover
+                                to reveal it on) and reveal-on-hover from sm
+                                up, where a pointer is the primary input.
+                            --}}
+                            <button type="button"
+                                    @click="openQuickView({
+                                        id: {{ $product->id }},
+                                        name: @js($product->name),
+                                        price: {{ (float) $product->price }},
+                                        image_url: @js($product->image_url),
+                                        category: @js($product->category),
+                                        description: @js(\Illuminate\Support\Str::limit($product->description, 140)),
+                                        inStock: {{ (!$product->track_stock || $product->stock_quantity > 0) ? 'true' : 'false' }},
+                                        url: '{{ $tenant->shopRoute('product', ['productId' => $product->id]) }}',
+                                    })"
+                                    class="absolute top-2 right-2 bg-white/90 hover:bg-white text-gray-600 hover:text-[#0078D4] rounded-full p-1.5 shadow-sm sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                                    aria-label="Quick view {{ $product->name }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+
                             <div class="p-3">
                                 @if($product->category)
                                     <p class="text-xs text-gray-400 mb-0.5">{{ $product->category }}</p>
@@ -114,6 +154,90 @@
                 </div>
             @endif
         </div>
+
+        <!-- Quick View modal -->
+        <div x-show="quickView" style="display: none;" x-transition.opacity
+             class="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+             @keydown.escape.window="quickView = null">
+            <div class="absolute inset-0 bg-black/50" @click="quickView = null"></div>
+
+            <div class="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto"
+                 x-show="quickView" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
+                <button type="button" @click="quickView = null"
+                        class="absolute top-3 right-3 z-10 bg-white/90 hover:bg-white text-gray-500 hover:text-gray-800 rounded-full w-8 h-8 flex items-center justify-center shadow-sm"
+                        aria-label="Close quick view">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+
+                <template x-if="quickView">
+                    <div class="p-5 sm:p-6">
+                        <div class="aspect-square bg-gray-100 rounded-xl overflow-hidden mb-4">
+                            <template x-if="quickView.image_url">
+                                <img :src="quickView.image_url" :alt="quickView.name" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
+                            </template>
+                            <template x-if="!quickView.image_url">
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <svg class="w-14 h-14 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                    </svg>
+                                </div>
+                            </template>
+                        </div>
+
+                        <p class="text-xs text-[#0078D4] font-medium mb-1" x-show="quickView.category" x-text="quickView.category"></p>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1" x-text="quickView.name"></h3>
+                        <p class="text-sm text-gray-600 leading-relaxed mb-3" x-show="quickView.description" x-text="quickView.description"></p>
+                        <p class="text-2xl font-bold text-[#0078D4] mb-4" x-text="'R' + quickView.price.toFixed(2)"></p>
+
+                        <div class="flex gap-3">
+                            <a :href="quickView.url"
+                               class="flex-1 text-center border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 rounded-xl text-sm transition-colors">
+                                View Details
+                            </a>
+
+                            {{--
+                                A real <form method="POST"> to the same
+                                cart.add route the card buttons use — a
+                                normal full-page submit, not fetch. Keeps
+                                quick view's add-to-cart on the exact same
+                                data path as everywhere else on this page.
+                            --}}
+                            <form x-show="quickView.inStock" action="{{ $tenant->shopRoute('cart.add') }}" method="POST" class="flex-1">
+                                @csrf
+                                <input type="hidden" name="qty" value="1">
+                                <input type="hidden" name="product_id" :value="quickView.id">
+                                <button type="submit"
+                                        class="w-full bg-[#0078D4] hover:bg-[#002B5B] text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
+                                    Add to Cart
+                                </button>
+                            </form>
+                            <button type="button" x-show="!quickView.inStock" disabled
+                                    class="flex-1 bg-gray-200 text-gray-400 font-semibold py-2.5 rounded-xl text-sm cursor-not-allowed">
+                                Out of Stock
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
     </div>
+
+    <script>
+    // Quick View is display-only: it renders the exact data already on the
+    // clicked card (no extra request), and its "Add to Cart" is a plain
+    // <form method="POST"> to the same cart.add route every other Add to
+    // Cart button on this page already uses — a normal full-page submit,
+    // deliberately NOT wired to fetch/JSON. See the note in the PR
+    // description for why an AJAX/live-cart version of this was pulled
+    // back out.
+    function shopIndex() {
+        return {
+            quickView: null,
+            openQuickView(product) {
+                this.quickView = product;
+            },
+        };
+    }
+    </script>
 
 </x-shop-layout>
