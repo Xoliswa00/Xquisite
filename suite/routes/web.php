@@ -16,6 +16,7 @@ use App\Http\Controllers\Booking\StaffController;
 use App\Http\Controllers\POS\PosController;
 use App\Http\Controllers\POS\SaleController;
 use App\Http\Controllers\POS\ProductController;
+use App\Http\Controllers\POS\ProductVariantController;
 use App\Http\Controllers\POS\StockController;
 use App\Http\Controllers\POS\PurchaseOrderController;
 use App\Http\Controllers\POS\SupplierController;
@@ -250,6 +251,17 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         // Stock, catalogue, procurement and suppliers — managers only.
         Route::middleware('can:manage-products')->group(function () {
             Route::resource('products', ProductController::class)->except(['show']);
+
+            // Product variants (size/color/etc.) — a product opts in by
+            // getting its variant_options set here, everything else about
+            // it (name, category, base price/stock as the fallback) stays
+            // on the normal product edit form above.
+            Route::prefix('products/{product}/variants')->name('products.variants.')->group(function () {
+                Route::get('/', [ProductVariantController::class, 'index'])->name('index');
+                Route::post('/generate', [ProductVariantController::class, 'generate'])->name('generate');
+                Route::patch('/', [ProductVariantController::class, 'update'])->name('update');
+                Route::delete('/{variant}', [ProductVariantController::class, 'destroy'])->name('destroy');
+            });
 
             Route::get('/stock/take', [StockController::class, 'takePage'])->name('stock.take');
             Route::post('/stock/take', [StockController::class, 'saveStockTake'])->name('stock.take.save');

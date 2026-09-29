@@ -54,12 +54,22 @@ class CreateOrder
         $order->save();
 
         foreach ($lines as $line) {
+            $variant = $line->variant ?? null;
+
             OrderItem::create([
-                'order_id'          => $order->id,
-                'product_id'        => $line->product->id,
-                'product_name'      => $line->product->name,
-                'product_sku'       => $line->product->sku,
-                'product_image_url' => $line->product->image_url,
+                'order_id'           => $order->id,
+                'product_id'         => $line->product->id,
+                'product_variant_id' => $variant?->id,
+                // Frozen at purchase time — survives the admin later
+                // renaming/deleting the variant, same reasoning as
+                // product_name/product_sku/product_image_url below.
+                'variant_attributes' => $variant?->attributes,
+                // e.g. "T-Shirt — Size: M, Color: Red" so the order stays
+                // readable on its own (admin list, email, invoice) without
+                // a join back to product_variants.
+                'product_name'      => $variant ? "{$line->product->name} — {$variant->label}" : $line->product->name,
+                'product_sku'       => $variant?->sku ?: $line->product->sku,
+                'product_image_url' => $variant?->effectiveImageUrl() ?? $line->product->image_url,
                 'unit_price'        => $line->unit_price,
                 'quantity'          => $line->qty,
                 'subtotal'          => $line->subtotal,

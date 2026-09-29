@@ -13,6 +13,8 @@ class SaleItem extends Model
         'sale_id',
         'item_type',
         'item_id',
+        'product_variant_id',
+        'variant_attributes',
         'name',
         'unit_price',
         'quantity',
@@ -20,12 +22,18 @@ class SaleItem extends Model
     ];
 
     protected $casts = [
-        'unit_price' => 'decimal:2',
-        'subtotal'   => 'decimal:2',
+        'unit_price'         => 'decimal:2',
+        'subtotal'           => 'decimal:2',
+        'variant_attributes' => 'array',
     ];
 
     public function sale()
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    public function productVariant()
+    {
+        return $this->belongsTo(ProductVariant::class);
     }
 }

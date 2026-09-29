@@ -7,6 +7,7 @@ use App\Modules\Ecommerce\Actions\CreateOrder;
 use App\Modules\Ecommerce\Actions\ReserveInventory;
 use App\Modules\Ecommerce\Models\Order;
 use App\Modules\POS\Models\Product;
+use App\Modules\POS\Models\ProductVariant;
 use App\Services\Cart\CartService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +36,7 @@ class OrderService
             return $existing;
         }
 
-        $items = $cart->all(); // [product_id => qty]
+        $items = $cart->all(); // [lineKey => {product_id, variant_id, qty}] — see CartService::all()
 
         try {
             return DB::transaction(function () use ($tenant, $data, $items, $idempotencyKey) {
@@ -65,6 +66,18 @@ class OrderService
     {
         DB::transaction(function () use ($order) {
             foreach ($order->items as $item) {
+                if ($item->product_variant_id) {
+                    $variant = ProductVariant::find($item->product_variant_id);
+                    if ($variant && $variant->track_stock) {
+                        $variant->incrementStock(
+                            $item->quantity,
+                            \App\Modules\POS\Models\StockAdjustment::TYPE_MANUAL_IN,
+                            ['notes' => "Released from cancelled order {$order->reference}"]
+                        );
+                    }
+                    continue;
+                }
+
                 if (! $item->product_id) {
                     continue;
                 }

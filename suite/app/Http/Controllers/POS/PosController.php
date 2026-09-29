@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PaymentPlan;
 use App\Modules\Booking\Models\Appointment;
 use App\Modules\POS\Models\Product;
+use App\Modules\POS\Models\ProductVariant;
 use App\Modules\POS\Models\Sale;
 use App\Modules\POS\Models\SaleItem;
 use Illuminate\Http\Request;
@@ -63,15 +64,27 @@ class PosController extends Controller
         $products = Product::where('is_active', true)
             ->orderBy('category')
             ->orderBy('name')
+            ->with(['activeVariants' => fn ($q) => $q->orderBy('id')])
             ->get()
             ->map(fn($p) => [
-                'id'       => $p->id,
-                'name'     => $p->name,
-                'category' => $p->category ?? 'General',
-                'price'    => (float) $p->price,
-                'sku'      => $p->sku,
-                'stock'    => $p->stock_quantity,
-                'tracked'  => $p->track_stock,
+                'id'           => $p->id,
+                'name'         => $p->name,
+                'category'     => $p->category ?? 'General',
+                'price'        => (float) $p->price,
+                'sku'          => $p->sku,
+                'stock'        => $p->stock_quantity,
+                'tracked'      => $p->track_stock,
+                'has_variants' => (bool) $p->has_variants,
+                'options'      => $p->variant_options ?: (object) [],
+                'variants'     => $p->activeVariants->map(fn ($v) => [
+                    'id'          => $v->id,
+                    'attributes'  => $v->attributes,
+                    'label'       => $v->label,
+                    'price'       => $v->effectivePrice(),
+                    'stock'       => $v->stock_quantity,
+                    'tracked'     => $v->track_stock,
+                    'sku'         => $v->sku,
+                ]),
             ]);
 
         return view('pos.terminal', compact('appointment', 'products', 'preloadItems', 'serviceSuggestions'));
@@ -80,17 +93,18 @@ class PosController extends Controller
     public function checkout(Request $request)
     {
         $request->validate([
-            'items'          => 'required|array|min:1',
-            'items.*.type'   => 'required|in:service,product',
-            'items.*.id'     => 'required|integer',
-            'items.*.name'   => 'required|string',
-            'items.*.price'  => 'required|numeric|min:0',
-            'items.*.qty'    => 'required|integer|min:1',
-            'payment_method' => 'required|in:cash,card,eft,split',
-            'discount'       => 'nullable|numeric|min:0',
-            'notes'          => 'nullable|string|max:500',
-            'appointment_id' => 'nullable|exists:appointments,id',
-            'customer_id'    => 'nullable|exists:customers,id',
+            'items'             => 'required|array|min:1',
+            'items.*.type'      => 'required|in:service,product',
+            'items.*.id'        => 'required|integer',
+            'items.*.variant_id' => 'nullable|integer',
+            'items.*.name'      => 'required|string',
+            'items.*.price'     => 'required|numeric|min:0',
+            'items.*.qty'       => 'required|integer|min:1',
+            'payment_method'    => 'required|in:cash,card,eft,split',
+            'discount'          => 'nullable|numeric|min:0',
+            'notes'             => 'nullable|string|max:500',
+            'appointment_id'    => 'nullable|exists:appointments,id',
+            'customer_id'       => 'nullable|exists:customers,id',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -114,10 +128,23 @@ class PosController extends Controller
             ]);
 
             foreach ($items as $item) {
+                // A variant belongs to a specific product, ringing up
+                // "product, no variant" alongside it is a separate SKU with
+                // its own stock — only look it up when this specific item
+                // picked one, never fall back to guessing which variant.
+                $variant = null;
+                if ($item['type'] === 'product' && !empty($item['variant_id'])) {
+                    $variant = ProductVariant::where('product_id', $item['id'])
+                        ->where('id', $item['variant_id'])
+                        ->first();
+                }
+
                 SaleItem::create([
-                    'sale_id'    => $sale->id,
-                    'item_type'  => $item['type'],
-                    'item_id'    => $item['id'],
+                    'sale_id'            => $sale->id,
+                    'item_type'          => $item['type'],
+                    'item_id'            => $item['id'],
+                    'product_variant_id' => $variant?->id,
+                    'variant_attributes' => $variant?->attributes,
                     'name'       => $item['name'],
                     'unit_price' => $item['price'],
                     'quantity'   => $item['qty'],
@@ -126,11 +153,18 @@ class PosController extends Controller
 
                 // Decrement stock + write adjustment log for products
                 if ($item['type'] === 'product') {
-                    $product = Product::find($item['id']);
-                    $product?->decrementStock($item['qty'], 'sale', [
-                        'sale_id'   => $sale->id,
-                        'reference' => $sale->reference,
-                    ]);
+                    if ($variant) {
+                        $variant->decrementStock($item['qty'], 'sale', [
+                            'sale_id'   => $sale->id,
+                            'reference' => $sale->reference,
+                        ]);
+                    } else {
+                        $product = Product::find($item['id']);
+                        $product?->decrementStock($item['qty'], 'sale', [
+                            'sale_id'   => $sale->id,
+                            'reference' => $sale->reference,
+                        ]);
+                    }
                 }
             }
 
@@ -155,6 +189,7 @@ class PosController extends Controller
             'items'                  => 'required|array|min:1',
             'items.*.type'           => 'required|in:service,product',
             'items.*.id'             => 'required|integer',
+            'items.*.variant_id'     => 'nullable|integer',
             'items.*.name'           => 'required|string',
             'items.*.price'          => 'required|numeric|min:0',
             'items.*.qty'            => 'required|integer|min:1',
@@ -187,10 +222,16 @@ class PosController extends Controller
             ]);
 
             foreach ($items as $item) {
+                $variant = ($item['type'] === 'product' && !empty($item['variant_id']))
+                    ? ProductVariant::where('product_id', $item['id'])->where('id', $item['variant_id'])->first()
+                    : null;
+
                 SaleItem::create([
-                    'sale_id'    => $sale->id,
-                    'item_type'  => $item['type'],
-                    'item_id'    => $item['id'],
+                    'sale_id'            => $sale->id,
+                    'item_type'          => $item['type'],
+                    'item_id'            => $item['id'],
+                    'product_variant_id' => $variant?->id,
+                    'variant_attributes' => $variant?->attributes,
                     'name'       => $item['name'],
                     'unit_price' => $item['price'],
                     'quantity'   => $item['qty'],

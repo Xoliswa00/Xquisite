@@ -1,7 +1,12 @@
 <x-shop-layout :tenant="$tenant" :cart="$cart">
 
     <div class="max-w-4xl mx-auto">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-gray-900">Checkout</h1>
+            <a href="{{ $tenant->shopRoute('cart') }}" class="text-sm text-[#0078D4] hover:text-[#002B5B] font-medium">
+                ← Edit Cart
+            </a>
+        </div>
 
         <form action="{{ $tenant->shopRoute('checkout.place') }}" method="POST"
               x-data="checkoutForm()" @submit.prevent="submitForm">
@@ -182,19 +187,32 @@
 
                 <!-- Right — Order Summary -->
                 <div class="lg:col-span-1">
-                    <div class="bg-white rounded-2xl border border-gray-200 p-5 sticky top-24">
+                    {{--
+                        lg:sticky, not sticky: at `lg` this column is a real
+                        sidebar next to a taller left column, so sticking it
+                        makes sense. Below `lg` the grid is a single stacked
+                        column (see the grid-cols-1 note above) — sticky
+                        there just pins the summary card mid-scroll over
+                        whatever form field the shopper is trying to reach
+                        next, which is worse UX than letting it scroll
+                        normally with everything else.
+                    --}}
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5 lg:sticky lg:top-24">
                         <h2 class="text-sm font-semibold text-gray-900 mb-4">Order Summary</h2>
 
                         <div class="space-y-3 mb-4">
                             @foreach($lines as $line)
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0">
-                                        @if($line->product->image_url)
-                                            <img src="{{ $line->product->image_url }}" alt="{{ $line->product->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
+                                        @if($line->variant?->effectiveImageUrl() ?? $line->product->image_url)
+                                            <img src="{{ $line->variant?->effectiveImageUrl() ?? $line->product->image_url }}" alt="{{ $line->product->name }}" onerror="shopImgFallback(this)" class="w-full h-full object-cover">
                                         @endif
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-xs font-medium text-gray-900 truncate">{{ $line->product->name }}</p>
+                                        @if($line->variant)
+                                            <p class="text-xs text-gray-500 truncate">{{ $line->variant->label }}</p>
+                                        @endif
                                         <p class="text-xs text-gray-400">× {{ $line->qty }}</p>
                                     </div>
                                     <p class="text-xs font-semibold text-gray-900 shrink-0">R{{ number_format($line->subtotal, 2) }}</p>
