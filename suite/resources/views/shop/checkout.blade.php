@@ -225,13 +225,19 @@
                                 <span>Subtotal</span>
                                 <span>R{{ number_format($subtotal, 2) }}</span>
                             </div>
+                            @if($promotion)
+                                <div class="flex justify-between text-xs text-emerald-600">
+                                    <span>Discount ({{ $promotion->code }})</span>
+                                    <span>-R{{ number_format($discount, 2) }}</span>
+                                </div>
+                            @endif
                             <div class="flex justify-between text-xs text-gray-400">
                                 <span>Shipping</span>
                                 <span x-text="fulfillment === 'delivery' ? 'TBC' : 'N/A'"></span>
                             </div>
                             <div class="flex justify-between font-bold text-sm pt-2 border-t border-gray-100">
                                 <span>Total</span>
-                                <span class="text-[#0078D4]">R{{ number_format($subtotal, 2) }}</span>
+                                <span class="text-[#0078D4]">R{{ number_format($subtotal - $discount, 2) }}</span>
                             </div>
                         </div>
 
