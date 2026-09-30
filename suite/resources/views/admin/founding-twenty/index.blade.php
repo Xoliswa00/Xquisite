@@ -2,12 +2,12 @@
     <x-slot name="header">Founding 20 Applications</x-slot>
 
     <div class="space-y-6">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h2 class="text-2xl font-bold text-[#D4AF37]">Founding 20 Applications</h2>
                 <p class="text-slate-400 text-sm mt-1">Scored discovery questionnaire responses, highest score first</p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
                 <a href="{{ route('admin.founding-twenty.action-queue') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 text-[#D4AF37] rounded-lg text-sm font-medium transition">
                     Action queue
