@@ -11,6 +11,30 @@
         </form>
     </div>
 
+    {{--
+        Teaser only — links through to the full listing rather than
+        rendering combo cards inline among products, which would mix two
+        different card shapes (single product vs multi-product bundle) in
+        one grid. Only rendered when there's something live to show, so a
+        tenant with no bundles sees nothing here at all.
+    --}}
+    @if($featuredCombos->isNotEmpty())
+        <div class="mb-8 bg-white rounded-2xl border border-gray-200 p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-semibold text-gray-900">Bundles &amp; Deals</h2>
+                <a href="{{ $tenant->shopRoute('combos') }}" class="text-sm text-[#0078D4] hover:text-[#002B5B] font-medium">View all →</a>
+            </div>
+            <div class="grid sm:grid-cols-3 gap-4">
+                @foreach($featuredCombos as $combo)
+                    <a href="{{ $tenant->shopRoute('combos') }}" class="block border border-gray-200 rounded-xl p-3 hover:border-[#0078D4] transition-colors">
+                        <p class="text-sm font-medium text-gray-900 truncate">{{ $combo->name }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">R{{ number_format($combo->combo_price, 2) }} <span class="line-through">R{{ number_format($combo->total_price, 2) }}</span></p>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <div class="flex gap-6" x-data="shopIndex()">
 
         <!-- Categories sidebar -->

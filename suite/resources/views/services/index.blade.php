@@ -228,10 +228,10 @@
                                     <p class="font-medium text-white">{{ $combo->name }}</p>
                                     <span class="text-xs px-2 py-0.5 rounded-full border font-medium {{ $badgeClass }}">{{ $status }}</span>
                                 </div>
-                                <p class="text-xs text-slate-500 mt-0.5 truncate">{{ $combo->services->pluck('name')->join(', ') }}</p>
+                                <p class="text-xs text-slate-500 mt-0.5 truncate">{{ $combo->services->pluck('name')->merge($combo->products->pluck('name'))->join(', ') }}</p>
                             </div>
                             <div class="text-right shrink-0">
-                                <p class="text-xs text-slate-500 line-through">R{{ number_format($combo->total_service_price, 2) }}</p>
+                                <p class="text-xs text-slate-500 line-through">R{{ number_format($combo->total_price, 2) }}</p>
                                 <p class="font-bold text-white text-sm">R{{ number_format($combo->combo_price, 2) }}</p>
                                 <p class="text-xs text-emerald-400">Save R{{ number_format($combo->savings, 2) }}</p>
                             </div>

@@ -106,6 +106,7 @@ use Illuminate\Support\Facades\Route;
 $registerShopRoutes = function () {
     Route::get('/manifest.json', [StorefrontController::class, 'manifest'])->name('manifest');
     Route::get('/', [StorefrontController::class, 'index'])->name('index');
+    Route::get('/combos', [StorefrontController::class, 'combos'])->name('combos');
     Route::get('/product/{productId}', [StorefrontController::class, 'product'])->name('product');
 
     // Cart
@@ -115,6 +116,8 @@ $registerShopRoutes = function () {
     Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/promo', [CartController::class, 'applyPromo'])->name('cart.promo.apply');
     Route::post('/cart/promo/remove', [CartController::class, 'removePromo'])->name('cart.promo.remove');
+    Route::post('/cart/combo/add', [CartController::class, 'addCombo'])->name('cart.combo.add');
+    Route::post('/cart/combo/remove', [CartController::class, 'removeCombo'])->name('cart.combo.remove');
 
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
