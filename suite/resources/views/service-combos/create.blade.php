@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header">{{ isset($combo) ? 'Edit Combo' : 'New Service Combo' }}</x-slot>
+    <x-slot name="header">{{ isset($combo) ? 'Edit Combo' : 'New Combo' }}</x-slot>
 
     <div class="max-w-5xl mx-auto" x-data="comboBuilder()">
         <form method="POST" action="{{ isset($combo) ? route('combos.update', $combo) : route('combos.store') }}" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -60,17 +60,17 @@
 
                 {{-- Service picker --}}
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                    <h3 class="font-semibold text-[#D4AF37] mb-3">Select Services (min. 2)</h3>
+                    <h3 class="font-semibold text-[#D4AF37] mb-3">Select Services</h3>
                     @if($services->isEmpty())
                         <p class="text-sm text-slate-500 py-2">No active services yet. <a href="{{ route('services.create') }}" class="text-[#0078D4] hover:text-[#B8D4F0]">Add a service first.</a></p>
                     @else
                         <div class="space-y-1 max-h-72 overflow-y-auto">
                             @foreach($services as $service)
-                                @php $selectedIds = old('service_ids', isset($combo) ? $combo->services->pluck('id')->toArray() : []); @endphp
+                                @php $selectedServiceIds = old('service_ids', isset($combo) ? $combo->services->pluck('id')->toArray() : []); @endphp
                                 <label class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 cursor-pointer">
                                     <input type="checkbox" name="service_ids[]" value="{{ $service->id }}"
                                            class="rounded border-slate-600 bg-slate-800 text-[#0078D4]"
-                                           {{ in_array($service->id, $selectedIds) ? 'checked' : '' }}
+                                           {{ in_array($service->id, $selectedServiceIds) ? 'checked' : '' }}
                                            @change="toggleService({{ $service->id }}, {{ (float) $service->price }}, {{ (float) ($service->cost_price ?? 0) }}, $event.target.checked)">
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm text-slate-200">{{ $service->name }}</p>
@@ -84,6 +84,43 @@
                         </div>
                     @endif
                     <x-input-error :messages="$errors->get('service_ids')" class="mt-2" />
+                </div>
+
+                {{--
+                    Product picker — restores what combo_items originally
+                    supported before a since-narrowed migration dropped it
+                    to services-only. has_variants products are excluded
+                    from the list entirely (see
+                    ServiceComboController::pickerOptions()) — a variant
+                    product has no single price/stock to bundle at this
+                    combo-item level.
+                --}}
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                    <h3 class="font-semibold text-[#D4AF37] mb-3">Select Products</h3>
+                    @if($products->isEmpty())
+                        <p class="text-sm text-slate-500 py-2">No products available for online sale yet.</p>
+                    @else
+                        <div class="space-y-1 max-h-72 overflow-y-auto">
+                            @foreach($products as $product)
+                                @php $selectedProductIds = old('product_ids', isset($combo) ? $combo->products->pluck('id')->toArray() : []); @endphp
+                                <label class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 cursor-pointer">
+                                    <input type="checkbox" name="product_ids[]" value="{{ $product->id }}"
+                                           class="rounded border-slate-600 bg-slate-800 text-[#0078D4]"
+                                           {{ in_array($product->id, $selectedProductIds) ? 'checked' : '' }}
+                                           @change="toggleProduct({{ $product->id }}, {{ (float) $product->price }}, {{ (float) ($product->cost_price ?? 0) }}, $event.target.checked)">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm text-slate-200">{{ $product->name }}</p>
+                                        @if($product->category)
+                                            <p class="text-xs text-slate-500">{{ $product->category }}</p>
+                                        @endif
+                                    </div>
+                                    <span class="text-sm text-slate-400 shrink-0">R{{ number_format($product->price, 2) }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    @endif
+                    <x-input-error :messages="$errors->get('product_ids')" class="mt-2" />
+                    <p class="text-xs text-slate-500 mt-3">Select at least 2 services/products in total, in any combination.</p>
                 </div>
             </div>
 
@@ -137,10 +174,17 @@
     function comboBuilder() {
         return {
             selectedServices: @json(isset($combo) ? $combo->services->map(fn($s) => ['id' => $s->id, 'price' => (float)$s->price, 'cost' => (float)($s->cost_price ?? 0)])->toArray() : []),
+            selectedProducts: @json(isset($combo) ? $combo->products->map(fn($p) => ['id' => $p->id, 'price' => (float)$p->price, 'cost' => (float)($p->cost_price ?? 0)])->toArray() : []),
             discountType: '{{ old('discount_type', $combo->discount_type ?? 'percentage') }}',
             discountValue: {{ old('discount_value', $combo->discount_value ?? 0) }},
-            get totalPrice() { return this.selectedServices.reduce((sum, s) => sum + s.price, 0); },
-            get totalCost()  { return this.selectedServices.reduce((sum, s) => sum + s.cost,  0); },
+            get totalPrice() {
+                return this.selectedServices.reduce((sum, s) => sum + s.price, 0)
+                     + this.selectedProducts.reduce((sum, p) => sum + p.price, 0);
+            },
+            get totalCost() {
+                return this.selectedServices.reduce((sum, s) => sum + s.cost, 0)
+                     + this.selectedProducts.reduce((sum, p) => sum + p.cost, 0);
+            },
             get discountAmount() {
                 if (this.discountType === 'percentage') return this.totalPrice * (this.discountValue / 100);
                 return Math.min(this.discountValue, this.totalPrice);
@@ -155,6 +199,15 @@
                     }
                 } else {
                     this.selectedServices = this.selectedServices.filter(s => s.id !== id);
+                }
+            },
+            toggleProduct(id, price, cost, checked) {
+                if (checked) {
+                    if (!this.selectedProducts.find(p => p.id === id)) {
+                        this.selectedProducts.push({ id, price, cost });
+                    }
+                } else {
+                    this.selectedProducts = this.selectedProducts.filter(p => p.id !== id);
                 }
             },
         };

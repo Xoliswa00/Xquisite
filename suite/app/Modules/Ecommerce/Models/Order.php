@@ -26,6 +26,7 @@ class Order extends Model
         'payment_method',
         'subtotal',
         'discount_amount',
+        'promotion_id',
         'shipping_cost',
         'total',
         'notes',
@@ -62,6 +63,11 @@ class Order extends Model
     public function tenant()
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function promotion()
+    {
+        return $this->belongsTo(\App\Models\Promotion::class);
     }
 
     /**

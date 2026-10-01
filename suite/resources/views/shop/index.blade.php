@@ -11,6 +11,30 @@
         </form>
     </div>
 
+    {{--
+        Teaser only — links through to the full listing rather than
+        rendering combo cards inline among products, which would mix two
+        different card shapes (single product vs multi-product bundle) in
+        one grid. Only rendered when there's something live to show, so a
+        tenant with no bundles sees nothing here at all.
+    --}}
+    @if($featuredCombos->isNotEmpty())
+        <div class="mb-8 bg-white rounded-2xl border border-gray-200 p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-semibold text-gray-900">Bundles &amp; Deals</h2>
+                <a href="{{ $tenant->shopRoute('combos') }}" class="text-sm text-[#0078D4] hover:text-[#002B5B] font-medium">View all →</a>
+            </div>
+            <div class="grid sm:grid-cols-3 gap-4">
+                @foreach($featuredCombos as $combo)
+                    <a href="{{ $tenant->shopRoute('combos') }}" class="block border border-gray-200 rounded-xl p-3 hover:border-[#0078D4] transition-colors">
+                        <p class="text-sm font-medium text-gray-900 truncate">{{ $combo->name }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">R{{ number_format($combo->combo_price, 2) }} <span class="line-through">R{{ number_format($combo->total_price, 2) }}</span></p>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <div class="flex gap-6" x-data="shopIndex()">
 
         <!-- Categories sidebar -->
@@ -52,6 +76,23 @@
                             {{ $cat }}
                         </a>
                     @endforeach
+                </div>
+            @endif
+
+            <!-- Sort -->
+            @if($products->isNotEmpty() || $sort !== 'category')
+                <div class="flex justify-end mb-4">
+                    <form method="GET" x-data @change="$el.submit()">
+                        @if($category) <input type="hidden" name="category" value="{{ $category }}"> @endif
+                        @if($search) <input type="hidden" name="search" value="{{ $search }}"> @endif
+                        <select name="sort"
+                                class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                            <option value="category" @selected($sort === 'category')>Sort: Category</option>
+                            <option value="newest" @selected($sort === 'newest')>Newest</option>
+                            <option value="price_asc" @selected($sort === 'price_asc')>Price: Low to High</option>
+                            <option value="price_desc" @selected($sort === 'price_desc')>Price: High to Low</option>
+                        </select>
+                    </form>
                 </div>
             @endif
 
@@ -137,6 +178,33 @@
                                     {{ $product->name }}
                                 </a>
                                 <p class="text-base font-bold text-[#0078D4] mt-1">R{{ number_format($product->price, 2) }}</p>
+
+                                {{--
+                                    Color preview only — not a picker. Clicking
+                                    through to the PDP is still required to
+                                    actually choose Size/Color together (a
+                                    dot here can't express "only Red is left
+                                    in stock, not Blue"), same reasoning as
+                                    "Select Options" below instead of a
+                                    one-click add for has_variants products.
+                                    strtolower() relies on the value already
+                                    being a real CSS color name/keyword
+                                    (Red, Navy, etc.) — a tenant who types a
+                                    non-color-keyword value just gets an
+                                    unstyled/transparent dot, not an error.
+                                --}}
+                                @php($swatches = $product->swatchColors())
+                                @if(count($swatches))
+                                    <div class="flex items-center gap-1 mt-1.5" title="{{ implode(', ', $swatches) }}">
+                                        @foreach(array_slice($swatches, 0, 5) as $color)
+                                            <span class="w-3.5 h-3.5 rounded-full border border-gray-200"
+                                                  style="background-color: {{ strtolower($color) }}"></span>
+                                        @endforeach
+                                        @if(count($swatches) > 5)
+                                            <span class="text-xs text-gray-400">+{{ count($swatches) - 5 }}</span>
+                                        @endif
+                                    </div>
+                                @endif
 
                                 @if($product->has_variants)
                                     {{-- Variant products need a size/color pick first — send to the product page rather than a one-click add. --}}
