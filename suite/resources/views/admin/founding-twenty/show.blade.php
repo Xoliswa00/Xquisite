@@ -452,7 +452,7 @@
             <h3 class="text-sm font-semibold text-slate-300 mb-4">30/60/90-day check-ins</h3>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+                <table class="w-full text-sm min-w-[36rem]">
                     <thead>
                         <tr class="border-b border-slate-700">
                             <th class="text-left py-2 pr-4 text-slate-400 font-medium">Metric</th>

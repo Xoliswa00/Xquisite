@@ -33,10 +33,11 @@ class CheckoutController extends Controller
             return redirect()->to($tenant->shopRoute('index'))->with('info', 'Your cart is empty.');
         }
 
-        $lines     = $cart->lines($tenant->id);
-        $subtotal  = $cart->subtotal($tenant->id);
-        $promotion = $cart->promotion($tenant->id);
-        $discount  = $promotion ? $promotion->discountFor($subtotal) : 0.0;
+        $lines      = $cart->lines($tenant->id);
+        $comboLines = $cart->comboLines($tenant->id);
+        $subtotal   = $cart->subtotal($tenant->id);
+        $promotion  = $cart->promotion($tenant->id);
+        $discount   = $promotion ? $promotion->discountFor($subtotal) : 0.0;
 
         // One idempotency token per checkout attempt, keyed by tenant ID so
         // it's the same token regardless of which URL (path or subdomain)
@@ -44,7 +45,7 @@ class CheckoutController extends Controller
         // only after a successful order.
         $idempotencyKey = $this->idempotencyKey($tenant->id);
 
-        return view('shop.checkout', compact('tenant', 'cart', 'lines', 'subtotal', 'promotion', 'discount', 'idempotencyKey'));
+        return view('shop.checkout', compact('tenant', 'cart', 'lines', 'comboLines', 'subtotal', 'promotion', 'discount', 'idempotencyKey'));
     }
 
     public function place(Request $request, string $tenantSlug)

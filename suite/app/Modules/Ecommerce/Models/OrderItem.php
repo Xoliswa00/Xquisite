@@ -16,6 +16,8 @@ class OrderItem extends Model
         'product_id',
         'product_variant_id',
         'variant_attributes',
+        'combo_id',
+        'combo_name',
         'product_name',
         'product_sku',
         'product_image_url',

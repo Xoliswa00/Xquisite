@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Ecommerce;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Ecommerce\Concerns\ResolvesShopTenant;
+use App\Models\ServiceCombo;
 use App\Modules\POS\Models\Product;
 use App\Services\Cart\CartService;
 use App\Support\TenantManifest;
@@ -70,7 +71,45 @@ class StorefrontController extends Controller
 
         $cart = new CartService($tenant->id);
 
-        return view('shop.index', compact('tenant', 'products', 'categories', 'cart', 'category', 'search', 'sort'));
+        // Small teaser only (top 3) — the shop index is a product grid, not
+        // a combo showcase; see combos() for the full listing.
+        $featuredCombos = $this->liveProductCombos($tenant->id)->take(3);
+
+        return view('shop.index', compact('tenant', 'products', 'categories', 'cart', 'category', 'search', 'sort', 'featuredCombos'));
+    }
+
+    public function combos(string $tenantSlug)
+    {
+        $tenant = $this->activeShopTenant($tenantSlug);
+        $combos = $this->liveProductCombos($tenant->id);
+        $cart   = new CartService($tenant->id);
+
+        return view('shop.combos', compact('tenant', 'combos', 'cart'));
+    }
+
+    /**
+     * Live combos that include at least one product, re-checking every
+     * constituent product/variant-free product is still actually sellable
+     * right now — mirrors PublicBookingController::index()'s "only combos
+     * whose every service is bookable right now" re-check, since a product
+     * can be deactivated or pulled from online sale after being added to a
+     * combo. A combo with services too still shows here (the shop just
+     * won't let those services be added to a cart — see
+     * shop/combos.blade.php), matching the booking side's own symmetric
+     * choice to still show a combo with product items in it.
+     */
+    private function liveProductCombos(int $tenantId)
+    {
+        return ServiceCombo::where('tenant_id', $tenantId)
+            ->where('is_active', true)
+            ->with(['products', 'services'])
+            ->get()
+            ->filter(fn (ServiceCombo $combo) =>
+                $combo->isLive()
+                && $combo->products->isNotEmpty()
+                && $combo->products->every(fn (Product $p) => $p->is_active && $p->is_available_online)
+            )
+            ->values();
     }
 
     public function product(string $tenantSlug, int $productId)
