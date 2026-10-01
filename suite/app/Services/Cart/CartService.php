@@ -170,6 +170,7 @@ class CartService
             ->where('is_available_online', true)
             ->where('is_active', true)
             ->whereIn('id', $productIds)
+            ->with('coverPhoto') // avoids a query per cart line for $product->image_url — see Product::getImageUrlAttribute()
             ->get()
             ->keyBy('id');
 

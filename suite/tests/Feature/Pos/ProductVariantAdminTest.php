@@ -117,4 +117,49 @@ class ProductVariantAdminTest extends TestCase
         $this->assertSame(20, $variant->stock_quantity);
         $this->assertFalse($variant->is_active);
     }
+
+    public function test_bulk_update_links_a_variant_to_one_of_the_products_own_photos(): void
+    {
+        $tenant  = Tenant::create(['name' => 'Test Store', 'slug' => 'test-store', 'is_active' => true]);
+        $tenant->activateModule('pos');
+        $manager = $this->manager($tenant);
+        $product = Product::create(['tenant_id' => $tenant->id, 'name' => 'T-Shirt', 'price' => 200, 'is_active' => true, 'has_variants' => true]);
+        $photo   = $product->photos()->create(['tenant_id' => $tenant->id, 'path' => 'red.jpg', 'disk' => 'public']);
+        $variant = ProductVariant::create([
+            'tenant_id' => $tenant->id, 'product_id' => $product->id,
+            'attributes' => ['Color' => 'Red'], 'stock_quantity' => 0, 'track_stock' => true, 'is_active' => true,
+        ]);
+
+        $this->actingAs($manager)->patch(route('products.variants.update', $product), [
+            'variants' => [[
+                'id' => $variant->id, 'stock_quantity' => 0, 'is_active' => 1,
+                'product_photo_id' => $photo->id,
+            ]],
+        ])->assertRedirect();
+
+        $this->assertSame($photo->id, $variant->fresh()->product_photo_id);
+    }
+
+    public function test_bulk_update_ignores_a_photo_id_belonging_to_a_different_product(): void
+    {
+        $tenant   = Tenant::create(['name' => 'Test Store', 'slug' => 'test-store', 'is_active' => true]);
+        $tenant->activateModule('pos');
+        $manager  = $this->manager($tenant);
+        $product  = Product::create(['tenant_id' => $tenant->id, 'name' => 'T-Shirt', 'price' => 200, 'is_active' => true, 'has_variants' => true]);
+        $other    = Product::create(['tenant_id' => $tenant->id, 'name' => 'Mug', 'price' => 50, 'is_active' => true]);
+        $foreignPhoto = $other->photos()->create(['tenant_id' => $tenant->id, 'path' => 'mug.jpg', 'disk' => 'public']);
+        $variant  = ProductVariant::create([
+            'tenant_id' => $tenant->id, 'product_id' => $product->id,
+            'attributes' => ['Color' => 'Red'], 'stock_quantity' => 0, 'track_stock' => true, 'is_active' => true,
+        ]);
+
+        $this->actingAs($manager)->patch(route('products.variants.update', $product), [
+            'variants' => [[
+                'id' => $variant->id, 'stock_quantity' => 0, 'is_active' => 1,
+                'product_photo_id' => $foreignPhoto->id,
+            ]],
+        ])->assertRedirect();
+
+        $this->assertNull($variant->fresh()->product_photo_id, 'A photo belonging to a different product must never be linkable.');
+    }
 }

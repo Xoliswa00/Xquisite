@@ -10,7 +10,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::orderBy('category')->orderBy('name');
+        $query = Product::orderBy('category')->orderBy('name')->with('coverPhoto');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {

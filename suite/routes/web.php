@@ -16,6 +16,7 @@ use App\Http\Controllers\Booking\StaffController;
 use App\Http\Controllers\POS\PosController;
 use App\Http\Controllers\POS\SaleController;
 use App\Http\Controllers\POS\ProductController;
+use App\Http\Controllers\POS\ProductPhotoController;
 use App\Http\Controllers\POS\ProductVariantController;
 use App\Http\Controllers\POS\StockController;
 use App\Http\Controllers\POS\PurchaseOrderController;
@@ -287,6 +288,13 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
                 Route::post('/generate', [ProductVariantController::class, 'generate'])->name('generate');
                 Route::patch('/', [ProductVariantController::class, 'update'])->name('update');
                 Route::delete('/{variant}', [ProductVariantController::class, 'destroy'])->name('destroy');
+            });
+
+            // Product photos — mirrors services/{service}/photos exactly.
+            Route::prefix('products/{product}/photos')->name('products.photos.')->group(function () {
+                Route::post('/', [ProductPhotoController::class, 'store'])->name('store');
+                Route::patch('/{photo}/primary', [ProductPhotoController::class, 'setPrimary'])->name('primary');
+                Route::delete('/{photo}', [ProductPhotoController::class, 'destroy'])->name('destroy');
             });
 
             Route::get('/stock/take', [StockController::class, 'takePage'])->name('stock.take');

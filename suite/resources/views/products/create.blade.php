@@ -83,7 +83,7 @@
                     <input type="url" name="image_url" value="{{ old('image_url') }}"
                            class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
                            placeholder="https://…">
-                    <p class="mt-1 text-xs text-slate-500">Shown in the online storefront and on receipts</p>
+                    <p class="mt-1 text-xs text-slate-500">Optional fallback. To upload real photos (up to {{ \App\Modules\POS\Models\Product::MAX_PHOTOS }}), save this product first, then use the Photos section on its edit page.</p>
                 </div>
 
                 <hr class="border-slate-700">
