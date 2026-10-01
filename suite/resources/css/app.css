@@ -3,6 +3,33 @@
 @tailwind utilities;
 
 @layer base {
+    /*
+     * ── [hidden] must always win ──────────────────────────────────────
+     * The browser's own UA stylesheet sets [hidden]{display:none}, but a
+     * display utility of equal selector specificity (.flex, .grid,
+     * .inline-flex, …) on the SAME element — loaded later, in Tailwind's
+     * utilities layer — beats it in the cascade. Any element toggled via
+     * the plain DOM `hidden` property/attribute (not an Alpine x-show,
+     * which sets its own inline style and is unaffected) while also
+     * carrying one of those classes for when it's shown then renders
+     * visible-but-empty instead of actually hidden.
+     *
+     * Confirmed hitting this: the add-to-home-screen install banner
+     * (`[data-install-banner]`, toggled by public/js/pwa-install.js via
+     * `el.hidden = true/false`) — its wrapper carries `flex` for layout
+     * once visible, duplicated near-identically across
+     * components/shop-layout.blade.php, layouts/app.blade.php,
+     * layouts/booking.blade.php, layouts/shop.blade.php,
+     * property/portal/layout.blade.php, and
+     * property/contractor-portal/layout.blade.php — every one of them
+     * had this same bug. One global rule here fixes all six at once, and
+     * closes the bug class for any future `hidden` + flex/grid element
+     * too, rather than patching each element individually.
+     */
+    [hidden] {
+        display: none !important;
+    }
+
     /* ── Brand focus ring — replaces Tailwind/Jetstream default indigo/purple ── */
     *:focus-visible {
         outline: none;
