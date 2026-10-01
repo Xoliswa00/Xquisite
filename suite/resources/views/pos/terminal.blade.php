@@ -82,6 +82,11 @@
                     <template x-for="product in filteredProducts" :key="product.id">
                         <button @click="addProduct(product)"
                                 class="bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-[#0078D4] rounded-xl p-3 text-left transition-colors group">
+                            <div class="aspect-square rounded-lg bg-slate-900 overflow-hidden mb-2" x-show="product.image_url">
+                                <img :src="product.image_url" :alt="product.name" loading="lazy"
+                                     class="w-full h-full object-cover"
+                                     x-on:error="product.image_url = null">
+                            </div>
                             <p class="text-xs text-slate-400 mb-1" x-text="product.category"></p>
                             <p class="text-sm font-medium text-white leading-tight" x-text="product.name"></p>
                             <p class="text-sm font-bold text-emerald-400 mt-1.5" x-text="'R' + product.price.toFixed(2)"></p>

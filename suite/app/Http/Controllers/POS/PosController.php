@@ -64,7 +64,7 @@ class PosController extends Controller
         $products = Product::where('is_active', true)
             ->orderBy('category')
             ->orderBy('name')
-            ->with(['activeVariants' => fn ($q) => $q->orderBy('id')])
+            ->with(['activeVariants' => fn ($q) => $q->orderBy('id'), 'coverPhoto'])
             ->get()
             ->map(fn($p) => [
                 'id'           => $p->id,
@@ -75,6 +75,13 @@ class PosController extends Controller
                 'stock'        => $p->stock_quantity,
                 'tracked'      => $p->track_stock,
                 'has_variants' => (bool) $p->has_variants,
+                // thumbUrl() (600x400 crop), not the image_url accessor's
+                // larger displayUrl() — this is a small grid tile, not a
+                // gallery stage. Falls back to the legacy raw column via
+                // getRawOriginal() the same way Product::getGalleryImagesAttribute()
+                // does, bypassing the image_url accessor entirely since that
+                // one resolves to displayUrl() instead.
+                'image_url'    => $p->coverPhoto?->thumbUrl() ?: $p->getRawOriginal('image_url'),
                 'options'      => $p->variant_options ?: (object) [],
                 'variants'     => $p->activeVariants->map(fn ($v) => [
                     'id'          => $v->id,
