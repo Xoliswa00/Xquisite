@@ -53,7 +53,31 @@
             <div class="bg-slate-800 rounded-xl p-6">
                 <h2 class="text-sm font-semibold text-slate-100 mb-4">{{ $product->variants->count() }} Variant(s)</h2>
 
-                <form method="POST" action="{{ route('products.variants.update', $product) }}">
+                {{--
+                    FIXED: this used to have a <form action="...destroy...">
+                    for the Remove button NESTED inside this outer <form
+                    action="...update...">. Nested <form> elements are
+                    invalid HTML — per the HTML5 parsing spec, the browser
+                    silently drops the inner <form> *start* tag but still
+                    processes its </form> *end* tag against the still-open
+                    outer form, closing the real form right after the
+                    first variant's Remove button. Every field and the
+                    "Save Variants" button after that point rendered
+                    visually inside the form's styling but sat structurally
+                    outside any <form> element — confirmed via a real
+                    browser (element.closest('form') on the Save button
+                    returned null), meaning this screen has never actually
+                    been able to bulk-save SKU/price/stock/active changes
+                    at all, found while verifying the product-photos
+                    feature's own variant→photo picker on this same page.
+                    Fixed with the HTML5 form="id" attribute: each
+                    variant's destroy action is now a real, separate
+                    <form> placed outside this one (right below, see
+                    "Standalone destroy forms"), and its Remove button
+                    here is a plain button pointing at it by id — valid
+                    HTML, no nesting.
+                --}}
+                <form id="variants-save-form" method="POST" action="{{ route('products.variants.update', $product) }}">
                     @csrf
                     @method('PATCH')
 
@@ -64,12 +88,9 @@
 
                                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                                     <p class="text-sm font-medium text-slate-100">{{ $variant->label }}</p>
-                                    <form method="POST" action="{{ route('products.variants.destroy', [$product, $variant]) }}"
-                                          onsubmit="return confirm('Remove this variant? Existing orders keep their own record of it.')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-xs text-red-400 hover:text-red-300">Remove</button>
-                                    </form>
+                                    <button type="submit" form="destroy-variant-{{ $variant->id }}"
+                                            onclick="return confirm('Remove this variant? Existing orders keep their own record of it.')"
+                                            class="text-xs text-red-400 hover:text-red-300">Remove</button>
                                 </div>
 
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -108,6 +129,43 @@
                                         </label>
                                     </div>
                                 </div>
+
+                                {{--
+                                    Links a variant to one of the product's
+                                    own uploaded photos (ProductVariant::
+                                    effectiveImageUrl() prefers this over
+                                    the plain image_url column) — "Red"
+                                    shows a red photo, "Blue" shows a blue
+                                    one, on both the storefront variant
+                                    picker and anywhere else effectiveImageUrl()
+                                    is read. A real FK (product_photo_id),
+                                    not a copied URL string, so deleting
+                                    the photo later clears this
+                                    automatically instead of leaving a
+                                    broken reference.
+                                --}}
+                                @if($product->photosOrdered->isNotEmpty())
+                                    <div class="mt-3 pt-3 border-t border-slate-600/50">
+                                        <label class="block text-xs text-slate-400 mb-1.5">Photo</label>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            <label class="cursor-pointer" title="Use the product's own cover photo">
+                                                <input type="radio" name="variants[{{ $i }}][product_photo_id]" value=""
+                                                       {{ old("variants.$i.product_photo_id", $variant->product_photo_id) ? '' : 'checked' }}
+                                                       class="sr-only peer">
+                                                <div class="w-10 h-10 rounded-lg border-2 border-slate-600 peer-checked:border-[#0078D4] bg-slate-900 flex items-center justify-center text-[8px] text-slate-500 text-center leading-tight px-0.5">Cover</div>
+                                            </label>
+                                            @foreach($product->photosOrdered as $photo)
+                                                <label class="cursor-pointer" title="{{ $photo->alt_text }}">
+                                                    <input type="radio" name="variants[{{ $i }}][product_photo_id]" value="{{ $photo->id }}"
+                                                           {{ (int) old("variants.$i.product_photo_id", $variant->product_photo_id) === $photo->id ? 'checked' : '' }}
+                                                           class="sr-only peer">
+                                                    <img src="{{ $photo->thumbUrl() }}" alt="" loading="lazy"
+                                                         class="w-10 h-10 rounded-lg object-cover border-2 border-transparent peer-checked:border-[#0078D4]">
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         @endforeach
                     </div>
@@ -116,6 +174,21 @@
                         Save Variants
                     </button>
                 </form>
+
+                {{--
+                    Standalone destroy forms — one per variant, deliberately
+                    outside #variants-save-form above (see the comment on
+                    that form's opening tag). Each variant's Remove button
+                    targets its matching form here by id via the HTML5
+                    form="..." attribute, not by nesting.
+                --}}
+                @foreach($product->variants as $variant)
+                    <form id="destroy-variant-{{ $variant->id }}" method="POST"
+                          action="{{ route('products.variants.destroy', [$product, $variant]) }}" class="hidden">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                @endforeach
             </div>
         @endif
     </div>

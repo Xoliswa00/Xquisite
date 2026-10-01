@@ -60,6 +60,11 @@ class StorefrontController extends Controller
         $products = $query
             ->withSum(['activeVariants as variant_stock_sum' => fn ($q) => $q->where('track_stock', true)], 'stock_quantity')
             ->with(['activeVariants' => fn ($q) => $q->select('id', 'product_id', 'attributes', 'is_active')])
+            // coverPhoto: a single cheap hasOne per product, not the full
+            // visiblePhotos collection — without it, every card's
+            // $product->image_url read (now backed by Product::
+            // getImageUrlAttribute()) would fire its own query per product.
+            ->with('coverPhoto')
             ->paginate(16)->withQueryString();
         $categories = Product::where('tenant_id', $tenant->id)
             ->where('is_active', true)
@@ -102,7 +107,7 @@ class StorefrontController extends Controller
     {
         return ServiceCombo::where('tenant_id', $tenantId)
             ->where('is_active', true)
-            ->with(['products', 'services'])
+            ->with(['products.coverPhoto', 'services'])
             ->get()
             ->filter(fn (ServiceCombo $combo) =>
                 $combo->isLive()
@@ -120,7 +125,7 @@ class StorefrontController extends Controller
             ->where('id', $productId)
             ->where('is_active', true)
             ->where('is_available_online', true)
-            ->with(['activeVariants' => fn ($q) => $q->orderBy('id')])
+            ->with(['activeVariants' => fn ($q) => $q->orderBy('id')->with('productPhoto'), 'visiblePhotos', 'coverPhoto'])
             ->firstOrFail();
 
         // Related: same category, up to 4
@@ -130,6 +135,7 @@ class StorefrontController extends Controller
             ->where('category', $product->category)
             ->where('id', '!=', $product->id)
             ->withSum(['activeVariants as variant_stock_sum' => fn ($q) => $q->where('track_stock', true)], 'stock_quantity')
+            ->with('coverPhoto')
             ->limit(4)
             ->get();
 
