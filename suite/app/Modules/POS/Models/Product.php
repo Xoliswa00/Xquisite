@@ -180,6 +180,38 @@ class Product extends Model
     }
 
     /**
+     * Distinct color values across this product's active variants, for a
+     * listing-card swatch preview — "comes in 3 colors" is a decision a
+     * shopper can make before ever opening the product page. Reads
+     * whichever variant_options axis is named "Color" case-insensitively
+     * (tenants type their own axis names when capturing a product; see
+     * ProductVariant's class doc), so a tenant who typed "colour" or
+     * "COLOR" still gets swatches. Returns [] for a plain product or one
+     * whose variants don't have a color-like axis at all (e.g. Size only).
+     */
+    public function swatchColors(): array
+    {
+        if (!$this->has_variants) {
+            return [];
+        }
+
+        $colorAxis = collect($this->variant_options ?? [])
+            ->keys()
+            ->first(fn ($name) => strtolower($name) === 'color' || strtolower($name) === 'colour');
+
+        if (!$colorAxis) {
+            return [];
+        }
+
+        return $this->activeVariants
+            ->pluck("attributes.{$colorAxis}")
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
      * Storefront gallery images. There is no multi-image field on this model
      * yet — this accessor exists purely so shop views can already loop over
      * "the product's images" without knowing that today there's only ever

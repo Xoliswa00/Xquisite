@@ -55,6 +55,23 @@
                 </div>
             @endif
 
+            <!-- Sort -->
+            @if($products->isNotEmpty() || $sort !== 'category')
+                <div class="flex justify-end mb-4">
+                    <form method="GET" x-data @change="$el.submit()">
+                        @if($category) <input type="hidden" name="category" value="{{ $category }}"> @endif
+                        @if($search) <input type="hidden" name="search" value="{{ $search }}"> @endif
+                        <select name="sort"
+                                class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                            <option value="category" @selected($sort === 'category')>Sort: Category</option>
+                            <option value="newest" @selected($sort === 'newest')>Newest</option>
+                            <option value="price_asc" @selected($sort === 'price_asc')>Price: Low to High</option>
+                            <option value="price_desc" @selected($sort === 'price_desc')>Price: High to Low</option>
+                        </select>
+                    </form>
+                </div>
+            @endif
+
             @if($products->isEmpty())
                 <div class="text-center py-16 text-gray-400">
                     <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,6 +154,33 @@
                                     {{ $product->name }}
                                 </a>
                                 <p class="text-base font-bold text-[#0078D4] mt-1">R{{ number_format($product->price, 2) }}</p>
+
+                                {{--
+                                    Color preview only — not a picker. Clicking
+                                    through to the PDP is still required to
+                                    actually choose Size/Color together (a
+                                    dot here can't express "only Red is left
+                                    in stock, not Blue"), same reasoning as
+                                    "Select Options" below instead of a
+                                    one-click add for has_variants products.
+                                    strtolower() relies on the value already
+                                    being a real CSS color name/keyword
+                                    (Red, Navy, etc.) — a tenant who types a
+                                    non-color-keyword value just gets an
+                                    unstyled/transparent dot, not an error.
+                                --}}
+                                @php($swatches = $product->swatchColors())
+                                @if(count($swatches))
+                                    <div class="flex items-center gap-1 mt-1.5" title="{{ implode(', ', $swatches) }}">
+                                        @foreach(array_slice($swatches, 0, 5) as $color)
+                                            <span class="w-3.5 h-3.5 rounded-full border border-gray-200"
+                                                  style="background-color: {{ strtolower($color) }}"></span>
+                                        @endforeach
+                                        @if(count($swatches) > 5)
+                                            <span class="text-xs text-gray-400">+{{ count($swatches) - 5 }}</span>
+                                        @endif
+                                    </div>
+                                @endif
 
                                 @if($product->has_variants)
                                     {{-- Variant products need a size/color pick first — send to the product page rather than a one-click add. --}}

@@ -30,6 +30,7 @@ class StorefrontController extends Controller
 
         $category = request('category');
         $search   = request('search');
+        $sort     = request('sort', 'category');
 
         if ($category) {
             $query->where('category', $category);
@@ -42,10 +43,23 @@ class StorefrontController extends Controller
             });
         }
 
+        match ($sort) {
+            'price_asc'  => $query->orderBy('price', 'asc'),
+            'price_desc' => $query->orderBy('price', 'desc'),
+            'newest'     => $query->orderBy('created_at', 'desc'),
+            default      => $query->orderBy('category')->orderBy('name'),
+        };
+
         // withSum avoids an N+1 stock lookup per card for variant products —
-        // the index only ever needs "is anything in stock", not per-variant detail.
-        $products   = $query->withSum(['activeVariants as variant_stock_sum' => fn ($q) => $q->where('track_stock', true)], 'stock_quantity')
-            ->orderBy('category')->orderBy('name')->paginate(16)->withQueryString();
+        // the index only ever needs "is anything in stock", not per-variant
+        // detail. The activeVariants eager load (id/attributes only, not a
+        // full select *) is for swatchColors() on the card — without it,
+        // Product::swatchColors() would fire one query per has_variants
+        // product on the page.
+        $products = $query
+            ->withSum(['activeVariants as variant_stock_sum' => fn ($q) => $q->where('track_stock', true)], 'stock_quantity')
+            ->with(['activeVariants' => fn ($q) => $q->select('id', 'product_id', 'attributes', 'is_active')])
+            ->paginate(16)->withQueryString();
         $categories = Product::where('tenant_id', $tenant->id)
             ->where('is_active', true)
             ->where('is_available_online', true)
@@ -56,7 +70,7 @@ class StorefrontController extends Controller
 
         $cart = new CartService($tenant->id);
 
-        return view('shop.index', compact('tenant', 'products', 'categories', 'cart', 'category', 'search'));
+        return view('shop.index', compact('tenant', 'products', 'categories', 'cart', 'category', 'search', 'sort'));
     }
 
     public function product(string $tenantSlug, int $productId)
