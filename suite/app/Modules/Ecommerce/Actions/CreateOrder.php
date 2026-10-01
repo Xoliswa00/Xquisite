@@ -2,6 +2,7 @@
 
 namespace App\Modules\Ecommerce\Actions;
 
+use App\Models\Promotion;
 use App\Models\Tenant;
 use App\Modules\Ecommerce\Models\Order;
 use App\Modules\Ecommerce\Models\OrderItem;
@@ -15,15 +16,19 @@ use Illuminate\Support\Collection;
  * generate concurrently — free of the max(id)+1 race the legacy generator had.
  *
  * @param  Collection<int,object>  $lines  {product, qty, unit_price, subtotal}
+ * @param  ?Promotion  $promotion  Already re-validated and row-locked by the
+ *                                 caller (OrderService::placeOrder()) — this
+ *                                 method trusts it and only does the math.
  */
 class CreateOrder
 {
-    public function handle(Tenant $tenant, array $data, Collection $lines, string $idempotencyKey): Order
+    public function handle(Tenant $tenant, array $data, Collection $lines, string $idempotencyKey, ?Promotion $promotion = null): Order
     {
         $subtotal     = (float) $lines->sum('subtotal');
+        $discount     = $promotion ? $promotion->discountFor($subtotal) : 0.0;
         $fulfillment  = $data['fulfillment_type'];
         $shippingCost = $tenant->calculateShipping($fulfillment);
-        $total        = $subtotal + $shippingCost;
+        $total        = $subtotal - $discount + $shippingCost;
         $method       = $data['payment_method'];
 
         $order = Order::create([
@@ -44,6 +49,8 @@ class CreateOrder
             'payment_status'       => 'pending',
             'payment_method'       => $method,
             'subtotal'             => $subtotal,
+            'discount_amount'      => $discount,
+            'promotion_id'         => $promotion?->id,
             'shipping_cost'        => $shippingCost,
             'total'                => $total,
             'notes'                => $data['notes'] ?? null,

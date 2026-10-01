@@ -2,9 +2,11 @@
 
 namespace App\Modules\Ecommerce\Services;
 
+use App\Models\Promotion;
 use App\Models\Tenant;
 use App\Modules\Ecommerce\Actions\CreateOrder;
 use App\Modules\Ecommerce\Actions\ReserveInventory;
+use App\Modules\Ecommerce\Exceptions\PromoCodeExpiredException;
 use App\Modules\Ecommerce\Models\Order;
 use App\Modules\POS\Models\Product;
 use App\Modules\POS\Models\ProductVariant;
@@ -36,15 +38,40 @@ class OrderService
             return $existing;
         }
 
-        $items = $cart->all(); // [lineKey => {product_id, variant_id, qty}] — see CartService::all()
+        $items     = $cart->all(); // [lineKey => {product_id, variant_id, qty}] — see CartService::all()
+        $promoCode = $cart->promoCode();
 
         try {
-            return DB::transaction(function () use ($tenant, $data, $items, $idempotencyKey) {
+            return DB::transaction(function () use ($tenant, $data, $items, $idempotencyKey, $promoCode) {
                 // Pre-generate the reference for stock-adjustment notes.
                 $reference = 'PENDING-' . Str::uuid();
                 $lines     = $this->reserveInventory->handle($tenant, $items, $reference);
 
-                return $this->createOrder->handle($tenant, $data, $lines, $idempotencyKey);
+                // Re-validated and row-locked here, inside the same
+                // transaction as the stock reservation — never trust
+                // whatever CartController::applyPromo() last saw. Locking
+                // closes the race where two concurrent checkouts both read
+                // used_count 1 below max_uses 2 and both succeed, leaving
+                // the promotion oversold at used_count 3.
+                $promotion = null;
+                if ($promoCode) {
+                    $promotion = Promotion::where('tenant_id', $tenant->id)
+                        ->whereRaw('UPPER(code) = ?', [strtoupper($promoCode)])
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$promotion || !$promotion->isLive() || !$promotion->appliesToProducts()) {
+                        throw PromoCodeExpiredException::make($promoCode);
+                    }
+                }
+
+                $order = $this->createOrder->handle($tenant, $data, $lines, $idempotencyKey, $promotion);
+
+                if ($promotion) {
+                    $promotion->increment('used_count');
+                }
+
+                return $order;
             });
         } catch (QueryException $e) {
             // Concurrent duplicate: the unique (tenant_id, idempotency_key)

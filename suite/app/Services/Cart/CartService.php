@@ -2,6 +2,7 @@
 
 namespace App\Services\Cart;
 
+use App\Models\Promotion;
 use App\Modules\POS\Models\Product;
 use App\Modules\POS\Models\ProductVariant;
 use Illuminate\Support\Collection;
@@ -9,6 +10,7 @@ use Illuminate\Support\Collection;
 class CartService
 {
     private string $key;
+    private string $promoKey;
 
     /**
      * Keyed by tenant ID, not slug/subdomain — the same tenant is now
@@ -19,6 +21,19 @@ class CartService
     public function __construct(private readonly int $tenantId)
     {
         $this->key = 'cart.' . $tenantId;
+
+        // A SEPARATE top-level key, not "{$this->key}.promo" — session()
+        // treats a dotted string as Arr::set() nested-path notation, so
+        // session(["cart.{$tenantId}.promo" => $code]) doesn't write a
+        // flat sibling key, it writes INTO the same array that cart items
+        // live in at "cart.{$tenantId}", landing a 'promo' => string entry
+        // alongside the p{id}/v{id} line-item keys. lines() then iterates
+        // it as a line item and crashes on $item['product_id'] against a
+        // string. Caught in real-browser verification, not by any test —
+        // every existing test sets up the session via ['cart.N' => [...]]
+        // directly and never exercises promo + cart items together through
+        // this actual key-construction path.
+        $this->promoKey = 'cart_promo.' . $tenantId;
     }
 
     /**
@@ -76,6 +91,29 @@ class CartService
     public function clear(): void
     {
         session()->forget($this->key);
+        $this->removePromoCode();
+    }
+
+    /**
+     * The promo code itself, stored separately from the cart items so it
+     * survives independently of what's in the cart. Validity (does it
+     * exist, is it live, does it apply to products) is NOT this class's
+     * job — a Promotion lookup needs the DB and tenant scoping, which
+     * belongs in the controller/OrderService. This is just session storage.
+     */
+    public function promoCode(): ?string
+    {
+        return session($this->promoKey);
+    }
+
+    public function setPromoCode(string $code): void
+    {
+        session([$this->promoKey => strtoupper(trim($code))]);
+    }
+
+    public function removePromoCode(): void
+    {
+        session()->forget($this->promoKey);
     }
 
     private function lineKey(int $productId, ?int $variantId): string
@@ -134,5 +172,31 @@ class CartService
     public function subtotal(int $tenantId): float
     {
         return (float) $this->lines($tenantId)->sum('subtotal');
+    }
+
+    /**
+     * Re-resolves the stored code against the DB on every call rather than
+     * trusting the session — a code applied an hour ago may since have been
+     * deactivated or hit its max_uses. Returns null (not just "no code
+     * set") for a code that's gone stale, so callers never need a separate
+     * staleness check.
+     */
+    public function promotion(int $tenantId): ?Promotion
+    {
+        $code = $this->promoCode();
+
+        return $code ? Promotion::findUsable($tenantId, $code) : null;
+    }
+
+    public function discount(int $tenantId): float
+    {
+        $promotion = $this->promotion($tenantId);
+
+        return $promotion ? $promotion->discountFor($this->subtotal($tenantId)) : 0.0;
+    }
+
+    public function total(int $tenantId): float
+    {
+        return $this->subtotal($tenantId) - $this->discount($tenantId);
     }
 }

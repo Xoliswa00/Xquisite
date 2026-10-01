@@ -7,6 +7,7 @@ use App\Http\Controllers\Ecommerce\Concerns\ResolvesShopTenant;
 use App\Mail\OrderConfirmationEmail;
 use App\Models\Tenant;
 use App\Modules\Ecommerce\Exceptions\InsufficientStockException;
+use App\Modules\Ecommerce\Exceptions\PromoCodeExpiredException;
 use App\Modules\Ecommerce\Models\Order;
 use App\Modules\Ecommerce\Services\OrderService;
 use App\Rules\SouthAfricanPhoneNumber;
@@ -32,8 +33,10 @@ class CheckoutController extends Controller
             return redirect()->to($tenant->shopRoute('index'))->with('info', 'Your cart is empty.');
         }
 
-        $lines    = $cart->lines($tenant->id);
-        $subtotal = $cart->subtotal($tenant->id);
+        $lines     = $cart->lines($tenant->id);
+        $subtotal  = $cart->subtotal($tenant->id);
+        $promotion = $cart->promotion($tenant->id);
+        $discount  = $promotion ? $promotion->discountFor($subtotal) : 0.0;
 
         // One idempotency token per checkout attempt, keyed by tenant ID so
         // it's the same token regardless of which URL (path or subdomain)
@@ -41,7 +44,7 @@ class CheckoutController extends Controller
         // only after a successful order.
         $idempotencyKey = $this->idempotencyKey($tenant->id);
 
-        return view('shop.checkout', compact('tenant', 'cart', 'lines', 'subtotal', 'idempotencyKey'));
+        return view('shop.checkout', compact('tenant', 'cart', 'lines', 'subtotal', 'promotion', 'discount', 'idempotencyKey'));
     }
 
     public function place(Request $request, string $tenantSlug)
@@ -73,6 +76,10 @@ class CheckoutController extends Controller
         try {
             $order = $this->orders->placeOrder($tenant, $data, $cart, $idempotencyKey);
         } catch (InsufficientStockException $e) {
+            return redirect()->to($tenant->shopRoute('cart'))->with('error', $e->getMessage());
+        } catch (PromoCodeExpiredException $e) {
+            $cart->removePromoCode();
+
             return redirect()->to($tenant->shopRoute('cart'))->with('error', $e->getMessage());
         } catch (\Throwable $e) {
             Log::error('Online checkout failed', [
