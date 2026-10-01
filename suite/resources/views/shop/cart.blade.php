@@ -78,19 +78,57 @@
                 @endforeach
             </div>
 
+            {{--
+                Applying a code re-validates it server-side on every submit
+                (Promotion::findUsable(), via CartService::promotion()) — it
+                is never trusted from what's already in the session. The
+                stored code is only a preview; placing the order re-checks
+                it again regardless (see OrderService::placeOrder()), so a
+                code that goes stale between here and checkout can't slip
+                through either way.
+            --}}
+            <div class="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Promo Code</p>
+                @if($promotion)
+                    <div class="flex items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5">
+                        <span class="text-sm text-emerald-700 font-medium">{{ $promotion->code }} applied</span>
+                        <form action="{{ $tenant->shopRoute('cart.promo.remove') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="text-xs text-emerald-700 hover:text-emerald-900 underline">Remove</button>
+                        </form>
+                    </div>
+                @else
+                    <form action="{{ $tenant->shopRoute('cart.promo.apply') }}" method="POST" class="flex gap-2">
+                        @csrf
+                        <input type="text" name="code" placeholder="Enter code"
+                               class="flex-1 min-w-0 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                        <button type="submit"
+                                class="shrink-0 border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded-xl transition-colors">
+                            Apply
+                        </button>
+                    </form>
+                @endif
+            </div>
+
             <!-- Summary -->
             <div class="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
                 <div class="flex justify-between text-sm text-gray-600 mb-1">
                     <span>Subtotal</span>
                     <span>R{{ number_format($lines->sum('subtotal'), 2) }}</span>
                 </div>
+                @if($promotion)
+                    <div class="flex justify-between text-sm text-emerald-600 mb-1">
+                        <span>Discount ({{ $promotion->code }})</span>
+                        <span>-R{{ number_format($promotion->discountFor($lines->sum('subtotal')), 2) }}</span>
+                    </div>
+                @endif
                 <div class="flex justify-between text-sm text-gray-400 mb-3">
                     <span>Shipping</span>
                     <span>Calculated at checkout</span>
                 </div>
                 <div class="flex justify-between font-bold text-base pt-3 border-t border-gray-100">
                     <span>Estimated Total</span>
-                    <span class="text-[#0078D4]">R{{ number_format($lines->sum('subtotal'), 2) }}</span>
+                    <span class="text-[#0078D4]">R{{ number_format($lines->sum('subtotal') - ($promotion?->discountFor($lines->sum('subtotal')) ?? 0), 2) }}</span>
                 </div>
             </div>
 

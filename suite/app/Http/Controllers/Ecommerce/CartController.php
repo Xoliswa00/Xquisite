@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Ecommerce;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Ecommerce\Concerns\ResolvesShopTenant;
+use App\Models\Promotion;
 use App\Modules\POS\Models\Product;
 use App\Modules\POS\Models\ProductVariant;
 use App\Services\Cart\CartService;
@@ -19,7 +20,12 @@ class CartController extends Controller
         $cart   = new CartService($tenant->id);
         $lines  = $cart->lines($tenant->id);
 
-        return view('shop.cart', compact('tenant', 'cart', 'lines'));
+        // Resolved (not just "is a code stored") so the view can tell a
+        // live, applied code apart from a stale one the cart is quietly
+        // about to drop — see CartService::promotion().
+        $promotion = $cart->promotion($tenant->id);
+
+        return view('shop.cart', compact('tenant', 'cart', 'lines', 'promotion'));
     }
 
     public function add(Request $request, string $tenantSlug)
@@ -104,5 +110,41 @@ class CartController extends Controller
         $cart->remove((int) $request->product_id, $request->filled('variant_id') ? (int) $request->variant_id : null);
 
         return redirect()->to($tenant->shopRoute('cart'))->with('cart_success', 'Item removed.');
+    }
+
+    /**
+     * Stores the code for display/preview on the cart page only — this is
+     * NOT the authoritative redemption. OrderService::placeOrder()
+     * re-validates with Promotion::findUsable() at checkout time regardless
+     * of what's in the session, so a code that goes stale (deactivated,
+     * expires, hits max_uses) between "applied to cart" and "placed order"
+     * can never slip through.
+     */
+    public function applyPromo(Request $request, string $tenantSlug)
+    {
+        $tenant = $this->activeShopTenant($tenantSlug);
+
+        $request->validate(['code' => 'required|string|max:50']);
+
+        $promotion = Promotion::findUsable($tenant->id, $request->code);
+
+        if (!$promotion) {
+            return back()->with('cart_error', 'That promo code is not valid or has expired.');
+        }
+
+        $cart = new CartService($tenant->id);
+        $cart->setPromoCode($promotion->code);
+
+        return back()->with('cart_success', 'Promo code applied.');
+    }
+
+    public function removePromo(string $tenantSlug)
+    {
+        $tenant = $this->activeShopTenant($tenantSlug);
+
+        $cart = new CartService($tenant->id);
+        $cart->removePromoCode();
+
+        return back()->with('cart_success', 'Promo code removed.');
     }
 }

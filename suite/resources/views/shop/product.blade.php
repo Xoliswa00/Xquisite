@@ -66,7 +66,23 @@
                 <!-- Option pickers -->
                 <template x-for="optionName in optionNames" :key="optionName">
                     <div class="mb-4">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2" x-text="optionName"></p>
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide" x-text="optionName"></p>
+                            {{--
+                                A generic static chart (industry-standard S–XXL
+                                measurements), not per-product — there's no
+                                per-product size-chart field on this model, and
+                                building one is its own piece of work. Shown for
+                                any axis literally named "Size"/"size"; hidden
+                                for Color or a tenant's other custom axes, where
+                                a generic chart wouldn't mean anything.
+                            --}}
+                            <button type="button" x-show="optionName.toLowerCase() === 'size'" style="display: none;"
+                                    @click="$dispatch('open-size-guide')"
+                                    class="text-xs text-[#0078D4] hover:text-[#002B5B] underline">
+                                Size Guide
+                            </button>
+                        </div>
                         <div class="flex flex-wrap gap-2">
                             <template x-for="value in options[optionName]" :key="value">
                                 <button type="button"
@@ -83,6 +99,62 @@
                         </div>
                     </div>
                 </template>
+
+                {{--
+                    Own x-data, deliberately not a property on variantPicker()
+                    — this modal is purely self-contained display (no cart/
+                    price/stock state to share), so it doesn't need to touch
+                    the shared window.variantPicker() factory that every
+                    variant PDP loads. Listens for the child template's
+                    @click="$dispatch('open-size-guide')" above (events
+                    bubble up through nested x-data scopes by default).
+                --}}
+                <div x-data="{ sizeGuideOpen: false }" @open-size-guide.window="sizeGuideOpen = true">
+                    <div x-show="sizeGuideOpen" style="display: none;" x-transition.opacity
+                         class="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+                         @keydown.escape.window="sizeGuideOpen = false">
+                        <div class="absolute inset-0 bg-black/50" @click="sizeGuideOpen = false"></div>
+                        <div class="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto p-5 sm:p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-base font-bold text-gray-900">Size Guide</h3>
+                                <button type="button" @click="sizeGuideOpen = false" aria-label="Close size guide"
+                                        class="text-gray-400 hover:text-gray-700">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-400 mb-4">General guide — fit can vary slightly by style. All measurements in cm.</p>
+                            <div class="overflow-x-auto">
+                            <table class="w-full text-sm min-w-[360px]">
+                                <thead>
+                                    <tr class="text-left text-xs text-gray-500 uppercase tracking-wide border-b border-gray-100">
+                                        <th class="py-2 font-semibold">Size</th>
+                                        <th class="py-2 font-semibold">Chest</th>
+                                        <th class="py-2 font-semibold">Waist</th>
+                                        <th class="py-2 font-semibold">Hip</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-gray-700">
+                                    @foreach([
+                                        ['XS', '81–86', '61–66', '86–91'],
+                                        ['S', '86–91', '66–71', '91–96'],
+                                        ['M', '91–97', '71–78', '96–102'],
+                                        ['L', '97–104', '78–85', '102–109'],
+                                        ['XL', '104–112', '85–94', '109–117'],
+                                        ['XXL', '112–120', '94–103', '117–125'],
+                                    ] as [$size, $chest, $waist, $hip])
+                                        <tr class="border-b border-gray-50 last:border-0">
+                                            <td class="py-2 font-medium">{{ $size }}</td>
+                                            <td class="py-2">{{ $chest }}</td>
+                                            <td class="py-2">{{ $waist }}</td>
+                                            <td class="py-2">{{ $hip }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Stock -->
                 <div class="mb-4">
@@ -119,7 +191,7 @@
                         <button type="button" @click="qty = Math.min(maxQty, qty + 1)"
                                 class="px-3 py-2.5 text-gray-500 hover:bg-gray-50 text-lg leading-none">+</button>
                     </div>
-                    <button type="submit" :disabled="!canAddToCart"
+                    <button type="submit" id="pdp-add-to-cart-btn" :disabled="!canAddToCart"
                             :class="canAddToCart ? 'bg-[#0078D4] hover:bg-[#002B5B] cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
                             class="flex-1 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
                             x-text="!selectedVariant ? 'Select Options' : (selectedVariant.track_stock && selectedVariant.stock <= 0 ? 'Out of Stock' : 'Add to Cart')">
@@ -129,6 +201,28 @@
                 <a href="{{ $tenant->shopRoute('cart') }}" class="mt-3 text-center text-sm text-[#0078D4] hover:text-[#002B5B]">
                     View Cart ({{ $cart->count() }} items)
                 </a>
+            </div>
+
+            {{--
+                Mobile-only sticky bar proxying the real form's submit
+                button above via a plain DOM .click() — deliberately not a
+                second <form>, so there's exactly one place that owns the
+                CSRF token, the variant_id hidden field, and the qty
+                stepper's value. Inherits this same x-data="variantPicker"
+                scope (it's a sibling inside that div), so price/
+                canAddToCart/selectedVariant stay in sync with the picker
+                above without any extra plumbing.
+            --}}
+            <div class="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white border-t border-gray-200 px-4 py-3 flex items-center gap-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)]">
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs text-gray-400 truncate" x-text="selectedVariant ? selectedVariant.sku : @js($product->name)"></p>
+                    <p class="text-lg font-bold text-[#0078D4]" x-text="'R' + price.toFixed(2)"></p>
+                </div>
+                <button type="button" @click="document.getElementById('pdp-add-to-cart-btn').click()" :disabled="!canAddToCart"
+                        :class="canAddToCart ? 'bg-[#0078D4] hover:bg-[#002B5B] cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
+                        class="shrink-0 text-white font-semibold py-2.5 px-6 rounded-xl text-sm transition-colors"
+                        x-text="!selectedVariant ? 'Select Options' : (selectedVariant.track_stock && selectedVariant.stock <= 0 ? 'Out of Stock' : 'Add to Cart')">
+                </button>
             </div>
         </div>
     @else
@@ -208,7 +302,7 @@
                             <button type="button" onclick="const q=document.getElementById('qty');q.value=Math.min({{ $product->track_stock ? $product->stock_quantity : 99 }},parseInt(q.value)+1)"
                                     class="px-3 py-2.5 text-gray-500 hover:bg-gray-50 text-lg leading-none">+</button>
                         </div>
-                        <button type="submit"
+                        <button type="submit" id="pdp-add-to-cart-btn"
                                 class="flex-1 bg-[#0078D4] hover:bg-[#002B5B] text-white font-semibold py-3 px-6 rounded-xl transition-colors">
                             Add to Cart
                         </button>
@@ -222,6 +316,32 @@
                 <a href="{{ $tenant->shopRoute('cart') }}" class="mt-3 text-center text-sm text-[#0078D4] hover:text-[#002B5B]">
                     View Cart ({{ $cart->count() }} items)
                 </a>
+            </div>
+
+            {{--
+                Same mobile sticky-bar pattern as the has_variants branch
+                above: proxies the real form's submit button via .click()
+                rather than duplicating the form/CSRF/qty-stepper wiring.
+                No Alpine state to mirror here (qty defaults to 1, same as
+                the real form) — the id="qty" stepper above only affects
+                the real form's own hidden qty value, this button doesn't
+                need to read it since qty=1 is the real form's own default.
+            --}}
+            <div class="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white border-t border-gray-200 px-4 py-3 flex items-center gap-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)]">
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs text-gray-400 truncate">{{ $product->name }}</p>
+                    <p class="text-lg font-bold text-[#0078D4]">R{{ number_format($product->price, 2) }}</p>
+                </div>
+                @if(!$product->track_stock || $product->stock_quantity > 0)
+                    <button type="button" onclick="document.getElementById('pdp-add-to-cart-btn').click()"
+                            class="shrink-0 bg-[#0078D4] hover:bg-[#002B5B] text-white font-semibold py-2.5 px-6 rounded-xl text-sm transition-colors">
+                        Add to Cart
+                    </button>
+                @else
+                    <button type="button" disabled class="shrink-0 bg-gray-200 text-gray-400 font-semibold py-2.5 px-6 rounded-xl text-sm cursor-not-allowed">
+                        Out of Stock
+                    </button>
+                @endif
             </div>
         </div>
     @endif
@@ -268,5 +388,8 @@
             </div>
         </div>
     @endif
+
+    {{-- Clears the fixed mobile sticky add-to-cart bar so it never overlaps the related-products grid or footer. --}}
+    <div class="lg:hidden h-20"></div>
 
 </x-shop-layout>
