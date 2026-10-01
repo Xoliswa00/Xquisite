@@ -30,48 +30,65 @@
             </div>
         </div>
 
-        {{-- Filters --}}
-        <form method="GET" id="filter-form" class="grid grid-cols-2 sm:flex flex-wrap gap-2 items-center">
-            <select name="level"
-                    class="bg-slate-800 border border-slate-600 text-slate-300 rounded-lg text-sm px-3 py-2"
-                    onchange="this.form.submit()">
-                <option value="">All Levels</option>
-                @foreach($levels as $lvl)
-                    <option value="{{ $lvl }}" {{ request('level') === $lvl ? 'selected' : '' }}>{{ $lvl }}</option>
-                @endforeach
-            </select>
+        {{--
+            FIXED: the "Resolve all" <form> used to be NESTED inside this
+            filter <form> (a <form method="POST"> opened here before the
+            method="GET" one above it closed). Nested <form> elements are
+            invalid HTML — per the HTML5 parsing spec, the browser drops
+            the inner <form> *start* tag but still processes its
+            </form> *end* tag against the still-open outer form, closing
+            it early right after "Resolve all"'s own closing tag. Found
+            via the same tag-order check that caught an identical bug in
+            products/variants.blade.php (PR #156) — same fix: each form
+            is now a genuine sibling, not nested, wrapped in a shared
+            layout container with Tailwind's `contents` utility
+            (display: contents) on each form so their children still
+            flow together in one visual row exactly as before — no
+            layout change, just valid HTML.
+        --}}
+        <div class="grid grid-cols-2 sm:flex flex-wrap gap-2 items-center">
+            <form method="GET" id="filter-form" class="contents">
+                <select name="level"
+                        class="bg-slate-800 border border-slate-600 text-slate-300 rounded-lg text-sm px-3 py-2"
+                        onchange="this.form.submit()">
+                    <option value="">All Levels</option>
+                    @foreach($levels as $lvl)
+                        <option value="{{ $lvl }}" {{ request('level') === $lvl ? 'selected' : '' }}>{{ $lvl }}</option>
+                    @endforeach
+                </select>
 
-            <select name="status"
-                    class="bg-slate-800 border border-slate-600 text-slate-300 rounded-lg text-sm px-3 py-2"
-                    onchange="this.form.submit()">
-                <option value="">All Statuses</option>
-                @foreach($statuses as $s)
-                    <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $s)) }}</option>
-                @endforeach
-            </select>
+                <select name="status"
+                        class="bg-slate-800 border border-slate-600 text-slate-300 rounded-lg text-sm px-3 py-2"
+                        onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    @foreach($statuses as $s)
+                        <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $s)) }}</option>
+                    @endforeach
+                </select>
 
-            <select name="source"
-                    class="bg-slate-800 border border-slate-600 text-slate-300 rounded-lg text-sm px-3 py-2"
-                    onchange="this.form.submit()">
-                <option value="">All Sources</option>
-                @foreach($sources as $src)
-                    <option value="{{ $src }}" {{ request('source') === $src ? 'selected' : '' }}>{{ ucfirst(str_replace('-', ' ', $src)) }}</option>
-                @endforeach
-            </select>
+                <select name="source"
+                        class="bg-slate-800 border border-slate-600 text-slate-300 rounded-lg text-sm px-3 py-2"
+                        onchange="this.form.submit()">
+                    <option value="">All Sources</option>
+                    @foreach($sources as $src)
+                        <option value="{{ $src }}" {{ request('source') === $src ? 'selected' : '' }}>{{ ucfirst(str_replace('-', ' ', $src)) }}</option>
+                    @endforeach
+                </select>
 
-            <input type="text" name="search" value="{{ request('search') }}"
-                   placeholder="Search…"
-                   class="col-span-2 sm:col-span-1 bg-slate-800 border border-slate-600 text-slate-300 rounded-lg text-sm px-3 py-2 sm:flex-1 min-w-0"
-                   oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 400)">
+                <input type="text" name="search" value="{{ request('search') }}"
+                       placeholder="Search…"
+                       class="col-span-2 sm:col-span-1 bg-slate-800 border border-slate-600 text-slate-300 rounded-lg text-sm px-3 py-2 sm:flex-1 min-w-0"
+                       oninput="clearTimeout(this._t); this._t = setTimeout(() => this.form.submit(), 400)">
 
-            @if(request()->hasAny(['level','status','source','search']))
-                <a href="{{ route('admin.logs.index') }}"
-                   class="px-3 py-2 text-slate-400 hover:text-white text-sm rounded-lg transition-colors">
-                    Clear
-                </a>
-            @endif
+                @if(request()->hasAny(['level','status','source','search']))
+                    <a href="{{ route('admin.logs.index') }}"
+                       class="px-3 py-2 text-slate-400 hover:text-white text-sm rounded-lg transition-colors">
+                        Clear
+                    </a>
+                @endif
+            </form>
 
-            <form method="POST" action="{{ route('admin.logs.resolve-all') }}" class="inline"
+            <form method="POST" action="{{ route('admin.logs.resolve-all') }}" class="contents"
                   onsubmit="return confirm('Resolve all logs matching current filters?')">
                 @csrf
                 @foreach(request()->only(['level','status','source','search']) as $k => $v)
@@ -82,7 +99,7 @@
                     Resolve all
                 </button>
             </form>
-        </form>
+        </div>
 
         {{-- Bulk action bar --}}
         <div x-show="selected.length > 0" x-cloak
