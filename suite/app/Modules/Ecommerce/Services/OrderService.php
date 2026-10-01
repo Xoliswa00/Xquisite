@@ -6,6 +6,7 @@ use App\Models\Promotion;
 use App\Models\Tenant;
 use App\Modules\Ecommerce\Actions\CreateOrder;
 use App\Modules\Ecommerce\Actions\ReserveInventory;
+use App\Modules\Ecommerce\Exceptions\InsufficientStockException;
 use App\Modules\Ecommerce\Exceptions\PromoCodeExpiredException;
 use App\Modules\Ecommerce\Models\Order;
 use App\Modules\POS\Models\Product;
@@ -38,14 +39,21 @@ class OrderService
             return $existing;
         }
 
-        $items     = $cart->all(); // [lineKey => {product_id, variant_id, qty}] — see CartService::all()
-        $promoCode = $cart->promoCode();
+        $items       = $cart->all();        // [lineKey => {product_id, variant_id, qty}] — see CartService::all()
+        $comboItems  = $cart->allCombos();  // [comboId => qty] — see CartService::allCombos()
+        $promoCode   = $cart->promoCode();
 
         try {
-            return DB::transaction(function () use ($tenant, $data, $items, $idempotencyKey, $promoCode) {
+            return DB::transaction(function () use ($tenant, $data, $items, $comboItems, $idempotencyKey, $promoCode) {
                 // Pre-generate the reference for stock-adjustment notes.
-                $reference = 'PENDING-' . Str::uuid();
-                $lines     = $this->reserveInventory->handle($tenant, $items, $reference);
+                $reference  = 'PENDING-' . Str::uuid();
+                $plainLines = $this->reserveInventory->handle($tenant, $items, $reference);
+                $comboLines = $this->reserveInventory->handleCombos($tenant, $comboItems, $reference);
+                $lines      = $plainLines->merge($comboLines);
+
+                if ($lines->isEmpty()) {
+                    throw new InsufficientStockException('Your cart is empty or its items are no longer available.');
+                }
 
                 // Re-validated and row-locked here, inside the same
                 // transaction as the stock reservation — never trust
@@ -55,6 +63,17 @@ class OrderService
                 // the promotion oversold at used_count 3.
                 $promotion = null;
                 if ($promoCode) {
+                    // Belt-and-suspenders: CartController already refuses to
+                    // let a promo and a bundle coexist in the session (both
+                    // applyPromo() and addCombo() enforce it), so this branch
+                    // should be unreachable through the normal UI — but the
+                    // authoritative checkout-time check must not silently
+                    // trust that a tampered/replayed request kept that
+                    // invariant intact either.
+                    if ($comboLines->isNotEmpty()) {
+                        throw PromoCodeExpiredException::make($promoCode);
+                    }
+
                     $promotion = Promotion::where('tenant_id', $tenant->id)
                         ->whereRaw('UPPER(code) = ?', [strtoupper($promoCode)])
                         ->lockForUpdate()
