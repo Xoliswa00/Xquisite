@@ -31,6 +31,7 @@ class ProductVariant extends Model
         'reorder_quantity',
         'track_stock',
         'image_url',
+        'product_photo_id',
         'is_active',
     ];
 
@@ -49,6 +50,11 @@ class ProductVariant extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function productPhoto()
+    {
+        return $this->belongsTo(ProductPhoto::class);
+    }
+
     public function stockAdjustments()
     {
         return $this->hasMany(StockAdjustment::class)->orderByDesc('created_at');
@@ -59,9 +65,17 @@ class ProductVariant extends Model
         return (float) ($this->price_override ?? $this->product->price);
     }
 
+    /**
+     * Resolution order: a linked gallery photo (set from the product's
+     * edit → Variants page, picking one of the product's uploaded
+     * photos) → the variant's own manually-pasted image_url (kept for
+     * backward compat, now a fallback rather than the primary path) →
+     * the parent product's own image_url (which itself may resolve to
+     * the product's cover photo — see Product::getImageUrlAttribute()).
+     */
     public function effectiveImageUrl(): ?string
     {
-        return $this->image_url ?: $this->product?->image_url;
+        return $this->productPhoto?->displayUrl() ?: $this->image_url ?: $this->product?->image_url;
     }
 
     /** Demand genuinely differs by size/color — this variant's own reorder_level if set, else the parent product's. */

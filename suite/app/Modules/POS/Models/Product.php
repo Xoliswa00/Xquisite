@@ -101,6 +101,51 @@ class Product extends Model
         return $this->variants()->where('is_active', true);
     }
 
+    /** Max uploaded photos per product — same cap as Service::MAX_PHOTOS, same reasoning (keeps upload/derivative cost bounded). */
+    public const MAX_PHOTOS = 5;
+
+    public function photos()
+    {
+        return $this->hasMany(ProductPhoto::class);
+    }
+
+    /** Admin view: every photo (including moderator-hidden), cover first. */
+    public function photosOrdered()
+    {
+        return $this->hasMany(ProductPhoto::class)
+            ->orderByDesc('is_primary')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
+    /** Storefront/POS: only photos not hidden by moderation, cover first. */
+    public function visiblePhotos()
+    {
+        return $this->hasMany(ProductPhoto::class)
+            ->whereNull('hidden_at')
+            ->orderByDesc('is_primary')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
+    /** Just the cover — cheap single-row eager load for listing pages (avoids an N+1 vs. loading all visiblePhotos). */
+    public function coverPhoto()
+    {
+        return $this->hasOne(ProductPhoto::class)
+            ->whereNull('hidden_at')
+            ->orderByDesc('is_primary')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
+    /** The single photo shown anywhere only one image fits (listing card, POS tile, related-product card). */
+    public function getDisplayPhotoAttribute(): ?ProductPhoto
+    {
+        $photos = $this->relationLoaded('visiblePhotos') ? $this->visiblePhotos : $this->visiblePhotos()->get();
+
+        return $photos->firstWhere('is_primary', true) ?? $photos->first();
+    }
+
     // ── Computed ───────────────────────────────────────────────
 
     public function getDurationLabelAttribute(): ?string
@@ -212,17 +257,47 @@ class Product extends Model
     }
 
     /**
-     * Storefront gallery images. There is no multi-image field on this model
-     * yet — this accessor exists purely so shop views can already loop over
-     * "the product's images" without knowing that today there's only ever
-     * one. When a real gallery (a product_images table, or a JSON column)
-     * ships, only this accessor needs to change to return the full set —
-     * every Blade view that already loops over gallery_images picks it up
-     * for free, no view changes required.
+     * Storefront gallery images. Previously a 1-item-array wrapper around
+     * the single legacy image_url column (dormant scaffolding, documented
+     * as such) — now returns the real uploaded set via ProductPhoto, cover
+     * first, falling back to the legacy pasted URL for a product that
+     * never got real photos uploaded. Every Blade view that already loops
+     * over gallery_images (built for this exact day) picks up real
+     * multi-image galleries with no view changes.
      */
     public function getGalleryImagesAttribute(): array
     {
-        return $this->image_url ? [$this->image_url] : [];
+        $photos = $this->relationLoaded('visiblePhotos') ? $this->visiblePhotos : $this->visiblePhotos()->get();
+
+        if ($photos->isNotEmpty()) {
+            return $photos->map(fn (ProductPhoto $p) => $p->displayUrl())->all();
+        }
+
+        $legacy = $this->getRawOriginal('image_url');
+
+        return $legacy ? [$legacy] : [];
+    }
+
+    /**
+     * Overrides the raw image_url column read: once a product has an
+     * uploaded cover photo, every existing call site that reads
+     * $product->image_url directly (shop index cards, Quick View,
+     * related-product cards, the has_variants branch's static fallback
+     * image) picks it up automatically — no call site needed to change.
+     * displayUrl() (the ~1400px derivative) rather than thumbUrl(), since
+     * call sites vary from small cards to a larger PDP-equivalent preview
+     * and all of them already apply object-cover in CSS; a single
+     * reasonably-sized source scales down cleanly everywhere, where a
+     * fixed 3:2 thumb crop forced into a square container would distort.
+     * Falls back to $value (the actual raw column) for a product that
+     * never got real photos uploaded — the legacy pasted-URL path keeps
+     * working exactly as before, untouched.
+     */
+    public function getImageUrlAttribute(?string $value): ?string
+    {
+        $cover = $this->relationLoaded('coverPhoto') ? $this->coverPhoto : $this->coverPhoto()->first();
+
+        return $cover?->displayUrl() ?? $value;
     }
 
     // ── Stock mutation helpers ─────────────────────────────────

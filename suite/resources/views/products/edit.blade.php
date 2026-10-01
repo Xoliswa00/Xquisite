@@ -77,10 +77,21 @@
 
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Product Image URL</label>
-                    <input type="url" name="image_url" value="{{ old('image_url', $product->image_url) }}"
+                    {{--
+                        getRawOriginal(), not $product->image_url — that
+                        accessor is overridden (Product::getImageUrlAttribute())
+                        to resolve to the uploaded cover photo once one
+                        exists. Reading the override here would mean
+                        re-saving this form unchanged silently overwrites
+                        the real stored column with the resolved photo URL
+                        string. This field is specifically the legacy
+                        fallback value — see the Photos section below for
+                        the real upload.
+                    --}}
+                    <input type="url" name="image_url" value="{{ old('image_url', $product->getRawOriginal('image_url')) }}"
                            class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]"
                            placeholder="https://…">
-                    <p class="mt-1 text-xs text-slate-500">Shown in the online storefront and on receipts</p>
+                    <p class="mt-1 text-xs text-slate-500">Fallback only — used while no photos are uploaded below.</p>
                 </div>
 
                 <hr class="border-slate-700">
@@ -124,6 +135,69 @@
                     <a href="{{ route('products.index') }}" class="text-sm text-slate-400 hover:text-white">Cancel</a>
                 </div>
             </form>
+        </div>
+
+        {{-- ── Photos ─────────────────────────────────────────────────────── --}}
+        @php
+            $maxPhotos = \App\Modules\POS\Models\Product::MAX_PHOTOS;
+            $photos    = $product->photosOrdered;
+            $slotsLeft = $maxPhotos - $photos->count();
+        @endphp
+        <div id="photos" class="bg-slate-800 rounded-xl p-6 space-y-4 scroll-mt-6">
+            <div>
+                <h3 class="text-sm font-semibold text-slate-200">Photos</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Up to {{ $maxPhotos }} photos. The cover is the one customers see in the online store and POS.</p>
+                <p class="text-xs text-amber-300/80 mt-1">Each photo action here saves on its own — you don't need to press "Save Changes".</p>
+            </div>
+
+            @if($photos->isNotEmpty())
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    @foreach($photos as $photo)
+                        <div class="relative rounded-lg overflow-hidden border {{ $photo->is_primary ? 'border-[#0078D4] ring-1 ring-[#0078D4]' : ($photo->isHidden() ? 'border-red-800' : 'border-slate-700') }}">
+                            <img src="{{ $photo->thumbUrl() }}" alt="{{ $photo->alt_text }}" loading="lazy"
+                                 width="300" height="300" class="w-full aspect-square object-cover bg-slate-900 {{ $photo->isHidden() ? 'opacity-40' : '' }}">
+
+                            @if($photo->isHidden())
+                                <span class="absolute inset-x-1.5 bottom-1.5 bg-red-900/90 text-red-100 text-[10px] font-semibold px-2 py-1 rounded text-center">
+                                    Hidden by moderation
+                                </span>
+                            @endif
+
+                            @if($photo->is_primary)
+                                <span class="absolute top-1.5 left-1.5 bg-[#0078D4] text-white text-[10px] font-bold px-2 py-0.5 rounded">Cover</span>
+                            @elseif(! $photo->isHidden())
+                                <form method="POST" action="{{ route('products.photos.primary', [$product, $photo]) }}" class="absolute top-1.5 left-1.5">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="bg-slate-900/80 hover:bg-[#0078D4] text-white text-[10px] font-semibold px-2 py-0.5 rounded transition-colors">Make cover</button>
+                                </form>
+                            @endif
+
+                            <form method="POST" action="{{ route('products.photos.destroy', [$product, $photo]) }}" class="absolute top-1.5 right-1.5"
+                                  onsubmit="return confirm('Remove this photo?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="w-6 h-6 rounded bg-slate-900/80 hover:bg-red-600 text-white flex items-center justify-center transition-colors" aria-label="Remove photo">&times;</button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <p class="text-xs text-slate-500">No photos yet.</p>
+            @endif
+
+            @if($slotsLeft > 0)
+                <form method="POST" action="{{ route('products.photos.store', $product) }}" enctype="multipart/form-data" class="space-y-2 border-t border-slate-700 pt-4">
+                    @csrf
+                    <input type="file" name="photos[]" multiple accept="image/jpeg,image/png,image/webp" required
+                           class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#0078D4] file:text-white hover:file:bg-[#0065B8] file:cursor-pointer">
+                    <p class="text-xs text-slate-500">JPG, PNG or WebP · max 4MB each · {{ $slotsLeft }} slot{{ $slotsLeft === 1 ? '' : 's' }} left.</p>
+                    <p class="text-xs text-slate-500">iPhone: if a photo won't upload, set Camera → Formats → "Most Compatible", or share it first (that converts it to JPG).</p>
+                    @error('photos')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+                    @error('photos.*')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+                    <button type="submit" class="bg-[#002B5B] hover:bg-[#0078D4] text-white text-sm px-4 py-2 rounded-lg transition-colors">Upload photos</button>
+                </form>
+            @else
+                <p class="text-xs text-slate-500 border-t border-slate-700 pt-4">Photo limit reached. Remove one to add another.</p>
+            @endif
         </div>
 
         <div class="bg-slate-800 rounded-xl p-4">

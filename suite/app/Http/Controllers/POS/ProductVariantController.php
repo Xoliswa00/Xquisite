@@ -11,7 +11,7 @@ class ProductVariantController extends Controller
 {
     public function index(Product $product)
     {
-        $product->load(['variants' => fn ($q) => $q->orderBy('id')]);
+        $product->load(['variants' => fn ($q) => $q->orderBy('id'), 'photosOrdered']);
 
         return view('products.variants', compact('product'));
     }
@@ -107,7 +107,14 @@ class ProductVariantController extends Controller
             'variants.*.stock_quantity'      => 'required|integer|min:0',
             'variants.*.track_stock'         => 'nullable|boolean',
             'variants.*.is_active'           => 'nullable|boolean',
+            // Validated against this product's own photos only, in the
+            // loop below (whereBelongsTo) — not a blanket exists:product_photos,id
+            // which would let one tenant's variant point at another
+            // tenant's/product's photo row.
+            'variants.*.product_photo_id'    => 'nullable|integer',
         ]);
+
+        $photoIds = $product->photos()->pluck('id');
 
         foreach ($data['variants'] as $row) {
             $variant = $product->variants()->whereKey($row['id'])->first();
@@ -115,12 +122,18 @@ class ProductVariantController extends Controller
                 continue; // belongs to a different product — ignore rather than 404 the whole batch
             }
 
+            $photoId = $row['product_photo_id'] ?? null;
+            if ($photoId && ! $photoIds->contains($photoId)) {
+                $photoId = null; // posted an id that isn't actually one of this product's photos
+            }
+
             $variant->update([
-                'sku'            => $row['sku'] ?? null,
-                'price_override' => $row['price_override'] ?? null,
-                'stock_quantity' => $row['stock_quantity'],
-                'track_stock'    => (bool) ($row['track_stock'] ?? false),
-                'is_active'      => (bool) ($row['is_active'] ?? false),
+                'sku'              => $row['sku'] ?? null,
+                'price_override'   => $row['price_override'] ?? null,
+                'stock_quantity'   => $row['stock_quantity'],
+                'track_stock'      => (bool) ($row['track_stock'] ?? false),
+                'is_active'        => (bool) ($row['is_active'] ?? false),
+                'product_photo_id' => $photoId,
             ]);
         }
 

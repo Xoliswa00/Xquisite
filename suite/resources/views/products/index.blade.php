@@ -23,28 +23,35 @@
             {{-- Mobile cards --}}
             <div class="sm:hidden divide-y divide-slate-700">
                 @forelse($products as $product)
-                    <a href="{{ route('products.edit', $product) }}" class="block px-4 py-3 hover:bg-slate-700/50 transition-colors">
-                        <div class="flex items-center justify-between gap-3">
-                            <p class="text-sm font-medium text-white truncate">{{ $product->name }}</p>
-                            @if($product->is_active)
-                                <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
-                            @else
-                                <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
+                    <a href="{{ route('products.edit', $product) }}" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-700/50 transition-colors">
+                        <div class="w-10 h-10 rounded-lg bg-slate-900 overflow-hidden shrink-0">
+                            @if($product->coverPhoto)
+                                <img src="{{ $product->coverPhoto->thumbUrl() }}" alt="" loading="lazy" class="w-full h-full object-cover">
                             @endif
                         </div>
-                        <div class="flex items-center gap-3 mt-0.5">
-                            <p class="text-xs text-slate-400">R{{ number_format($product->price, 2) }}</p>
-                            @if($product->category)
-                                <p class="text-xs text-slate-500">{{ $product->category }}</p>
-                            @endif
-                            @if($product->sku)
-                                <p class="text-xs text-slate-500 font-mono">{{ $product->sku }}</p>
-                            @endif
-                            @if($product->track_stock)
-                                <p class="text-xs {{ $product->stock_quantity <= 0 ? 'text-red-400' : ($product->stock_quantity <= 5 ? 'text-yellow-400' : 'text-slate-500') }}">
-                                    Stock: {{ $product->stock_quantity }}
-                                </p>
-                            @endif
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-3">
+                                <p class="text-sm font-medium text-white truncate">{{ $product->name }}</p>
+                                @if($product->is_active)
+                                    <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800">Active</span>
+                                @else
+                                    <span class="shrink-0 inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-3 mt-0.5">
+                                <p class="text-xs text-slate-400">R{{ number_format($product->price, 2) }}</p>
+                                @if($product->category)
+                                    <p class="text-xs text-slate-500">{{ $product->category }}</p>
+                                @endif
+                                @if($product->sku)
+                                    <p class="text-xs text-slate-500 font-mono">{{ $product->sku }}</p>
+                                @endif
+                                @if($product->track_stock)
+                                    <p class="text-xs {{ $product->stock_quantity <= 0 ? 'text-red-400' : ($product->stock_quantity <= 5 ? 'text-yellow-400' : 'text-slate-500') }}">
+                                        Stock: {{ $product->stock_quantity }}
+                                    </p>
+                                @endif
+                            </div>
                         </div>
                     </a>
                 @empty
@@ -71,10 +78,19 @@
                     @forelse($products as $product)
                         <tr class="hover:bg-slate-700/50">
                             <td class="px-4 py-3">
-                                <p class="text-white font-medium">{{ $product->name }}</p>
-                                @if($product->description)
-                                    <p class="text-xs text-slate-500">{{ Str::limit($product->description, 50) }}</p>
-                                @endif
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-slate-900 overflow-hidden shrink-0">
+                                        @if($product->coverPhoto)
+                                            <img src="{{ $product->coverPhoto->thumbUrl() }}" alt="" loading="lazy" class="w-full h-full object-cover">
+                                        @endif
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-white font-medium">{{ $product->name }}</p>
+                                        @if($product->description)
+                                            <p class="text-xs text-slate-500">{{ Str::limit($product->description, 50) }}</p>
+                                        @endif
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-4 py-3 text-slate-400 font-mono text-xs">{{ $product->sku ?? '—' }}</td>
                             <td class="px-4 py-3 text-slate-300">{{ $product->category ?? '—' }}</td>
