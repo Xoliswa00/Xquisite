@@ -8,6 +8,7 @@ use App\Modules\POS\Models\Product;
 use App\Modules\POS\Models\ProductVariant;
 use Database\Seeders\PermissionRoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\AssertsNoNestedForms;
 use Tests\TestCase;
 
 /**
@@ -22,13 +23,21 @@ use Tests\TestCase;
  * Playwright verification of an unrelated feature (product photos),
  * confirmed pre-existing on dev before that feature touched this file.
  *
- * A DOMDocument parse of the real rendered response is the cheap,
- * deterministic equivalent of "did a browser's form-association logic
- * break" — it would have caught this on day one.
+ * CORRECTION (found while fixing the same bug class in
+ * admin/logs/index.blade.php, a separate follow-up): the "no nested
+ * form" check below, via DOMDocument, does NOT actually detect this —
+ * confirmed empirically that libxml2's HTML parser does not replicate
+ * the real-browser tree-construction quirk this bug depends on, so a
+ * DOMDocument-based "no form nested inside a form" assertion PASSES
+ * even against genuinely broken markup. The real regression guard is
+ * test_the_variants_view_source_has_no_nested_form_elements below (a
+ * raw-source scan, see AssertsNoNestedForms) — kept the DOMDocument
+ * tests for what they're actually good at (did the right fields end up
+ * in the right form), not as proof of "not nested".
  */
 class ProductVariantsPageHtmlTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, AssertsNoNestedForms;
 
     protected function setUp(): void
     {
@@ -36,27 +45,9 @@ class ProductVariantsPageHtmlTest extends TestCase
         $this->seed(PermissionRoleSeeder::class);
     }
 
-    public function test_the_variants_page_has_no_nested_form_elements(): void
+    public function test_the_variants_view_source_has_no_nested_form_elements(): void
     {
-        $tenant  = Tenant::create(['name' => 'Test Store', 'slug' => 'test-store', 'is_active' => true]);
-        $tenant->activateModule('pos');
-        $manager = User::factory()->create(['tenant_id' => $tenant->id]);
-        $manager->assignRole('manager');
-        $product = Product::create(['tenant_id' => $tenant->id, 'name' => 'T-Shirt', 'price' => 200, 'is_active' => true, 'has_variants' => true]);
-        ProductVariant::create([
-            'tenant_id' => $tenant->id, 'product_id' => $product->id,
-            'attributes' => ['Size' => 'M'], 'stock_quantity' => 5, 'track_stock' => true, 'is_active' => true,
-        ]);
-
-        $html = $this->actingAs($manager)->get(route('products.variants.index', $product))->getContent();
-
-        $dom = new \DOMDocument();
-        @$dom->loadHTML($html); // suppresses warnings for the page's non-HTML5 bits DOMDocument doesn't know
-
-        foreach ($dom->getElementsByTagName('form') as $form) {
-            $nested = $form->getElementsByTagName('form');
-            $this->assertSame(0, $nested->length, 'Found a <form> nested inside another <form> — invalid HTML; the browser silently closes the outer form early at the inner form\'s closing tag.');
-        }
+        $this->assertNoNestedFormsInSource('products/variants.blade.php');
     }
 
     public function test_the_save_variants_button_is_inside_the_update_form_not_orphaned(): void
