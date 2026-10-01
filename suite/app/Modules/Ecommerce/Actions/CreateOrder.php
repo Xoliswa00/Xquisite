@@ -15,7 +15,7 @@ use Illuminate\Support\Collection;
  * reference is a ULID (Order::generateReference), globally unique and safe to
  * generate concurrently — free of the max(id)+1 race the legacy generator had.
  *
- * @param  Collection<int,object>  $lines  {product, qty, unit_price, subtotal}
+ * @param  Collection<int,object>  $lines  {product, qty, unit_price, subtotal}, optionally {variant} and/or {combo} (see ReserveInventory::handle()/handleCombos())
  * @param  ?Promotion  $promotion  Already re-validated and row-locked by the
  *                                 caller (OrderService::placeOrder()) — this
  *                                 method trusts it and only does the math.
@@ -62,6 +62,7 @@ class CreateOrder
 
         foreach ($lines as $line) {
             $variant = $line->variant ?? null;
+            $combo   = $line->combo ?? null;
 
             OrderItem::create([
                 'order_id'           => $order->id,
@@ -71,9 +72,17 @@ class CreateOrder
                 // renaming/deleting the variant, same reasoning as
                 // product_name/product_sku/product_image_url below.
                 'variant_attributes' => $variant?->attributes,
+                // Frozen for the same reason — a combo can be edited or
+                // deleted later (see ServiceComboController) without this
+                // order's own history changing under it.
+                'combo_id'          => $combo?->id,
+                'combo_name'        => $combo?->name,
                 // e.g. "T-Shirt — Size: M, Color: Red" so the order stays
                 // readable on its own (admin list, email, invoice) without
-                // a join back to product_variants.
+                // a join back to product_variants. A combo item doesn't
+                // need the same treatment — combo_name on this row already
+                // carries "which bundle", and the product's own plain name
+                // is what was actually shipped/collected.
                 'product_name'      => $variant ? "{$line->product->name} — {$variant->label}" : $line->product->name,
                 'product_sku'       => $variant?->sku ?: $line->product->sku,
                 'product_image_url' => $variant?->effectiveImageUrl() ?? $line->product->image_url,

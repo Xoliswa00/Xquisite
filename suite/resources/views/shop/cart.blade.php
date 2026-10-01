@@ -3,7 +3,7 @@
     <div class="max-w-2xl mx-auto">
         <h1 class="text-2xl font-bold text-gray-900 mb-6">Your Cart</h1>
 
-        @if($lines->isEmpty())
+        @if($lines->isEmpty() && $comboLines->isEmpty())
             <div class="text-center py-16 bg-white rounded-2xl border border-gray-200">
                 <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -15,6 +15,47 @@
                 </a>
             </div>
         @else
+            {{--
+                Bundle lines, own block above the plain product lines — a
+                combo is conceptually one purchase (fixed contents, fixed
+                combo-priced total), not N separate product rows the
+                shopper could individually adjust, so it gets its own
+                Remove-only row rather than the qty stepper plain lines
+                have (see CartController::addCombo() — buying a second of
+                the same bundle means clicking "Add Bundle to Cart" again).
+            --}}
+            @if($comboLines->isNotEmpty())
+                <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-4">
+                    @foreach($comboLines as $comboLine)
+                        <div class="flex flex-wrap items-center gap-4 px-5 py-4 border-b border-gray-100 last:border-0">
+                            <div class="flex-1 min-w-[180px]">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-semibold px-1.5 py-0.5 rounded bg-[#F0F7FF] text-[#0078D4]">Bundle</span>
+                                    <p class="text-sm font-medium text-gray-900">{{ $comboLine->combo->name }}</p>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">{{ $comboLine->combo->products->pluck('name')->join(' + ') }}</p>
+                                @if($comboLine->qty > 1)
+                                    <p class="text-xs text-gray-400">× {{ $comboLine->qty }}</p>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <p class="text-sm font-bold text-gray-900">R{{ number_format($comboLine->subtotal, 2) }}</p>
+                                <form action="{{ $tenant->shopRoute('cart.combo.remove') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="combo_id" value="{{ $comboLine->combo->id }}">
+                                    <button type="submit" class="text-gray-300 hover:text-red-500 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            @if($lines->isNotEmpty())
             <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-4">
                 @foreach($lines as $line)
                     {{--
@@ -77,6 +118,7 @@
                     </div>
                 @endforeach
             </div>
+            @endif
 
             {{--
                 Applying a code re-validates it server-side on every submit
@@ -97,6 +139,9 @@
                             <button type="submit" class="text-xs text-emerald-700 hover:text-emerald-900 underline">Remove</button>
                         </form>
                     </div>
+                @elseif($comboLines->isNotEmpty())
+                    {{-- Same rule as the booking funnel: a bundle's price is already discounted, no stacking a code on top. --}}
+                    <p class="text-sm text-gray-400">Promo codes can't be combined with a bundle deal — remove the bundle to use a code instead.</p>
                 @else
                     <form action="{{ $tenant->shopRoute('cart.promo.apply') }}" method="POST" class="flex gap-2">
                         @csrf
@@ -114,12 +159,12 @@
             <div class="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
                 <div class="flex justify-between text-sm text-gray-600 mb-1">
                     <span>Subtotal</span>
-                    <span>R{{ number_format($lines->sum('subtotal'), 2) }}</span>
+                    <span>R{{ number_format($subtotal, 2) }}</span>
                 </div>
                 @if($promotion)
                     <div class="flex justify-between text-sm text-emerald-600 mb-1">
                         <span>Discount ({{ $promotion->code }})</span>
-                        <span>-R{{ number_format($promotion->discountFor($lines->sum('subtotal')), 2) }}</span>
+                        <span>-R{{ number_format($discount, 2) }}</span>
                     </div>
                 @endif
                 <div class="flex justify-between text-sm text-gray-400 mb-3">
@@ -128,7 +173,7 @@
                 </div>
                 <div class="flex justify-between font-bold text-base pt-3 border-t border-gray-100">
                     <span>Estimated Total</span>
-                    <span class="text-[#0078D4]">R{{ number_format($lines->sum('subtotal') - ($promotion?->discountFor($lines->sum('subtotal')) ?? 0), 2) }}</span>
+                    <span class="text-[#0078D4]">R{{ number_format($subtotal - $discount, 2) }}</span>
                 </div>
             </div>
 
