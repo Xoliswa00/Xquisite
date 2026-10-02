@@ -327,7 +327,12 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
 
-        <div class="flex-1 flex flex-col gap-1 items-center w-full px-2">
+        {{-- overflow-y-auto so a growing module list scrolls instead of
+             silently clipping the bottom icons (System Owner, the profile
+             menu) off-screen on short viewports. Popout flyouts are
+             position:fixed (see nav-flyout.blade.php), so they aren't
+             affected by this container's own scrollport/clipping. --}}
+        <div @scroll="mobileFlyout = null" class="sidebar-scroll flex-1 min-h-0 flex flex-col gap-1 items-center w-full px-2 overflow-y-auto">
             <a href="{{ route('dashboard') }}"
                class="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 {{ request()->routeIs('dashboard') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}"
                aria-label="Dashboard" title="Dashboard">
