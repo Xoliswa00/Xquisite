@@ -27,6 +27,7 @@ class Appointment extends Model
         'pos_order_id',
         'notes',
         'inspiration_notes',
+        'look_saved_at',
         'terms_accepted_at',
         'combo_id',
         'combo_price',
@@ -47,6 +48,7 @@ class Appointment extends Model
     protected $casts = [
         'scheduled_at'     => 'datetime',
         'terms_accepted_at' => 'datetime',
+        'look_saved_at'    => 'datetime',
         'setup_at'         => 'datetime',
         'breakdown_at'     => 'datetime',
         'duration_minutes' => 'integer',
@@ -118,7 +120,30 @@ public function totalDuration(): int
     /** Customer "this is the look I want" photos (private disk, see the model). */
     public function inspirationPhotos()
     {
+        return $this->lookPhotos()->where('kind', AppointmentInspirationPhoto::KIND_INSPIRATION);
+    }
+
+    /** Staff "how it turned out" photos, added when saving the client's look. */
+    public function resultPhotos()
+    {
+        return $this->lookPhotos()->where('kind', AppointmentInspirationPhoto::KIND_RESULT);
+    }
+
+    /** Every look photo, both kinds. */
+    public function lookPhotos()
+    {
         return $this->hasMany(AppointmentInspirationPhoto::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function isLookSaved(): bool
+    {
+        return $this->look_saved_at !== null;
+    }
+
+    /** Saved looks only. */
+    public function scopeSavedLooks($query)
+    {
+        return $query->whereNotNull('look_saved_at')->orderByDesc('scheduled_at');
     }
 
     /** Whether the customer can still add or remove inspiration photos. */

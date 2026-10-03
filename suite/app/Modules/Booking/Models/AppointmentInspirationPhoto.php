@@ -24,8 +24,14 @@ class AppointmentInspirationPhoto extends Model
 
     public const DISK = 'local';
 
+    /** What the customer asked for (uploaded by them). */
+    public const KIND_INSPIRATION = 'inspiration';
+
+    /** How it actually turned out (uploaded by staff, for saved looks). */
+    public const KIND_RESULT = 'result';
+
     /** appointment_id is set via the relationship, never from request input. */
-    protected $fillable = ['tenant_id', 'path', 'path_thumb', 'width', 'height', 'sort_order'];
+    protected $fillable = ['tenant_id', 'kind', 'path', 'path_thumb', 'width', 'height', 'sort_order'];
 
     protected $casts = [
         'appointment_id' => 'integer',
@@ -39,6 +45,11 @@ class AppointmentInspirationPhoto extends Model
         // A DB cascade from a force-deleted appointment skips this hook; the
         // prune command sweeps up those orphaned directories.
         static::deleted(fn (self $photo) => Storage::disk(self::DISK)->delete($photo->storagePaths()));
+    }
+
+    public function isResult(): bool
+    {
+        return $this->kind === self::KIND_RESULT;
     }
 
     public function appointment()

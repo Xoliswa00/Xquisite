@@ -53,7 +53,12 @@ class CustomerPortalController extends Controller
             ->limit(20)
             ->get();
 
-        return view('booking.my-bookings', compact('tenant', 'slug', 'upcoming', 'past'));
+        $savedLooks = Appointment::where('customer_id', $customer->id)
+            ->savedLooks()
+            ->with(['services', 'inspirationPhotos', 'resultPhotos'])
+            ->get();
+
+        return view('booking.my-bookings', compact('tenant', 'slug', 'upcoming', 'past', 'savedLooks'));
     }
 
     public function cancel(string $slug, Appointment $appointment, Request $request, BookingNotificationService $notifications)

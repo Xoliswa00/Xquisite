@@ -235,6 +235,10 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('appointments/{appointment}/remind', [\App\Http\Controllers\Booking\AppointmentController::class, 'remind'])->name('appointments.remind');
             Route::get('appointments/{appointment}/inspiration/{photo}/{size}', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffShow'])
                 ->whereIn('size', ['full', 'thumb'])->name('appointments.inspiration.show');
+            Route::post('appointments/{appointment}/look/results', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffStoreResults'])->name('appointments.look.results.store');
+            Route::delete('appointments/{appointment}/look/results/{photo}', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffDestroyResult'])->name('appointments.look.results.destroy');
+            Route::post('appointments/{appointment}/look', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffSaveLook'])->name('appointments.look.save');
+            Route::delete('appointments/{appointment}/look', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffForgetLook'])->name('appointments.look.forget');
             Route::post('appointments/{appointment}/mark-paid', [\App\Http\Controllers\Booking\AppointmentController::class, 'markPaid'])->name('appointments.mark-paid');
             Route::get('calendar/{date?}', [\App\Http\Controllers\Booking\AppointmentController::class, 'calendar'])->name('appointments.calendar');
         });
@@ -642,6 +646,8 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
             ->name('inspiration.store')->middleware('throttle:10,1');
         Route::delete('/appointments/{appointment}/inspiration/{photo}', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerDestroy'])
             ->name('inspiration.destroy');
+        Route::get('/looks/{appointment}/book-again',                   [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerRebookLook'])->name('looks.rebook');
+        Route::delete('/looks/{appointment}',                           [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerForgetLook'])->name('looks.forget');
 
         // Push notification subscriptions — same controller as the staff-side
         // route (routes/web.php, profile group); it resolves whichever guard
