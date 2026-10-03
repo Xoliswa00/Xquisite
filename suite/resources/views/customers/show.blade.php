@@ -49,10 +49,16 @@
                             </a>
                             <span class="text-xs text-slate-500 shrink-0">{{ $look->scheduled_at->format('d M Y') }}</span>
                         </div>
-                        @php $photos = $look->resultPhotos->concat($look->inspirationPhotos); @endphp
-                        @if($photos->isNotEmpty())
+                        @if($look->resultPhotos->isNotEmpty())
                             <div class="max-w-sm">
-                                @include('appointments.partials.look-thumbs', ['photos' => $photos->take(6), 'label' => 'Look photo'])
+                                <p class="text-xs text-slate-500 mb-1">How it turned out</p>
+                                @include('appointments.partials.look-thumbs', ['photos' => $look->resultPhotos, 'label' => 'After photo'])
+                            </div>
+                        @endif
+                        @if($look->inspirationPhotos->isNotEmpty())
+                            <div class="max-w-sm">
+                                <p class="text-xs text-slate-500 mb-1">What they asked for</p>
+                                @include('appointments.partials.look-thumbs', ['photos' => $look->inspirationPhotos, 'label' => 'Inspiration photo'])
                             </div>
                         @endif
                         @if($look->inspiration_notes)

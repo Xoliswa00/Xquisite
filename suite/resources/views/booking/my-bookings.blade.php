@@ -111,7 +111,7 @@
                             </p>
                             @if($inspoSlots > 0 && $appt->inspirationIsEditable())
                                 <button type="button" @click="showInspo = !showInspo"
-                                        class="text-xs text-[#0078D4] hover:text-[#0065B8] font-medium">
+                                        class="text-xs text-[#0078D4] hover:text-[#0065B8] font-medium px-2 py-2">
                                     {{ $inspoPhotos->isEmpty() ? 'Add the look you want' : 'Add more' }}
                                 </button>
                             @endif
@@ -122,15 +122,15 @@
                                 @foreach($inspoPhotos as $photo)
                                     <div class="relative">
                                         <a href="{{ $photo->customerUrl($slug) }}" target="_blank" rel="noopener">
-                                            <img src="{{ $photo->customerUrl($slug, 'thumb') }}" alt="Inspiration photo {{ $loop->iteration }}"
+                                            <img src="{{ $photo->customerUrl($slug, 'thumb') }}" alt="Inspiration photo {{ $loop->iteration }}" loading="lazy"
                                                  class="w-20 h-20 object-cover rounded-xl border border-slate-200">
                                         </a>
                                         @if($appt->inspirationIsEditable())
                                             <form method="POST" action="{{ route('book.inspiration.destroy', [$slug, $appt, $photo]) }}"
                                                   onsubmit="return confirm('Remove this photo?')"
-                                                  class="absolute top-1 right-1">
+                                                  class="absolute top-0 right-0 p-1">
                                                 @csrf @method('DELETE')
-                                                <button class="w-6 h-6 rounded-full bg-slate-900 hover:bg-slate-700 text-white flex items-center justify-center" aria-label="Remove photo">
+                                                <button class="w-8 h-8 rounded-full bg-slate-900 hover:bg-slate-700 text-white flex items-center justify-center" aria-label="Remove photo">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                                 </button>
                                             </form>
@@ -190,25 +190,33 @@
         <p class="text-xs text-slate-400 mb-3">Looks {{ $tenant->name }} saved for you. Book one again and they'll see it before you arrive.</p>
         <div class="space-y-3">
             @foreach($savedLooks as $look)
-            @php $lookPhotos = $look->resultPhotos->concat($look->inspirationPhotos)->take(3); @endphp
+            @php
+                $lookPhotos = $look->orderedLookPhotos()->take(3);
+                $lookTitle  = $look->services->pluck('name')->join(', ') ?: 'Your look from ' . $look->scheduled_at->format('d M Y');
+            @endphp
             <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                        <p class="font-semibold text-slate-900 truncate">{{ $look->services->pluck('name')->join(', ') }}</p>
+                        <p class="font-semibold text-slate-900 truncate">{{ $lookTitle }}</p>
                         <p class="text-xs text-slate-400 mt-0.5">{{ $look->scheduled_at->format('d M Y') }}</p>
                     </div>
                     <form method="POST" action="{{ route('book.looks.forget', [$slug, $look]) }}"
-                          onsubmit="return confirm('Remove this saved look? The photos will be deleted after 90 days.')">
+                          onsubmit="return confirm(@js("Remove this look? {$tenant->name} won't see it any more, and their after photos of you are deleted now."))">
                         @csrf @method('DELETE')
-                        <button class="text-xs text-slate-400 hover:text-red-500 shrink-0">Remove</button>
+                        <button class="text-xs text-slate-400 hover:text-red-500 shrink-0 px-2 py-2 -mt-2">Remove</button>
                     </form>
                 </div>
                 @if($lookPhotos->isNotEmpty())
                     <div class="flex flex-wrap gap-2">
                         @foreach($lookPhotos as $photo)
-                            <a href="{{ $photo->customerUrl($slug) }}" target="_blank" rel="noopener">
-                                <img src="{{ $photo->customerUrl($slug, 'thumb') }}" alt="Saved look photo {{ $loop->iteration }}"
-                                     class="w-20 h-20 object-cover rounded-xl border border-slate-200">
+                            <a href="{{ $photo->customerUrl($slug) }}" target="_blank" rel="noopener" class="relative block">
+                                <img src="{{ $photo->customerUrl($slug, 'thumb') }}"
+                                     alt="{{ $photo->isResult() ? 'How it turned out' : 'Your inspiration' }}, photo {{ $loop->iteration }}"
+                                     loading="lazy" class="block w-20 h-20 object-cover rounded-xl border border-slate-200">
+                                <span class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-slate-900 text-white text-[10px] font-medium">
+                                    {{ $photo->isResult() ? 'After' : 'Yours' }}
+                                </span>
+                                <span class="sr-only">(opens full size in a new tab)</span>
                             </a>
                         @endforeach
                     </div>
@@ -216,10 +224,12 @@
                 @if($look->inspiration_notes)
                     <p class="text-xs text-slate-500 whitespace-pre-line">{{ $look->inspiration_notes }}</p>
                 @endif
-                <a href="{{ route('book.looks.rebook', [$slug, $look]) }}"
-                   class="inline-flex px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs font-semibold rounded-lg">
-                    Book this look again
-                </a>
+                <form method="POST" action="{{ route('book.looks.rebook', [$slug, $look]) }}">
+                    @csrf
+                    <button class="inline-flex px-4 py-2.5 bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs font-semibold rounded-lg">
+                        Book this look again
+                    </button>
+                </form>
             </div>
             @endforeach
         </div>

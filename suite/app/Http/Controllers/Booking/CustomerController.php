@@ -65,7 +65,8 @@ class CustomerController extends Controller
 
         $savedLooks = $customer->appointments()
             ->savedLooks()
-            ->with(['services', 'inspirationPhotos', 'resultPhotos'])
+            ->with(['services', 'lookPhotos', 'inspirationPhotos', 'resultPhotos'])
+            ->limit(12) // each thumb is its own request; the newest dozen is plenty
             ->get();
 
         return view('customers.show', compact('customer', 'appointments', 'savedLooks'));
