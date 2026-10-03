@@ -65,3 +65,6 @@ Schedule::command('traffic:purge')->dailyAt('03:30')->withoutOverlapping();
 // Founding 20: auto-create 30/60/90-day check-ins once a business has been
 // onboarded that long, instead of relying on someone remembering the date.
 Schedule::command('founding-twenty:auto-issue-checkins')->dailyAt('06:00')->withoutOverlapping();
+
+// Booking: delete customer inspiration photos 90 days after the appointment (personal data, POPIA).
+Schedule::command('booking:prune-inspiration-photos')->dailyAt('03:15')->withoutOverlapping();

@@ -106,6 +106,7 @@ class ServiceController extends Controller
             'price_per_unit'      => 'nullable|numeric|min:0',
             'unit_label'          => 'nullable|string|max:30',
             'is_active'           => 'boolean',
+            'accepts_inspiration_photos' => 'boolean',
             'bundles'             => 'nullable|array',
             'bundles.*.product_id' => 'required|integer|exists:products,id',
             'bundles.*.quantity'   => 'required|integer|min:1',
@@ -116,6 +117,7 @@ class ServiceController extends Controller
         ]);
 
         $data['is_active'] = $request->boolean('is_active', true);
+        $data['accepts_inspiration_photos'] = $request->boolean('accepts_inspiration_photos', true);
         $bundles = $data['bundles'] ?? [];
         unset($data['bundles'], $data['photos']);
 
@@ -151,12 +153,16 @@ class ServiceController extends Controller
             'price_per_unit'      => 'nullable|numeric|min:0',
             'unit_label'          => 'nullable|string|max:30',
             'is_active'           => 'boolean',
+            'accepts_inspiration_photos' => 'boolean',
             'bundles'             => 'nullable|array',
             'bundles.*.product_id' => 'required|integer|exists:products,id',
             'bundles.*.quantity'   => 'required|integer|min:1',
         ]);
 
         $data['is_active'] = $request->boolean('is_active', true);
+        if ($request->has('accepts_inspiration_photos')) {
+            $data['accepts_inspiration_photos'] = $request->boolean('accepts_inspiration_photos');
+        }
         $bundles = $data['bundles'] ?? [];
         unset($data['bundles']);
 

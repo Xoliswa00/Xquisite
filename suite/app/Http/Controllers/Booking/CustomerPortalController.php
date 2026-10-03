@@ -39,7 +39,7 @@ class CustomerPortalController extends Controller
         $upcoming = Appointment::where('customer_id', $customer->id)
             ->whereIn('status', ['pending', 'confirmed'])
             ->where('scheduled_at', '>=', now())
-            ->with(['services', 'staff'])
+            ->with(['services', 'staff', 'inspirationPhotos'])
             ->orderBy('scheduled_at')
             ->get();
 

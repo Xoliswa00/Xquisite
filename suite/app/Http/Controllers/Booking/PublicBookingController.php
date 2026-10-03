@@ -12,6 +12,7 @@ use App\Modules\Booking\Models\Service;
 use App\Modules\Booking\Models\ServicePhoto;
 use App\Models\Tenant;
 use App\Services\Booking\AvailabilityService;
+use App\Services\Booking\InspirationPhotoService;
 use App\Services\Notifications\BookingNotificationService;
 use App\Services\Tenant\TenantContext;
 use App\Support\TenantManifest;
@@ -207,7 +208,11 @@ class PublicBookingController extends Controller
 
         $customer = auth('customer')->user();
 
-        return view('booking.confirm', compact('tenant', 'services', 'slot', 'slug', 'customer', 'combo', 'isMultiDay', 'totalDays', 'quantities'));
+        // Owners switch the inspiration upload off per service; show it if any picked service wants it.
+        $acceptsInspiration = $services->contains(fn($s) => $s->accepts_inspiration_photos);
+        $maxInspirationPhotos = InspirationPhotoService::MAX_PER_APPOINTMENT;
+
+        return view('booking.confirm', compact('tenant', 'services', 'slot', 'slug', 'customer', 'combo', 'isMultiDay', 'totalDays', 'quantities', 'acceptsInspiration', 'maxInspirationPhotos'));
     }
 
     /** AJAX — validate a promo code against the pending booking session */
@@ -250,7 +255,7 @@ class PublicBookingController extends Controller
     }
 
     /** Step 4 — create the appointment */
-    public function store(string $slug, Request $request, AvailabilityService $availability, BookingNotificationService $notifications)
+    public function store(string $slug, Request $request, AvailabilityService $availability, BookingNotificationService $notifications, InspirationPhotoService $inspiration)
     {
         $tenant  = $this->resolveTenant($slug);
         $pending = session('pending_booking');
@@ -270,6 +275,12 @@ class PublicBookingController extends Controller
             return back()->withErrors(['accepted_terms' => 'Please accept the terms and cancellation policy to continue.']);
         }
 
+        // Validated before taking the slot lock: a bad file shouldn't hold the slot for anyone else.
+        $inspirationInput = $request->validate(
+            InspirationPhotoService::rules() + ['inspiration_notes' => 'nullable|string|max:1000'],
+            InspirationPhotoService::messages()
+        );
+
         // Guards against two causes of duplicate/oversold bookings:
         //  1. The customer double-clicks "Confirm Booking" (or the request is just
         //     slow) before the first request has cleared pending_booking from the
@@ -287,7 +298,7 @@ class PublicBookingController extends Controller
 
         try {
             return Cache::lock($lockKey, 15)->block(5, function () use (
-                $slug, $request, $availability, $notifications, $tenant, $pending, $customer
+                $slug, $request, $availability, $notifications, $tenant, $pending, $customer, $inspiration, $inspirationInput
             ) {
                 $services      = Service::findMany($pending['service_ids']);
                 $quantities    = $pending['quantities'] ?? [];
@@ -311,6 +322,9 @@ class PublicBookingController extends Controller
 
                 $notes = $request->validate(['notes' => 'nullable|string|max:1000'])['notes'] ?? null;
 
+                $acceptsInspiration = $services->contains(fn($s) => $s->accepts_inspiration_photos);
+                $inspirationNotes   = $acceptsInspiration ? ($inspirationInput['inspiration_notes'] ?? null) : null;
+
                 // Auto-detect combo pricing (works even if combo_id wasn't threaded through session)
                 $combo      = $this->detectCombo($pending['combo_id'] ?? null, $serviceIds);
                 $comboId    = $combo?->id;
@@ -322,7 +336,7 @@ class PublicBookingController extends Controller
 
                 $appointment = DB::transaction(function () use (
                     $combo, $request, $services, $quantities, $tenant, $customer, $start,
-                    $totalDuration, $notes, $comboId, $comboPrice, &$promoCode, &$promoDiscount
+                    $totalDuration, $notes, $inspirationNotes, $comboId, $comboPrice, &$promoCode, &$promoDiscount
                 ) {
                     if (!$combo && $request->filled('promo_code')) {
                         $code = strtoupper(trim($request->input('promo_code')));
@@ -356,6 +370,7 @@ class PublicBookingController extends Controller
                         'duration_minutes' => $totalDuration,
                         'status'           => 'pending',
                         'notes'            => $notes,
+                        'inspiration_notes' => $inspirationNotes,
                         'combo_id'         => $comboId,
                         'combo_price'      => $comboPrice,
                         'promo_code'       => $promoCode,
@@ -379,6 +394,11 @@ class PublicBookingController extends Controller
 
                 if ($appointment === null) {
                     return back()->withErrors(['promo_code' => 'Invalid or expired promo code.'])->withInput();
+                }
+
+                // After the booking transaction, so a slow image can't hold the promo row lock.
+                if ($acceptsInspiration) {
+                    $inspiration->store($appointment, $request->file('inspiration_photos', []));
                 }
 
                 $notifications->notifyAppointmentCreated($appointment, route('book.success', [$slug, $appointment]));

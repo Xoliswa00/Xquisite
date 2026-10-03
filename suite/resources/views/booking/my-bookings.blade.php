@@ -26,11 +26,17 @@
         @else
             <div class="space-y-3">
                 @foreach($upcoming as $appt)
-                @php $serviceNames = $appt->services->pluck('name')->join(', '); @endphp
+                @php
+                    $serviceNames = $appt->services->pluck('name')->join(', ');
+                    $inspoPhotos  = $appt->inspirationPhotos;
+                    $inspoOpen    = $appt->services->contains(fn($s) => $s->accepts_inspiration_photos) || $inspoPhotos->isNotEmpty();
+                    $inspoSlots   = \App\Services\Booking\InspirationPhotoService::MAX_PER_APPOINTMENT - $inspoPhotos->count();
+                    $inspoErrored = old('inspiration_for') == $appt->id;
+                @endphp
                 <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3"
-                     x-data="{ showUpload: false }">
+                     x-data="{ showUpload: false, showInspo: {{ $inspoErrored ? 'true' : 'false' }}, inspoBusy: false }">
 
-                    <div class="flex items-start justify-between gap-3">
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div class="min-w-0">
                             <p class="font-semibold text-slate-900 truncate">{{ $serviceNames }}</p>
                             <p class="text-sm text-slate-500 mt-0.5">
@@ -48,12 +54,12 @@
                             @endif
                         </div>
 
-                        <div class="flex flex-col items-end gap-2 shrink-0">
+                        <div class="flex flex-col items-start sm:items-end gap-2 shrink-0">
                             <span class="px-2 py-0.5 rounded-full text-xs font-medium
                                 {{ $appt->status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : 'bg-yellow-100 text-yellow-700' }}">
                                 {{ ucfirst(str_replace('_', ' ', $appt->status)) }}
                             </span>
-                            <div class="flex items-center gap-3">
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
                                 @if(!$appt->payment_proof_path)
                                     <button type="button" @click="showUpload = !showUpload"
                                             class="text-xs text-[#0078D4] hover:text-[#0065B8] font-medium">
@@ -67,7 +73,7 @@
                                         <button class="text-xs text-red-500 hover:text-red-700">Cancel</button>
                                     </form>
                                     <a href="{{ route('book.edit', [$slug, $appt]) }}"
-                                       class="text-xs text-[#0078D4] hover:text-[#0078D4]">Reschedule &rarr;</a>
+                                       class="text-xs text-[#0078D4] hover:text-[#0065B8]">Reschedule &rarr;</a>
                                 @else
                                     <span class="text-xs text-slate-300" title="Cancellation window has passed">Cannot cancel</span>
                                 @endif
@@ -94,6 +100,83 @@
                         </form>
                         <p class="text-xs text-slate-400 mt-1">PDF, JPG, PNG or WebP &middot; max 8 MB</p>
                     </div>
+
+                    {{-- Inspiration photos --}}
+                    @if($inspoOpen)
+                    <div class="border-t border-slate-100 pt-3 space-y-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="text-xs font-semibold text-slate-500">
+                                Inspiration photos
+                                @if($inspoPhotos->isNotEmpty())<span class="font-normal text-slate-400">&middot; {{ $inspoPhotos->count() }}</span>@endif
+                            </p>
+                            @if($inspoSlots > 0 && $appt->inspirationIsEditable())
+                                <button type="button" @click="showInspo = !showInspo"
+                                        class="text-xs text-[#0078D4] hover:text-[#0065B8] font-medium">
+                                    {{ $inspoPhotos->isEmpty() ? 'Add the look you want' : 'Add more' }}
+                                </button>
+                            @endif
+                        </div>
+
+                        @if($inspoPhotos->isNotEmpty())
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($inspoPhotos as $photo)
+                                    <div class="relative">
+                                        <a href="{{ $photo->customerUrl($slug) }}" target="_blank" rel="noopener">
+                                            <img src="{{ $photo->customerUrl($slug, 'thumb') }}" alt="Inspiration photo {{ $loop->iteration }}"
+                                                 class="w-20 h-20 object-cover rounded-xl border border-slate-200">
+                                        </a>
+                                        @if($appt->inspirationIsEditable())
+                                            <form method="POST" action="{{ route('book.inspiration.destroy', [$slug, $appt, $photo]) }}"
+                                                  onsubmit="return confirm('Remove this photo?')"
+                                                  class="absolute top-1 right-1">
+                                                @csrf @method('DELETE')
+                                                <button class="w-6 h-6 rounded-full bg-slate-900 hover:bg-slate-700 text-white flex items-center justify-center" aria-label="Remove photo">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        @if($appt->inspiration_notes)
+                            <p class="text-xs text-slate-500 whitespace-pre-line">{{ $appt->inspiration_notes }}</p>
+                        @endif
+
+                        @if($inspoSlots > 0 && $appt->inspirationIsEditable())
+                        <form method="POST" action="{{ route('book.inspiration.store', [$slug, $appt]) }}"
+                              enctype="multipart/form-data"
+                              x-show="showInspo" x-cloak x-transition
+                              @submit="if (inspoBusy) $event.preventDefault()"
+                              class="space-y-3">
+                            @csrf
+                            <input type="hidden" name="inspiration_for" value="{{ $appt->id }}">
+                            @if($inspoErrored)
+                                @if($errors->has('inspiration_photos'))
+                                    <p class="text-xs text-red-500">{{ $errors->first('inspiration_photos') }}</p>
+                                @endif
+                                @foreach($errors->get('inspiration_photos.*') as $messages)
+                                    <p class="text-xs text-red-500">{{ $messages[0] }}</p>
+                                @endforeach
+                            @endif
+
+                            @include('booking.partials.inspiration-picker', ['max' => $inspoSlots, 'inputId' => 'inspiration-photos-' . $appt->id])
+
+                            @if(! $appt->inspiration_notes)
+                                <textarea name="inspiration_notes" rows="2" maxlength="1000"
+                                          placeholder="Describe the look (optional)"
+                                          class="w-full border-slate-300 rounded-xl text-sm"></textarea>
+                            @endif
+
+                            <button type="submit" :disabled="inspoBusy"
+                                    class="px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] disabled:opacity-60 text-white text-xs font-semibold rounded-lg">
+                                Save photos
+                            </button>
+                        </form>
+                        @endif
+                    </div>
+                    @endif
                 </div>
                 @endforeach
             </div>

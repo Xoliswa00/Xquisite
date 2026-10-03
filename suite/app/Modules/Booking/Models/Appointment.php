@@ -26,6 +26,7 @@ class Appointment extends Model
         'status',
         'pos_order_id',
         'notes',
+        'inspiration_notes',
         'terms_accepted_at',
         'combo_id',
         'combo_price',
@@ -112,6 +113,19 @@ public function totalDuration(): int
     public function reminders()
     {
         return $this->hasMany(AppointmentReminder::class);
+    }
+
+    /** Customer "this is the look I want" photos (private disk, see the model). */
+    public function inspirationPhotos()
+    {
+        return $this->hasMany(AppointmentInspirationPhoto::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /** Whether the customer can still add or remove inspiration photos. */
+    public function inspirationIsEditable(): bool
+    {
+        return in_array($this->status, ['pending', 'confirmed'], true)
+            && $this->scheduled_at?->isFuture();
     }
 
     public function scopeToday($query)
