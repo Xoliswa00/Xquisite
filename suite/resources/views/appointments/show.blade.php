@@ -286,9 +286,10 @@
 
             {{-- Proof of payment --}}
             @if($appointment->payment_proof_path)
+                @php $proofUrl = $appointment->paymentProofUrl(); @endphp
                 <div class="pt-3 border-t border-slate-700">
                     <p class="text-slate-400 text-sm mb-2">Proof of Payment</p>
-                    <a href="{{ Storage::disk('public')->url($appointment->payment_proof_path) }}"
+                    <a href="{{ $proofUrl }}"
                        target="_blank" rel="noopener"
                        class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-200 text-xs font-medium rounded-lg transition-colors">
                         <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -301,7 +302,7 @@
                     @endphp
                     @if(in_array(strtolower($ext), ['jpg','jpeg','png','webp']))
                         <div class="mt-2">
-                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($appointment->payment_proof_path) }}"
+                            <img src="{{ $proofUrl }}"
                                  alt="Proof of payment"
                                  class="max-h-40 rounded-lg border border-slate-700 object-contain">
                         </div>

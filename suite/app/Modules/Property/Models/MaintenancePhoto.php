@@ -17,8 +17,9 @@ class MaintenancePhoto extends Model
         return $this->belongsTo(MaintenanceRequest::class);
     }
 
+    /** Short-lived signed link; photos from inside occupied homes are private. See App\Support\PrivateFile. */
     public function url(): string
     {
-        return asset('storage/' . $this->path);
+        return \App\Support\PrivateFile::url('maintenance-photo', $this->id);
     }
 }

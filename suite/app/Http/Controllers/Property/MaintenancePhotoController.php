@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Property\Models\MaintenancePhoto;
 use App\Modules\Property\Models\MaintenanceRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Support\PrivateFile;
 
 class MaintenancePhotoController extends Controller
 {
@@ -20,7 +20,7 @@ class MaintenancePhotoController extends Controller
 
         foreach ($request->file('photos') as $photo) {
             $maintenance->photos()->create([
-                'path'    => $photo->store('maintenance', 'public'),
+                'path'    => PrivateFile::store($photo, 'maintenance'),
                 'caption' => $validated['caption'] ?? null,
             ]);
         }
@@ -32,7 +32,7 @@ class MaintenancePhotoController extends Controller
     {
         abort_unless($photo->maintenance_request_id === $maintenance->id, 404);
 
-        Storage::disk('public')->delete($photo->path);
+        PrivateFile::delete($photo->path);
         $photo->delete();
 
         return back()->with('success', 'Photo removed.');

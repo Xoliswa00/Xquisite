@@ -7,7 +7,6 @@ use App\Modules\Property\Models\Inspection;
 use App\Modules\Property\Models\InspectionSection;
 use App\Modules\Property\Models\Lease;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class InspectionController extends Controller
 {
@@ -50,9 +49,9 @@ class InspectionController extends Controller
 
             if ($request->hasFile("sections.{$sectionId}.photo")) {
                 if ($section->photo_path) {
-                    Storage::disk('public')->delete($section->photo_path);
+                    \App\Support\PrivateFile::delete($section->photo_path);
                 }
-                $update['photo_path'] = $request->file("sections.{$sectionId}.photo")->store('inspections', 'public');
+                $update['photo_path'] = \App\Support\PrivateFile::store($request->file("sections.{$sectionId}.photo"), 'inspections');
             }
 
             $section->update($update);

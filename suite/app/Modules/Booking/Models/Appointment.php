@@ -63,6 +63,12 @@ class Appointment extends Model
         return $this->morphOne(\App\Models\PaymentPlan::class, 'plannable');
     }
 
+    /** Short-lived signed link to the customer's proof of payment (private file). */
+    public function paymentProofUrl(): ?string
+    {
+        return $this->payment_proof_path ? \App\Support\PrivateFile::url('payment-proof', $this->id) : null;
+    }
+
     public function isTentative(): bool
     {
         return $this->status === 'tentative';

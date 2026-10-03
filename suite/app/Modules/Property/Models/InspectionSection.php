@@ -19,6 +19,7 @@ class InspectionSection extends Model
 
     public function url(): ?string
     {
-        return $this->photo_path ? asset('storage/' . $this->photo_path) : null;
+        // Short-lived signed link; inspection photos are private. See App\Support\PrivateFile.
+        return $this->photo_path ? \App\Support\PrivateFile::url('inspection-photo', $this->id) : null;
     }
 }
