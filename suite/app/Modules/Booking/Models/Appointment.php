@@ -2,6 +2,7 @@
 
 namespace App\Modules\Booking\Models;
 
+use App\Support\PrivateFile;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Traits\HasTenant;
@@ -66,7 +67,7 @@ class Appointment extends Model
     /** Short-lived signed link to the customer's proof of payment (private file). */
     public function paymentProofUrl(): ?string
     {
-        return $this->payment_proof_path ? \App\Support\PrivateFile::url('payment-proof', $this->id) : null;
+        return $this->payment_proof_path ? PrivateFile::url('payment-proof', $this->id) : null;
     }
 
     public function isTentative(): bool
