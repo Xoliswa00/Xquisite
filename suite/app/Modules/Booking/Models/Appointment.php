@@ -29,6 +29,7 @@ class Appointment extends Model
         'notes',
         'inspiration_notes',
         'look_saved_at',
+        'look_removed_at',
         'terms_accepted_at',
         'combo_id',
         'combo_price',
@@ -50,6 +51,7 @@ class Appointment extends Model
         'scheduled_at'     => 'datetime',
         'terms_accepted_at' => 'datetime',
         'look_saved_at'    => 'datetime',
+        'look_removed_at'  => 'datetime',
         'setup_at'         => 'datetime',
         'breakdown_at'     => 'datetime',
         'duration_minutes' => 'integer',
@@ -142,9 +144,42 @@ public function totalDuration(): int
         return $this->hasMany(AppointmentInspirationPhoto::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    /**
+     * Look photos in display/copy order: staff after-photos first (that's the
+     * look they liked), then the client's own inspiration. One place, so the
+     * confirm preview, My Bookings and copyLook() can't disagree.
+     */
+    public function orderedLookPhotos(): \Illuminate\Support\Collection
+    {
+        return $this->lookPhotos
+            ->sortBy(fn ($p) => [$p->isResult() ? 0 : 1, $p->sort_order, $p->id])
+            ->values();
+    }
+
     public function isLookSaved(): bool
     {
         return $this->look_saved_at !== null;
+    }
+
+    /** The client removed this look; staff can't save it again. */
+    public function lookWasRemovedByClient(): bool
+    {
+        return $this->look_removed_at !== null;
+    }
+
+    /** Whether looks apply to this booking at all (some service takes inspiration, or photos already exist). */
+    public function usesLooks(): bool
+    {
+        return $this->services->contains(fn ($s) => $s->accepts_inspiration_photos)
+            || $this->lookPhotos->isNotEmpty()
+            || (bool) $this->inspiration_notes;
+    }
+
+    /** Staff can add after photos / save the look once the appointment has happened. */
+    public function lookCanBeRecorded(): bool
+    {
+        return ! in_array($this->status, ['cancelled', 'no_show'], true)
+            && ($this->status === 'completed' || $this->scheduled_at?->isPast());
     }
 
     /** Saved looks only. */

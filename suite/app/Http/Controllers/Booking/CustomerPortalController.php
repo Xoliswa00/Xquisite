@@ -55,7 +55,8 @@ class CustomerPortalController extends Controller
 
         $savedLooks = Appointment::where('customer_id', $customer->id)
             ->savedLooks()
-            ->with(['services', 'inspirationPhotos', 'resultPhotos'])
+            ->with(['services', 'lookPhotos', 'inspirationPhotos', 'resultPhotos'])
+            ->limit(12) // each thumb is its own request; the newest dozen is plenty
             ->get();
 
         return view('booking.my-bookings', compact('tenant', 'slug', 'upcoming', 'past', 'savedLooks'));

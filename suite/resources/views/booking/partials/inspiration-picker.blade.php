@@ -14,17 +14,17 @@
 --}}
 <div x-data="inspirationPicker({{ (int) $max }})" class="space-y-3">
     <input type="file" name="inspiration_photos[]" id="{{ $inputId }}" x-ref="input"
-           accept="image/jpeg,image/png,image/webp" multiple class="sr-only"
+           accept="image/jpeg,image/png,image/webp" multiple class="sr-only xq-picker-input"
            @change="add($event)">
 
     <div x-show="items.length" x-cloak class="grid grid-cols-3 gap-2">
         <template x-for="(item, i) in items" :key="item.key">
             <div class="relative">
-                <img :src="item.preview" alt="Inspiration photo preview"
+                <img :src="item.preview" :alt="'Inspiration photo preview ' + (i + 1)"
                      class="w-full aspect-square object-cover rounded-xl border border-slate-200">
                 <button type="button" @click="remove(i)"
-                        class="absolute top-1 right-1 w-7 h-7 rounded-full bg-slate-900 hover:bg-slate-700 text-white flex items-center justify-center"
-                        aria-label="Remove photo">
+                        class="absolute top-1 right-1 w-8 h-8 rounded-full bg-slate-900 hover:bg-slate-700 text-white flex items-center justify-center"
+                        :aria-label="'Remove photo ' + (i + 1)">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -32,7 +32,7 @@
     </div>
 
     <label for="{{ $inputId }}" x-show="items.length < max"
-           class="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-dashed border-slate-300 text-sm font-medium text-slate-600 hover:border-[#0078D4] hover:text-[#0078D4] cursor-pointer transition">
+           class="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-dashed border-slate-300 text-sm font-medium text-slate-600 hover:border-[#0078D4] hover:text-[#0078D4] cursor-pointer transition xq-focus-ring">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A1.5 1.5 0 0 0 21.75 19.5V4.5A1.5 1.5 0 0 0 20.25 3H3.75A1.5 1.5 0 0 0 2.25 4.5v15A1.5 1.5 0 0 0 3.75 21Zm10.5-13.5h.008v.008h-.008V7.5Z"/></svg>
         <span x-text="busy ? 'Preparing photos…' : (items.length ? 'Add another photo' : 'Add photos')"></span>
     </label>
@@ -42,6 +42,7 @@
 </div>
 
 @once
+<style>.xq-focus-ring:focus-within, .xq-picker-input:focus-visible ~ .xq-focus-ring{box-shadow:0 0 0 2px #0078D4}</style>
 @push('scripts')
 <script>
 function inspirationPicker(max) {

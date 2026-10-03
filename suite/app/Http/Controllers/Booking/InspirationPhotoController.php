@@ -14,10 +14,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Serves and manages customer inspiration photos. The files sit on the
- * private disk, so every read goes through one of the show methods here,
- * which check ownership explicitly instead of relying on the HasTenant
- * scope having been applied before route-model binding ran.
+ * Look photos on a booking, for both sides:
+ *  - customer: view, add and remove their inspiration photos; remove a saved
+ *    look; start "Book this look again" (read back by PublicBookingController);
+ *  - staff: view, add and remove after photos; save or unsave the client's look.
+ * The files sit on the private disk, so every read goes through one of the
+ * show methods here, which check ownership explicitly instead of relying on
+ * the HasTenant scope having been applied before route-model binding ran.
  */
 class InspirationPhotoController extends Controller
 {
@@ -110,31 +113,54 @@ class InspirationPhotoController extends Controller
         return back()->with('success', 'Inspiration photo removed.');
     }
 
-    /** Customer removes a saved look; its photos go back to the normal 90-day retention. */
+    /**
+     * Customer removes a saved look. The business's after photos of them are
+     * deleted now (not left for the prune), their own uploads fall back to the
+     * normal 90-day rule, and the removal is recorded so staff can't re-save it.
+     */
     public function customerForgetLook(string $slug, Appointment $appointment)
     {
         $this->authorizeCustomer($this->resolveTenant($slug), $appointment);
 
-        $appointment->update(['look_saved_at' => null]);
+        $appointment->resultPhotos()->get()->each->delete();
+        $appointment->update(['look_saved_at' => null, 'look_removed_at' => now()]);
 
-        return back()->with('success', 'Saved look removed.');
+        return back()->with('success', 'Saved look removed. The after photos have been deleted.');
     }
 
-    /** "Book this look again": remember which look to copy, then start a booking for the same services. */
+    /**
+     * "Book this look again": remember which look to copy (with the services it
+     * was for, and when), then start a booking for the same services. The
+     * confirm step only offers it again for a matching booking, within
+     * REBOOK_WINDOW_MINUTES, so an abandoned rebook can't leak into a later,
+     * unrelated booking.
+     */
     public function customerRebookLook(string $slug, Appointment $appointment)
     {
         $this->authorizeCustomer($this->resolveTenant($slug), $appointment);
         abort_unless($appointment->isLookSaved(), 404);
 
-        $serviceIds = $appointment->services()->where('services.is_active', true)->pluck('services.id')->all();
+        $services   = $appointment->services()->get(['services.id', 'services.name', 'services.is_active']);
+        $active     = $services->where('is_active', true);
+        $serviceIds = $active->pluck('id')->values()->all();
+
+        session(['rebook_look' => [
+            'id'          => $appointment->id,
+            'service_ids' => $serviceIds,
+            'at'          => now()->timestamp,
+        ]]);
+
         if ($serviceIds === []) {
             return redirect()->route('book.index', $slug)
-                ->withErrors(['look' => "Those services aren't on offer any more. Pick what you'd like and we'll still attach your look."]);
+                ->with('info', "The services from this look aren't on offer any more. Pick what you'd like, and your saved look will be attached.");
         }
 
-        session(['rebook_look' => $appointment->id]);
+        $redirect = redirect()->route('book.service', ['slug' => $slug, 'service_ids' => $serviceIds]);
+        $dropped  = $services->where('is_active', false)->pluck('name');
 
-        return redirect()->route('book.service', ['slug' => $slug, 'service_ids' => $serviceIds]);
+        return $dropped->isEmpty()
+            ? $redirect
+            : $redirect->with('info', $dropped->join(', ', ' and ') . " isn't offered any more, so we left it out.");
     }
 
     // ── Staff dashboard (/appointments/...) ────────────────────────────────
@@ -152,6 +178,10 @@ class InspirationPhotoController extends Controller
     public function staffStoreResults(Appointment $appointment, Request $request, InspirationPhotoService $inspiration)
     {
         $this->authorizeStaff($appointment);
+
+        if (! $appointment->lookCanBeRecorded()) {
+            return back()->withErrors(['inspiration_photos' => 'After photos can be added once the appointment has happened.']);
+        }
 
         $slots = InspirationPhotoService::MAX_PER_APPOINTMENT - $appointment->resultPhotos()->count();
         $request->validate(
@@ -178,17 +208,26 @@ class InspirationPhotoController extends Controller
         return back()->with('success', 'After photo removed.');
     }
 
-    public function staffSaveLook(Appointment $appointment)
+    public function staffSaveLook(Appointment $appointment, BookingNotificationService $notifications)
     {
         $this->authorizeStaff($appointment);
 
-        if (! $appointment->lookPhotos()->exists() && ! $appointment->inspiration_notes) {
+        if ($appointment->lookWasRemovedByClient()) {
+            return back()->withErrors(['look' => ($appointment->customer?->name ?? 'The client') . ' removed this look, so it can\'t be saved again.']);
+        }
+        if (! $appointment->lookCanBeRecorded()) {
+            return back()->withErrors(['look' => 'A look can be saved once the appointment has happened.']);
+        }
+        // Only the business's own after photos make a look; a client's Pinterest
+        // screenshot alone shouldn't be kept 2 years as "your look".
+        if (! $appointment->resultPhotos()->exists()) {
             return back()->withErrors(['look' => 'Add an after photo first, so there is a look to save.']);
         }
 
         $appointment->update(['look_saved_at' => now()]);
+        $notifications->notifyLookSaved($appointment);
 
-        return back()->with('success', 'Saved to ' . ($appointment->customer?->name ?? 'the client') . "'s looks.");
+        return back()->with('success', 'Saved to ' . ($appointment->customer?->name ?? 'the client') . "'s looks. We've let them know.");
     }
 
     public function staffForgetLook(Appointment $appointment)

@@ -232,24 +232,33 @@
                     <div>
                         <p class="text-sm font-semibold text-slate-700">Have a look in mind?</p>
                         <p class="text-xs text-slate-500 mt-0.5">Optional. Add up to {{ $maxInspirationPhotos }} photos of what you'd like, such as a screenshot from Instagram or Pinterest. You can also add them later from My Bookings.</p>
+                        <p class="text-xs text-slate-400 mt-1">If you love the result, {{ $tenant->name }} may save it as your look so you can book it again. Saved looks are kept for up to 2 years, and you can remove one any time.</p>
                     </div>
 
                     @if($rebookLook)
-                        @php $savedPhotos = $rebookLook->lookPhotos->sortBy(fn ($p) => $p->isResult() ? 0 : 1)->take($maxInspirationPhotos); @endphp
+                        @php
+                            $savedPhotos = $rebookLook->orderedLookPhotos()->take($maxInspirationPhotos);
+                            // Remember an untick across a validation round-trip; ticked on first view.
+                            $useSaved = session()->hasOldInput() ? (bool) old('use_saved_look') : true;
+                        @endphp
                         <label class="flex items-start gap-3 bg-[#F0F7FF] border border-[#DCEEFA] rounded-xl p-3">
-                            <input type="checkbox" name="use_saved_look" value="1" checked
+                            <input type="checkbox" name="use_saved_look" value="1" @checked($useSaved)
                                    class="mt-0.5 w-4 h-4 rounded border-slate-300 text-[#0078D4] focus:ring-[#0078D4]">
                             <span class="min-w-0">
                                 <span class="block text-sm font-medium text-[#002B5B]">Use your saved look from {{ $rebookLook->scheduled_at->format('d M Y') }}</span>
                                 @if($savedPhotos->isNotEmpty())
                                     <span class="flex gap-1.5 mt-2">
                                         @foreach($savedPhotos as $photo)
-                                            <img src="{{ $photo->customerUrl($slug, 'thumb') }}" alt="Saved look photo {{ $loop->iteration }}"
-                                                 class="w-12 h-12 object-cover rounded-lg border border-[#DCEEFA]">
+                                            <span class="relative block">
+                                                <img src="{{ $photo->customerUrl($slug, 'thumb') }}"
+                                                     alt="{{ $photo->isResult() ? 'How it turned out' : 'Your inspiration' }}, photo {{ $loop->iteration }}"
+                                                     class="block w-12 h-12 object-cover rounded-lg border border-[#DCEEFA]">
+                                                <span class="absolute top-1 left-1 px-1 rounded bg-slate-900 text-white text-[9px] font-medium">{{ $photo->isResult() ? 'After' : 'Yours' }}</span>
+                                            </span>
                                         @endforeach
                                     </span>
                                 @endif
-                                <span class="block text-xs text-slate-500 mt-1">Photos you add below come first.</span>
+                                <span class="block text-xs text-slate-500 mt-1">We'll attach these to your booking. A booking holds {{ $maxInspirationPhotos }} photos, and any new ones you add get the first spots.</span>
                             </span>
                         </label>
                     @endif

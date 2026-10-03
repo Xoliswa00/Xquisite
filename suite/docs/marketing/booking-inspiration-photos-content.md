@@ -113,9 +113,12 @@ photos** (up to 3), then **Save as client's look**. The appointment shows "Saved
 {client}'s looks" and the look appears in the **Saved looks** section on the
 customer record.
 
-The client sees it too. In My Bookings, under **Your saved looks**, they read
-"Looks {business} saved for you. Book one again and they'll see it before you
-arrive." Two buttons: **Book this look again** and **Remove**.
+The client is told straight away ("{business} saved your look from {date} so you
+can book it again. You can remove it any time from My Bookings."), and sees it in
+My Bookings under **Your saved looks**: "Looks {business} saved for you. Book one
+again and they'll see it before you arrive." Two buttons: **Book this look again**
+and **Remove**. After photos only appear once the appointment has happened, and a
+look needs at least one after photo before it can be saved.
 
 "Book this look again" starts a booking for the same services. On the confirm
 step there's a ticked box, "Use your saved look from {date}". It copies the saved
@@ -123,9 +126,10 @@ photos and the description onto the new booking, so you see it again before they
 arrive. Photos the client adds themselves come first, then the saved ones with the
 after-photos leading.
 
-- Saved looks are kept for 2 years, and the client can remove one any time.
-- Clients can't delete your after-photos, and you can't delete a client's own
-  uploads.
+- Saved looks are kept for 2 years after the appointment, and the client can
+  remove one any time. Removing it deletes your after photos of them straight
+  away, and the look can't be saved again.
+- You can't delete a client's own uploads.
 
 ### Privacy, in plain words
 
@@ -176,9 +180,10 @@ look". The client sees it under "Your saved looks" in My Bookings and can tap "B
 this look again", which starts a booking for the same services and can copy the
 photos and description across.
 
-**Can a client delete my after-photos?**
-No. Clients can remove a saved look from their own list, but can't delete your
-after-photos, and you can't delete a client's own uploads.
+**What happens if a client removes a saved look?**
+It disappears from their list and the customer record, and your after photos of
+them are deleted straight away. It's their photo, so it's their call, and you
+can't save that look again. You can't delete a client's own uploads either.
 
 **Will it use up my clients' data?**
 It's light. The phone shrinks the photo before it uploads, so a large camera photo
@@ -194,7 +199,7 @@ No. It's included in every plan.
 ### Closing
 
 Your clients already have the look saved on their phone. Let them show you before
-they sit down, and next time let them book it again in one tap.
+they sit down, and next time let them book the same look again.
 
 `[ Open Services ]`
 

@@ -13,12 +13,13 @@
                class="block rounded-lg overflow-hidden border border-slate-700 hover:border-[#0078D4] transition-colors">
                 <img src="{{ $photo->staffUrl('thumb') }}" alt="{{ $label }} {{ $loop->iteration }}"
                      loading="lazy" class="w-full aspect-square object-cover">
+                <span class="sr-only">(opens full size in a new tab)</span>
             </a>
             @if($removable ?? false)
                 <form method="POST" action="{{ route('appointments.look.results.destroy', [$photo->appointment_id, $photo]) }}"
-                      onsubmit="return confirm('Remove this after photo?')" class="absolute top-1 right-1">
+                      onsubmit="return confirm('Remove this after photo?')" class="absolute top-0 right-0 p-1.5">
                     @csrf @method('DELETE')
-                    <button class="w-7 h-7 rounded-full bg-slate-900 hover:bg-slate-700 text-white flex items-center justify-center" aria-label="Remove after photo">
+                    <button class="w-8 h-8 rounded-full bg-slate-900 hover:bg-slate-700 text-white flex items-center justify-center" aria-label="Remove {{ strtolower($label) }} {{ $loop->iteration }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </form>
