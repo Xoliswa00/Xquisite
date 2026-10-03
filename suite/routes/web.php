@@ -651,6 +651,15 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
     });
 });
 
+// ─── Private uploads (payment proofs, applicant documents, maintenance/inspection photos) ──
+// No auth guard on purpose: the signature is the authorisation, minted only while rendering
+// a page the viewer may see (staff, customer, contractor and renter guards all use it).
+// See App\Support\PrivateFile.
+Route::get('/files/{kind}/{id}', [\App\Http\Controllers\PrivateFileController::class, 'show'])
+    ->whereNumber('id')
+    ->middleware(['signed:relative', 'throttle:120,1'])
+    ->name('private-files.show');
+
 // ─── Renter portal (/rent/{slug}) ────────────────────────────────────────────
 Route::prefix('rent/{slug}')->name('rent.')->group(function () {
     Route::get('/manifest.json', [RenterPortalController::class, 'manifest'])->name('manifest');

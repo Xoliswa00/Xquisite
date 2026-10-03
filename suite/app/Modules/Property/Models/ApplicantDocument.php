@@ -17,8 +17,9 @@ class ApplicantDocument extends Model
         return $this->belongsTo(Applicant::class);
     }
 
+    /** Short-lived signed link; the file is private (ID copies, payslips). See App\Support\PrivateFile. */
     public function url(): string
     {
-        return asset('storage/' . $this->path);
+        return \App\Support\PrivateFile::url('applicant-doc', $this->id);
     }
 }
