@@ -92,7 +92,7 @@ class PublicApplicationController extends Controller
                 $applicant->documents()->create([
                     'tenant_id'     => $tenant->id,
                     'type'          => $type,
-                    'path'          => $file->store('applicant-documents', 'public'),
+                    'path'          => \App\Support\PrivateFile::store($file, 'applicant-documents'),
                     'original_name' => $file->getClientOriginalName(),
                 ]);
             }

@@ -163,7 +163,7 @@ class ContractorPortalController extends Controller
         foreach ($request->file('photos') as $photo) {
             $job->photos()->create([
                 'tenant_id' => $tenant->id,
-                'path'      => $photo->store('maintenance', 'public'),
+                'path'      => \App\Support\PrivateFile::store($photo, 'maintenance'),
             ]);
         }
 
