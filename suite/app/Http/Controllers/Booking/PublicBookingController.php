@@ -211,8 +211,9 @@ class PublicBookingController extends Controller
         // Owners switch the inspiration upload off per service; show it if any picked service wants it.
         $acceptsInspiration = $services->contains(fn($s) => $s->accepts_inspiration_photos);
         $maxInspirationPhotos = InspirationPhotoService::MAX_PER_APPOINTMENT;
+        $rebookLook = $acceptsInspiration ? $this->rebookLook($customer) : null;
 
-        return view('booking.confirm', compact('tenant', 'services', 'slot', 'slug', 'customer', 'combo', 'isMultiDay', 'totalDays', 'quantities', 'acceptsInspiration', 'maxInspirationPhotos'));
+        return view('booking.confirm', compact('tenant', 'services', 'slot', 'slug', 'customer', 'combo', 'isMultiDay', 'totalDays', 'quantities', 'acceptsInspiration', 'maxInspirationPhotos', 'rebookLook'));
     }
 
     /** AJAX — validate a promo code against the pending booking session */
@@ -399,7 +400,17 @@ class PublicBookingController extends Controller
                 // After the booking transaction, so a slow image can't hold the promo row lock.
                 if ($acceptsInspiration) {
                     $inspiration->store($appointment, $request->file('inspiration_photos', []));
+
+                    // "Book this look again": new uploads win, the saved look fills the remaining slots.
+                    $look = $request->boolean('use_saved_look') ? $this->rebookLook($customer) : null;
+                    if ($look) {
+                        $inspiration->copyLook($look, $appointment);
+                        if (! $appointment->inspiration_notes && $look->inspiration_notes) {
+                            $appointment->update(['inspiration_notes' => $look->inspiration_notes]);
+                        }
+                    }
                 }
+                session()->forget('rebook_look');
 
                 $notifications->notifyAppointmentCreated($appointment, route('book.success', [$slug, $appointment]));
 
@@ -515,6 +526,25 @@ class PublicBookingController extends Controller
             ->get();
 
         return view('booking.edit', compact('tenant', 'appointment', 'slug', 'services', 'isMultiDay', 'totalDays'));
+    }
+
+    /**
+     * The saved look the customer chose to book again (set by "Book this look
+     * again" on My Bookings). Re-checked on every use: it must still be theirs,
+     * in this tenant, and still saved.
+     */
+    private function rebookLook($customer): ?Appointment
+    {
+        $id = session('rebook_look');
+        if (! $id || ! $customer) {
+            return null;
+        }
+
+        return Appointment::whereKey($id)
+            ->where('customer_id', $customer->id)
+            ->whereNotNull('look_saved_at')
+            ->with('lookPhotos', 'services')
+            ->first();
     }
 
     /**

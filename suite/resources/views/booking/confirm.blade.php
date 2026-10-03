@@ -234,6 +234,26 @@
                         <p class="text-xs text-slate-500 mt-0.5">Optional. Add up to {{ $maxInspirationPhotos }} photos of what you'd like, such as a screenshot from Instagram or Pinterest. You can also add them later from My Bookings.</p>
                     </div>
 
+                    @if($rebookLook)
+                        @php $savedPhotos = $rebookLook->lookPhotos->sortBy(fn ($p) => $p->isResult() ? 0 : 1)->take($maxInspirationPhotos); @endphp
+                        <label class="flex items-start gap-3 bg-[#F0F7FF] border border-[#DCEEFA] rounded-xl p-3">
+                            <input type="checkbox" name="use_saved_look" value="1" checked
+                                   class="mt-0.5 w-4 h-4 rounded border-slate-300 text-[#0078D4] focus:ring-[#0078D4]">
+                            <span class="min-w-0">
+                                <span class="block text-sm font-medium text-[#002B5B]">Use your saved look from {{ $rebookLook->scheduled_at->format('d M Y') }}</span>
+                                @if($savedPhotos->isNotEmpty())
+                                    <span class="flex gap-1.5 mt-2">
+                                        @foreach($savedPhotos as $photo)
+                                            <img src="{{ $photo->customerUrl($slug, 'thumb') }}" alt="Saved look photo {{ $loop->iteration }}"
+                                                 class="w-12 h-12 object-cover rounded-lg border border-[#DCEEFA]">
+                                        @endforeach
+                                    </span>
+                                @endif
+                                <span class="block text-xs text-slate-500 mt-1">Photos you add below come first.</span>
+                            </span>
+                        </label>
+                    @endif
+
                     @error('inspiration_photos')<p class="text-red-600 text-xs">{{ $message }}</p>@enderror
                     @foreach($errors->get('inspiration_photos.*') as $messages)
                         <p class="text-red-600 text-xs">{{ $messages[0] }}</p>

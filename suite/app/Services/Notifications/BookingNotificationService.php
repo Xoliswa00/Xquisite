@@ -80,6 +80,26 @@ class BookingNotificationService
         $this->notifyCustomer($appointment, 'Booking cancelled', $message, $customerUrl);
     }
 
+    /**
+     * A customer added inspiration photos to an existing booking from My Bookings.
+     * Staff-only (AppNotice also sends web push), so the look is seen before the
+     * client walks in, not discovered at the chair.
+     */
+    public function notifyInspirationAdded(Appointment $appointment, int $count): void
+    {
+        $appointment->loadMissing(['customer', 'services']);
+
+        $who    = $appointment->customer?->name ?? 'A client';
+        $photos = $count === 1 ? 'an inspiration photo' : "{$count} inspiration photos";
+
+        $this->notifyTenantStaff(
+            $appointment,
+            'New inspiration photos',
+            "{$who} added {$photos} for {$this->servicesSummary($appointment)} on {$appointment->scheduled_at->format('M j, Y H:i')}.",
+            route('appointments.show', $appointment)
+        );
+    }
+
     public function notifyStaffScheduleChanged($staff, string $message): void
     {
         $users = User::query()

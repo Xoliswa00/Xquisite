@@ -183,6 +183,49 @@
         @endif
     </div>
 
+    {{-- Saved looks: bookings the business saved as this client's look --}}
+    @if($savedLooks->isNotEmpty())
+    <div>
+        <h2 class="text-base font-semibold text-slate-700 mb-1">Your saved looks</h2>
+        <p class="text-xs text-slate-400 mb-3">Looks {{ $tenant->name }} saved for you. Book one again and they'll see it before you arrive.</p>
+        <div class="space-y-3">
+            @foreach($savedLooks as $look)
+            @php $lookPhotos = $look->resultPhotos->concat($look->inspirationPhotos)->take(3); @endphp
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="font-semibold text-slate-900 truncate">{{ $look->services->pluck('name')->join(', ') }}</p>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ $look->scheduled_at->format('d M Y') }}</p>
+                    </div>
+                    <form method="POST" action="{{ route('book.looks.forget', [$slug, $look]) }}"
+                          onsubmit="return confirm('Remove this saved look? The photos will be deleted after 90 days.')">
+                        @csrf @method('DELETE')
+                        <button class="text-xs text-slate-400 hover:text-red-500 shrink-0">Remove</button>
+                    </form>
+                </div>
+                @if($lookPhotos->isNotEmpty())
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($lookPhotos as $photo)
+                            <a href="{{ $photo->customerUrl($slug) }}" target="_blank" rel="noopener">
+                                <img src="{{ $photo->customerUrl($slug, 'thumb') }}" alt="Saved look photo {{ $loop->iteration }}"
+                                     class="w-20 h-20 object-cover rounded-xl border border-slate-200">
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
+                @if($look->inspiration_notes)
+                    <p class="text-xs text-slate-500 whitespace-pre-line">{{ $look->inspiration_notes }}</p>
+                @endif
+                <a href="{{ route('book.looks.rebook', [$slug, $look]) }}"
+                   class="inline-flex px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs font-semibold rounded-lg">
+                    Book this look again
+                </a>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     {{-- Past --}}
     @if($past->isNotEmpty())
     <div>

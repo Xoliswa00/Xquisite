@@ -10,23 +10,31 @@ use Illuminate\Support\Facades\Storage;
 /**
  * Customer inspiration photos are personal data (often a photo of the
  * customer), so they're only kept while they're useful: until --days after
- * the appointment, or until the appointment itself is deleted. Also sweeps
+ * the appointment, or --saved-days for a look staff saved as the client's
+ * look (the client can remove it sooner from My Bookings), or until the
+ * appointment itself is deleted. Also sweeps
  * directories left behind when an appointment was force-deleted (the DB
  * cascade removes rows without firing the model's file cleanup).
  */
 class PruneInspirationPhotos extends Command
 {
-    protected $signature   = 'booking:prune-inspiration-photos {--days=90 : Days after the appointment to keep its inspiration photos}';
+    protected $signature   = 'booking:prune-inspiration-photos
+        {--days=90 : Days after the appointment to keep its inspiration photos}
+        {--saved-days=730 : Days after the appointment to keep a saved look}';
     protected $description = 'Delete customer inspiration photos for appointments that are long past or deleted';
 
     public function handle(): int
     {
-        $cutoff  = now()->subDays((int) $this->option('days'));
-        $deleted = 0;
+        $cutoff      = now()->subDays((int) $this->option('days'));
+        $savedCutoff = now()->subDays((int) $this->option('saved-days'));
+        $deleted     = 0;
 
         AppointmentInspirationPhoto::withoutGlobalScopes()
             ->whereIn('appointment_id', Appointment::withoutGlobalScopes()->withTrashed()
-                ->where(fn ($q) => $q->where('scheduled_at', '<', $cutoff)->orWhereNotNull('deleted_at'))
+                ->where(fn ($q) => $q
+                    ->where(fn ($q) => $q->whereNull('look_saved_at')->where('scheduled_at', '<', $cutoff))
+                    ->orWhere('scheduled_at', '<', $savedCutoff)
+                    ->orWhereNotNull('deleted_at'))
                 ->select('id'))
             ->chunkById(200, function ($photos) use (&$deleted) {
                 foreach ($photos as $photo) {
