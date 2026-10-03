@@ -1,6 +1,6 @@
 @props(['label', 'active' => false])
 <div x-data="{ open: {{ $active ? 'true' : 'false' }} }" class="pt-2 border-t border-slate-800 mt-2">
-    <button type="button" @click="open = !open"
+    <button type="button" @click="open = !open; $nextTick(() => $dispatch('nav-resized'))"
             class="w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-800/50">
         <span class="flex items-center gap-3 text-xs text-[#D4AF37] uppercase tracking-wide font-bold">
             <span class="w-4 h-4 shrink-0">{{ $icon }}</span>
