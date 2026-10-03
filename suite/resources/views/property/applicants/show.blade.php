@@ -163,9 +163,11 @@
                             <p class="text-xs text-slate-400 uppercase font-semibold mb-2">{{ $docLabels[$type] ?? ucfirst($type) }}</p>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($docs as $doc)
-                                    <a href="{{ $doc->url() }}" target="_blank"
+                                    @php $downloads = ! in_array(strtolower(pathinfo($doc->path, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf'], true); @endphp
+                                    <a href="{{ $doc->url() }}" target="_blank" rel="noopener"
                                        class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs rounded-lg">
                                         {{ $doc->original_name ?? 'View file' }}
+                                        @if($downloads)<span class="text-slate-500">(downloads)</span>@endif
                                     </a>
                                 @endforeach
                             </div>

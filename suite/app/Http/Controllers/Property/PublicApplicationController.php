@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Support\PrivateFile;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Modules\Property\Models\Applicant;
@@ -92,7 +93,7 @@ class PublicApplicationController extends Controller
                 $applicant->documents()->create([
                     'tenant_id'     => $tenant->id,
                     'type'          => $type,
-                    'path'          => \App\Support\PrivateFile::store($file, 'applicant-documents'),
+                    'path'          => PrivateFile::store($file, 'applicant-documents'),
                     'original_name' => $file->getClientOriginalName(),
                 ]);
             }

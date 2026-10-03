@@ -76,7 +76,7 @@ class PrivateUploadsTest extends TestCase
 
         $this->get($appt->paymentProofUrl())
             ->assertOk()
-            ->assertHeader('Cache-Control', 'max-age=600, private')
+            ->assertHeader('Cache-Control', 'max-age=1800, private')
             ->assertHeader('X-Content-Type-Options', 'nosniff');
     }
 
@@ -107,7 +107,7 @@ class PrivateUploadsTest extends TestCase
         $this->get(str_replace("/applicant-doc/{$doc->id}", "/applicant-doc/{$other->id}", $signed))->assertForbidden();
         $this->get(str_replace('/applicant-doc/', '/payment-proof/', $signed))->assertForbidden();
 
-        $this->travel(PrivateFile::LINK_MINUTES + 1)->minutes();
+        $this->travel(PrivateFile::LINK_MINUTES + PrivateFile::LINK_BUCKET_MINUTES + 1)->minutes();
         $this->get($signed)->assertForbidden();
     }
 
@@ -167,4 +167,98 @@ class PrivateUploadsTest extends TestCase
             ->assertSee('/files/payment-proof/' . $appt->id . '?expires=', false)
             ->assertDontSee('/storage/payment_proofs', false);
     }
+
+    // ── Review fixes ────────────────────────────────────────────────────────
+
+    public function test_a_file_that_fails_to_move_stays_public_and_the_command_fails(): void
+    {
+        Storage::disk('public')->put('applicant-documents/ok.pdf', 'ok');
+        Storage::disk('public')->put('applicant-documents/sub/stuck.pdf', 'precious');
+        // A file squatting where the target folder must go makes both rename and copy fail.
+        Storage::disk('local')->put('applicant-documents/sub', 'not a folder');
+
+        $this->artisan('storage:privatize-uploads')->assertFailed();
+
+        Storage::disk('local')->assertExists('applicant-documents/ok.pdf');
+        $this->assertSame('precious', Storage::disk('public')->get('applicant-documents/sub/stuck.pdf'), 'unmoved file must survive');
+    }
+
+    public function test_links_are_stable_within_the_cache_window(): void
+    {
+        $this->travelTo(now()->setTime(10, 5));
+        $first = PrivateFile::url('applicant-doc', 1);
+        $this->travelTo(now()->setTime(10, 25));
+
+        $this->assertSame($first, PrivateFile::url('applicant-doc', 1));
+    }
+
+    public function test_an_expired_link_explains_itself(): void
+    {
+        $tenant = $this->tenant();
+        $doc    = $this->applicantDoc($tenant, 'id.pdf', '%PDF-1.4 test');
+        $url    = $doc->url();
+
+        $this->travel(PrivateFile::LINK_MINUTES + PrivateFile::LINK_BUCKET_MINUTES + 1)->minutes();
+
+        $this->get($url)->assertForbidden()->assertSee('This link has expired')->assertDontSee('Invalid signature');
+    }
+
+    public function test_unchanged_files_answer_with_304(): void
+    {
+        $tenant = $this->tenant();
+        $doc    = $this->applicantDoc($tenant, 'id.pdf', '%PDF-1.4 test');
+
+        $first = $this->get($doc->url())->assertOk();
+        $this->get($doc->url(), ['If-Modified-Since' => $first->headers->get('Last-Modified')])->assertStatus(304);
+    }
+
+    public function test_file_requests_do_not_start_a_session(): void
+    {
+        $tenant = $this->tenant();
+        $doc    = $this->applicantDoc($tenant, 'id.pdf', '%PDF-1.4 test');
+
+        $response = $this->get($doc->url())->assertOk();
+        $this->assertEmpty(array_filter($response->headers->getCookies(), fn ($c) => str_contains($c->getName(), 'session')));
+    }
+
+    public function test_a_proof_for_a_deleted_booking_is_not_served(): void
+    {
+        $tenant = $this->tenant();
+        [, $appt] = $this->appointmentFor($tenant);
+        Storage::disk('local')->put('payment_proofs/x/pop.jpg', 'img');
+        $appt->update(['payment_proof_path' => 'payment_proofs/x/pop.jpg', 'payment_proof_name' => 'pop.jpg']);
+        $url = $appt->paymentProofUrl();
+
+        $appt->delete();
+
+        $this->get($url)->assertNotFound();
+    }
+
+    public function test_staff_maintenance_photo_upload_is_private_and_renders_signed(): void
+    {
+        $this->seed(\Database\Seeders\PermissionRoleSeeder::class);
+        $tenant = $this->tenant();
+        $tenant->activateModule('property_management');
+        $property = Property::create(['tenant_id' => $tenant->id, 'name' => 'Flat', 'address_line_1' => '1 Main', 'city' => 'Durban', 'is_active' => true]);
+        $unit     = \App\Modules\Property\Models\Unit::create(['tenant_id' => $tenant->id, 'property_id' => $property->id, 'unit_number' => '1A', 'monthly_rent' => 5000]);
+        $request  = \App\Modules\Property\Models\MaintenanceRequest::create([
+            'tenant_id' => $tenant->id, 'property_id' => $property->id, 'unit_id' => $unit->id, 'title' => 'Leak', 'description' => 'Kitchen tap', 'priority' => 'low', 'status' => 'open',
+        ]);
+        $owner = \App\Models\User::factory()->create(['tenant_id' => $tenant->id]);
+        $owner->assignRole('tenant-owner');
+        TenantContext::clear();
+
+        $this->actingAs($owner)
+            ->post(route('maintenance.photos.store', $request), ['photos' => [UploadedFile::fake()->image('leak.jpg')]])
+            ->assertSessionHas('success');
+
+        $photo = $request->photos()->firstOrFail();
+        Storage::disk('local')->assertExists($photo->path);
+        $this->assertSame([], Storage::disk('public')->allFiles());
+
+        $this->actingAs($owner)->get(route('maintenance.show', $request))
+            ->assertOk()
+            ->assertSee('/files/maintenance-photo/' . $photo->id . '?expires=', false);
+    }
 }
+

@@ -64,6 +64,15 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) use ($portalLoginRedirect): void {
+        // Private-file links (App\Support\PrivateFile) expire by design. A bare
+        // "Invalid signature" 403 reads like a hack or a bug; say what happened
+        // and how to get a fresh link instead.
+        $exceptions->render(function (\Illuminate\Routing\Exceptions\InvalidSignatureException $e, $request) {
+            if ($request->routeIs('private-files.show')) {
+                return response()->view('errors.link-expired', [], 403);
+            }
+        });
+
         // Last-resort net for any DB integrity violation that slips past
         // application-level validation (a race condition, a spot a validation
         // rule doesn't cover yet, etc.) — across every portal, not just the
