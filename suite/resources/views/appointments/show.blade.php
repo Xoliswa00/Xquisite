@@ -309,6 +309,33 @@
                 </div>
             @endif
 
+            {{-- Customer's inspiration photos (private files, streamed via appointments.inspiration.show) --}}
+            @if($appointment->inspirationPhotos->isNotEmpty() || $appointment->inspiration_notes)
+                <div class="pt-3 border-t border-slate-700">
+                    <p class="text-slate-400 text-sm mb-2">
+                        The look they want
+                        @if($appointment->inspirationPhotos->isNotEmpty())
+                            <span class="text-slate-500">&middot; {{ $appointment->inspirationPhotos->count() }} {{ Str::plural('photo', $appointment->inspirationPhotos->count()) }}</span>
+                        @endif
+                    </p>
+                    @if($appointment->inspirationPhotos->isNotEmpty())
+                        <div class="grid grid-cols-3 gap-2">
+                            @foreach($appointment->inspirationPhotos as $photo)
+                                <a href="{{ $photo->staffUrl() }}" target="_blank" rel="noopener"
+                                   class="block rounded-lg overflow-hidden border border-slate-700 hover:border-[#0078D4] transition-colors">
+                                    <img src="{{ $photo->staffUrl('thumb') }}" alt="Inspiration photo {{ $loop->iteration }}"
+                                         loading="lazy" class="w-full aspect-square object-cover">
+                                </a>
+                            @endforeach
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1.5">Tap a photo to open it full size. Photos are deleted 90 days after the appointment.</p>
+                    @endif
+                    @if($appointment->inspiration_notes)
+                        <p class="text-slate-300 text-sm mt-2 whitespace-pre-line">{{ $appointment->inspiration_notes }}</p>
+                    @endif
+                </div>
+            @endif
+
             @if($appointment->notes)
                 <div class="pt-2 border-t border-slate-700">
                     <p class="text-slate-400 text-sm mb-1">Notes</p>

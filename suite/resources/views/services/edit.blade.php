@@ -132,6 +132,16 @@
                     <label for="is_active" class="text-sm text-slate-300">Active (bookable)</label>
                 </div>
 
+                <div class="flex items-start gap-2">
+                    <input type="hidden" name="accepts_inspiration_photos" value="0">
+                    <input type="checkbox" name="accepts_inspiration_photos" id="accepts_inspiration_photos" value="1" {{ old('accepts_inspiration_photos', $service->accepts_inspiration_photos) ? 'checked' : '' }}
+                           class="mt-0.5 rounded bg-slate-700 border-slate-600 text-[#0078D4] focus:ring-[#0078D4]">
+                    <label for="accepts_inspiration_photos" class="text-sm text-slate-300">
+                        Let clients add inspiration photos
+                        <span class="block text-xs text-slate-500">Up to 3 photos of the look they want, shown on the booking.</span>
+                    </label>
+                </div>
+
                 {{-- Materials / bundle (inventory module only) --}}
                 @if($hasInventory)
                 <div class="border-t border-slate-700 pt-4">

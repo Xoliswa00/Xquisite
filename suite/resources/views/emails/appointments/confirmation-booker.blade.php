@@ -111,6 +111,23 @@
                 </table>
                 @endif
 
+                @php $inspoCount = $appointment->inspirationPhotos()->count(); @endphp
+                @if($inspoCount || $appointment->inspiration_notes)
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f7ff;border:1px solid #dceefa;border-radius:10px;margin-bottom:28px;">
+                    <tr>
+                        <td style="padding:14px 18px;">
+                            <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#002B5B;text-transform:uppercase;">The look they want</p>
+                            @if($inspoCount)
+                                <p style="margin:0 0 4px;font-size:14px;color:#002B5B;">{{ $inspoCount }} inspiration {{ \Illuminate\Support\Str::plural('photo', $inspoCount) }} attached. Open the booking in your dashboard to see {{ $inspoCount === 1 ? 'it' : 'them' }}.</p>
+                            @endif
+                            @if($appointment->inspiration_notes)
+                                <p style="margin:0;font-size:14px;color:#002B5B;">{{ $appointment->inspiration_notes }}</p>
+                            @endif
+                        </td>
+                    </tr>
+                </table>
+                @endif
+
                 <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.6;">
                     This is an automated notification. Log in to your dashboard to manage this appointment.
                 </p>

@@ -166,9 +166,9 @@
             Booking as <strong>{{ $customer->name }}</strong> ({{ $customer->email }})
         </div>
 
-        <form method="POST" action="{{ route('book.store', $slug) }}"
-              x-data="{ submitting: false }"
-              @submit="if (submitting) { $event.preventDefault(); return; } submitting = true">
+        <form method="POST" action="{{ route('book.store', $slug) }}" enctype="multipart/form-data"
+              x-data="{ submitting: false, inspoBusy: false }"
+              @submit="if (submitting || inspoBusy) { $event.preventDefault(); return; } submitting = true">
             @csrf
             @if($combo)
                 <input type="hidden" name="combo_id" value="{{ $combo->id }}">
@@ -227,6 +227,30 @@
                     </div>
                 @endif
 
+                @if($acceptsInspiration)
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-700">Have a look in mind?</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Optional. Add up to {{ $maxInspirationPhotos }} photos of what you'd like, such as a screenshot from Instagram or Pinterest. You can also add them later from My Bookings.</p>
+                    </div>
+
+                    @error('inspiration_photos')<p class="text-red-600 text-xs">{{ $message }}</p>@enderror
+                    @foreach($errors->get('inspiration_photos.*') as $messages)
+                        <p class="text-red-600 text-xs">{{ $messages[0] }}</p>
+                    @endforeach
+
+                    @include('booking.partials.inspiration-picker', ['max' => $maxInspirationPhotos, 'inputId' => 'inspiration-photos'])
+
+                    <div>
+                        <label for="inspiration_notes" class="block text-xs font-medium text-slate-600 mb-1">Describe the look (optional)</label>
+                        <textarea name="inspiration_notes" id="inspiration_notes" rows="2" maxlength="1000"
+                                  placeholder="e.g. the shape from the first photo, in a softer colour"
+                                  class="w-full border-slate-300 rounded-xl text-sm">{{ old('inspiration_notes') }}</textarea>
+                        @error('inspiration_notes')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+                @endif
+
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Notes (optional)</label>
                     <textarea name="notes" rows="3" placeholder="Any special requests or information&hellip;"
@@ -250,7 +274,7 @@
                 @endif
 
                 <button type="submit"
-                        :disabled="submitting"
+                        :disabled="submitting || inspoBusy"
                         class="w-full py-3 bg-[#0078D4] hover:bg-[#0065B8] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition text-lg flex items-center justify-center gap-2">
                     <svg x-show="submitting" x-cloak class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

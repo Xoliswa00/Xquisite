@@ -209,7 +209,7 @@ class AppointmentController extends Controller
 
     public function show(Appointment $appointment)
     {
-        $appointment->load(['customer', 'staff', 'services', 'reminders']);
+        $appointment->load(['customer', 'staff', 'services', 'reminders', 'inspirationPhotos']);
         $hasPos = auth()->user()->tenant?->hasModule('pos') ?? false;
 
         $timingConflicts = collect();
