@@ -34,6 +34,36 @@
             </div>
         </div>
 
+        {{-- Saved looks: past bookings staff saved as this client's look --}}
+        @if($savedLooks->isNotEmpty())
+        <div class="bg-slate-800 rounded-xl overflow-hidden">
+            <div class="px-4 py-3 border-b border-slate-700">
+                <h3 class="text-sm font-medium text-slate-300">Saved looks</h3>
+            </div>
+            <div class="divide-y divide-slate-700">
+                @foreach($savedLooks as $look)
+                    <div class="p-4 space-y-2">
+                        <div class="flex items-center justify-between gap-3">
+                            <a href="{{ route('appointments.show', $look) }}" class="text-sm text-slate-200 font-medium hover:text-[#0078D4] truncate">
+                                {{ $look->services->pluck('name')->join(', ') ?: 'Booking #' . $look->id }}
+                            </a>
+                            <span class="text-xs text-slate-500 shrink-0">{{ $look->scheduled_at->format('d M Y') }}</span>
+                        </div>
+                        @php $photos = $look->resultPhotos->concat($look->inspirationPhotos); @endphp
+                        @if($photos->isNotEmpty())
+                            <div class="max-w-sm">
+                                @include('appointments.partials.look-thumbs', ['photos' => $photos->take(6), 'label' => 'Look photo'])
+                            </div>
+                        @endif
+                        @if($look->inspiration_notes)
+                            <p class="text-xs text-slate-400 whitespace-pre-line">{{ $look->inspiration_notes }}</p>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         <!-- Appointment history -->
         <div class="bg-slate-800 rounded-xl overflow-hidden">
             <div class="px-4 py-3 border-b border-slate-700">

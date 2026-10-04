@@ -63,7 +63,12 @@ class CustomerController extends Controller
             ->orderByDesc('scheduled_at')
             ->paginate(10);
 
-        return view('customers.show', compact('customer', 'appointments'));
+        $savedLooks = $customer->appointments()
+            ->savedLooks()
+            ->with(['services', 'inspirationPhotos', 'resultPhotos'])
+            ->get();
+
+        return view('customers.show', compact('customer', 'appointments', 'savedLooks'));
     }
 
     public function edit(Customer $customer)

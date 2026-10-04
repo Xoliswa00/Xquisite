@@ -26,6 +26,8 @@ class Appointment extends Model
         'status',
         'pos_order_id',
         'notes',
+        'inspiration_notes',
+        'look_saved_at',
         'terms_accepted_at',
         'combo_id',
         'combo_price',
@@ -46,6 +48,7 @@ class Appointment extends Model
     protected $casts = [
         'scheduled_at'     => 'datetime',
         'terms_accepted_at' => 'datetime',
+        'look_saved_at'    => 'datetime',
         'setup_at'         => 'datetime',
         'breakdown_at'     => 'datetime',
         'duration_minutes' => 'integer',
@@ -60,6 +63,12 @@ class Appointment extends Model
     public function paymentPlan()
     {
         return $this->morphOne(\App\Models\PaymentPlan::class, 'plannable');
+    }
+
+    /** Short-lived signed link to the customer's proof of payment (private file). */
+    public function paymentProofUrl(): ?string
+    {
+        return $this->payment_proof_path ? \App\Support\PrivateFile::url('payment-proof', $this->id) : null;
     }
 
     public function isTentative(): bool
@@ -112,6 +121,42 @@ public function totalDuration(): int
     public function reminders()
     {
         return $this->hasMany(AppointmentReminder::class);
+    }
+
+    /** Customer "this is the look I want" photos (private disk, see the model). */
+    public function inspirationPhotos()
+    {
+        return $this->lookPhotos()->where('kind', AppointmentInspirationPhoto::KIND_INSPIRATION);
+    }
+
+    /** Staff "how it turned out" photos, added when saving the client's look. */
+    public function resultPhotos()
+    {
+        return $this->lookPhotos()->where('kind', AppointmentInspirationPhoto::KIND_RESULT);
+    }
+
+    /** Every look photo, both kinds. */
+    public function lookPhotos()
+    {
+        return $this->hasMany(AppointmentInspirationPhoto::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function isLookSaved(): bool
+    {
+        return $this->look_saved_at !== null;
+    }
+
+    /** Saved looks only. */
+    public function scopeSavedLooks($query)
+    {
+        return $query->whereNotNull('look_saved_at')->orderByDesc('scheduled_at');
+    }
+
+    /** Whether the customer can still add or remove inspiration photos. */
+    public function inspirationIsEditable(): bool
+    {
+        return in_array($this->status, ['pending', 'confirmed'], true)
+            && $this->scheduled_at?->isFuture();
     }
 
     public function scopeToday($query)

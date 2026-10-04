@@ -9,7 +9,7 @@ use App\Services\Notifications\BookingNotificationService;
 use App\Services\Tenant\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use App\Support\PrivateFile;
 
 class CustomerPortalController extends Controller
 {
@@ -39,7 +39,7 @@ class CustomerPortalController extends Controller
         $upcoming = Appointment::where('customer_id', $customer->id)
             ->whereIn('status', ['pending', 'confirmed'])
             ->where('scheduled_at', '>=', now())
-            ->with(['services', 'staff'])
+            ->with(['services', 'staff', 'inspirationPhotos'])
             ->orderBy('scheduled_at')
             ->get();
 
@@ -53,7 +53,12 @@ class CustomerPortalController extends Controller
             ->limit(20)
             ->get();
 
-        return view('booking.my-bookings', compact('tenant', 'slug', 'upcoming', 'past'));
+        $savedLooks = Appointment::where('customer_id', $customer->id)
+            ->savedLooks()
+            ->with(['services', 'inspirationPhotos', 'resultPhotos'])
+            ->get();
+
+        return view('booking.my-bookings', compact('tenant', 'slug', 'upcoming', 'past', 'savedLooks'));
     }
 
     public function cancel(string $slug, Appointment $appointment, Request $request, BookingNotificationService $notifications)
@@ -122,12 +127,10 @@ class CustomerPortalController extends Controller
         ]);
 
         // Delete previous upload if one exists
-        if ($appointment->payment_proof_path) {
-            Storage::disk('public')->delete($appointment->payment_proof_path);
-        }
+        PrivateFile::delete($appointment->payment_proof_path);
 
         $file = $request->file('payment_proof');
-        $path = $file->store("payment_proofs/{$tenant->id}/{$appointment->id}", 'public');
+        $path = PrivateFile::store($file, "payment_proofs/{$tenant->id}/{$appointment->id}");
 
         $appointment->update([
             'payment_proof_path' => $path,

@@ -286,9 +286,10 @@
 
             {{-- Proof of payment --}}
             @if($appointment->payment_proof_path)
+                @php $proofUrl = $appointment->paymentProofUrl(); @endphp
                 <div class="pt-3 border-t border-slate-700">
                     <p class="text-slate-400 text-sm mb-2">Proof of Payment</p>
-                    <a href="{{ Storage::disk('public')->url($appointment->payment_proof_path) }}"
+                    <a href="{{ $proofUrl }}"
                        target="_blank" rel="noopener"
                        class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-200 text-xs font-medium rounded-lg transition-colors">
                         <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -301,11 +302,97 @@
                     @endphp
                     @if(in_array(strtolower($ext), ['jpg','jpeg','png','webp']))
                         <div class="mt-2">
-                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($appointment->payment_proof_path) }}"
+                            <img src="{{ $proofUrl }}"
                                  alt="Proof of payment"
                                  class="max-h-40 rounded-lg border border-slate-700 object-contain">
                         </div>
                     @endif
+                </div>
+            @endif
+
+            {{-- The client's look: their inspiration + staff "after" photos; can be saved to the client's record --}}
+            @php
+                $inspo     = $appointment->inspirationPhotos;
+                $results   = $appointment->resultPhotos;
+                $canLook   = ! in_array($appointment->status, ['cancelled', 'no_show'], true);
+                $resultCap = \App\Services\Booking\InspirationPhotoService::MAX_PER_APPOINTMENT;
+            @endphp
+            @if($canLook || $inspo->isNotEmpty() || $results->isNotEmpty() || $appointment->inspiration_notes)
+                <div class="pt-3 border-t border-slate-700 space-y-3">
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <p class="text-slate-400 text-sm">
+                            The look they want
+                            @if($inspo->isNotEmpty())
+                                <span class="text-slate-500">&middot; {{ $inspo->count() }} {{ Str::plural('photo', $inspo->count()) }}</span>
+                            @endif
+                        </p>
+                        @if($appointment->isLookSaved())
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-400">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                Saved to {{ $appointment->customer?->name ?? 'client' }}'s looks
+                            </span>
+                        @endif
+                    </div>
+
+                    @if($inspo->isNotEmpty())
+                        @include('appointments.partials.look-thumbs', ['photos' => $inspo, 'label' => 'Inspiration photo'])
+                    @elseif(! $appointment->inspiration_notes)
+                        <p class="text-xs text-slate-500">No inspiration photos from the client.</p>
+                    @endif
+                    @if($appointment->inspiration_notes)
+                        <p class="text-slate-300 text-sm whitespace-pre-line">{{ $appointment->inspiration_notes }}</p>
+                    @endif
+
+                    @if($results->isNotEmpty())
+                        <div>
+                            <p class="text-slate-400 text-sm mb-2">How it turned out</p>
+                            @include('appointments.partials.look-thumbs', ['photos' => $results, 'label' => 'After photo', 'removable' => true])
+                        </div>
+                    @endif
+
+                    @if($canLook)
+                        @error('look')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+                        @error('inspiration_photos')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+                        @foreach($errors->get('inspiration_photos.*') as $messages)
+                            <p class="text-xs text-red-400">{{ $messages[0] }}</p>
+                        @endforeach
+
+                        <div class="flex items-center gap-2 flex-wrap">
+                            @if($results->count() < $resultCap)
+                                <form method="POST" action="{{ route('appointments.look.results.store', $appointment) }}" enctype="multipart/form-data"
+                                      x-data="{ busy: false }" @submit="busy = true">
+                                    @csrf
+                                    <label class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-200 text-xs font-medium rounded-lg cursor-pointer transition-colors">
+                                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"/></svg>
+                                        <span x-text="busy ? 'Uploading…' : 'Add after photos'"></span>
+                                        <input type="file" name="inspiration_photos[]" multiple accept="image/jpeg,image/png,image/webp"
+                                               class="sr-only" @change="if ($event.target.files.length) { busy = true; $el.form.submit() }">
+                                    </label>
+                                </form>
+                            @endif
+
+                            @if($appointment->isLookSaved())
+                                <form method="POST" action="{{ route('appointments.look.forget', $appointment) }}"
+                                      onsubmit="return confirm('Remove this from the client\'s saved looks?')">
+                                    @csrf @method('DELETE')
+                                    <button class="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors">Remove from saved looks</button>
+                                </form>
+                            @else
+                                <form method="POST" action="{{ route('appointments.look.save', $appointment) }}">
+                                    @csrf
+                                    <button class="px-3 py-1.5 bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs font-semibold rounded-lg transition-colors">Save as client's look</button>
+                                </form>
+                            @endif
+                        </div>
+                    @endif
+
+                    <p class="text-xs text-slate-500">
+                        @if($appointment->isLookSaved())
+                            Saved looks are kept for 2 years, and the client can remove them from My Bookings.
+                        @else
+                            Photos are deleted 90 days after the appointment unless you save the look.
+                        @endif
+                    </p>
                 </div>
             @endif
 

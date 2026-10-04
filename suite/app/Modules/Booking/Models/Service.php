@@ -27,6 +27,7 @@ class Service extends Model
         'price_per_unit',
         'unit_label',
         'is_active',
+        'accepts_inspiration_photos',
     ];
 
     protected $casts = [
@@ -34,6 +35,7 @@ class Service extends Model
         'cost_price'       => 'decimal:2',
         'price_per_unit'   => 'decimal:2',
         'duration_minutes' => 'integer',
+        'accepts_inspiration_photos' => 'boolean',
     ];
 
     public function isPerHead(): bool   { return $this->pricing_type === 'per_head'; }
