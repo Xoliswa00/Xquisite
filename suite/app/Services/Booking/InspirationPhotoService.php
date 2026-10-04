@@ -28,6 +28,9 @@ class InspirationPhotoService
     public const FULL_EDGE           = 1600;
     public const THUMB_EDGE          = 400;
 
+    /** ~40MP; above this GD decoding risks exhausting memory on shared hosting. */
+    public const MAX_PIXELS          = 40_000_000;
+
     /** Validation rules for an `inspiration_photos[]` upload with $slots photos still allowed. */
     public static function rules(int $slots = self::MAX_PER_APPOINTMENT, bool $required = false): array
     {
@@ -73,9 +76,17 @@ class InspirationPhotoService
 
         foreach ($files as $file) {
             try {
-                // read() auto-orients from EXIF before the re-encode drops it.
+                // A raw 48MP phone photo needs ~200MB of GD memory to decode;
+                // refuse anything that big before decoding rather than OOM the worker.
+                $size = @getimagesize($file->getRealPath());
+                if (! $size || $size[0] * $size[1] > self::MAX_PIXELS) {
+                    throw new \RuntimeException('Image missing dimensions or larger than ' . self::MAX_PIXELS . ' pixels');
+                }
+
+                // Decode once: read() auto-orients from EXIF before the re-encode
+                // drops it, and the thumb is cut from the already-scaled copy.
                 $full  = $manager->read($file->getRealPath())->scaleDown(self::FULL_EDGE, self::FULL_EDGE);
-                $thumb = $manager->read($file->getRealPath())->cover(self::THUMB_EDGE, self::THUMB_EDGE);
+                $thumb = (clone $full)->cover(self::THUMB_EDGE, self::THUMB_EDGE);
 
                 [$ext, $fullBin]  = $this->encode($full);
                 [, $thumbBin]     = $this->encode($thumb);
@@ -150,9 +161,7 @@ class InspirationPhotoService
             return 0;
         }
 
-        $source = $from->lookPhotos()->get()
-            ->sortBy(fn ($p) => [$p->isResult() ? 0 : 1, $p->sort_order, $p->id])
-            ->take($slots);
+        $source = $from->orderedLookPhotos()->take($slots);
 
         $order  = (int) $to->lookPhotos()->max('sort_order');
         $copied = 0;
@@ -166,9 +175,13 @@ class InspirationPhotoService
             $fullPath  = "{$base}/{$stem}.{$ext}";
             $thumbPath = $photo->path_thumb ? "{$base}/{$stem}_t." . pathinfo($photo->path_thumb, PATHINFO_EXTENSION) : null;
 
-            $disk->copy($photo->path, $fullPath);
-            if ($thumbPath && $disk->exists($photo->path_thumb)) {
-                $disk->copy($photo->path_thumb, $thumbPath);
+            // The disk doesn't throw on failure, so check: a row pointing at a
+            // missing file would show the stylist a broken image.
+            if (! $disk->copy($photo->path, $fullPath)) {
+                continue;
+            }
+            if ($thumbPath && (! $disk->exists($photo->path_thumb) || ! $disk->copy($photo->path_thumb, $thumbPath))) {
+                $thumbPath = null; // pathFor('thumb') falls back to the full copy
             }
 
             $copy = new AppointmentInspirationPhoto([

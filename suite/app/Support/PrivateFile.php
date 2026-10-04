@@ -26,7 +26,15 @@ class PrivateFile
 {
     public const DISK = 'local';
 
+    /** Links stay valid for at least this long... */
     public const LINK_MINUTES = 60;
+
+    /**
+     * ...and expiry is rounded up to this bucket, so every render within the
+     * same half hour produces the same URL and the browser cache (and 304s)
+     * actually work instead of re-downloading every photo on each page view.
+     */
+    public const LINK_BUCKET_MINUTES = 30;
 
     /** Top-level folders that hold sensitive uploads (moved by storage:privatize-uploads). */
     public const DIRECTORIES = ['payment_proofs', 'applicant-documents', 'maintenance', 'inspections'];
@@ -52,7 +60,7 @@ class PrivateFile
     {
         return URL::temporarySignedRoute(
             'private-files.show',
-            now()->addMinutes(self::LINK_MINUTES),
+            now()->addMinutes(self::LINK_MINUTES)->ceilMinutes(self::LINK_BUCKET_MINUTES),
             ['kind' => $kind, 'id' => $id],
             absolute: false
         );

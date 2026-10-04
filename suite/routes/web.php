@@ -235,7 +235,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('appointments/{appointment}/remind', [\App\Http\Controllers\Booking\AppointmentController::class, 'remind'])->name('appointments.remind');
             Route::get('appointments/{appointment}/inspiration/{photo}/{size}', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffShow'])
                 ->whereIn('size', ['full', 'thumb'])->name('appointments.inspiration.show');
-            Route::post('appointments/{appointment}/look/results', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffStoreResults'])->name('appointments.look.results.store');
+            Route::post('appointments/{appointment}/look/results', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffStoreResults'])->name('appointments.look.results.store')->middleware('throttle:10,1');
             Route::delete('appointments/{appointment}/look/results/{photo}', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffDestroyResult'])->name('appointments.look.results.destroy');
             Route::post('appointments/{appointment}/look', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffSaveLook'])->name('appointments.look.save');
             Route::delete('appointments/{appointment}/look', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffForgetLook'])->name('appointments.look.forget');
@@ -645,8 +645,8 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
         Route::post('/appointments/{appointment}/inspiration',          [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerStore'])
             ->name('inspiration.store')->middleware('throttle:10,1');
         Route::delete('/appointments/{appointment}/inspiration/{photo}', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerDestroy'])
-            ->name('inspiration.destroy');
-        Route::get('/looks/{appointment}/book-again',                   [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerRebookLook'])->name('looks.rebook');
+            ->name('inspiration.destroy')->middleware('throttle:20,1');
+        Route::post('/looks/{appointment}/book-again',                  [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerRebookLook'])->name('looks.rebook');
         Route::delete('/looks/{appointment}',                           [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerForgetLook'])->name('looks.forget');
 
         // Push notification subscriptions — same controller as the staff-side
@@ -660,10 +660,17 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
 // ─── Private uploads (payment proofs, applicant documents, maintenance/inspection photos) ──
 // No auth guard on purpose: the signature is the authorisation, minted only while rendering
 // a page the viewer may see (staff, customer, contractor and renter guards all use it).
-// See App\Support\PrivateFile.
+// No session either: an inspection page can load 40 of these at once, and each one would
+// otherwise read and write a database session row. See App\Support\PrivateFile.
 Route::get('/files/{kind}/{id}', [\App\Http\Controllers\PrivateFileController::class, 'show'])
     ->whereNumber('id')
-    ->middleware(['signed:relative', 'throttle:120,1'])
+    ->middleware(['signed:relative', 'throttle:private-files'])
+    ->withoutMiddleware([
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+        \App\Http\Middleware\TrackPageView::class,
+    ])
     ->name('private-files.show');
 
 // ─── Renter portal (/rent/{slug}) ────────────────────────────────────────────

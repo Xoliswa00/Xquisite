@@ -2,6 +2,7 @@
 
 namespace App\Modules\Property\Models;
 
+use App\Support\PrivateFile;
 use App\Models\Traits\HasTenant;
 use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,6 @@ class MaintenancePhoto extends Model
     /** Short-lived signed link; photos from inside occupied homes are private. See App\Support\PrivateFile. */
     public function url(): string
     {
-        return \App\Support\PrivateFile::url('maintenance-photo', $this->id);
+        return PrivateFile::url('maintenance-photo', $this->id);
     }
 }
