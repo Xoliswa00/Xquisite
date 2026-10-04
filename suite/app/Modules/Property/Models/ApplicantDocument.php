@@ -2,6 +2,7 @@
 
 namespace App\Modules\Property\Models;
 
+use App\Support\PrivateFile;
 use App\Models\Traits\HasTenant;
 use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,6 @@ class ApplicantDocument extends Model
     /** Short-lived signed link; the file is private (ID copies, payslips). See App\Support\PrivateFile. */
     public function url(): string
     {
-        return \App\Support\PrivateFile::url('applicant-doc', $this->id);
+        return PrivateFile::url('applicant-doc', $this->id);
     }
 }

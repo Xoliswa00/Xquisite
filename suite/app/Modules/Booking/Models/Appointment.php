@@ -2,6 +2,7 @@
 
 namespace App\Modules\Booking\Models;
 
+use App\Support\PrivateFile;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Traits\HasTenant;
@@ -28,6 +29,15 @@ class Appointment extends Model
         'notes',
         'inspiration_notes',
         'look_saved_at',
+        'look_removed_at',
+        'look_showcase_at',
+        'rebook_reminded_at',
+        'quote_status',
+        'quoted_price',
+        'quoted_duration_minutes',
+        'quote_note',
+        'quote_sent_at',
+        'quote_responded_at',
         'terms_accepted_at',
         'combo_id',
         'combo_price',
@@ -49,6 +59,13 @@ class Appointment extends Model
         'scheduled_at'     => 'datetime',
         'terms_accepted_at' => 'datetime',
         'look_saved_at'    => 'datetime',
+        'look_removed_at'  => 'datetime',
+        'look_showcase_at' => 'datetime',
+        'rebook_reminded_at' => 'datetime',
+        'quoted_price'     => 'decimal:2',
+        'quoted_duration_minutes' => 'integer',
+        'quote_sent_at'    => 'datetime',
+        'quote_responded_at' => 'datetime',
         'setup_at'         => 'datetime',
         'breakdown_at'     => 'datetime',
         'duration_minutes' => 'integer',
@@ -68,12 +85,27 @@ class Appointment extends Model
     /** Short-lived signed link to the customer's proof of payment (private file). */
     public function paymentProofUrl(): ?string
     {
-        return $this->payment_proof_path ? \App\Support\PrivateFile::url('payment-proof', $this->id) : null;
+        return $this->payment_proof_path ? PrivateFile::url('payment-proof', $this->id) : null;
     }
 
     public function isTentative(): bool
     {
         return $this->status === 'tentative';
+    }
+
+    /**
+     * The business. Email templates already read $appointment->tenant->name,
+     * which silently fell back to the app name while this relation was missing.
+     */
+    public function tenant()
+    {
+        return $this->belongsTo(\App\Models\Tenant::class);
+    }
+
+    /** A quote from the client's photos is outstanding (requested or sent, not answered). */
+    public function quoteIsOpen(): bool
+    {
+        return in_array($this->quote_status, ['requested', 'sent'], true);
     }
 
     public function customer()
@@ -141,9 +173,42 @@ public function totalDuration(): int
         return $this->hasMany(AppointmentInspirationPhoto::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    /**
+     * Look photos in display/copy order: staff after-photos first (that's the
+     * look they liked), then the client's own inspiration. One place, so the
+     * confirm preview, My Bookings and copyLook() can't disagree.
+     */
+    public function orderedLookPhotos(): \Illuminate\Support\Collection
+    {
+        return $this->lookPhotos
+            ->sortBy(fn ($p) => [$p->isResult() ? 0 : 1, $p->sort_order, $p->id])
+            ->values();
+    }
+
     public function isLookSaved(): bool
     {
         return $this->look_saved_at !== null;
+    }
+
+    /** The client removed this look; staff can't save it again. */
+    public function lookWasRemovedByClient(): bool
+    {
+        return $this->look_removed_at !== null;
+    }
+
+    /** Whether looks apply to this booking at all (some service takes inspiration, or photos already exist). */
+    public function usesLooks(): bool
+    {
+        return $this->services->contains(fn ($s) => $s->accepts_inspiration_photos)
+            || $this->lookPhotos->isNotEmpty()
+            || (bool) $this->inspiration_notes;
+    }
+
+    /** Staff can add after photos / save the look once the appointment has happened. */
+    public function lookCanBeRecorded(): bool
+    {
+        return ! in_array($this->status, ['cancelled', 'no_show'], true)
+            && ($this->status === 'completed' || $this->scheduled_at?->isPast());
     }
 
     /** Saved looks only. */

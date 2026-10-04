@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Support\PrivateFile;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Modules\Property\Models\MaintenanceQuote;
@@ -163,7 +164,7 @@ class ContractorPortalController extends Controller
         foreach ($request->file('photos') as $photo) {
             $job->photos()->create([
                 'tenant_id' => $tenant->id,
-                'path'      => \App\Support\PrivateFile::store($photo, 'maintenance'),
+                'path'      => PrivateFile::store($photo, 'maintenance'),
             ]);
         }
 

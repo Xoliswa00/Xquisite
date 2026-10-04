@@ -5,7 +5,11 @@ namespace App\Services\Notifications;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Booking\Models\Appointment;
+use App\Mail\QuoteReadyEmail;
+use App\Mail\RebookReminderEmail;
 use App\Notifications\AppNotice;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
 
 class BookingNotificationService
 {
@@ -80,24 +84,174 @@ class BookingNotificationService
         $this->notifyCustomer($appointment, 'Booking cancelled', $message, $customerUrl);
     }
 
+    /** How long repeat "new inspiration photos" notices for one booking are collapsed. */
+    public const INSPIRATION_NOTICE_COOLDOWN_MINUTES = 10;
+
     /**
-     * A customer added inspiration photos to an existing booking from My Bookings.
-     * Staff-only (AppNotice also sends web push), so the look is seen before the
-     * client walks in, not discovered at the chair.
+     * A customer added inspiration photos to an existing booking from My Bookings,
+     * so the look is seen before the client walks in, not discovered at the chair.
+     *
+     * - Goes to owners/managers plus the assigned stylist (matched by email),
+     *   not every employee, so the barber doesn't get the braider's pushes.
+     * - One notice per booking per cooldown: adding photos one at a time (or
+     *   delete/re-add) doesn't fire a push each time.
+     * - Sent after the response, so web push round-trips never hold up the
+     *   customer's upload.
      */
     public function notifyInspirationAdded(Appointment $appointment, int $count): void
     {
-        $appointment->loadMissing(['customer', 'services']);
+        $key = "inspiration-notice:{$appointment->id}";
+        if (! Cache::add($key, true, now()->addMinutes(self::INSPIRATION_NOTICE_COOLDOWN_MINUTES))) {
+            return;
+        }
 
-        $who    = $appointment->customer?->name ?? 'A client';
-        $photos = $count === 1 ? 'an inspiration photo' : "{$count} inspiration photos";
+        dispatch(function () use ($appointment, $count) {
+            $appointment->loadMissing(['customer', 'services', 'staff']);
 
-        $this->notifyTenantStaff(
-            $appointment,
-            'New inspiration photos',
-            "{$who} added {$photos} for {$this->servicesSummary($appointment)} on {$appointment->scheduled_at->format('M j, Y H:i')}.",
-            route('appointments.show', $appointment)
+            $who    = $appointment->customer?->name ?? 'A client';
+            $photos = $count === 1 ? 'an inspiration photo' : "{$count} inspiration photos";
+
+            $notice = new AppNotice(
+                title: $count === 1 ? 'New inspiration photo' : 'New inspiration photos',
+                message: "{$who} added {$photos} for {$this->servicesSummary($appointment)} on {$appointment->scheduled_at->format('d M Y, H:i')}.",
+                url: route('appointments.show', $appointment),
+                level: 'info'
+            );
+
+            foreach ($this->lookRecipients($appointment) as $user) {
+                $user->notify($notice);
+            }
+        })->afterResponse();
+    }
+
+    // ── Quotes from inspiration photos ─────────────────────────────────────
+
+    /** A booking for a "confirm price from photos" service came in: staff need to send a quote. */
+    public function notifyQuoteRequested(Appointment $appointment): void
+    {
+        $appointment->loadMissing(['customer', 'services', 'staff']);
+        $notice = new AppNotice(
+            title: 'Quote needed',
+            message: ($appointment->customer?->name ?? 'A client') . " booked {$this->servicesSummary($appointment)} for "
+                . "{$appointment->scheduled_at->format('d M Y, H:i')} and is waiting for your price and time.",
+            url: route('appointments.show', $appointment),
+            level: 'warning'
         );
+        foreach ($this->lookRecipients($appointment) as $user) {
+            $user->notify($notice);
+        }
+    }
+
+    /** Staff sent (or revised) a quote: tell the client in-app, by push and by email. */
+    public function notifyQuoteSent(Appointment $appointment): void
+    {
+        $appointment->loadMissing(['customer', 'services']);
+        $tenant = Tenant::find($appointment->tenant_id);
+
+        $this->notifyCustomer(
+            $appointment,
+            'Your quote is ready',
+            ($tenant?->name ?? 'Your salon') . ' quoted R' . number_format((float) $appointment->quoted_price, 2)
+                . ' and about ' . self::humanMinutes((int) $appointment->quoted_duration_minutes)
+                . " for {$appointment->scheduled_at->format('d M Y, H:i')}. Accept or decline it in My Bookings.",
+            $this->customerPortalUrl($appointment)
+        );
+
+        if ($appointment->customer?->email) {
+            Mail::to($appointment->customer->email)->queue(new QuoteReadyEmail($appointment));
+        }
+    }
+
+    /** The client accepted or declined: tell owners/managers and the assigned stylist. */
+    public function notifyQuoteAnswered(Appointment $appointment, bool $accepted): void
+    {
+        $appointment->loadMissing(['customer', 'services', 'staff']);
+        $who = $appointment->customer?->name ?? 'The client';
+
+        $notice = new AppNotice(
+            title: $accepted ? 'Quote accepted' : 'Quote declined',
+            message: $accepted
+                ? "{$who} accepted R" . number_format((float) $appointment->quoted_price, 2) . " for {$appointment->scheduled_at->format('d M Y, H:i')}. The booking now runs " . self::humanMinutes((int) $appointment->duration_minutes) . '.'
+                : "{$who} declined the quote for {$appointment->scheduled_at->format('d M Y, H:i')}, so the booking was cancelled and the slot is free again.",
+            url: route('appointments.show', $appointment),
+            level: $accepted ? 'success' : 'warning'
+        );
+        foreach ($this->lookRecipients($appointment) as $user) {
+            $user->notify($notice);
+        }
+    }
+
+    // ── Rebook reminders ───────────────────────────────────────────────────
+
+    /** "Time for your next {service}": in-app, push and email (with a one-click opt-out). */
+    public function notifyRebookDue(Appointment $appointment, string $bookUrl): void
+    {
+        $appointment->loadMissing(['customer', 'services']);
+        $tenant = Tenant::find($appointment->tenant_id);
+        $when   = $appointment->scheduled_at->diffForHumans(['parts' => 1]);
+
+        $this->notifyCustomer(
+            $appointment,
+            "Time for your next {$this->servicesSummary($appointment)}?",
+            "Your last visit to " . ($tenant?->name ?? 'us') . " was {$when}. "
+                . ($appointment->isLookSaved() ? 'Your saved look is ready to book again.' : 'Book your next one when it suits you.'),
+            $bookUrl
+        );
+
+        if ($appointment->customer?->email) {
+            Mail::to($appointment->customer->email)->queue(new RebookReminderEmail($appointment, $bookUrl));
+        }
+    }
+
+    /** "6 hours" / "1 hour 30 min" / "45 min". */
+    public static function humanMinutes(int $minutes): string
+    {
+        $h = intdiv($minutes, 60);
+        $m = $minutes % 60;
+
+        return trim(($h ? $h . ' ' . ($h === 1 ? 'hour' : 'hours') : '') . ($m ? " {$m} min" : '')) ?: '0 min';
+    }
+
+    /** Tell the client their look was saved, and that they can remove it (POPIA notice). */
+    public function notifyLookSaved(Appointment $appointment): void
+    {
+        $appointment->loadMissing(['customer', 'services']);
+        $tenant = Tenant::find($appointment->tenant_id);
+
+        $this->notifyCustomer(
+            $appointment,
+            'Your look was saved',
+            ($tenant?->name ?? 'Your salon') . " saved your look from {$appointment->scheduled_at->format('d M Y')} so you can book it again. "
+                . 'You can remove it any time from My Bookings.',
+            $this->customerPortalUrl($appointment)
+        );
+    }
+
+    /**
+     * Owners and managers, plus the assigned staff member when they have a login
+     * with the same email. Falls back to all booking staff when nobody is assigned.
+     */
+    protected function lookRecipients(Appointment $appointment)
+    {
+        $tenantId = $this->resolveTenantId($appointment);
+        if (! $tenantId) {
+            return collect();
+        }
+
+        $base = User::query()->where('tenant_id', $tenantId)->where('is_active', true);
+
+        if ($appointment->isUnassigned()) {
+            return $base->whereHas('roles', fn ($q) => $q->whereIn('name', ['tenant-owner', 'manager', 'employee']))->get();
+        }
+
+        $staffEmail = $appointment->staff?->email;
+
+        return $base->where(function ($q) use ($staffEmail) {
+            $q->whereHas('roles', fn ($r) => $r->whereIn('name', ['tenant-owner', 'manager']));
+            if ($staffEmail) {
+                $q->orWhere('email', $staffEmail);
+            }
+        })->get();
     }
 
     public function notifyStaffScheduleChanged($staff, string $message): void

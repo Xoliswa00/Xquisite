@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Storage;
  * Customer inspiration photos are personal data (often a photo of the
  * customer), so they're only kept while they're useful: until --days after
  * the appointment, or --saved-days for a look staff saved as the client's
- * look (the client can remove it sooner from My Bookings), or until the
+ * look, both counted from the appointment date (the client can remove a
+ * saved look sooner from My Bookings), or until the
  * appointment itself is deleted. Also sweeps
  * directories left behind when an appointment was force-deleted (the DB
  * cascade removes rows without firing the model's file cleanup).
@@ -43,9 +44,23 @@ class PruneInspirationPhotos extends Command
                 }
             });
 
+        // A saved look past its 2 years has just lost its photos; unsave it too,
+        // so it doesn't linger as an empty card on My Bookings and the customer
+        // record. Per model, not a bulk update, so the change is audited.
+        $expired = 0;
+        Appointment::withoutGlobalScopes()
+            ->whereNotNull('look_saved_at')
+            ->where('scheduled_at', '<', $savedCutoff)
+            ->chunkById(200, function ($appointments) use (&$expired) {
+                foreach ($appointments as $appointment) {
+                    $appointment->update(['look_saved_at' => null]);
+                    $expired++;
+                }
+            });
+
         $orphans = $this->sweepOrphanDirectories();
 
-        $this->info("Pruned {$deleted} inspiration photo(s), {$orphans} orphaned folder(s).");
+        $this->info("Pruned {$deleted} inspiration photo(s), {$expired} expired saved look(s), {$orphans} orphaned folder(s).");
 
         return self::SUCCESS;
     }

@@ -142,6 +142,30 @@
                     </label>
                 </div>
 
+                <div class="space-y-3 border-t border-slate-700 pt-4">
+                    <div class="flex items-start gap-2">
+                        <input type="hidden" name="requires_quote" value="0">
+                        <input type="checkbox" name="requires_quote" id="requires_quote" value="1" {{ old('requires_quote', $service->requires_quote) ? 'checked' : '' }}
+                               class="mt-0.5 rounded bg-slate-700 border-slate-600 text-[#0078D4] focus:ring-[#0078D4]">
+                        <label for="requires_quote" class="text-sm text-slate-300">
+                            Confirm price and time from the client's photos
+                            <span class="block text-xs text-slate-500">For looks you can't price up front, like long braids or custom nail art. The slot is held, you send a quote, and the client accepts it before the booking is final.</span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="rebook_after_days" class="block text-sm text-slate-300">Remind clients to rebook after</label>
+                        <div class="mt-1 flex items-center gap-2">
+                            <input type="number" name="rebook_after_days" id="rebook_after_days" min="1" max="730"
+                                   value="{{ old('rebook_after_days', $service->rebook_after_days) }}" placeholder="e.g. 21"
+                                   class="w-24 bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0078D4]">
+                            <span class="text-sm text-slate-400">days</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">We'll send the client one "time for your next one?" message after this many days, unless they've already booked again. Leave blank to turn it off.</p>
+                        @error('rebook_after_days')<p class="text-xs text-red-400 mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
                 {{-- Materials / bundle (inventory module only) --}}
                 @if($hasInventory)
                 <div class="border-t border-slate-700 pt-4">

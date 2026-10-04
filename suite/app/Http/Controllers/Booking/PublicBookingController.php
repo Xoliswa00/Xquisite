@@ -211,9 +211,12 @@ class PublicBookingController extends Controller
         // Owners switch the inspiration upload off per service; show it if any picked service wants it.
         $acceptsInspiration = $services->contains(fn($s) => $s->accepts_inspiration_photos);
         $maxInspirationPhotos = InspirationPhotoService::MAX_PER_APPOINTMENT;
-        $rebookLook = $acceptsInspiration ? $this->rebookLook($customer) : null;
+        $rebookLook = $acceptsInspiration ? $this->rebookLook($customer, $services->pluck('id')->all()) : null;
 
-        return view('booking.confirm', compact('tenant', 'services', 'slot', 'slug', 'customer', 'combo', 'isMultiDay', 'totalDays', 'quantities', 'acceptsInspiration', 'maxInspirationPhotos', 'rebookLook'));
+        // Some services are priced from the client's photos (long braids, custom art).
+        $needsQuote = $services->contains(fn($s) => $s->requires_quote);
+
+        return view('booking.confirm', compact('tenant', 'services', 'slot', 'slug', 'customer', 'combo', 'isMultiDay', 'totalDays', 'quantities', 'acceptsInspiration', 'maxInspirationPhotos', 'rebookLook', 'needsQuote'));
     }
 
     /** AJAX — validate a promo code against the pending booking session */
@@ -402,7 +405,7 @@ class PublicBookingController extends Controller
                     $inspiration->store($appointment, $request->file('inspiration_photos', []));
 
                     // "Book this look again": new uploads win, the saved look fills the remaining slots.
-                    $look = $request->boolean('use_saved_look') ? $this->rebookLook($customer) : null;
+                    $look = $request->boolean('use_saved_look') ? $this->rebookLook($customer, $serviceIds) : null;
                     if ($look) {
                         $inspiration->copyLook($look, $appointment);
                         if (! $appointment->inspiration_notes && $look->inspiration_notes) {
@@ -413,6 +416,12 @@ class PublicBookingController extends Controller
                 session()->forget('rebook_look');
 
                 $notifications->notifyAppointmentCreated($appointment, route('book.success', [$slug, $appointment]));
+
+                // Priced from the photos: hold the slot and ask staff for a quote.
+                if ($services->contains(fn($s) => $s->requires_quote)) {
+                    $appointment->update(['quote_status' => \App\Services\Booking\AppointmentQuoteService::REQUESTED]);
+                    $notifications->notifyQuoteRequested($appointment);
+                }
 
                 // Confirmation email to the customer
                 $appointment->load(['customer', 'services']);
@@ -528,19 +537,35 @@ class PublicBookingController extends Controller
         return view('booking.edit', compact('tenant', 'appointment', 'slug', 'services', 'isMultiDay', 'totalDays'));
     }
 
+    /** How long after tapping "Book this look again" the look is still offered. */
+    private const REBOOK_WINDOW_MINUTES = 120;
+
     /**
      * The saved look the customer chose to book again (set by "Book this look
-     * again" on My Bookings). Re-checked on every use: it must still be theirs,
-     * in this tenant, and still saved.
+     * again" on My Bookings), for the booking being made with $serviceIds.
+     *
+     * Only offered when it belongs to this booking: within the rebook window,
+     * and for overlapping services (or any services, when the look's own
+     * services are no longer offered). So an abandoned rebook can't turn up,
+     * pre-ticked, on an unrelated booking later. Re-checked on every use: it
+     * must still be theirs, in this tenant, and still saved.
      */
-    private function rebookLook($customer): ?Appointment
+    private function rebookLook($customer, array $serviceIds): ?Appointment
     {
-        $id = session('rebook_look');
-        if (! $id || ! $customer) {
+        $state = session('rebook_look');
+        if (! is_array($state) || ! $customer || empty($state['id'])) {
+            return null;
+        }
+        if (now()->timestamp - (int) ($state['at'] ?? 0) > self::REBOOK_WINDOW_MINUTES * 60) {
             return null;
         }
 
-        return Appointment::whereKey($id)
+        $lookServices = array_map('intval', $state['service_ids'] ?? []);
+        if ($lookServices !== [] && array_intersect($lookServices, array_map('intval', $serviceIds)) === []) {
+            return null;
+        }
+
+        return Appointment::whereKey($state['id'])
             ->where('customer_id', $customer->id)
             ->whereNotNull('look_saved_at')
             ->with('lookPhotos', 'services')

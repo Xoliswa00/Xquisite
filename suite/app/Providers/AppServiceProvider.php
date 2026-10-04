@@ -63,6 +63,13 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('ingest', function (Request $request) {
             return Limit::perMinute(120)->by($request->bearerToken() ?: $request->ip());
         });
+
+        // Private files (/files/{kind}/{id}) — its own bucket so a photo-heavy
+        // inspection page (40+ images) behind one office IP doesn't hit 429s and
+        // show broken images. The signature already stops enumeration.
+        RateLimiter::for('private-files', function (Request $request) {
+            return Limit::perMinute(600)->by('private-files|' . $request->ip());
+        });
     }
 
     private function registerSlowQueryDetector(): void

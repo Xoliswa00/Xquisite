@@ -310,14 +310,91 @@
                 </div>
             @endif
 
-            {{-- The client's look: their inspiration + staff "after" photos; can be saved to the client's record --}}
+            {{-- Quote from the client's photos (services with "confirm price and time from photos") --}}
+            @if($appointment->quote_status)
+            @php
+                $currentTotal = (float) $appointment->services->sum(fn ($s) => $s->pivot->price_at_booking);
+                $fmtMins = fn ($m) => \App\Services\Notifications\BookingNotificationService::humanMinutes((int) $m);
+                $canQuote = in_array($appointment->status, ['pending', 'confirmed', 'tentative'], true) && $appointment->scheduled_at->isFuture()
+                    && $appointment->quote_status !== 'accepted';
+            @endphp
+                <div class="pt-3 border-t border-slate-700 space-y-3" x-data="{ revise: {{ $appointment->quote_status === 'requested' || $errors->has('quoted_price') || $errors->has('quoted_duration_minutes') ? 'true' : 'false' }} }">
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <p class="text-slate-400 text-sm">Quote</p>
+                        @switch($appointment->quote_status)
+                            @case('requested')
+                                <span class="text-xs font-semibold text-yellow-400">Waiting for your quote</span>
+                                @break
+                            @case('sent')
+                                <span class="text-xs font-semibold text-[#0078D4]">Sent {{ $appointment->quote_sent_at?->format('d M, H:i') }} &middot; waiting for the client</span>
+                                @break
+                            @case('accepted')
+                                <span class="text-xs font-semibold text-emerald-400">Accepted {{ $appointment->quote_responded_at?->format('d M, H:i') }}</span>
+                                @break
+                            @case('declined')
+                                <span class="text-xs font-semibold text-red-400">Declined {{ $appointment->quote_responded_at?->format('d M, H:i') }}</span>
+                                @break
+                        @endswitch
+                    </div>
+
+                    @if($appointment->quote_status === 'requested')
+                        <p class="text-sm text-slate-300">The client is waiting for your price and time. Check the look they want below, then send a quote. Their slot is held until they answer.</p>
+                    @elseif($appointment->quoted_price !== null)
+                        <p class="text-sm text-slate-200">
+                            R{{ number_format((float) $appointment->quoted_price, 2) }} &middot; about {{ $fmtMins($appointment->quoted_duration_minutes) }}
+                        </p>
+                        @if($appointment->quote_note)
+                            <p class="text-xs text-slate-400 whitespace-pre-line">{{ $appointment->quote_note }}</p>
+                        @endif
+                    @endif
+
+                    @error('quote')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+
+                    @if($canQuote)
+                        @if($appointment->quote_status === 'sent')
+                            <button type="button" @click="revise = !revise" class="text-xs text-[#0078D4] hover:text-[#0065B8] font-medium py-1">Change the quote</button>
+                        @endif
+                        <form method="POST" action="{{ route('appointments.quote.send', $appointment) }}" x-show="revise" x-cloak class="space-y-3">
+                            @csrf
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="quoted_price" class="block text-xs text-slate-400 mb-1">Total price (R)</label>
+                                    <input type="number" step="0.01" min="0" name="quoted_price" id="quoted_price" required
+                                           value="{{ old('quoted_price', $appointment->quoted_price ?? $currentTotal) }}"
+                                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#0078D4]">
+                                    @error('quoted_price')<p class="text-xs text-red-400 mt-1">{{ $message }}</p>@enderror
+                                </div>
+                                <div>
+                                    <label for="quoted_duration_minutes" class="block text-xs text-slate-400 mb-1">Time needed (minutes)</label>
+                                    <input type="number" min="5" step="5" name="quoted_duration_minutes" id="quoted_duration_minutes" required
+                                           value="{{ old('quoted_duration_minutes', $appointment->quoted_duration_minutes ?? $appointment->duration_minutes) }}"
+                                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#0078D4]">
+                                    @error('quoted_duration_minutes')<p class="text-xs text-red-400 mt-1">{{ $message }}</p>@enderror
+                                </div>
+                            </div>
+                            <div>
+                                <label for="quote_note" class="block text-xs text-slate-400 mb-1">Note for the client (optional)</label>
+                                <textarea name="quote_note" id="quote_note" rows="2" maxlength="1000" placeholder="e.g. Waist length knotless with beads. Hair included."
+                                          class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#0078D4]">{{ old('quote_note', $appointment->quote_note) }}</textarea>
+                            </div>
+                            <button class="px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs font-semibold rounded-lg transition-colors">
+                                {{ $appointment->quote_status === 'sent' ? 'Send updated quote' : 'Send quote' }}
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            @endif
+
+            {{-- The client's look: their inspiration + staff "after" photos; can be saved to the client's record.
+                 Only shown where looks apply (a service takes inspiration photos, or photos/notes exist). --}}
+            @if($appointment->usesLooks())
             @php
                 $inspo     = $appointment->inspirationPhotos;
                 $results   = $appointment->resultPhotos;
-                $canLook   = ! in_array($appointment->status, ['cancelled', 'no_show'], true);
+                $canRecord = $appointment->lookCanBeRecorded();
                 $resultCap = \App\Services\Booking\InspirationPhotoService::MAX_PER_APPOINTMENT;
+                $clientName = $appointment->customer?->name ?? 'the client';
             @endphp
-            @if($canLook || $inspo->isNotEmpty() || $results->isNotEmpty() || $appointment->inspiration_notes)
                 <div class="pt-3 border-t border-slate-700 space-y-3">
                     <div class="flex items-center justify-between gap-3 flex-wrap">
                         <p class="text-slate-400 text-sm">
@@ -329,10 +406,19 @@
                         @if($appointment->isLookSaved())
                             <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-400">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                                Saved to {{ $appointment->customer?->name ?? 'client' }}'s looks
+                                Saved to {{ $clientName }}'s looks
                             </span>
                         @endif
                     </div>
+                    @if($appointment->isLookSaved())
+                    <div class="text-xs">
+                        @if($appointment->look_showcase_at)
+                            <span class="text-emerald-400">OK to share: {{ $clientName }} agreed on {{ $appointment->look_showcase_at->format('d M Y') }}.</span>
+                        @else
+                            <span class="text-slate-500">Not cleared for sharing. Only post this look if {{ $clientName }} agrees in My Bookings.</span>
+                        @endif
+                    </div>
+                    @endif
 
                     @if($inspo->isNotEmpty())
                         @include('appointments.partials.look-thumbs', ['photos' => $inspo, 'label' => 'Inspiration photo'])
@@ -350,7 +436,7 @@
                         </div>
                     @endif
 
-                    @if($canLook)
+                    @if($canRecord)
                         @error('look')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
                         @error('inspiration_photos')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
                         @foreach($errors->get('inspiration_photos.*') as $messages)
@@ -360,40 +446,83 @@
                         <div class="flex items-center gap-2 flex-wrap">
                             @if($results->count() < $resultCap)
                                 <form method="POST" action="{{ route('appointments.look.results.store', $appointment) }}" enctype="multipart/form-data"
-                                      x-data="{ busy: false }" @submit="busy = true">
+                                      x-data="{ busy: false }">
                                     @csrf
-                                    <label class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-200 text-xs font-medium rounded-lg cursor-pointer transition-colors">
+                                    <label class="inline-flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-200 text-xs font-medium rounded-lg cursor-pointer transition-colors xq-focus-ring"
+                                           :class="busy && 'opacity-60 pointer-events-none'">
                                         <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"/></svg>
                                         <span x-text="busy ? 'Uploading…' : 'Add after photos'"></span>
                                         <input type="file" name="inspiration_photos[]" multiple accept="image/jpeg,image/png,image/webp"
-                                               class="sr-only" @change="if ($event.target.files.length) { busy = true; $el.form.submit() }">
+                                               class="sr-only" @change="if ($event.target.files.length) { busy = true; xqShrinkAndSubmit($event.target) }">
                                     </label>
                                 </form>
                             @endif
 
                             @if($appointment->isLookSaved())
                                 <form method="POST" action="{{ route('appointments.look.forget', $appointment) }}"
-                                      onsubmit="return confirm('Remove this from the client\'s saved looks?')">
+                                      onsubmit="return confirm(@js($appointment->scheduled_at->lt(now()->subDays(90))
+                                          ? 'Remove from saved looks? This appointment was over 90 days ago, so its photos will be deleted tonight.'
+                                          : 'Remove from saved looks? Its photos will be deleted 90 days after the appointment.'))">
                                     @csrf @method('DELETE')
-                                    <button class="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors">Remove from saved looks</button>
+                                    <button class="px-3 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors">Remove from saved looks</button>
                                 </form>
-                            @else
+                            @elseif($appointment->lookWasRemovedByClient())
+                                <p class="text-xs text-slate-500">{{ $clientName }} removed this look, so it can't be saved again.</p>
+                            @elseif($results->isNotEmpty())
                                 <form method="POST" action="{{ route('appointments.look.save', $appointment) }}">
                                     @csrf
-                                    <button class="px-3 py-1.5 bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs font-semibold rounded-lg transition-colors">Save as client's look</button>
+                                    <button class="px-3 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs font-semibold rounded-lg transition-colors">Save as client's look</button>
                                 </form>
+                            @else
+                                <p class="text-xs text-slate-500">Add an after photo to save this as {{ $clientName }}'s look.</p>
                             @endif
                         </div>
                     @endif
 
                     <p class="text-xs text-slate-500">
                         @if($appointment->isLookSaved())
-                            Saved looks are kept for 2 years, and the client can remove them from My Bookings.
+                            Saved looks are kept for 2 years after the appointment, and the client can remove them from My Bookings.
                         @else
                             Photos are deleted 90 days after the appointment unless you save the look.
                         @endif
                     </p>
                 </div>
+
+                @once
+                <style>.xq-focus-ring:focus-within{box-shadow:0 0 0 2px #0078D4}</style>
+                <script>
+                    // Shrink phone photos in the browser before upload (same approach as the
+                    // client-side inspiration picker): a raw 12-48MP camera photo is 5-15MB on
+                    // mobile data and can exhaust server memory to decode. Falls back to the
+                    // original files if anything here isn't supported.
+                    window.xqShrinkAndSubmit = async function (input) {
+                        const EDGE = 1600;
+                        const shrink = async (file) => {
+                            try {
+                                let bmp;
+                                try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+                                catch { bmp = await createImageBitmap(file); }
+                                const scale = Math.min(1, EDGE / Math.max(bmp.width, bmp.height));
+                                const canvas = document.createElement('canvas');
+                                canvas.width = Math.round(bmp.width * scale);
+                                canvas.height = Math.round(bmp.height * scale);
+                                canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+                                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
+                                return blob ? new File([blob], (file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }) : file;
+                            } catch { return file; }
+                        };
+                        try {
+                            if (typeof DataTransfer !== 'undefined') {
+                                const dt = new DataTransfer();
+                                for (const f of Array.from(input.files)) dt.items.add(await shrink(f));
+                                input.files = dt.files;
+                            }
+                        } finally {
+                            input.form.submit();
+                        }
+                    };
+                </script>
+                @endonce
             @endif
 
             @if($appointment->notes)

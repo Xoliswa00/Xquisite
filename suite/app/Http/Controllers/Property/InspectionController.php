@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Support\PrivateFile;
 use App\Http\Controllers\Controller;
 use App\Modules\Property\Models\Inspection;
 use App\Modules\Property\Models\InspectionSection;
@@ -49,9 +50,9 @@ class InspectionController extends Controller
 
             if ($request->hasFile("sections.{$sectionId}.photo")) {
                 if ($section->photo_path) {
-                    \App\Support\PrivateFile::delete($section->photo_path);
+                    PrivateFile::delete($section->photo_path);
                 }
-                $update['photo_path'] = \App\Support\PrivateFile::store($request->file("sections.{$sectionId}.photo"), 'inspections');
+                $update['photo_path'] = PrivateFile::store($request->file("sections.{$sectionId}.photo"), 'inspections');
             }
 
             $section->update($update);

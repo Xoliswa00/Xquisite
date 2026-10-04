@@ -65,10 +65,13 @@ class CustomerController extends Controller
 
         $savedLooks = $customer->appointments()
             ->savedLooks()
-            ->with(['services', 'inspirationPhotos', 'resultPhotos'])
+            ->with(['services', 'lookPhotos', 'inspirationPhotos', 'resultPhotos'])
+            ->limit(12) // each thumb is its own request; the newest dozen is plenty
             ->get();
 
-        return view('customers.show', compact('customer', 'appointments', 'savedLooks'));
+        $consents = $customer->consents()->with('appointment.services')->limit(15)->get();
+
+        return view('customers.show', compact('customer', 'appointments', 'savedLooks', 'consents'));
     }
 
     public function edit(Customer $customer)
