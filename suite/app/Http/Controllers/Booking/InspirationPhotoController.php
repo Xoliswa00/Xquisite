@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Modules\Booking\Models\Appointment;
 use App\Modules\Booking\Models\AppointmentInspirationPhoto;
+use App\Modules\Booking\Models\CustomerConsent;
+use App\Services\Booking\ConsentLedger;
 use App\Services\Booking\InspirationPhotoService;
 use App\Services\Notifications\BookingNotificationService;
 use App\Services\Tenant\TenantContext;
@@ -24,6 +26,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class InspirationPhotoController extends Controller
 {
+    public function __construct(private readonly ConsentLedger $ledger) {}
+
     private function resolveTenant(string $slug): Tenant
     {
         $tenant = Tenant::where('slug', $slug)->where('is_active', true)->firstOrFail();
@@ -123,9 +127,24 @@ class InspirationPhotoController extends Controller
         $this->authorizeCustomer($this->resolveTenant($slug), $appointment);
 
         $appointment->resultPhotos()->get()->each->delete();
-        $appointment->update(['look_saved_at' => null, 'look_removed_at' => now()]);
+        $appointment->update(['look_saved_at' => null, 'look_removed_at' => now(), 'look_showcase_at' => null]);
+        $this->ledger->record($appointment->customer, CustomerConsent::SCOPE_LOOK_SAVED, CustomerConsent::WITHDRAWN, 'client', $appointment);
 
         return back()->with('success', 'Saved look removed. The after photos have been deleted.');
+    }
+
+    /** Customer allows (or stops) the business sharing this saved look, e.g. on Instagram or a portfolio. */
+    public function customerShowcaseLook(string $slug, Appointment $appointment, Request $request)
+    {
+        $this->authorizeCustomer($this->resolveTenant($slug), $appointment);
+        abort_unless($appointment->isLookSaved(), 404);
+
+        $allowed = $request->boolean('allow');
+        $this->ledger->setShowcase($appointment->loadMissing('customer'), $allowed);
+
+        return back()->with('success', $allowed
+            ? 'Thanks! ' . ($appointment->tenant?->name ?? 'They') . ' can share this look. You can change your mind any time.'
+            : 'Done. This look won\'t be shared.');
     }
 
     /**
@@ -226,6 +245,7 @@ class InspirationPhotoController extends Controller
 
         $appointment->update(['look_saved_at' => now()]);
         $notifications->notifyLookSaved($appointment);
+        $this->ledger->record($appointment->customer, CustomerConsent::SCOPE_LOOK_SAVED, CustomerConsent::NOTIFIED, 'staff', $appointment);
 
         return back()->with('success', 'Saved to ' . ($appointment->customer?->name ?? 'the client') . "'s looks. We've let them know.");
     }
@@ -234,7 +254,8 @@ class InspirationPhotoController extends Controller
     {
         $this->authorizeStaff($appointment);
 
-        $appointment->update(['look_saved_at' => null]);
+        $appointment->update(['look_saved_at' => null, 'look_showcase_at' => null]);
+        $this->ledger->record($appointment->customer, CustomerConsent::SCOPE_LOOK_SAVED, CustomerConsent::WITHDRAWN, 'staff', $appointment);
 
         return back()->with('success', 'Saved look removed.');
     }

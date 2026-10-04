@@ -28,6 +28,8 @@ class Service extends Model
         'unit_label',
         'is_active',
         'accepts_inspiration_photos',
+        'rebook_after_days',
+        'requires_quote',
     ];
 
     protected $casts = [
@@ -36,6 +38,8 @@ class Service extends Model
         'price_per_unit'   => 'decimal:2',
         'duration_minutes' => 'integer',
         'accepts_inspiration_photos' => 'boolean',
+        'rebook_after_days' => 'integer',
+        'requires_quote'   => 'boolean',
     ];
 
     public function isPerHead(): bool   { return $this->pricing_type === 'per_head'; }

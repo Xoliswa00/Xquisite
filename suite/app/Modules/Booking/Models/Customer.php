@@ -27,6 +27,7 @@ class Customer extends Model implements AuthenticatableContract, CanResetPasswor
         'notes',
         'is_active',
         'password',
+        'rebook_reminders_opt_out_at',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -34,12 +35,24 @@ class Customer extends Model implements AuthenticatableContract, CanResetPasswor
     protected $casts = [
         'is_active'         => 'boolean',
         'email_verified_at' => 'datetime',
+        'rebook_reminders_opt_out_at' => 'datetime',
         'password'          => 'hashed',
     ];
 
     public function appointments()
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    /** What this client was told or agreed to, newest first (see ConsentLedger). */
+    public function consents()
+    {
+        return $this->hasMany(CustomerConsent::class)->latest('id');
+    }
+
+    public function wantsRebookReminders(): bool
+    {
+        return $this->is_active && $this->rebook_reminders_opt_out_at === null;
     }
 
     public function tenant()
