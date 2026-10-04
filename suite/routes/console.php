@@ -68,3 +68,6 @@ Schedule::command('founding-twenty:auto-issue-checkins')->dailyAt('06:00')->with
 
 // Booking: delete customer inspiration photos 90 days after the appointment (personal data, POPIA).
 Schedule::command('booking:prune-inspiration-photos')->dailyAt('03:15')->withoutOverlapping();
+
+// Booking: "time for your next ..." reminders for services with a rebook interval set.
+Schedule::command('booking:send-rebook-reminders')->dailyAt('09:00')->withoutOverlapping();

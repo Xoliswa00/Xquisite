@@ -30,6 +30,14 @@ class Appointment extends Model
         'inspiration_notes',
         'look_saved_at',
         'look_removed_at',
+        'look_showcase_at',
+        'rebook_reminded_at',
+        'quote_status',
+        'quoted_price',
+        'quoted_duration_minutes',
+        'quote_note',
+        'quote_sent_at',
+        'quote_responded_at',
         'terms_accepted_at',
         'combo_id',
         'combo_price',
@@ -52,6 +60,12 @@ class Appointment extends Model
         'terms_accepted_at' => 'datetime',
         'look_saved_at'    => 'datetime',
         'look_removed_at'  => 'datetime',
+        'look_showcase_at' => 'datetime',
+        'rebook_reminded_at' => 'datetime',
+        'quoted_price'     => 'decimal:2',
+        'quoted_duration_minutes' => 'integer',
+        'quote_sent_at'    => 'datetime',
+        'quote_responded_at' => 'datetime',
         'setup_at'         => 'datetime',
         'breakdown_at'     => 'datetime',
         'duration_minutes' => 'integer',
@@ -77,6 +91,21 @@ class Appointment extends Model
     public function isTentative(): bool
     {
         return $this->status === 'tentative';
+    }
+
+    /**
+     * The business. Email templates already read $appointment->tenant->name,
+     * which silently fell back to the app name while this relation was missing.
+     */
+    public function tenant()
+    {
+        return $this->belongsTo(\App\Models\Tenant::class);
+    }
+
+    /** A quote from the client's photos is outstanding (requested or sent, not answered). */
+    public function quoteIsOpen(): bool
+    {
+        return in_array($this->quote_status, ['requested', 'sent'], true);
     }
 
     public function customer()

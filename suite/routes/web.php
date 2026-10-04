@@ -239,6 +239,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::delete('appointments/{appointment}/look/results/{photo}', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffDestroyResult'])->name('appointments.look.results.destroy');
             Route::post('appointments/{appointment}/look', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffSaveLook'])->name('appointments.look.save');
             Route::delete('appointments/{appointment}/look', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffForgetLook'])->name('appointments.look.forget');
+            Route::post('appointments/{appointment}/quote', [\App\Http\Controllers\Booking\AppointmentQuoteController::class, 'send'])->name('appointments.quote.send');
             Route::post('appointments/{appointment}/mark-paid', [\App\Http\Controllers\Booking\AppointmentController::class, 'markPaid'])->name('appointments.mark-paid');
             Route::get('calendar/{date?}', [\App\Http\Controllers\Booking\AppointmentController::class, 'calendar'])->name('appointments.calendar');
         });
@@ -598,6 +599,9 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
 
     Route::get('/',          [PublicBookingController::class, 'index'])->name('index');
     Route::get('/manifest.json', [PublicBookingController::class, 'manifest'])->name('manifest');
+    // One-click "stop rebook reminders" from an email: signed, so no login needed.
+    Route::get('/rebook-reminders/off/{customer}', [\App\Http\Controllers\Booking\RebookReminderController::class, 'optOut'])
+        ->middleware('signed')->name('rebook-reminders.opt-out');
     Route::get('/schedule',  [PublicBookingController::class, 'service'])->name('service'); // was /services/{service}
     Route::get('/slots',     [PublicBookingController::class, 'slots'])->name('slots');
     Route::post('/photos/{photo}/report', [PublicBookingController::class, 'reportPhoto'])
@@ -648,6 +652,10 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
             ->name('inspiration.destroy')->middleware('throttle:20,1');
         Route::post('/looks/{appointment}/book-again',                  [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerRebookLook'])->name('looks.rebook');
         Route::delete('/looks/{appointment}',                           [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerForgetLook'])->name('looks.forget');
+        Route::post('/looks/{appointment}/showcase',                    [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerShowcaseLook'])->name('looks.showcase');
+        Route::post('/rebook-reminders',                                [\App\Http\Controllers\Booking\RebookReminderController::class, 'toggle'])->name('rebook-reminders.toggle');
+        Route::post('/appointments/{appointment}/quote/accept',         [\App\Http\Controllers\Booking\AppointmentQuoteController::class, 'accept'])->name('quote.accept');
+        Route::post('/appointments/{appointment}/quote/decline',        [\App\Http\Controllers\Booking\AppointmentQuoteController::class, 'decline'])->name('quote.decline');
 
         // Push notification subscriptions — same controller as the staff-side
         // route (routes/web.php, profile group); it resolves whichever guard

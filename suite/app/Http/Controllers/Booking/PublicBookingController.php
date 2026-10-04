@@ -213,7 +213,10 @@ class PublicBookingController extends Controller
         $maxInspirationPhotos = InspirationPhotoService::MAX_PER_APPOINTMENT;
         $rebookLook = $acceptsInspiration ? $this->rebookLook($customer, $services->pluck('id')->all()) : null;
 
-        return view('booking.confirm', compact('tenant', 'services', 'slot', 'slug', 'customer', 'combo', 'isMultiDay', 'totalDays', 'quantities', 'acceptsInspiration', 'maxInspirationPhotos', 'rebookLook'));
+        // Some services are priced from the client's photos (long braids, custom art).
+        $needsQuote = $services->contains(fn($s) => $s->requires_quote);
+
+        return view('booking.confirm', compact('tenant', 'services', 'slot', 'slug', 'customer', 'combo', 'isMultiDay', 'totalDays', 'quantities', 'acceptsInspiration', 'maxInspirationPhotos', 'rebookLook', 'needsQuote'));
     }
 
     /** AJAX — validate a promo code against the pending booking session */
@@ -413,6 +416,12 @@ class PublicBookingController extends Controller
                 session()->forget('rebook_look');
 
                 $notifications->notifyAppointmentCreated($appointment, route('book.success', [$slug, $appointment]));
+
+                // Priced from the photos: hold the slot and ask staff for a quote.
+                if ($services->contains(fn($s) => $s->requires_quote)) {
+                    $appointment->update(['quote_status' => \App\Services\Booking\AppointmentQuoteService::REQUESTED]);
+                    $notifications->notifyQuoteRequested($appointment);
+                }
 
                 // Confirmation email to the customer
                 $appointment->load(['customer', 'services']);

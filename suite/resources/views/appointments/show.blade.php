@@ -310,6 +310,81 @@
                 </div>
             @endif
 
+            {{-- Quote from the client's photos (services with "confirm price and time from photos") --}}
+            @if($appointment->quote_status)
+            @php
+                $currentTotal = (float) $appointment->services->sum(fn ($s) => $s->pivot->price_at_booking);
+                $fmtMins = fn ($m) => \App\Services\Notifications\BookingNotificationService::humanMinutes((int) $m);
+                $canQuote = in_array($appointment->status, ['pending', 'confirmed', 'tentative'], true) && $appointment->scheduled_at->isFuture()
+                    && $appointment->quote_status !== 'accepted';
+            @endphp
+                <div class="pt-3 border-t border-slate-700 space-y-3" x-data="{ revise: {{ $appointment->quote_status === 'requested' || $errors->has('quoted_price') || $errors->has('quoted_duration_minutes') ? 'true' : 'false' }} }">
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                        <p class="text-slate-400 text-sm">Quote</p>
+                        @switch($appointment->quote_status)
+                            @case('requested')
+                                <span class="text-xs font-semibold text-yellow-400">Waiting for your quote</span>
+                                @break
+                            @case('sent')
+                                <span class="text-xs font-semibold text-[#0078D4]">Sent {{ $appointment->quote_sent_at?->format('d M, H:i') }} &middot; waiting for the client</span>
+                                @break
+                            @case('accepted')
+                                <span class="text-xs font-semibold text-emerald-400">Accepted {{ $appointment->quote_responded_at?->format('d M, H:i') }}</span>
+                                @break
+                            @case('declined')
+                                <span class="text-xs font-semibold text-red-400">Declined {{ $appointment->quote_responded_at?->format('d M, H:i') }}</span>
+                                @break
+                        @endswitch
+                    </div>
+
+                    @if($appointment->quote_status === 'requested')
+                        <p class="text-sm text-slate-300">The client is waiting for your price and time. Check the look they want below, then send a quote. Their slot is held until they answer.</p>
+                    @elseif($appointment->quoted_price !== null)
+                        <p class="text-sm text-slate-200">
+                            R{{ number_format((float) $appointment->quoted_price, 2) }} &middot; about {{ $fmtMins($appointment->quoted_duration_minutes) }}
+                        </p>
+                        @if($appointment->quote_note)
+                            <p class="text-xs text-slate-400 whitespace-pre-line">{{ $appointment->quote_note }}</p>
+                        @endif
+                    @endif
+
+                    @error('quote')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+
+                    @if($canQuote)
+                        @if($appointment->quote_status === 'sent')
+                            <button type="button" @click="revise = !revise" class="text-xs text-[#0078D4] hover:text-[#0065B8] font-medium py-1">Change the quote</button>
+                        @endif
+                        <form method="POST" action="{{ route('appointments.quote.send', $appointment) }}" x-show="revise" x-cloak class="space-y-3">
+                            @csrf
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="quoted_price" class="block text-xs text-slate-400 mb-1">Total price (R)</label>
+                                    <input type="number" step="0.01" min="0" name="quoted_price" id="quoted_price" required
+                                           value="{{ old('quoted_price', $appointment->quoted_price ?? $currentTotal) }}"
+                                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#0078D4]">
+                                    @error('quoted_price')<p class="text-xs text-red-400 mt-1">{{ $message }}</p>@enderror
+                                </div>
+                                <div>
+                                    <label for="quoted_duration_minutes" class="block text-xs text-slate-400 mb-1">Time needed (minutes)</label>
+                                    <input type="number" min="5" step="5" name="quoted_duration_minutes" id="quoted_duration_minutes" required
+                                           value="{{ old('quoted_duration_minutes', $appointment->quoted_duration_minutes ?? $appointment->duration_minutes) }}"
+                                           class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#0078D4]">
+                                    @error('quoted_duration_minutes')<p class="text-xs text-red-400 mt-1">{{ $message }}</p>@enderror
+                                </div>
+                            </div>
+                            <div>
+                                <label for="quote_note" class="block text-xs text-slate-400 mb-1">Note for the client (optional)</label>
+                                <textarea name="quote_note" id="quote_note" rows="2" maxlength="1000" placeholder="e.g. Waist length knotless with beads. Hair included."
+                                          class="w-full bg-slate-700 border border-slate-600 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#0078D4]">{{ old('quote_note', $appointment->quote_note) }}</textarea>
+                            </div>
+                            <button class="px-4 py-2 bg-[#0078D4] hover:bg-[#0065B8] text-white text-xs font-semibold rounded-lg transition-colors">
+                                {{ $appointment->quote_status === 'sent' ? 'Send updated quote' : 'Send quote' }}
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            @endif
+
             {{-- The client's look: their inspiration + staff "after" photos; can be saved to the client's record.
                  Only shown where looks apply (a service takes inspiration photos, or photos/notes exist). --}}
             @if($appointment->usesLooks())
@@ -335,6 +410,15 @@
                             </span>
                         @endif
                     </div>
+                    @if($appointment->isLookSaved())
+                    <div class="text-xs">
+                        @if($appointment->look_showcase_at)
+                            <span class="text-emerald-400">OK to share: {{ $clientName }} agreed on {{ $appointment->look_showcase_at->format('d M Y') }}.</span>
+                        @else
+                            <span class="text-slate-500">Not cleared for sharing. Only post this look if {{ $clientName }} agrees in My Bookings.</span>
+                        @endif
+                    </div>
+                    @endif
 
                     @if($inspo->isNotEmpty())
                         @include('appointments.partials.look-thumbs', ['photos' => $inspo, 'label' => 'Inspiration photo'])

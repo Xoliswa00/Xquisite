@@ -49,6 +49,9 @@
                             </a>
                             <span class="text-xs text-slate-500 shrink-0">{{ $look->scheduled_at->format('d M Y') }}</span>
                         </div>
+                        <p class="text-xs {{ $look->look_showcase_at ? 'text-emerald-400' : 'text-slate-500' }}">
+                            {{ $look->look_showcase_at ? 'OK to share (client agreed ' . $look->look_showcase_at->format('d M Y') . ')' : 'Not cleared for sharing' }}
+                        </p>
                         @if($look->resultPhotos->isNotEmpty())
                             <div class="max-w-sm">
                                 <p class="text-xs text-slate-500 mb-1">How it turned out</p>
@@ -67,6 +70,28 @@
                     </div>
                 @endforeach
             </div>
+        </div>
+        @endif
+
+        {{-- What this client was told or agreed to (POPIA record, newest first) --}}
+        @if($consents->isNotEmpty())
+        <div class="bg-slate-800 rounded-xl overflow-hidden">
+            <div class="px-4 py-3 border-b border-slate-700">
+                <h3 class="text-sm font-medium text-slate-300">Consent history</h3>
+            </div>
+            <ul class="divide-y divide-slate-700">
+                @foreach($consents as $consent)
+                    <li class="px-4 py-2.5 flex items-start justify-between gap-3 text-xs">
+                        <span class="text-slate-300">
+                            {{ $consent->describe() }}
+                            @if($consent->appointment)
+                                <span class="text-slate-500">&middot; {{ $consent->appointment->services->pluck('name')->join(', ') ?: 'booking' }}, {{ $consent->appointment->scheduled_at->format('d M Y') }}</span>
+                            @endif
+                        </span>
+                        <span class="text-slate-500 shrink-0">{{ $consent->created_at->format('d M Y, H:i') }}</span>
+                    </li>
+                @endforeach
+            </ul>
         </div>
         @endif
 

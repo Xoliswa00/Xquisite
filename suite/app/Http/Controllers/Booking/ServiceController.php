@@ -107,6 +107,8 @@ class ServiceController extends Controller
             'unit_label'          => 'nullable|string|max:30',
             'is_active'           => 'boolean',
             'accepts_inspiration_photos' => 'boolean',
+            'rebook_after_days'   => 'nullable|integer|min:1|max:730',
+            'requires_quote'      => 'boolean',
             'bundles'             => 'nullable|array',
             'bundles.*.product_id' => 'required|integer|exists:products,id',
             'bundles.*.quantity'   => 'required|integer|min:1',
@@ -118,6 +120,7 @@ class ServiceController extends Controller
 
         $data['is_active'] = $request->boolean('is_active', true);
         $data['accepts_inspiration_photos'] = $request->boolean('accepts_inspiration_photos', true);
+        $data['requires_quote'] = $request->boolean('requires_quote');
         $bundles = $data['bundles'] ?? [];
         unset($data['bundles'], $data['photos']);
 
@@ -154,6 +157,8 @@ class ServiceController extends Controller
             'unit_label'          => 'nullable|string|max:30',
             'is_active'           => 'boolean',
             'accepts_inspiration_photos' => 'boolean',
+            'rebook_after_days'   => 'nullable|integer|min:1|max:730',
+            'requires_quote'      => 'boolean',
             'bundles'             => 'nullable|array',
             'bundles.*.product_id' => 'required|integer|exists:products,id',
             'bundles.*.quantity'   => 'required|integer|min:1',
@@ -162,6 +167,9 @@ class ServiceController extends Controller
         $data['is_active'] = $request->boolean('is_active', true);
         if ($request->has('accepts_inspiration_photos')) {
             $data['accepts_inspiration_photos'] = $request->boolean('accepts_inspiration_photos');
+        }
+        if ($request->has('requires_quote')) {
+            $data['requires_quote'] = $request->boolean('requires_quote');
         }
         $bundles = $data['bundles'] ?? [];
         unset($data['bundles']);
