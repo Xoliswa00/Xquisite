@@ -18,7 +18,7 @@ class SupportEmailTest extends TestCase
         $offenders = [];
 
         foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(resource_path('views'))) as $file) {
-            if ($file->isFile() && preg_match('/support@[a-z0-9.-]+/i', file_get_contents($file->getPathname()), $m)) {
+            if ($file->isFile() && preg_match('/(support|admin)@[a-z0-9.-]+/i', file_get_contents($file->getPathname()), $m)) {
                 $offenders[] = str_replace(resource_path('views') . DIRECTORY_SEPARATOR, '', $file->getPathname()) . " ({$m[0]})";
             }
         }

@@ -18,7 +18,7 @@ return [
     // The one support inbox shown to users everywhere (pages, emails, error
     // screens). Deliberately not tied to MAIL_FROM_ADDRESS: the send-from address
     // is often a no-reply or a different mailbox.
-    'support_email'    => env('SUPPORT_EMAIL', 'support@xquisite.brightfinance-x.co.za'),
+    'support_email'    => env('SUPPORT_EMAIL', 'admin@xquisite.brightfinance-x.co.za'),
     'support_name'     => env('SUPPORT_NAME', 'Xquisite Support'),
 
 ];
