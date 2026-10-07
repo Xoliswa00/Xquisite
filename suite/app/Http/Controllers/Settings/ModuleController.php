@@ -82,7 +82,7 @@ class ModuleController extends Controller
         $requesters->push(auth()->user());
         $requesters->unique('id')->each(fn ($user) => $user->notify(new ModuleRequestSubmitted($moduleRequest)));
 
-        $supportEmail = config('app.support_email') ?: config('mail.from.address');
+        $supportEmail = config('contact.support_email');
         if ($supportEmail) {
             Notification::route('mail', $supportEmail)->notify(new ModuleRequestSubmitted($moduleRequest));
         }

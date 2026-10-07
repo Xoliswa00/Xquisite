@@ -88,7 +88,7 @@
         <ul>
             <li>You are responsible for maintaining the confidentiality of your login credentials.</li>
             <li>You are responsible for all activity that occurs under your account.</li>
-            <li>Notify us immediately at <a href="mailto:{{ config('mail.from.address', 'support@xquisitecreations.co.za') }}">support@xquisitecreations.co.za</a> if you suspect unauthorised access.</li>
+            <li>Notify us immediately at <a href="mailto:{{ config('contact.support_email') }}">{{ config('contact.support_email') }}</a> if you suspect unauthorised access.</li>
             <li>You may not share your account with third parties or use a single account to represent multiple unrelated businesses.</li>
         </ul>
 

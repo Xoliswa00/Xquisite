@@ -15,7 +15,10 @@ return [
     'whatsapp_number'  => env('WHATSAPP_NUMBER', '27000000000'),
     'whatsapp_message' => env('WHATSAPP_MESSAGE', 'Hi! I\'d like to learn more about Xquisite.'),
 
-    'support_email'    => env('SUPPORT_EMAIL', env('MAIL_FROM_ADDRESS', 'support@xquisite.co.za')),
+    // The one support inbox shown to users everywhere (pages, emails, error
+    // screens). Deliberately not tied to MAIL_FROM_ADDRESS: the send-from address
+    // is often a no-reply or a different mailbox.
+    'support_email'    => env('SUPPORT_EMAIL', 'support@xquisite.brightfinance-x.co.za'),
     'support_name'     => env('SUPPORT_NAME', 'Xquisite Support'),
 
 ];

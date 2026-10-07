@@ -19,7 +19,7 @@ h2{color:#002B5B;font-size:20px;margin:0 0 8px}.sub{color:#718096;font-size:14px
 
     <a href="{{ $loginUrl }}" class="btn">Sign In Now</a>
 
-    <p class="note">If you did not expect this email, please contact your administrator immediately at <a href="mailto:support@xquisite.brightfinance-x.co.za" style="color:#0078D4">support@xquisite.brightfinance-x.co.za</a>.</p>
+    <p class="note">If you did not expect this email, please contact your administrator immediately at <a href="mailto:{{ config('contact.support_email') }}" style="color:#0078D4">{{ config('contact.support_email') }}</a>.</p>
 </div>
 </body>
 </html>

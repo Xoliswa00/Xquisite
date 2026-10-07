@@ -38,9 +38,11 @@ class AppServiceProvider extends ServiceProvider
 
     private function registerRateLimiters(): void
     {
-        // Login / auth — 10 attempts per minute per IP
+        // Login / auth: 30 posts per minute per IP. One address is often a whole
+        // shop or a mobile carrier, so this is only a flood guard; the per-account
+        // limits live in LoginThrottleService.
         RateLimiter::for('auth', function (Request $request) {
-            return Limit::perMinute(10)->by($request->ip())->response(function () {
+            return Limit::perMinute(30)->by($request->ip())->response(function () {
                 abort(429, 'Too many login attempts. Please wait before trying again.');
             });
         });
