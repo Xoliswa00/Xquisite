@@ -52,15 +52,15 @@ class LoginRequest extends FormRequest
                 entityType: 'User',
                 meta: ['email' => $this->string('email')->toString()],
             );
-            LoginThrottleService::recordFailure($this->ip(), 'staff', $this->string('email')->toString());
+            $left = LoginThrottleService::recordFailure($this->ip(), 'staff', 'login', $this->string('email')->toString());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => trans('auth.failed') . LoginThrottleService::warning($left),
             ]);
         }
 
         RateLimiter::clear($this->throttleKey());
-        LoginThrottleService::recordSuccess($this->ip(), $this->string('email')->toString());
+        LoginThrottleService::recordSuccess($this->ip(), 'staff', $this->string('email')->toString());
     }
 
     /**

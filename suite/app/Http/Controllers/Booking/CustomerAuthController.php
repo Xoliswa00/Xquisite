@@ -41,7 +41,7 @@ class CustomerAuthController extends Controller
 
         if (Auth::guard('customer')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             $request->session()->regenerate();
-            LoginThrottleService::recordSuccess($request->ip(), $request->input('email'));
+            LoginThrottleService::recordSuccess($request->ip(), 'customer', $request->input('email'));
 
             AuditService::log(
                 action: 'customer.login',
@@ -58,9 +58,9 @@ class CustomerAuthController extends Controller
             entityType: 'Customer',
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug],
         );
-        LoginThrottleService::recordFailure($request->ip(), 'customer', $request->input('email'));
+        $left = LoginThrottleService::recordFailure($request->ip(), 'customer', 'login', $request->input('email'), ['tenant_slug' => $slug]);
 
-        return back()->withErrors(['email' => 'These credentials do not match our records.'])->withInput();
+        return back()->withErrors(['email' => 'These credentials do not match our records.' . LoginThrottleService::warning($left)])->withInput();
     }
 
     public function showRegister(string $slug)
@@ -199,8 +199,9 @@ class CustomerAuthController extends Controller
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug, 'status' => $status],
         );
 
-        if ($status !== Password::RESET_LINK_SENT) {
-            LoginThrottleService::recordFailure($request->ip(), 'customer-password-reset', $request->input('email'));
+        // Asking again too soon is impatience, not a failed attempt.
+        if (! in_array($status, [Password::RESET_LINK_SENT, Password::RESET_THROTTLED], true)) {
+            LoginThrottleService::recordFailure($request->ip(), 'customer', 'reset', $request->input('email'), ['tenant_slug' => $slug]);
         }
 
         return $status === Password::RESET_LINK_SENT
@@ -247,7 +248,7 @@ class CustomerAuthController extends Controller
             entityType: 'Customer',
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug, 'status' => $status],
         );
-        LoginThrottleService::recordFailure($request->ip(), 'customer-password-reset', $request->input('email'));
+        LoginThrottleService::recordFailure($request->ip(), 'customer', 'reset', $request->input('email'), ['tenant_slug' => $slug]);
 
         return back()->withErrors(['email' => __($status)]);
     }

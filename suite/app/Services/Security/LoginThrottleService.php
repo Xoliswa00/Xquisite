@@ -5,6 +5,8 @@ namespace App\Services\Security;
 use App\Services\AuditService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 /**
  * Turns repeated failed sign-ins into a short pause on signing in.
@@ -19,6 +21,12 @@ use Illuminate\Support\Facades\RateLimiter;
  *    whole IP. This is the net for an attack that tries many accounts.
  *
  * Site-wide blocks are a separate, manual tool (BlockedIp + CheckBlockedIp).
+ *
+ * Every sign-in, forgot-password and reset-password POST needs both halves:
+ * the `sign-in.pause:{guard},{channel}` route middleware (refuses while
+ * paused) and a recordFailure() call (earns the pause).
+ * SignInPauseTest::test_every_sign_in_and_reset_post_is_guarded checks the
+ * first half.
  */
 class LoginThrottleService
 {
@@ -27,65 +35,98 @@ class LoginThrottleService
     public const WINDOW_SECONDS = 900;    // 15 minutes
     public const LOCK_SECONDS = 300;      // 5 minutes
 
-    public static function recordFailure(string $ip, string $context, ?string $identifier = null): void
+    public const GUARDS = ['staff', 'customer', 'renter', 'contractor'];
+
+    // Failed sign-ins must not also shut the "forgot password" form, which is
+    // exactly where someone who keeps mistyping needs to go next.
+    public const CHANNELS = ['login', 'reset'];
+
+    /**
+     * @return int|null Attempts left before this account is paused (0 = it is
+     *                  paused now), or null when there was no email to count.
+     */
+    public static function recordFailure(string $ip, string $guard, string $channel, ?string $identifier, array $meta = []): ?int
     {
-        $channel = self::channelFor($context);
+        self::assertKnown($guard, $channel);
+
+        $left = null;
 
         if ($identifier = self::normalise($identifier)) {
-            $strikes = self::accountKey('strikes', $channel, $ip, $identifier);
-            RateLimiter::hit($strikes, self::WINDOW_SECONDS);
+            $strikes = self::accountKey('strikes', $guard, $channel, $ip, $identifier);
+            $attempts = RateLimiter::hit($strikes, self::WINDOW_SECONDS);
+            $left = max(0, self::ACCOUNT_THRESHOLD - $attempts);
 
-            if (RateLimiter::attempts($strikes) >= self::ACCOUNT_THRESHOLD) {
-                self::lock(self::accountKey('lock', $channel, $ip, $identifier));
+            if ($left === 0) {
+                self::lock(self::accountKey('lock', $guard, $channel, $ip, $identifier));
                 RateLimiter::clear($strikes);
 
                 AuditService::log(
                     action: 'auth.sign_in_paused',
-                    meta: ['scope' => 'account', 'channel' => $channel, 'context' => $context, 'email' => $identifier],
+                    meta: ['scope' => 'account', 'guard' => $guard, 'channel' => $channel, 'email' => Str::limit($identifier, 190, '')] + $meta,
                 );
             }
         }
 
         $strikes = "login_strikes:ip:{$ip}";
-        RateLimiter::hit($strikes, self::WINDOW_SECONDS);
 
-        if (RateLimiter::attempts($strikes) >= self::IP_THRESHOLD) {
+        if (RateLimiter::hit($strikes, self::WINDOW_SECONDS) >= self::IP_THRESHOLD) {
             self::lock("login_lock:ip:{$ip}");
             RateLimiter::clear($strikes);
 
             AuditService::log(
                 action: 'auth.sign_in_paused',
-                meta: ['scope' => 'ip', 'context' => $context],
+                meta: ['scope' => 'ip', 'guard' => $guard, 'channel' => $channel] + $meta,
             );
         }
+
+        return $left;
     }
 
     /**
      * A correct sign-in wipes that account's strikes. The IP-wide count is left
      * alone, or one valid account could be used to keep resetting it.
      */
-    public static function recordSuccess(string $ip, ?string $identifier): void
+    public static function recordSuccess(string $ip, string $guard, ?string $identifier): void
     {
+        self::assertKnown($guard, 'login');
+
         if ($identifier = self::normalise($identifier)) {
-            RateLimiter::clear(self::accountKey('strikes', 'login', $ip, $identifier));
+            RateLimiter::clear(self::accountKey('strikes', $guard, 'login', $ip, $identifier));
         }
     }
 
     /**
      * @return array{scope: string, seconds: int}|null
      */
-    public static function lockedFor(string $ip, string $channel, ?string $identifier): ?array
+    public static function lockedFor(string $ip, string $guard, string $channel, ?string $identifier): ?array
     {
+        self::assertKnown($guard, $channel);
+
         if ($seconds = self::secondsLeft("login_lock:ip:{$ip}")) {
             return ['scope' => 'ip', 'seconds' => $seconds];
         }
 
         if (($identifier = self::normalise($identifier))
-            && ($seconds = self::secondsLeft(self::accountKey('lock', $channel, $ip, $identifier)))) {
+            && ($seconds = self::secondsLeft(self::accountKey('lock', $guard, $channel, $ip, $identifier)))) {
             return ['scope' => 'account', 'seconds' => $seconds];
         }
 
         return null;
+    }
+
+    /**
+     * What to add to the "wrong details" message so the pause never arrives
+     * unannounced. Says the same thing whether or not the account exists.
+     */
+    public static function warning(?int $attemptsLeft): string
+    {
+        $minutes = (int) ceil(self::LOCK_SECONDS / 60);
+
+        return match ($attemptsLeft) {
+            1 => " One more failed attempt will pause sign-in for this email for {$minutes} minutes.",
+            0 => " Sign-in for this email is now paused for {$minutes} minutes. If you have forgotten your password, you can reset it in the meantime.",
+            default => '',
+        };
     }
 
     private static function lock(string $key): void
@@ -98,22 +139,28 @@ class LoginThrottleService
         return max(0, (int) Cache::get($key, 0) - now()->getTimestamp());
     }
 
-    // Failed sign-ins must not also shut the "forgot password" form, which is
-    // exactly where someone who keeps mistyping needs to go next.
-    private static function channelFor(string $context): string
+    // A typo in a guard or channel would otherwise read or write a key that
+    // nothing else uses, and the pause would silently never apply.
+    private static function assertKnown(string $guard, string $channel): void
     {
-        return str_ends_with($context, 'password-reset') ? 'reset' : 'login';
+        if (! in_array($guard, self::GUARDS, true) || ! in_array($channel, self::CHANNELS, true)) {
+            throw new InvalidArgumentException("Unknown sign-in pause guard/channel [{$guard}, {$channel}].");
+        }
     }
 
+    // Transliterated because the users tables compare emails accent-insensitively,
+    // so "ádmin@" reaches the same account as "admin@" and must share its strikes.
     private static function normalise(?string $identifier): ?string
     {
-        $identifier = mb_strtolower(trim((string) $identifier));
+        $identifier = Str::lower(Str::transliterate(trim((string) $identifier)));
 
         return $identifier === '' ? null : $identifier;
     }
 
-    private static function accountKey(string $kind, string $channel, string $ip, string $identifier): string
+    // The guard is part of the key so signing in to one portal can't clear (or
+    // trip) the strikes for the same email on another.
+    private static function accountKey(string $kind, string $guard, string $channel, string $ip, string $identifier): string
     {
-        return "login_{$kind}:account:{$channel}:" . sha1($identifier . '|' . $ip);
+        return "login_{$kind}:account:{$guard}:{$channel}:" . sha1($identifier . '|' . $ip);
     }
 }

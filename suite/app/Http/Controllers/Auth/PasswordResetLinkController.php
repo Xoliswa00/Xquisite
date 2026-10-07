@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\Security\LoginThrottleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -36,6 +37,11 @@ class PasswordResetLinkController extends Controller
         $status = Password::sendResetLink(
             $request->only('email')
         );
+
+        // Asking again too soon is impatience, not a failed attempt.
+        if (! in_array($status, [Password::RESET_LINK_SENT, Password::RESET_THROTTLED], true)) {
+            LoginThrottleService::recordFailure($request->ip(), 'staff', 'reset', $request->input('email'));
+        }
 
         return $status == Password::RESET_LINK_SENT
                     ? back()->with('status', __($status))

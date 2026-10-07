@@ -19,22 +19,25 @@ class CheckBlockedIp
             return $next($request);
         }
 
-        $block = BlockedIp::active()->where('ip_address', $ip)->first();
-        $until = $block?->expires_at;
+        $until = BlockedIp::active()->where('ip_address', $ip)->value('expires_at');
+        $until = $until ? \Illuminate\Support\Carbon::parse($until) : null;
 
-        $message = "Access from your network (IP address {$ip}) has been blocked by the site administrator. "
+        $message = 'Xquisite Creations has blocked access from your internet connection. '
             . ($until
-                ? 'The block lifts ' . ($until->isToday() ? 'at ' . $until->format('H:i') : 'on ' . $until->format('j M Y \a\t H:i')) . '.'
-                : 'It stays in place until an administrator removes it.')
-            . ' If you think this is a mistake, contact support and quote this IP address.';
+                ? 'The block lifts ' . ($until->isToday() ? 'at ' . $until->format('H:i') . ' today' : 'on ' . $until->format('j M Y \a\t H:i')) . '.'
+                : 'It stays in place until we remove it.');
 
         $this->logRefusal($request, $ip);
 
         if ($request->expectsJson()) {
-            return response()->json(['error' => 'Access denied.', 'message' => $message], 403);
+            return response()->json(['error' => 'Access denied.', 'message' => $message, 'reference' => $ip], 403);
         }
 
-        return response()->view('errors.ip-blocked', ['reason' => $message], 403);
+        return response()->view('errors.ip-blocked', [
+            'reason' => $message,
+            'ip' => $ip,
+            'supportEmail' => config('contact.support_email'),
+        ], 403);
     }
 
     // One entry per IP every five minutes: enough to see who was turned away

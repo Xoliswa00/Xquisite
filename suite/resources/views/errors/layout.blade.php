@@ -99,9 +99,14 @@
             background: transparent;
             border: 1px solid #1e3a5f;
             color: #94a3b8;
-            margin-left: 0.75rem;
         }
         .btn-ghost:hover { background: #1e3a5f; color: #f1f5f9; }
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+        }
         footer {
             margin-top: 3rem;
             font-size: 0.75rem;
@@ -118,19 +123,25 @@
             Xquisite Creations
         </div>
 
-        <div class="code">@yield('code')</div>
-        <div class="divider"></div>
+        @hasSection('code')
+            <div class="code">@yield('code')</div>
+            <div class="divider"></div>
+        @endif
         <h1 class="title">@yield('title')</h1>
         <p class="message">@yield('message')</p>
 
-        <div>
-            <a href="{{ auth()->check() ? route('dashboard') : '/' }}" class="btn">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-                Go Home
-            </a>
-            <a href="javascript:history.back()" class="btn btn-ghost">Go Back</a>
+        <div class="actions">
+            @hasSection('actions')
+                @yield('actions')
+            @else
+                <a href="{{ auth()->check() ? route('dashboard') : '/' }}" class="btn">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    Go Home
+                </a>
+                <a href="javascript:history.back()" class="btn btn-ghost">Go Back</a>
+            @endif
         </div>
     </div>
     <footer>

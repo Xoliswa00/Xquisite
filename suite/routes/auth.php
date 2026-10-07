@@ -22,21 +22,21 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store'])
-        ->middleware(['throttle:auth', 'sign-in.pause:login']);
+        ->middleware(['sign-in.pause:staff,login', 'throttle:auth']);
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
 
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
         ->name('password.email')
-        ->middleware(['throttle:auth', 'sign-in.pause:reset']);
+        ->middleware(['sign-in.pause:staff,reset', 'throttle:auth']);
 
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
         ->name('password.reset');
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store')
-        ->middleware('sign-in.pause:reset');
+        ->middleware(['sign-in.pause:staff,reset', 'throttle:auth']);
 });
 
 Route::middleware('auth')->group(function () {
