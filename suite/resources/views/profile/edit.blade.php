@@ -436,6 +436,18 @@
                     </span>
                 </label>
 
+                <div class="space-y-1.5">
+                    <label for="quote_expiry_hours" class="block text-sm font-medium text-slate-300">Quotes expire after</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="quote_expiry_hours" name="quote_expiry_hours" min="2" max="336"
+                               value="{{ old('quote_expiry_hours', $tenant->quote_expiry_hours ?? 48) }}"
+                               class="w-24 bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0078D4]/50 focus:border-[#0078D4] transition @error('quote_expiry_hours') border-red-500 @enderror">
+                        <span class="text-sm text-slate-400">hours</span>
+                    </div>
+                    @error('quote_expiry_hours')<p class="mt-1 text-xs text-red-400">{{ $message }}</p>@enderror
+                    <p class="text-xs text-slate-500">For services where you confirm the price from the client's photos. If the client hasn't accepted in this time, or by 24 hours before the appointment if that comes first, the booking is cancelled and the slot opens up again. They get one reminder halfway.</p>
+                </div>
+
                 <div class="flex justify-end gap-3 border-t border-slate-800 pt-6">
                     <button type="button" onclick="location.reload()"
                             class="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white bg-slate-800 border border-slate-700 hover:border-slate-500 rounded-xl transition">

@@ -98,6 +98,9 @@
                                 @if($appt->quote_note)
                                     <p class="text-xs text-slate-600 mt-1 whitespace-pre-line">{{ $appt->quote_note }}</p>
                                 @endif
+                                @if($appt->quote_expires_at)
+                                    <p class="text-xs font-medium text-[#002B5B] mt-2">Accept by {{ $appt->quote_expires_at->format('D d M, H:i') }} to keep your slot.</p>
+                                @endif
                             </div>
                             <div class="flex items-center gap-2 flex-wrap">
                                 <form method="POST" action="{{ route('book.quote.accept', [$slug, $appt]) }}">

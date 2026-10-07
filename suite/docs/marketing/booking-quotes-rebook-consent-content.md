@@ -58,6 +58,9 @@ page, and they accept in My Bookings. Included in every plan.
 - **The slot is held while you quote.** The client books and adds their photos. On
   the confirm step they see "Price and time are confirmed from your photos", and in
   My Bookings they see that you're working on it.
+- **An unanswered quote can't block your day.** The client has 48 hours to accept,
+  or until 24 hours before the appointment. After that the booking is cancelled and
+  the slot is yours to sell again.
 - **Your staff are told.** A "Quote needed" alert lands when a client books a
   service that needs one. Open the booking, look at the look they want, and send
   your quote.
@@ -113,7 +116,14 @@ accepted price is what shows at checkout.
 
 **What if I need to change the quote?**
 Open the booking and tap "Change the quote", then "Send updated quote". The client
-gets the new one.
+gets the new one, with a fresh deadline.
+
+**What if the client never answers?**
+The slot isn't held forever. A quote expires 48 hours after you send it, or 24 hours
+before the appointment if that comes first. The client sees "Accept by" with the
+date and time, and gets one reminder halfway. If they still haven't answered, the
+booking is cancelled, the slot opens up again, and you're both told. You can change
+the 48 hours under Settings, in your booking policy.
 
 **What if the client declines?**
 The booking is cancelled and there's nothing to pay.
@@ -122,9 +132,9 @@ The booking is cancelled and there's nothing to pay.
 You get a warning before you send. You can still send it.
 
 **Does the client have to add photos?**
-Photos are how you price it, so the confirm step asks for them as for any look in
-mind. [Confirm: are photos required for a quote service, or optional? The confirm
-step wording is "Optional" for photos in general.]
+No, photos are optional. Most clients add them because it's how you price the look.
+If someone books without any, you can still quote from their description, or ask
+them to add photos from My Bookings before you send it.
 
 **Does it cost extra?**
 No. It's included in every plan.
@@ -505,24 +515,15 @@ check, not a guess.
 1. **Posting order and timing.** The code is live on main. Post inspiration photos
    first if it hasn't gone out, then quotes, rebook, consent. Is that the order you
    want?
-2. **Are photos required for a quote service?** The confirm step calls photos
-   "Optional" generally. A quote with no photos would be a guess. Check the confirm
-   step for a quote service before the FAQ answer goes public.
-3. **Multi-service visits and rebook timing.** The code uses the shortest
+2. **Multi-service visits and rebook timing.** The code uses the shortest
    `rebook_after_days` among the visit's services. OK to say so, or leave it out?
-4. **Rebook channels.** The notice goes in-app, by push and by email, not WhatsApp
+3. **Rebook channels.** The notice goes in-app, by push and by email, not WhatsApp
    or SMS. Confirm that's how you want it described.
-5. **POPIA wording.** The draft never says "POPIA compliant". Should the public copy
+4. **POPIA wording.** The draft never says "POPIA compliant". Should the public copy
    mention POPIA at all, or only say "a record of what the client agreed to"?
-6. **Consent on older looks.** Confirm nothing is back-filled for looks saved before
+5. **Consent on older looks.** Confirm nothing is back-filled for looks saved before
    2026-10-04, so the "Not cleared for sharing" default is right for them.
-7. **Quote expiry.** There's no expiry on a sent quote in the code I read. The slot
-   is held until the client answers. Do you want a line about that, or a limit built
-   first?
-8. **Poster example figure.** The poster's "R1,450" is labelled "An example quote".
-   Swap it for a figure that suits the niche you're targeting, such as a braids
-   price, if you prefer.
-9. **Demo content.** Any screen capture should use the Marigold demo tenant and
+6. **Demo content.** Any screen capture should use the Marigold demo tenant and
    stock or demo photos, never a real client's.
 
 ---

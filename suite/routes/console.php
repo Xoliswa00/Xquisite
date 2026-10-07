@@ -71,3 +71,6 @@ Schedule::command('booking:prune-look-photos')->dailyAt('03:15')->withoutOverlap
 
 // Booking: "time for your next ..." reminders for services with a rebook interval set.
 Schedule::command('booking:send-rebook-reminders')->dailyAt('09:00')->withoutOverlapping();
+
+// Booking: nudge clients about quotes that expire soon, and cancel bookings whose quote went unanswered.
+Schedule::command('booking:expire-quotes')->everyFifteenMinutes()->withoutOverlapping();
