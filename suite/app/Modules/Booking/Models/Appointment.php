@@ -158,19 +158,19 @@ public function totalDuration(): int
     /** Customer "this is the look I want" photos (private disk, see the model). */
     public function inspirationPhotos()
     {
-        return $this->lookPhotos()->where('kind', AppointmentInspirationPhoto::KIND_INSPIRATION);
+        return $this->lookPhotos()->where('kind', AppointmentLookPhoto::KIND_INSPIRATION);
     }
 
     /** Staff "how it turned out" photos, added when saving the client's look. */
     public function resultPhotos()
     {
-        return $this->lookPhotos()->where('kind', AppointmentInspirationPhoto::KIND_RESULT);
+        return $this->lookPhotos()->where('kind', AppointmentLookPhoto::KIND_RESULT);
     }
 
     /** Every look photo, both kinds. */
     public function lookPhotos()
     {
-        return $this->hasMany(AppointmentInspirationPhoto::class)->orderBy('sort_order')->orderBy('id');
+        return $this->hasMany(AppointmentLookPhoto::class)->orderBy('sort_order')->orderBy('id');
     }
 
     /**

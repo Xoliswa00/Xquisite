@@ -3,7 +3,7 @@
 namespace App\Services\Booking;
 
 use App\Modules\Booking\Models\Appointment;
-use App\Modules\Booking\Models\AppointmentInspirationPhoto;
+use App\Modules\Booking\Models\AppointmentLookPhoto;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -12,7 +12,8 @@ use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 
 /**
- * The one write path for customer inspiration photos.
+ * The one write path for a booking's look photos: the client's inspiration
+ * photos and the staff "after" photos (AppointmentLookPhoto::KIND_*).
  *
  * Processing is synchronous on purpose, unlike the queued service/product
  * photo derivatives: the original upload can carry EXIF GPS (where the
@@ -21,7 +22,7 @@ use Intervention\Image\ImageManager;
  * in-request cost bounded, and the booking form already downsizes in the
  * browser before upload.
  */
-class InspirationPhotoService
+class LookPhotoService
 {
     public const MAX_PER_APPOINTMENT = 3;
     public const MAX_UPLOAD_KB       = 10240;
@@ -31,25 +32,33 @@ class InspirationPhotoService
     /** ~40MP; above this GD decoding risks exhausting memory on shared hosting. */
     public const MAX_PIXELS          = 40_000_000;
 
-    /** Validation rules for an `inspiration_photos[]` upload with $slots photos still allowed. */
-    public static function rules(int $slots = self::MAX_PER_APPOINTMENT, bool $required = false): array
+    /** Form field for the client's inspiration uploads. */
+    public const FIELD_INSPIRATION = 'inspiration_photos';
+
+    /** Form field for the staff "after" uploads. */
+    public const FIELD_RESULT = 'result_photos';
+
+    /** Validation rules for a `{$field}[]` upload with $slots photos still allowed. */
+    public static function rules(int $slots = self::MAX_PER_APPOINTMENT, bool $required = false, string $field = self::FIELD_INSPIRATION): array
     {
         return [
-            'inspiration_photos'   => ($required ? 'required|array|min:1' : 'nullable|array') . '|max:' . max(0, $slots),
-            'inspiration_photos.*' => 'image|mimes:jpg,jpeg,png,webp|max:' . self::MAX_UPLOAD_KB,
+            $field        => ($required ? 'required|array|min:1' : 'nullable|array') . '|max:' . max(0, $slots),
+            "{$field}.*"  => 'image|mimes:jpg,jpeg,png,webp|max:' . self::MAX_UPLOAD_KB,
         ];
     }
 
-    public static function messages(int $slots = self::MAX_PER_APPOINTMENT): array
+    public static function messages(int $slots = self::MAX_PER_APPOINTMENT, string $field = self::FIELD_INSPIRATION): array
     {
+        $noun = $field === self::FIELD_RESULT ? 'after' : 'inspiration';
+
         return [
-            'inspiration_photos.required' => 'Choose at least one photo to add.',
-            'inspiration_photos.max'      => $slots < self::MAX_PER_APPOINTMENT
+            "{$field}.required" => 'Choose at least one photo to add.',
+            "{$field}.max"      => $slots < self::MAX_PER_APPOINTMENT
                 ? "This booking has room for {$slots} more " . ($slots === 1 ? 'photo' : 'photos') . ' (' . self::MAX_PER_APPOINTMENT . ' in total).'
-                : 'You can add up to ' . self::MAX_PER_APPOINTMENT . ' inspiration photos per booking.',
-            'inspiration_photos.*.image' => 'Inspiration photos must be images.',
-            'inspiration_photos.*.mimes' => 'Inspiration photos must be JPG, PNG or WebP. On iPhone, share the photo first or set Camera to "Most Compatible".',
-            'inspiration_photos.*.max'   => 'Each inspiration photo must be smaller than 10 MB.',
+                : 'You can add up to ' . self::MAX_PER_APPOINTMENT . " {$noun} photos per booking.",
+            "{$field}.*.image" => ucfirst($noun) . ' photos must be images.',
+            "{$field}.*.mimes" => ucfirst($noun) . ' photos must be JPG, PNG or WebP. On iPhone, share the photo first or set Camera to "Most Compatible".',
+            "{$field}.*.max"   => 'Each ' . $noun . ' photo must be smaller than 10 MB.',
         ];
     }
 
@@ -63,14 +72,14 @@ class InspirationPhotoService
      *
      * @param  UploadedFile[]  $files
      */
-    public function store(Appointment $appointment, array $files, string $kind = AppointmentInspirationPhoto::KIND_INSPIRATION): int
+    public function store(Appointment $appointment, array $files, string $kind = AppointmentLookPhoto::KIND_INSPIRATION): int
     {
         if ($files === []) {
             return 0;
         }
 
         $manager  = ImageManager::gd();
-        $disk     = Storage::disk(AppointmentInspirationPhoto::DISK);
+        $disk     = Storage::disk(AppointmentLookPhoto::DISK);
         $base     = "inspiration/{$appointment->tenant_id}/{$appointment->id}";
         $prepared = [];
 
@@ -116,7 +125,7 @@ class InspirationPhotoService
         return DB::transaction(function () use ($appointment, $prepared, $disk, $base, $kind) {
             Appointment::withoutGlobalScopes()->whereKey($appointment->id)->lockForUpdate()->first();
 
-            $existing = AppointmentInspirationPhoto::withoutGlobalScopes()
+            $existing = AppointmentLookPhoto::withoutGlobalScopes()
                 ->where('appointment_id', $appointment->id);
             $count    = (clone $existing)->where('kind', $kind)->count();
             $order    = (int) (clone $existing)->max('sort_order');
@@ -129,7 +138,7 @@ class InspirationPhotoService
                 $disk->put($fullPath, $img['full']);
                 $disk->put($thumbPath, $img['thumb']);
 
-                $photo = new AppointmentInspirationPhoto([
+                $photo = new AppointmentLookPhoto([
                     'tenant_id'  => $appointment->tenant_id,
                     'kind'       => $kind,
                     'path'       => $fullPath,
@@ -154,7 +163,7 @@ class InspirationPhotoService
      */
     public function copyLook(Appointment $from, Appointment $to): int
     {
-        $disk  = Storage::disk(AppointmentInspirationPhoto::DISK);
+        $disk  = Storage::disk(AppointmentLookPhoto::DISK);
         $base  = "inspiration/{$to->tenant_id}/{$to->id}";
         $slots = self::MAX_PER_APPOINTMENT - $to->inspirationPhotos()->count();
         if ($slots <= 0) {
@@ -184,9 +193,9 @@ class InspirationPhotoService
                 $thumbPath = null; // pathFor('thumb') falls back to the full copy
             }
 
-            $copy = new AppointmentInspirationPhoto([
+            $copy = new AppointmentLookPhoto([
                 'tenant_id'  => $to->tenant_id,
-                'kind'       => AppointmentInspirationPhoto::KIND_INSPIRATION,
+                'kind'       => AppointmentLookPhoto::KIND_INSPIRATION,
                 'path'       => $fullPath,
                 'path_thumb' => $thumbPath,
                 'width'      => $photo->width,

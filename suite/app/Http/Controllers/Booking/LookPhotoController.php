@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Booking;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Modules\Booking\Models\Appointment;
-use App\Modules\Booking\Models\AppointmentInspirationPhoto;
+use App\Modules\Booking\Models\AppointmentLookPhoto;
 use App\Modules\Booking\Models\CustomerConsent;
 use App\Services\Booking\ConsentLedger;
-use App\Services\Booking\InspirationPhotoService;
+use App\Services\Booking\LookPhotoService;
 use App\Services\Notifications\BookingNotificationService;
 use App\Services\Tenant\TenantContext;
 use Illuminate\Http\Request;
@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Storage;
  * show methods here, which check ownership explicitly instead of relying on
  * the HasTenant scope having been applied before route-model binding ran.
  */
-class InspirationPhotoController extends Controller
+class LookPhotoController extends Controller
 {
     public function __construct(private readonly ConsentLedger $ledger) {}
 
@@ -36,7 +36,7 @@ class InspirationPhotoController extends Controller
     }
 
     /** 404 (not 403) for anything not this customer's, so ids can't be probed. */
-    private function authorizeCustomer(Tenant $tenant, Appointment $appointment, ?AppointmentInspirationPhoto $photo = null): void
+    private function authorizeCustomer(Tenant $tenant, Appointment $appointment, ?AppointmentLookPhoto $photo = null): void
     {
         $customer = Auth::guard('customer')->user();
 
@@ -49,10 +49,10 @@ class InspirationPhotoController extends Controller
         );
     }
 
-    private function stream(AppointmentInspirationPhoto $photo, string $size)
+    private function stream(AppointmentLookPhoto $photo, string $size)
     {
         $path = $photo->pathFor($size);
-        $disk = Storage::disk(AppointmentInspirationPhoto::DISK);
+        $disk = Storage::disk(AppointmentLookPhoto::DISK);
         abort_unless($disk->exists($path), 404);
 
         return $disk->response($path, null, [
@@ -64,14 +64,14 @@ class InspirationPhotoController extends Controller
 
     // ── Customer portal (/book/{slug}/...) ─────────────────────────────────
 
-    public function customerShow(string $slug, Appointment $appointment, AppointmentInspirationPhoto $photo, string $size)
+    public function customerShow(string $slug, Appointment $appointment, AppointmentLookPhoto $photo, string $size)
     {
         $this->authorizeCustomer($this->resolveTenant($slug), $appointment, $photo);
 
         return $this->stream($photo, $size);
     }
 
-    public function customerStore(string $slug, Appointment $appointment, Request $request, InspirationPhotoService $inspiration, BookingNotificationService $notifications)
+    public function customerStore(string $slug, Appointment $appointment, Request $request, LookPhotoService $inspiration, BookingNotificationService $notifications)
     {
         $this->authorizeCustomer($this->resolveTenant($slug), $appointment);
 
@@ -79,12 +79,12 @@ class InspirationPhotoController extends Controller
             return back()->withErrors(['inspiration_photos' => 'Inspiration photos can only be changed before the appointment.'])->withInput();
         }
 
-        $slots = InspirationPhotoService::MAX_PER_APPOINTMENT - $appointment->inspirationPhotos()->count();
+        $slots = LookPhotoService::MAX_PER_APPOINTMENT - $appointment->inspirationPhotos()->count();
 
         $data = $request->validate(
-            InspirationPhotoService::rules($slots, required: true)
+            LookPhotoService::rules($slots, required: true)
                 + ['inspiration_notes' => 'nullable|string|max:1000'],
-            InspirationPhotoService::messages($slots)
+            LookPhotoService::messages($slots)
         );
 
         $stored = $inspiration->store($appointment, $request->file('inspiration_photos', []));
@@ -102,7 +102,7 @@ class InspirationPhotoController extends Controller
         return back()->with('success', $stored === 1 ? 'Inspiration photo added.' : "{$stored} inspiration photos added.");
     }
 
-    public function customerDestroy(string $slug, Appointment $appointment, AppointmentInspirationPhoto $photo)
+    public function customerDestroy(string $slug, Appointment $appointment, AppointmentLookPhoto $photo)
     {
         $this->authorizeCustomer($this->resolveTenant($slug), $appointment, $photo);
         // "After" photos belong to the business's saved look, not the customer's upload.
@@ -184,7 +184,7 @@ class InspirationPhotoController extends Controller
 
     // ── Staff dashboard (/appointments/...) ────────────────────────────────
 
-    private function authorizeStaff(Appointment $appointment, ?AppointmentInspirationPhoto $photo = null): void
+    private function authorizeStaff(Appointment $appointment, ?AppointmentLookPhoto $photo = null): void
     {
         abort_unless(
             (int) $appointment->tenant_id === (int) auth()->user()->tenant_id
@@ -194,30 +194,31 @@ class InspirationPhotoController extends Controller
     }
 
     /** Staff add "after" photos (how it turned out) to a booking. */
-    public function staffStoreResults(Appointment $appointment, Request $request, InspirationPhotoService $inspiration)
+    public function staffStoreResults(Appointment $appointment, Request $request, LookPhotoService $photos)
     {
         $this->authorizeStaff($appointment);
+        $field = LookPhotoService::FIELD_RESULT;
 
         if (! $appointment->lookCanBeRecorded()) {
-            return back()->withErrors(['inspiration_photos' => 'After photos can be added once the appointment has happened.']);
+            return back()->withErrors([$field => 'After photos can be added once the appointment has happened.']);
         }
 
-        $slots = InspirationPhotoService::MAX_PER_APPOINTMENT - $appointment->resultPhotos()->count();
+        $slots = LookPhotoService::MAX_PER_APPOINTMENT - $appointment->resultPhotos()->count();
         $request->validate(
-            InspirationPhotoService::rules($slots, required: true),
-            InspirationPhotoService::messages($slots)
+            LookPhotoService::rules($slots, required: true, field: $field),
+            LookPhotoService::messages($slots, $field)
         );
 
-        $stored = $inspiration->store($appointment, $request->file('inspiration_photos', []), AppointmentInspirationPhoto::KIND_RESULT);
+        $stored = $photos->store($appointment, $request->file($field, []), AppointmentLookPhoto::KIND_RESULT);
 
         if ($stored === 0) {
-            return back()->withErrors(['inspiration_photos' => "That photo couldn't be read. Try a different one."]);
+            return back()->withErrors([$field => "That photo couldn't be read. Try a different one."]);
         }
 
         return back()->with('success', $stored === 1 ? 'After photo added.' : "{$stored} after photos added.");
     }
 
-    public function staffDestroyResult(Appointment $appointment, AppointmentInspirationPhoto $photo)
+    public function staffDestroyResult(Appointment $appointment, AppointmentLookPhoto $photo)
     {
         $this->authorizeStaff($appointment, $photo);
         abort_unless($photo->isResult(), 404); // the client's own uploads aren't the business's to delete
@@ -260,7 +261,7 @@ class InspirationPhotoController extends Controller
         return back()->with('success', 'Saved look removed.');
     }
 
-    public function staffShow(Appointment $appointment, AppointmentInspirationPhoto $photo, string $size)
+    public function staffShow(Appointment $appointment, AppointmentLookPhoto $photo, string $size)
     {
         $this->authorizeStaff($appointment, $photo);
 

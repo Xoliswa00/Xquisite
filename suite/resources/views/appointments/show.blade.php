@@ -392,7 +392,7 @@
                 $inspo     = $appointment->inspirationPhotos;
                 $results   = $appointment->resultPhotos;
                 $canRecord = $appointment->lookCanBeRecorded();
-                $resultCap = \App\Services\Booking\InspirationPhotoService::MAX_PER_APPOINTMENT;
+                $resultCap = \App\Services\Booking\LookPhotoService::MAX_PER_APPOINTMENT;
                 $clientName = $appointment->customer?->name ?? 'the client';
             @endphp
                 <div class="pt-3 border-t border-slate-700 space-y-3">
@@ -438,8 +438,8 @@
 
                     @if($canRecord)
                         @error('look')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
-                        @error('inspiration_photos')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
-                        @foreach($errors->get('inspiration_photos.*') as $messages)
+                        @error('result_photos')<p class="text-xs text-red-400">{{ $message }}</p>@enderror
+                        @foreach($errors->get('result_photos.*') as $messages)
                             <p class="text-xs text-red-400">{{ $messages[0] }}</p>
                         @endforeach
 
@@ -452,7 +452,7 @@
                                            :class="busy && 'opacity-60 pointer-events-none'">
                                         <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"/></svg>
                                         <span x-text="busy ? 'Uploading…' : 'Add after photos'"></span>
-                                        <input type="file" name="inspiration_photos[]" multiple accept="image/jpeg,image/png,image/webp"
+                                        <input type="file" name="result_photos[]" multiple accept="image/jpeg,image/png,image/webp"
                                                class="sr-only" @change="if ($event.target.files.length) { busy = true; xqShrinkAndSubmit($event.target) }">
                                     </label>
                                 </form>

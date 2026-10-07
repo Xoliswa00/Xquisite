@@ -5,7 +5,7 @@ namespace Tests\Feature\Booking;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Booking\Models\Appointment;
-use App\Modules\Booking\Models\AppointmentInspirationPhoto;
+use App\Modules\Booking\Models\AppointmentLookPhoto;
 use App\Modules\Booking\Models\Customer;
 use App\Modules\Booking\Models\Service;
 use App\Services\Tenant\TenantContext;
@@ -141,7 +141,7 @@ class InspirationPhotosTest extends TestCase
 
         $this->book($tenant, $customer, $service, ['inspiration_photos' => [$upload]])->assertRedirect();
 
-        $photo = AppointmentInspirationPhoto::firstOrFail();
+        $photo = AppointmentLookPhoto::firstOrFail();
         foreach ($photo->storagePaths() as $path) {
             $bytes = Storage::disk('local')->get($path);
             $this->assertStringNotContainsString('GPS-SECRET-LOCATION', $bytes);
@@ -158,7 +158,7 @@ class InspirationPhotosTest extends TestCase
         $this->book($tenant, $customer, $service)->assertRedirect()->assertSessionDoesntHaveErrors();
 
         $this->assertSame(1, Appointment::count());
-        $this->assertSame(0, AppointmentInspirationPhoto::count());
+        $this->assertSame(0, AppointmentLookPhoto::count());
     }
 
     public function test_more_than_three_photos_is_rejected_and_no_booking_is_made(): void
@@ -200,7 +200,7 @@ class InspirationPhotosTest extends TestCase
 
         $this->assertSame(1, Appointment::count());
         $this->assertNull(Appointment::first()->inspiration_notes);
-        $this->assertSame(0, AppointmentInspirationPhoto::count());
+        $this->assertSame(0, AppointmentLookPhoto::count());
     }
 
     // ── Who can see them ────────────────────────────────────────────────────
@@ -213,7 +213,7 @@ class InspirationPhotosTest extends TestCase
         $stranger = $this->makeCustomer($tenant, 'other@example.com');
         $this->book($tenant, $owner, $service, ['inspiration_photos' => [$this->photo()]]);
 
-        $photo = AppointmentInspirationPhoto::firstOrFail();
+        $photo = AppointmentLookPhoto::firstOrFail();
         $url   = route('book.inspiration.show', [$tenant->slug, $photo->appointment_id, $photo->id, 'thumb']);
 
         $this->actingAs($owner, 'customer')->get($url)
@@ -231,7 +231,7 @@ class InspirationPhotosTest extends TestCase
         $this->book($tenant, $customer, $service, ['inspiration_photos' => [$this->photo()]]);
         auth('customer')->logout();
 
-        $photo = AppointmentInspirationPhoto::firstOrFail();
+        $photo = AppointmentLookPhoto::firstOrFail();
 
         $this->get(route('book.inspiration.show', [$tenant->slug, $photo->appointment_id, $photo->id, 'full']))
             ->assertRedirect();
@@ -246,7 +246,7 @@ class InspirationPhotosTest extends TestCase
         $service  = $this->makeService($tenant);
         $customer = $this->makeCustomer($tenant);
         $this->book($tenant, $customer, $service, ['inspiration_photos' => [$this->photo()]]);
-        $photo = AppointmentInspirationPhoto::firstOrFail();
+        $photo = AppointmentLookPhoto::firstOrFail();
 
         $staff = User::factory()->create(['tenant_id' => $tenant->id]);
         $staff->assignRole('employee');
@@ -329,7 +329,7 @@ class InspirationPhotosTest extends TestCase
             ->post(route('book.inspiration.store', [$tenant->slug, $appt]), ['inspiration_photos' => [$this->photo()]])
             ->assertNotFound();
 
-        $this->assertSame(0, AppointmentInspirationPhoto::count());
+        $this->assertSame(0, AppointmentLookPhoto::count());
     }
 
     public function test_photos_are_locked_once_the_appointment_has_passed(): void
@@ -343,7 +343,7 @@ class InspirationPhotosTest extends TestCase
             ->post(route('book.inspiration.store', [$tenant->slug, $appt]), ['inspiration_photos' => [$this->photo()]])
             ->assertSessionHasErrors('inspiration_photos');
 
-        $this->assertSame(0, AppointmentInspirationPhoto::count());
+        $this->assertSame(0, AppointmentLookPhoto::count());
     }
 
     public function test_removing_a_photo_deletes_its_files(): void
@@ -355,14 +355,14 @@ class InspirationPhotosTest extends TestCase
 
         $this->actingAs($customer, 'customer')
             ->post(route('book.inspiration.store', [$tenant->slug, $appt]), ['inspiration_photos' => [$this->photo()]]);
-        $photo = AppointmentInspirationPhoto::firstOrFail();
+        $photo = AppointmentLookPhoto::firstOrFail();
         $paths = $photo->storagePaths();
 
         $this->actingAs($customer, 'customer')
             ->delete(route('book.inspiration.destroy', [$tenant->slug, $appt, $photo]))
             ->assertSessionHas('success');
 
-        $this->assertSame(0, AppointmentInspirationPhoto::count());
+        $this->assertSame(0, AppointmentLookPhoto::count());
         foreach ($paths as $path) {
             Storage::disk('local')->assertMissing($path);
         }
@@ -400,7 +400,7 @@ class InspirationPhotosTest extends TestCase
         $oldPaths = $old->inspirationPhotos()->first()->storagePaths();
 
         TenantContext::clear();
-        $this->artisan('booking:prune-inspiration-photos')->assertSuccessful();
+        $this->artisan('booking:prune-look-photos')->assertSuccessful();
 
         $this->assertSame(0, $old->inspirationPhotos()->count());
         $this->assertSame(1, $recent->inspirationPhotos()->count());
@@ -413,7 +413,7 @@ class InspirationPhotosTest extends TestCase
     {
         Storage::disk('local')->put('inspiration/1/999999/x.webp', 'x');
 
-        $this->artisan('booking:prune-inspiration-photos')->assertSuccessful();
+        $this->artisan('booking:prune-look-photos')->assertSuccessful();
 
         $this->assertSame([], Storage::disk('local')->allFiles('inspiration'));
     }

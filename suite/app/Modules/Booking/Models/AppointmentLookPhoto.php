@@ -8,17 +8,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * A "this is the look I want" photo a customer attaches to their booking.
+ * A look photo on a booking. Two kinds share this table:
+ *  - inspiration: "this is the look I want", uploaded by the customer;
+ *  - result: "how it turned out", added by staff when saving the client's look.
+ * Use Appointment::inspirationPhotos() / resultPhotos() for one kind, and
+ * lookPhotos() for both.
  *
  * Private by design: stored on the `local` disk (storage/app/private) and only
  * ever served through an authorised controller route, because unlike service
  * or product photos these are personal uploads, often of the customer
  * themselves. Never build a public URL for one (no asset('storage/...')).
  *
- * Written only through App\Services\Booking\InspirationPhotoService, which
+ * Written only through App\Services\Booking\LookPhotoService, which
  * re-encodes the upload so EXIF/GPS never reaches disk.
  */
-class AppointmentInspirationPhoto extends Model
+class AppointmentLookPhoto extends Model
 {
     use HasTenant, Auditable;
 

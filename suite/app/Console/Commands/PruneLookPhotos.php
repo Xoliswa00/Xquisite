@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Modules\Booking\Models\Appointment;
-use App\Modules\Booking\Models\AppointmentInspirationPhoto;
+use App\Modules\Booking\Models\AppointmentLookPhoto;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
@@ -17,9 +17,9 @@ use Illuminate\Support\Facades\Storage;
  * directories left behind when an appointment was force-deleted (the DB
  * cascade removes rows without firing the model's file cleanup).
  */
-class PruneInspirationPhotos extends Command
+class PruneLookPhotos extends Command
 {
-    protected $signature   = 'booking:prune-inspiration-photos
+    protected $signature   = 'booking:prune-look-photos
         {--days=90 : Days after the appointment to keep its inspiration photos}
         {--saved-days=730 : Days after the appointment to keep a saved look}';
     protected $description = 'Delete customer inspiration photos for appointments that are long past or deleted';
@@ -30,7 +30,7 @@ class PruneInspirationPhotos extends Command
         $savedCutoff = now()->subDays((int) $this->option('saved-days'));
         $deleted     = 0;
 
-        AppointmentInspirationPhoto::withoutGlobalScopes()
+        AppointmentLookPhoto::withoutGlobalScopes()
             ->whereIn('appointment_id', Appointment::withoutGlobalScopes()->withTrashed()
                 ->where(fn ($q) => $q
                     ->where(fn ($q) => $q->whereNull('look_saved_at')->where('scheduled_at', '<', $cutoff))
@@ -68,7 +68,7 @@ class PruneInspirationPhotos extends Command
     /** inspiration/{tenant}/{appointment} folders whose appointment row no longer exists. */
     private function sweepOrphanDirectories(): int
     {
-        $disk  = Storage::disk(AppointmentInspirationPhoto::DISK);
+        $disk  = Storage::disk(AppointmentLookPhoto::DISK);
         $swept = 0;
 
         foreach ($disk->directories('inspiration') as $tenantDir) {
