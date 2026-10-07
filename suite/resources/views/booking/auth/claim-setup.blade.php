@@ -6,13 +6,13 @@
     <div class="text-center">
         <h1 class="text-2xl font-bold text-slate-900">Set up your login</h1>
         <p class="text-slate-500 mt-1 text-sm">
-            We found your record, <span class="font-semibold text-slate-700">{{ $customer->name }}</span>.
-            Add an email and password to activate your account.
+            Welcome, <span class="font-semibold text-slate-700">{{ $customer->name }}</span>.
+            Add an email and password to activate your account with {{ $tenant->name }}.
         </p>
     </div>
 
     <div class="bg-white rounded-2xl border border-slate-200 p-8">
-        <form method="POST" action="{{ route('book.claim.complete', $slug) }}" class="space-y-5">
+        <form method="POST" action="{{ $submitUrl }}" class="space-y-5">
             @csrf
 
             {{-- Name (read-only — already on file) --}}
@@ -33,7 +33,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Email address <span class="text-red-500">*</span></label>
-                <input type="email" name="email" value="{{ old('email') }}" required autofocus
+                <input type="email" name="email" value="{{ old('email', $customer->email) }}" required autofocus
                        class="w-full border-slate-300 rounded-xl @error('email') border-red-400 @enderror">
                 @error('email') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
@@ -59,7 +59,7 @@
     </div>
 
     <p class="text-center text-sm">
-        <a href="{{ route('book.claim', $slug) }}" class="text-slate-400 hover:text-slate-600">&larr; Use a different number</a>
+        <a href="{{ route('book.login', $slug) }}" class="text-[#0078D4] hover:underline">&larr; Back to sign in</a>
     </p>
 
 </div>

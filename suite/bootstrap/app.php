@@ -82,6 +82,15 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        // A customer login setup link (sent by the business) that has expired or
+        // lost part of its address in a message app.
+        $exceptions->render(function (\Illuminate\Routing\Exceptions\InvalidSignatureException $e, $request) {
+            if ($request->routeIs('book.claim.*') && ($slug = $request->route('slug'))) {
+                return redirect()->route('book.claim', $slug)
+                    ->withErrors(['link' => 'That setup link has expired or is incomplete. Ask for a new one.']);
+            }
+        });
+
         // Last-resort net for any DB integrity violation that slips past
         // application-level validation (a race condition, a spot a validation
         // rule doesn't cover yet, etc.) — across every portal, not just the

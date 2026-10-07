@@ -13,10 +13,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 
 class CustomerAuthController extends Controller
 {
+    public const CLAIM_LINK_DAYS = 7;
+
     private function resolveTenant(string $slug): Tenant
     {
         $tenant = Tenant::where('slug', $slug)->where('is_active', true)->firstOrFail();
@@ -94,7 +97,7 @@ class CustomerAuthController extends Controller
         return redirect()->route('book.index', $slug)->with('success', "Welcome, {$customer->name}! Your account is ready.");
     }
 
-    // ── Account claim (phone-based) ─────────────────────────────────────────
+    // ── Account claim (setup link sent by the business) ─────────────────────
 
     public function showClaim(string $slug)
     {
@@ -102,62 +105,50 @@ class CustomerAuthController extends Controller
         return view('booking.auth.claim', compact('tenant', 'slug'));
     }
 
-    public function lookupByPhone(string $slug, Request $request)
+    /**
+     * The link the business sends a customer who has no login yet. Signed and
+     * time-limited, and dead as soon as a password has been set.
+     */
+    public static function claimSetupUrl(Customer $customer, string $slug): string
+    {
+        return URL::temporarySignedRoute(
+            'book.claim.setup',
+            now()->addDays(self::CLAIM_LINK_DAYS),
+            ['slug' => $slug, 'customer' => $customer->id],
+        );
+    }
+
+    private function alreadySetUp(string $slug)
+    {
+        return redirect()->route('book.login', $slug)
+            ->with('success', 'Your login is already set up. Sign in with your email address.');
+    }
+
+    public function showClaimSetup(string $slug, Customer $customer, Request $request)
     {
         $tenant = $this->resolveTenant($slug);
-
-        $request->validate(['phone' => 'required|string|max:50']);
-
-        // Normalise to digits only, then to SA international format
-        $raw = preg_replace('/[^0-9]/', '', $request->phone);
-        if (strlen($raw) === 9)                                  $raw = '27' . $raw;
-        if (strlen($raw) === 10 && str_starts_with($raw, '0'))  $raw = '27' . substr($raw, 1);
-
-        $customer = Customer::where('tenant_id', $tenant->id)
-            ->whereNotNull('phone')
-            ->get()
-            ->first(function ($c) use ($raw) {
-                $s = preg_replace('/[^0-9]/', '', $c->phone ?? '');
-                if (strlen($s) === 9)                                $s = '27' . $s;
-                if (strlen($s) === 10 && str_starts_with($s, '0'))  $s = '27' . substr($s, 1);
-                return $s === $raw;
-            });
-
-        if (!$customer) {
-            return back()->withErrors(['phone' => 'No client record found with that number. Please register as a new customer instead.'])->withInput();
-        }
+        abort_unless((int) $customer->tenant_id === (int) $tenant->id, 404);
 
         if ($customer->password) {
-            return back()->withErrors(['phone' => 'This account already has a login set up. Please sign in with your email address.'])->withInput();
+            return $this->alreadySetUp($slug);
         }
 
-        session(['claim_customer_id' => $customer->id]);
-        return redirect()->route('book.claim.setup', $slug);
+        return view('booking.auth.claim-setup', [
+            'tenant'    => $tenant,
+            'slug'      => $slug,
+            'customer'  => $customer,
+            'submitUrl' => $request->fullUrl(),
+        ]);
     }
 
-    public function showClaimSetup(string $slug)
+    public function completeClaimSetup(string $slug, Customer $customer, Request $request)
     {
-        $tenant     = $this->resolveTenant($slug);
-        $customerId = session('claim_customer_id');
+        $tenant = $this->resolveTenant($slug);
+        abort_unless((int) $customer->tenant_id === (int) $tenant->id, 404);
 
-        if (!$customerId) {
-            return redirect()->route('book.claim', $slug);
+        if ($customer->password) {
+            return $this->alreadySetUp($slug);
         }
-
-        $customer = Customer::where('tenant_id', $tenant->id)->findOrFail($customerId);
-        return view('booking.auth.claim-setup', compact('tenant', 'slug', 'customer'));
-    }
-
-    public function completeClaimSetup(string $slug, Request $request)
-    {
-        $tenant     = $this->resolveTenant($slug);
-        $customerId = session('claim_customer_id');
-
-        if (!$customerId) {
-            return redirect()->route('book.claim', $slug);
-        }
-
-        $customer = Customer::where('tenant_id', $tenant->id)->findOrFail($customerId);
 
         $request->validate([
             'email'                 => ['required', 'email', Rule::unique('customers', 'email')->ignore($customer->id)],
@@ -169,12 +160,18 @@ class CustomerAuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        session()->forget('claim_customer_id');
         Auth::guard('customer')->login($customer);
         $request->session()->regenerate();
 
+        AuditService::log(
+            action: 'customer.claim_completed',
+            entityType: 'Customer',
+            entityId: $customer->id,
+            meta: ['tenant_slug' => $slug],
+        );
+
         return redirect()->route('book.index', $slug)
-            ->with('success', "Welcome, {$customer->name}! Your account is ready — you can now sign in any time.");
+            ->with('success', "Welcome, {$customer->name}! Your account is ready. You can now sign in any time.");
     }
 
     // ── Forgot / reset password ──────────────────────────────────────────────

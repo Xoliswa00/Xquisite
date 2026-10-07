@@ -613,11 +613,12 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
         Route::post('/login',             [CustomerAuthController::class, 'login'])->name('login.post')->middleware(['sign-in.pause:customer,login', 'throttle:auth']);
         Route::get('/register',           [CustomerAuthController::class, 'showRegister'])->name('register');
         Route::post('/register',          [CustomerAuthController::class, 'register'])->name('register.post');
-        // Account claim — for manually-added customers who want to set up their own login
-        Route::get('/claim',              [CustomerAuthController::class, 'showClaim'])->name('claim');
-        Route::post('/claim',             [CustomerAuthController::class, 'lookupByPhone'])->name('claim.lookup')->middleware('throttle:auth');
-        Route::get('/claim/setup',        [CustomerAuthController::class, 'showClaimSetup'])->name('claim.setup');
-        Route::post('/claim/setup',       [CustomerAuthController::class, 'completeClaimSetup'])->name('claim.complete');
+        // Account claim, for manually-added customers who want to set up their own login.
+        // There is no public lookup: the business sends the customer a signed setup
+        // link from their profile, so only the person holding that phone can use it.
+        Route::get('/claim',                    [CustomerAuthController::class, 'showClaim'])->name('claim');
+        Route::get('/claim/setup/{customer}',   [CustomerAuthController::class, 'showClaimSetup'])->name('claim.setup')->middleware('signed');
+        Route::post('/claim/setup/{customer}',  [CustomerAuthController::class, 'completeClaimSetup'])->name('claim.complete')->middleware(['signed', 'throttle:auth']);
 
         // Forgot / reset password
         Route::get('/forgot-password',   [CustomerAuthController::class, 'showForgotPassword'])->name('password.request');

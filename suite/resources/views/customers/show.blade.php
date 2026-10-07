@@ -32,6 +32,29 @@
                 <a href="{{ route('appointments.create') }}?customer_id={{ $customer->id }}"
                    class="flex-1 sm:flex-none text-center bg-[#0078D4] hover:bg-[#0065B8] text-white text-sm px-4 py-2 rounded-lg font-medium">+ Book</a>
             </div>
+
+            {{-- No online login yet: staff send a setup link the customer uses to set their own password --}}
+            @if($setupLink)
+                <div class="border-t border-slate-700 pt-4 space-y-3" x-data="{ copied: false }">
+                    <div>
+                        <p class="text-sm font-medium text-slate-200">No online login yet</p>
+                        <p class="text-sm text-slate-400">Send {{ $customer->name }} a setup link so they can choose their own email and password. The link works for {{ \App\Http\Controllers\Booking\CustomerAuthController::CLAIM_LINK_DAYS }} days and stops working once they have used it.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        @if($customer->phone)
+                            <x-whatsapp-link :phone="$customer->phone"
+                                :message="'Hi ' . $customer->name . ', this is ' . ($customer->tenant?->name ?? config('app.name')) . '. Use this link to set up your online login so you can book and manage your appointments: ' . $setupLink"
+                                class="flex-1 sm:flex-none justify-center bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Send on WhatsApp</x-whatsapp-link>
+                        @endif
+                        <button type="button" data-link="{{ $setupLink }}"
+                                x-on:click="navigator.clipboard.writeText($el.dataset.link).then(() => { copied = true; setTimeout(() => copied = false, 2500) })"
+                                class="flex-1 sm:flex-none text-center bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">
+                            <span x-show="!copied">Copy link</span>
+                            <span x-show="copied" x-cloak class="text-emerald-400">Copied</span>
+                        </button>
+                    </div>
+                </div>
+            @endif
         </div>
 
         {{-- Saved looks: past bookings staff saved as this client's look --}}
