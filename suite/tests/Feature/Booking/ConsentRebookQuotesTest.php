@@ -11,7 +11,7 @@ use App\Modules\Booking\Models\Customer;
 use App\Modules\Booking\Models\CustomerConsent;
 use App\Modules\Booking\Models\Service;
 use App\Notifications\AppNotice;
-use App\Services\Booking\InspirationPhotoService;
+use App\Services\Booking\LookPhotoService;
 use App\Services\Tenant\TenantContext;
 use Carbon\Carbon;
 use Database\Seeders\PermissionRoleSeeder;
@@ -91,7 +91,7 @@ class ConsentRebookQuotesTest extends TestCase
     private function savedLook(): Appointment
     {
         $appt = $this->appointment(now()->subWeek());
-        app(InspirationPhotoService::class)->store($appt, [UploadedFile::fake()->image('after.jpg', 600, 600)], 'result');
+        app(LookPhotoService::class)->store($appt, [UploadedFile::fake()->image('after.jpg', 600, 600)], 'result');
         $this->asStaff()->post(route('appointments.look.save', $appt))->assertSessionHas('success');
 
         return $appt->fresh();

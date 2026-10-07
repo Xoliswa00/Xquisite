@@ -30,7 +30,7 @@
                     $serviceNames = $appt->services->pluck('name')->join(', ');
                     $inspoPhotos  = $appt->inspirationPhotos;
                     $inspoOpen    = $appt->services->contains(fn($s) => $s->accepts_inspiration_photos) || $inspoPhotos->isNotEmpty();
-                    $inspoSlots   = \App\Services\Booking\InspirationPhotoService::MAX_PER_APPOINTMENT - $inspoPhotos->count();
+                    $inspoSlots   = \App\Services\Booking\LookPhotoService::MAX_PER_APPOINTMENT - $inspoPhotos->count();
                     $inspoErrored = old('inspiration_for') == $appt->id;
                 @endphp
                 <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3"

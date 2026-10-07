@@ -233,12 +233,12 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::patch('appointments/{appointment}/actual-duration', [\App\Http\Controllers\Booking\AppointmentController::class, 'setActualDuration'])->name('appointments.actual-duration');
             Route::post('appointments/{appointment}/assign', [\App\Http\Controllers\Booking\AppointmentController::class, 'assign'])->name('appointments.assign');
             Route::post('appointments/{appointment}/remind', [\App\Http\Controllers\Booking\AppointmentController::class, 'remind'])->name('appointments.remind');
-            Route::get('appointments/{appointment}/inspiration/{photo}/{size}', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffShow'])
+            Route::get('appointments/{appointment}/inspiration/{photo}/{size}', [\App\Http\Controllers\Booking\LookPhotoController::class, 'staffShow'])
                 ->whereIn('size', ['full', 'thumb'])->name('appointments.inspiration.show');
-            Route::post('appointments/{appointment}/look/results', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffStoreResults'])->name('appointments.look.results.store')->middleware('throttle:10,1');
-            Route::delete('appointments/{appointment}/look/results/{photo}', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffDestroyResult'])->name('appointments.look.results.destroy');
-            Route::post('appointments/{appointment}/look', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffSaveLook'])->name('appointments.look.save');
-            Route::delete('appointments/{appointment}/look', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'staffForgetLook'])->name('appointments.look.forget');
+            Route::post('appointments/{appointment}/look/results', [\App\Http\Controllers\Booking\LookPhotoController::class, 'staffStoreResults'])->name('appointments.look.results.store')->middleware('throttle:10,1');
+            Route::delete('appointments/{appointment}/look/results/{photo}', [\App\Http\Controllers\Booking\LookPhotoController::class, 'staffDestroyResult'])->name('appointments.look.results.destroy');
+            Route::post('appointments/{appointment}/look', [\App\Http\Controllers\Booking\LookPhotoController::class, 'staffSaveLook'])->name('appointments.look.save');
+            Route::delete('appointments/{appointment}/look', [\App\Http\Controllers\Booking\LookPhotoController::class, 'staffForgetLook'])->name('appointments.look.forget');
             Route::post('appointments/{appointment}/quote', [\App\Http\Controllers\Booking\AppointmentQuoteController::class, 'send'])->name('appointments.quote.send');
             Route::post('appointments/{appointment}/mark-paid', [\App\Http\Controllers\Booking\AppointmentController::class, 'markPaid'])->name('appointments.mark-paid');
             Route::get('calendar/{date?}', [\App\Http\Controllers\Booking\AppointmentController::class, 'calendar'])->name('appointments.calendar');
@@ -644,15 +644,15 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
         Route::post('/appointments/{appointment}/payment-proof',        [CustomerPortalController::class, 'uploadPaymentProof'])->name('payment-proof');
 
         // Inspiration photos — private files, streamed through the controller only.
-        Route::get('/appointments/{appointment}/inspiration/{photo}/{size}', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerShow'])
+        Route::get('/appointments/{appointment}/inspiration/{photo}/{size}', [\App\Http\Controllers\Booking\LookPhotoController::class, 'customerShow'])
             ->whereIn('size', ['full', 'thumb'])->name('inspiration.show');
-        Route::post('/appointments/{appointment}/inspiration',          [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerStore'])
+        Route::post('/appointments/{appointment}/inspiration',          [\App\Http\Controllers\Booking\LookPhotoController::class, 'customerStore'])
             ->name('inspiration.store')->middleware('throttle:10,1');
-        Route::delete('/appointments/{appointment}/inspiration/{photo}', [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerDestroy'])
+        Route::delete('/appointments/{appointment}/inspiration/{photo}', [\App\Http\Controllers\Booking\LookPhotoController::class, 'customerDestroy'])
             ->name('inspiration.destroy')->middleware('throttle:20,1');
-        Route::post('/looks/{appointment}/book-again',                  [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerRebookLook'])->name('looks.rebook');
-        Route::delete('/looks/{appointment}',                           [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerForgetLook'])->name('looks.forget');
-        Route::post('/looks/{appointment}/showcase',                    [\App\Http\Controllers\Booking\InspirationPhotoController::class, 'customerShowcaseLook'])->name('looks.showcase');
+        Route::post('/looks/{appointment}/book-again',                  [\App\Http\Controllers\Booking\LookPhotoController::class, 'customerRebookLook'])->name('looks.rebook');
+        Route::delete('/looks/{appointment}',                           [\App\Http\Controllers\Booking\LookPhotoController::class, 'customerForgetLook'])->name('looks.forget');
+        Route::post('/looks/{appointment}/showcase',                    [\App\Http\Controllers\Booking\LookPhotoController::class, 'customerShowcaseLook'])->name('looks.showcase');
         Route::post('/rebook-reminders',                                [\App\Http\Controllers\Booking\RebookReminderController::class, 'toggle'])->name('rebook-reminders.toggle');
         Route::post('/appointments/{appointment}/quote/accept',         [\App\Http\Controllers\Booking\AppointmentQuoteController::class, 'accept'])->name('quote.accept');
         Route::post('/appointments/{appointment}/quote/decline',        [\App\Http\Controllers\Booking\AppointmentQuoteController::class, 'decline'])->name('quote.decline');

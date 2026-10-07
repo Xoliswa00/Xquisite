@@ -12,7 +12,7 @@ use App\Modules\Booking\Models\Service;
 use App\Modules\Booking\Models\ServicePhoto;
 use App\Models\Tenant;
 use App\Services\Booking\AvailabilityService;
-use App\Services\Booking\InspirationPhotoService;
+use App\Services\Booking\LookPhotoService;
 use App\Services\Notifications\BookingNotificationService;
 use App\Services\Tenant\TenantContext;
 use App\Support\TenantManifest;
@@ -210,7 +210,7 @@ class PublicBookingController extends Controller
 
         // Owners switch the inspiration upload off per service; show it if any picked service wants it.
         $acceptsInspiration = $services->contains(fn($s) => $s->accepts_inspiration_photos);
-        $maxInspirationPhotos = InspirationPhotoService::MAX_PER_APPOINTMENT;
+        $maxInspirationPhotos = LookPhotoService::MAX_PER_APPOINTMENT;
         $rebookLook = $acceptsInspiration ? $this->rebookLook($customer, $services->pluck('id')->all()) : null;
 
         // Some services are priced from the client's photos (long braids, custom art).
@@ -259,7 +259,7 @@ class PublicBookingController extends Controller
     }
 
     /** Step 4 — create the appointment */
-    public function store(string $slug, Request $request, AvailabilityService $availability, BookingNotificationService $notifications, InspirationPhotoService $inspiration)
+    public function store(string $slug, Request $request, AvailabilityService $availability, BookingNotificationService $notifications, LookPhotoService $inspiration)
     {
         $tenant  = $this->resolveTenant($slug);
         $pending = session('pending_booking');
@@ -281,8 +281,8 @@ class PublicBookingController extends Controller
 
         // Validated before taking the slot lock: a bad file shouldn't hold the slot for anyone else.
         $inspirationInput = $request->validate(
-            InspirationPhotoService::rules() + ['inspiration_notes' => 'nullable|string|max:1000'],
-            InspirationPhotoService::messages()
+            LookPhotoService::rules() + ['inspiration_notes' => 'nullable|string|max:1000'],
+            LookPhotoService::messages()
         );
 
         // Guards against two causes of duplicate/oversold bookings:

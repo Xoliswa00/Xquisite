@@ -5,7 +5,7 @@ namespace Tests\Feature\Booking;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Booking\Models\Appointment;
-use App\Modules\Booking\Models\AppointmentInspirationPhoto;
+use App\Modules\Booking\Models\AppointmentLookPhoto;
 use App\Modules\Booking\Models\Customer;
 use App\Modules\Booking\Models\Service;
 use App\Notifications\AppNotice;
@@ -85,10 +85,10 @@ class SavedLooksTest extends TestCase
     private function savedLook(): Appointment
     {
         $appt = $this->appointment(at: now()->subWeek(), status: 'completed');
-        app(\App\Services\Booking\InspirationPhotoService::class)->store($appt, [$this->photo()]);
+        app(\App\Services\Booking\LookPhotoService::class)->store($appt, [$this->photo()]);
         $appt->update(['inspiration_notes' => 'Waist length, 1B']);
 
-        $this->asStaff()->post(route('appointments.look.results.store', $appt), ['inspiration_photos' => [$this->photo()]]);
+        $this->asStaff()->post(route('appointments.look.results.store', $appt), ['result_photos' => [$this->photo()]]);
         $this->asStaff()->post(route('appointments.look.save', $appt))->assertSessionHas('success');
 
         return $appt->fresh();
@@ -147,7 +147,7 @@ class SavedLooksTest extends TestCase
     {
         $appt = $this->appointment(status: 'completed');
         // The client's own screenshot alone isn't a look worth keeping 2 years.
-        app(\App\Services\Booking\InspirationPhotoService::class)->store($appt, [$this->photo()]);
+        app(\App\Services\Booking\LookPhotoService::class)->store($appt, [$this->photo()]);
 
         $this->asStaff()->post(route('appointments.look.save', $appt))->assertSessionHasErrors('look');
         $this->assertNull($appt->fresh()->look_saved_at);
@@ -211,7 +211,7 @@ class SavedLooksTest extends TestCase
         }
 
         // Staff can't quietly save it again.
-        $this->asStaff()->post(route('appointments.look.results.store', $appt), ['inspiration_photos' => [$this->photo()]]);
+        $this->asStaff()->post(route('appointments.look.results.store', $appt), ['result_photos' => [$this->photo()]]);
         $this->asStaff()->post(route('appointments.look.save', $appt))->assertSessionHasErrors('look');
         $this->assertNull($appt->fresh()->look_saved_at);
     }
@@ -234,8 +234,8 @@ class SavedLooksTest extends TestCase
     {
         $future = $this->appointment(at: now()->addDays(3), status: 'confirmed');
 
-        $this->asStaff()->post(route('appointments.look.results.store', $future), ['inspiration_photos' => [$this->photo()]])
-            ->assertSessionHasErrors('inspiration_photos');
+        $this->asStaff()->post(route('appointments.look.results.store', $future), ['result_photos' => [$this->photo()]])
+            ->assertSessionHasErrors('result_photos');
         $this->assertSame(0, $future->resultPhotos()->count());
 
         $this->asStaff()->get(route('appointments.show', $future))
@@ -428,17 +428,17 @@ class SavedLooksTest extends TestCase
     {
         $saved   = $this->savedLook();
         $unsaved = $this->appointment(at: now()->subDays(100), status: 'completed');
-        app(\App\Services\Booking\InspirationPhotoService::class)->store($unsaved, [$this->photo()]);
+        app(\App\Services\Booking\LookPhotoService::class)->store($unsaved, [$this->photo()]);
 
         $saved->forceFill(['scheduled_at' => now()->subDays(100)])->saveQuietly();
         TenantContext::clear();
-        $this->artisan('booking:prune-inspiration-photos')->assertSuccessful();
+        $this->artisan('booking:prune-look-photos')->assertSuccessful();
 
         $this->assertSame(2, $saved->lookPhotos()->count(), 'saved look kept past 90 days');
         $this->assertSame(0, $unsaved->lookPhotos()->count(), 'unsaved photos pruned at 90 days');
 
         $saved->forceFill(['scheduled_at' => now()->subDays(731)])->saveQuietly();
-        $this->artisan('booking:prune-inspiration-photos')->assertSuccessful();
+        $this->artisan('booking:prune-look-photos')->assertSuccessful();
         $this->assertSame(0, $saved->lookPhotos()->count(), 'saved look pruned after 2 years');
         $this->assertNull($saved->fresh()->look_saved_at, 'and no longer listed as an empty saved look');
     }
