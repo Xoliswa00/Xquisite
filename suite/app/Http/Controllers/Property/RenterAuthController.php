@@ -39,6 +39,7 @@ class RenterAuthController extends Controller
 
         if (Auth::guard('renter')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             $request->session()->regenerate();
+            LoginThrottleService::recordSuccess($request->ip(), 'renter', $request->input('email'));
 
             AuditService::log(
                 action: 'renter.login',
@@ -55,9 +56,9 @@ class RenterAuthController extends Controller
             entityType: 'Renter',
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug],
         );
-        LoginThrottleService::recordFailure($request->ip(), 'renter');
+        $left = LoginThrottleService::recordFailure($request->ip(), 'renter', 'login', $request->input('email'), ['tenant_slug' => $slug]);
 
-        return back()->withErrors(['email' => 'These credentials do not match our records.'])->withInput();
+        return back()->withErrors(['email' => 'These credentials do not match our records.' . LoginThrottleService::warning($left)])->withInput();
     }
 
     public function showForgotPassword(string $slug)
@@ -80,8 +81,9 @@ class RenterAuthController extends Controller
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug, 'status' => $status],
         );
 
-        if ($status !== Password::RESET_LINK_SENT) {
-            LoginThrottleService::recordFailure($request->ip(), 'renter-password-reset');
+        // Asking again too soon is impatience, not a failed attempt.
+        if (! in_array($status, [Password::RESET_LINK_SENT, Password::RESET_THROTTLED], true)) {
+            LoginThrottleService::recordFailure($request->ip(), 'renter', 'reset', $request->input('email'), ['tenant_slug' => $slug]);
         }
 
         return $status === Password::RESET_LINK_SENT
@@ -128,7 +130,7 @@ class RenterAuthController extends Controller
             entityType: 'Renter',
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug, 'status' => $status],
         );
-        LoginThrottleService::recordFailure($request->ip(), 'renter-password-reset');
+        LoginThrottleService::recordFailure($request->ip(), 'renter', 'reset', $request->input('email'), ['tenant_slug' => $slug]);
 
         return back()->withErrors(['email' => __($status)]);
     }

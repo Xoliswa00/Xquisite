@@ -47,6 +47,14 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\TrackPageView::class,
         ]);
 
+        // Laravel hoists `throttle` ahead of unlisted route middleware. The pause
+        // check has to win, or retries against a paused account spend the per-IP
+        // `throttle:auth` allowance that everyone on the same network shares.
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Routing\Middleware\ThrottleRequests::class,
+            prepend: \App\Http\Middleware\EnsureSignInNotPaused::class,
+        );
+
         $middleware->validateCsrfTokens(except: [
             '/js-error',
             '/ingest/logs',
@@ -61,6 +69,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'enforce-password-change' => EnforcePasswordChange::class,
             'company.suspension' => \App\Http\Middleware\CheckCompanySuspension::class,
             'monitored-instance' => \App\Http\Middleware\EnsureMonitoredInstance::class,
+            'sign-in.pause' => \App\Http\Middleware\EnsureSignInNotPaused::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) use ($portalLoginRedirect): void {

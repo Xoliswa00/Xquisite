@@ -37,6 +37,7 @@ class ContractorAuthController extends Controller
 
         if (Auth::guard('contractor')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             $request->session()->regenerate();
+            LoginThrottleService::recordSuccess($request->ip(), 'contractor', $request->input('email'));
 
             AuditService::log(
                 action: 'contractor.login',
@@ -53,9 +54,9 @@ class ContractorAuthController extends Controller
             entityType: 'Contractor',
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug],
         );
-        LoginThrottleService::recordFailure($request->ip(), 'contractor');
+        $left = LoginThrottleService::recordFailure($request->ip(), 'contractor', 'login', $request->input('email'), ['tenant_slug' => $slug]);
 
-        return back()->withErrors(['email' => 'These credentials do not match our records.'])->withInput();
+        return back()->withErrors(['email' => 'These credentials do not match our records.' . LoginThrottleService::warning($left)])->withInput();
     }
 
     public function showForgotPassword(string $slug)
@@ -78,8 +79,9 @@ class ContractorAuthController extends Controller
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug, 'status' => $status],
         );
 
-        if ($status !== Password::RESET_LINK_SENT) {
-            LoginThrottleService::recordFailure($request->ip(), 'contractor-password-reset');
+        // Asking again too soon is impatience, not a failed attempt.
+        if (! in_array($status, [Password::RESET_LINK_SENT, Password::RESET_THROTTLED], true)) {
+            LoginThrottleService::recordFailure($request->ip(), 'contractor', 'reset', $request->input('email'), ['tenant_slug' => $slug]);
         }
 
         return $status === Password::RESET_LINK_SENT
@@ -126,7 +128,7 @@ class ContractorAuthController extends Controller
             entityType: 'Contractor',
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug, 'status' => $status],
         );
-        LoginThrottleService::recordFailure($request->ip(), 'contractor-password-reset');
+        LoginThrottleService::recordFailure($request->ip(), 'contractor', 'reset', $request->input('email'), ['tenant_slug' => $slug]);
 
         return back()->withErrors(['email' => __($status)]);
     }
