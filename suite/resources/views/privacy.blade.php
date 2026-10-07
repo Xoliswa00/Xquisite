@@ -140,7 +140,7 @@
         </ul>
         <p>
             To exercise any of these rights, contact our Information Officer at
-            <a href="mailto:privacy@xquisitecreations.co.za">privacy@xquisitecreations.co.za</a>.
+            <a href="mailto:{{ config('contact.privacy_email') }}">{{ config('contact.privacy_email') }}</a>.
         </p>
 
         <h2>8. Cookies</h2>
@@ -175,7 +175,7 @@
         <h2>11. Contact &amp; Information Officer</h2>
         <p>
             For privacy-related queries, data access requests, or complaints, contact our Information Officer:<br>
-            <a href="mailto:privacy@xquisitecreations.co.za">privacy@xquisitecreations.co.za</a><br>
+            <a href="mailto:{{ config('contact.privacy_email') }}">{{ config('contact.privacy_email') }}</a><br>
             Xquisite Creations (Pty) Ltd, South Africa.
         </p>
 

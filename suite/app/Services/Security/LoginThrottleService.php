@@ -61,6 +61,7 @@ class LoginThrottleService
         self::assertKnown($guard, $channel);
 
         $left = null;
+        $email = Str::lower(trim((string) $identifier));
 
         if ($identifier = self::normalise($identifier)) {
             $strikes = self::accountKey('strikes', $guard, $channel, $ip, $identifier);
@@ -75,6 +76,15 @@ class LoginThrottleService
                     action: 'auth.sign_in_paused',
                     meta: ['scope' => 'account', 'guard' => $guard, 'channel' => $channel, 'email' => Str::limit($identifier, 190, '')] + $meta,
                 );
+
+                if ($channel === 'login') {
+                    try {
+                        SignInPauseNotifier::accountPaused($guard, $email, $meta['tenant_slug'] ?? null);
+                    } catch (\Throwable $e) {
+                        // Telling people is a courtesy; it must never break the sign-in form.
+                        report($e);
+                    }
+                }
             }
         }
 
@@ -125,6 +135,50 @@ class LoginThrottleService
         }
 
         return null;
+    }
+
+    /**
+     * Seconds left on one specific pause (0 when it has ended or been lifted).
+     * Unlike lockedFor(), an account pause is not masked by an IP-wide one.
+     */
+    public static function pauseSecondsLeft(string $scope, string $ip, ?string $guard = null, ?string $channel = null, ?string $identifier = null): int
+    {
+        return ($key = self::lockKey($scope, $ip, $guard, $channel, $identifier)) ? self::secondsLeft($key) : 0;
+    }
+
+    /**
+     * Lift a pause early (admin action). For an account pause the strikes go
+     * too, or the very next typo would pause it again.
+     */
+    public static function unlock(string $scope, string $ip, ?string $guard = null, ?string $channel = null, ?string $identifier = null): bool
+    {
+        if (! ($key = self::lockKey($scope, $ip, $guard, $channel, $identifier))) {
+            return false;
+        }
+
+        Cache::forget($key);
+
+        $scope === 'ip'
+            ? RateLimiter::clear("login_strikes:ip:{$ip}")
+            : RateLimiter::clear(self::accountKey('strikes', $guard, $channel, $ip, self::normalise($identifier)));
+
+        return true;
+    }
+
+    private static function lockKey(string $scope, string $ip, ?string $guard, ?string $channel, ?string $identifier): ?string
+    {
+        if ($scope === 'ip') {
+            return "login_lock:ip:{$ip}";
+        }
+
+        $identifier = self::normalise($identifier);
+
+        if ($scope !== 'account' || ! $identifier
+            || ! in_array($guard, self::GUARDS, true) || ! in_array($channel, self::CHANNELS, true)) {
+            return null;
+        }
+
+        return self::accountKey('lock', $guard, $channel, $ip, $identifier);
     }
 
     /**

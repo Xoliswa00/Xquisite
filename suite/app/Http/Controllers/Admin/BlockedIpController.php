@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\BlockedIp;
+use App\Services\AuditService;
+use App\Services\Security\LoginThrottleService;
 use App\Support\IpLocation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class BlockedIpController extends Controller
 {
@@ -37,7 +41,65 @@ class BlockedIpController extends Controller
             ->filter()
             ->values();
 
-        return view('admin.security.blocked-ips', compact('blocked', 'points'));
+        $pauses = $this->recentPauses();
+
+        return view('admin.security.blocked-ips', compact('blocked', 'points', 'pauses'));
+    }
+
+    /**
+     * Automatic sign-in pauses from the last day. They live in the cache, so the
+     * audit log is the only list of them; each row is checked against the cache
+     * to see whether it is still running.
+     */
+    private function recentPauses()
+    {
+        return DB::table('audit_logs')
+            ->where('action', 'auth.sign_in_paused')
+            ->where('created_at', '>=', now()->subDay())
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get(['ip_address', 'meta', 'created_at'])
+            ->map(function ($row) {
+                $meta = json_decode($row->meta ?? '[]', true) ?: [];
+
+                $pause = [
+                    'at'      => Carbon::parse($row->created_at),
+                    'ip'      => (string) $row->ip_address,
+                    'scope'   => $meta['scope'] ?? 'account',
+                    'guard'   => $meta['guard'] ?? null,
+                    'channel' => $meta['channel'] ?? null,
+                    'email'   => $meta['email'] ?? null,
+                    'tenant'  => $meta['tenant_slug'] ?? null,
+                ];
+
+                $pause['seconds_left'] = LoginThrottleService::pauseSecondsLeft(
+                    $pause['scope'], $pause['ip'], $pause['guard'], $pause['channel'], $pause['email']
+                );
+
+                return $pause;
+            });
+    }
+
+    public function liftPause(Request $request)
+    {
+        $data = $request->validate([
+            'scope'   => 'required|in:account,ip',
+            'ip'      => 'required|ip',
+            'guard'   => 'nullable|required_if:scope,account|in:' . implode(',', LoginThrottleService::GUARDS),
+            'channel' => 'nullable|required_if:scope,account|in:' . implode(',', LoginThrottleService::CHANNELS),
+            'email'   => 'nullable|required_if:scope,account|email|max:190',
+        ]);
+
+        LoginThrottleService::unlock($data['scope'], $data['ip'], $data['guard'] ?? null, $data['channel'] ?? null, $data['email'] ?? null);
+
+        AuditService::log(
+            action: 'auth.sign_in_pause_lifted',
+            meta: array_filter($data),
+        );
+
+        return back()->with('success', $data['scope'] === 'ip'
+            ? "Sign-in pause lifted for {$data['ip']}."
+            : "Sign-in pause lifted for {$data['email']}.");
     }
 
     public function store(Request $request)

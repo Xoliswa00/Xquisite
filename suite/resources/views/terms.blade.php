@@ -162,7 +162,7 @@
         <h2>13. Contact</h2>
         <p>
             Questions about these Terms? Email us at
-            <a href="mailto:legal@xquisitecreations.co.za">legal@xquisitecreations.co.za</a>.
+            <a href="mailto:{{ config('contact.legal_email') }}">{{ config('contact.legal_email') }}</a>.
         </p>
 
     </div>

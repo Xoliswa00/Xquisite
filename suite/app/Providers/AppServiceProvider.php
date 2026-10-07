@@ -47,6 +47,25 @@ class AppServiceProvider extends ServiceProvider
             });
         });
 
+        // New accounts: generous enough for a shop where several customers sign
+        // up on the same Wi-Fi, tight enough to stop scripted sign-ups.
+        RateLimiter::for('register', function (Request $request) {
+            $refuse = fn () => abort(429, 'Too many new accounts from your internet connection. Please wait a few minutes and try again.');
+
+            return [
+                Limit::perMinute(10)->by('register:minute:' . $request->ip())->response($refuse),
+                Limit::perHour(60)->by('register:hour:' . $request->ip())->response($refuse),
+            ];
+        });
+
+        // "Confirm your password" is a password guess against a signed-in account,
+        // so it is limited per account, not per network.
+        RateLimiter::for('confirm-password', function (Request $request) {
+            return Limit::perMinute(5)->by('confirm:' . ($request->user()?->getAuthIdentifier() ?? $request->ip()))->response(function () {
+                abort(429, 'Too many wrong passwords. Please wait a minute and try again.');
+            });
+        });
+
         // General API / web routes — 120 per minute per authenticated user or IP
         RateLimiter::for('global', function (Request $request) {
             return $request->user()

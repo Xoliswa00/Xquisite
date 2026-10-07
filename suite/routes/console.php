@@ -71,3 +71,8 @@ Schedule::command('booking:prune-look-photos')->dailyAt('03:15')->withoutOverlap
 
 // Booking: "time for your next ..." reminders for services with a rebook interval set.
 Schedule::command('booking:send-rebook-reminders')->dailyAt('09:00')->withoutOverlapping();
+
+// The database cache store never removes an expired row unless that exact key is
+// read again, so sign-in strike keys and rate-limit windows pile up. Clear them
+// nightly, in small passes.
+Schedule::command('cache:prune-expired')->dailyAt('03:30')->withoutOverlapping();
