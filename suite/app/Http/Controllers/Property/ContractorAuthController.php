@@ -37,6 +37,7 @@ class ContractorAuthController extends Controller
 
         if (Auth::guard('contractor')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             $request->session()->regenerate();
+            LoginThrottleService::recordSuccess($request->ip(), $request->input('email'));
 
             AuditService::log(
                 action: 'contractor.login',
@@ -53,7 +54,7 @@ class ContractorAuthController extends Controller
             entityType: 'Contractor',
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug],
         );
-        LoginThrottleService::recordFailure($request->ip(), 'contractor');
+        LoginThrottleService::recordFailure($request->ip(), 'contractor', $request->input('email'));
 
         return back()->withErrors(['email' => 'These credentials do not match our records.'])->withInput();
     }
@@ -79,7 +80,7 @@ class ContractorAuthController extends Controller
         );
 
         if ($status !== Password::RESET_LINK_SENT) {
-            LoginThrottleService::recordFailure($request->ip(), 'contractor-password-reset');
+            LoginThrottleService::recordFailure($request->ip(), 'contractor-password-reset', $request->input('email'));
         }
 
         return $status === Password::RESET_LINK_SENT
@@ -126,7 +127,7 @@ class ContractorAuthController extends Controller
             entityType: 'Contractor',
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug, 'status' => $status],
         );
-        LoginThrottleService::recordFailure($request->ip(), 'contractor-password-reset');
+        LoginThrottleService::recordFailure($request->ip(), 'contractor-password-reset', $request->input('email'));
 
         return back()->withErrors(['email' => __($status)]);
     }

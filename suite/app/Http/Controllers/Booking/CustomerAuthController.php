@@ -41,6 +41,7 @@ class CustomerAuthController extends Controller
 
         if (Auth::guard('customer')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             $request->session()->regenerate();
+            LoginThrottleService::recordSuccess($request->ip(), $request->input('email'));
 
             AuditService::log(
                 action: 'customer.login',
@@ -57,7 +58,7 @@ class CustomerAuthController extends Controller
             entityType: 'Customer',
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug],
         );
-        LoginThrottleService::recordFailure($request->ip(), 'customer');
+        LoginThrottleService::recordFailure($request->ip(), 'customer', $request->input('email'));
 
         return back()->withErrors(['email' => 'These credentials do not match our records.'])->withInput();
     }
@@ -199,7 +200,7 @@ class CustomerAuthController extends Controller
         );
 
         if ($status !== Password::RESET_LINK_SENT) {
-            LoginThrottleService::recordFailure($request->ip(), 'customer-password-reset');
+            LoginThrottleService::recordFailure($request->ip(), 'customer-password-reset', $request->input('email'));
         }
 
         return $status === Password::RESET_LINK_SENT
@@ -246,7 +247,7 @@ class CustomerAuthController extends Controller
             entityType: 'Customer',
             meta: ['email' => $request->input('email'), 'tenant_slug' => $slug, 'status' => $status],
         );
-        LoginThrottleService::recordFailure($request->ip(), 'customer-password-reset');
+        LoginThrottleService::recordFailure($request->ip(), 'customer-password-reset', $request->input('email'));
 
         return back()->withErrors(['email' => __($status)]);
     }

@@ -610,7 +610,7 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
     // ── Customer auth routes (guests only — redirect if already logged in) ───
     Route::middleware('guest:customer')->group(function () {
         Route::get('/login',              [CustomerAuthController::class, 'showLogin'])->name('login');
-        Route::post('/login',             [CustomerAuthController::class, 'login'])->name('login.post')->middleware('throttle:auth');
+        Route::post('/login',             [CustomerAuthController::class, 'login'])->name('login.post')->middleware(['throttle:auth', 'sign-in.pause:login']);
         Route::get('/register',           [CustomerAuthController::class, 'showRegister'])->name('register');
         Route::post('/register',          [CustomerAuthController::class, 'register'])->name('register.post');
         // Account claim — for manually-added customers who want to set up their own login
@@ -621,9 +621,9 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
 
         // Forgot / reset password
         Route::get('/forgot-password',   [CustomerAuthController::class, 'showForgotPassword'])->name('password.request');
-        Route::post('/forgot-password',  [CustomerAuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:auth');
+        Route::post('/forgot-password',  [CustomerAuthController::class, 'sendResetLink'])->name('password.email')->middleware(['throttle:auth', 'sign-in.pause:reset']);
         Route::get('/reset-password/{token}', [CustomerAuthController::class, 'showResetPassword'])->name('password.reset');
-        Route::post('/reset-password',   [CustomerAuthController::class, 'resetPassword'])->name('password.store');
+        Route::post('/reset-password',   [CustomerAuthController::class, 'resetPassword'])->name('password.store')->middleware('sign-in.pause:reset');
     });
 
     // ── Requires customer auth ────────────────────────────────────────────────
@@ -687,14 +687,14 @@ Route::prefix('rent/{slug}')->name('rent.')->group(function () {
 
     // Public auth routes — no guard needed
     Route::get('/login',        [RenterAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login',       [RenterAuthController::class, 'login'])->name('login.post')->middleware('throttle:auth');
+    Route::post('/login',       [RenterAuthController::class, 'login'])->name('login.post')->middleware(['throttle:auth', 'sign-in.pause:login']);
     Route::post('/logout',      [RenterAuthController::class, 'logout'])->name('logout');
 
     // Forgot / reset password — public, no guard needed
     Route::get('/forgot-password',   [RenterAuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/forgot-password',  [RenterAuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:auth');
+    Route::post('/forgot-password',  [RenterAuthController::class, 'sendResetLink'])->name('password.email')->middleware(['throttle:auth', 'sign-in.pause:reset']);
     Route::get('/reset-password/{token}', [RenterAuthController::class, 'showResetPassword'])->name('password.reset');
-    Route::post('/reset-password',   [RenterAuthController::class, 'resetPassword'])->name('password.store');
+    Route::post('/reset-password',   [RenterAuthController::class, 'resetPassword'])->name('password.store')->middleware('sign-in.pause:reset');
 
     // Protected portal pages — renter guard enforced at route level
     Route::middleware('auth:renter')->group(function () {
@@ -716,14 +716,14 @@ Route::prefix('contractor/{slug}')->name('contractor.')->group(function () {
 
     // Public auth routes — no guard needed
     Route::get('/login',   [ContractorAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login',  [ContractorAuthController::class, 'login'])->name('login.post')->middleware('throttle:auth');
+    Route::post('/login',  [ContractorAuthController::class, 'login'])->name('login.post')->middleware(['throttle:auth', 'sign-in.pause:login']);
     Route::post('/logout', [ContractorAuthController::class, 'logout'])->name('logout');
 
     // Forgot / reset password — public, no guard needed
     Route::get('/forgot-password',   [ContractorAuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/forgot-password',  [ContractorAuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:auth');
+    Route::post('/forgot-password',  [ContractorAuthController::class, 'sendResetLink'])->name('password.email')->middleware(['throttle:auth', 'sign-in.pause:reset']);
     Route::get('/reset-password/{token}', [ContractorAuthController::class, 'showResetPassword'])->name('password.reset');
-    Route::post('/reset-password',   [ContractorAuthController::class, 'resetPassword'])->name('password.store');
+    Route::post('/reset-password',   [ContractorAuthController::class, 'resetPassword'])->name('password.store')->middleware('sign-in.pause:reset');
 
     // Protected portal pages — contractor guard enforced at route level
     Route::middleware('auth:contractor')->group(function () {

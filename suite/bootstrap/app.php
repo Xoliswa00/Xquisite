@@ -61,6 +61,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'enforce-password-change' => EnforcePasswordChange::class,
             'company.suspension' => \App\Http\Middleware\CheckCompanySuspension::class,
             'monitored-instance' => \App\Http\Middleware\EnsureMonitoredInstance::class,
+            'sign-in.pause' => \App\Http\Middleware\EnsureSignInNotPaused::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) use ($portalLoginRedirect): void {

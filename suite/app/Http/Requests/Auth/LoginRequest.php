@@ -52,7 +52,7 @@ class LoginRequest extends FormRequest
                 entityType: 'User',
                 meta: ['email' => $this->string('email')->toString()],
             );
-            LoginThrottleService::recordFailure($this->ip(), 'staff');
+            LoginThrottleService::recordFailure($this->ip(), 'staff', $this->string('email')->toString());
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
@@ -60,6 +60,7 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+        LoginThrottleService::recordSuccess($this->ip(), $this->string('email')->toString());
     }
 
     /**
