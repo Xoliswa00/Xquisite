@@ -2,6 +2,7 @@
 
 namespace App\Services\Security;
 
+use App\Models\BlockedIp;
 use App\Services\AuditService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
@@ -20,7 +21,10 @@ use InvalidArgumentException;
  *  - IP: 20 failures from one IP across any accounts pauses sign-in for the
  *    whole IP. This is the net for an attack that tries many accounts.
  *
- * Site-wide blocks are a separate, manual tool (BlockedIp + CheckBlockedIp).
+ * Site-wide blocks (BlockedIp + CheckBlockedIp) are for administrators, with one
+ * automated exception: an IP that earns a second IP-wide pause within an hour
+ * is blocked for 30 minutes. That takes 40 failed sign-ins across accounts, far
+ * beyond what a busy shop's typos produce.
  *
  * Every sign-in, forgot-password and reset-password POST needs both halves:
  * the `sign-in.pause:{guard},{channel}` route middleware (refuses while
@@ -34,6 +38,13 @@ class LoginThrottleService
     public const IP_THRESHOLD = 20;       // failures from one IP, any account
     public const WINDOW_SECONDS = 900;    // 15 minutes
     public const LOCK_SECONDS = 300;      // 5 minutes
+
+    // A second IP-wide pause inside this window is a sustained attack, not typos:
+    // it becomes a real, timed BlockedIp row that shows on the admin Blocked IPs
+    // screen and can be lifted there.
+    public const ESCALATION_PAUSES = 2;
+    public const ESCALATION_WINDOW_SECONDS = 3600;
+    public const ESCALATION_BLOCK_MINUTES = 30;
 
     public const GUARDS = ['staff', 'customer', 'renter', 'contractor'];
 
@@ -77,6 +88,8 @@ class LoginThrottleService
                 action: 'auth.sign_in_paused',
                 meta: ['scope' => 'ip', 'guard' => $guard, 'channel' => $channel] + $meta,
             );
+
+            self::escalateRepeatOffender($ip);
         }
 
         return $left;
@@ -127,6 +140,31 @@ class LoginThrottleService
             0 => " Sign-in for this email is now paused for {$minutes} minutes. If you have forgotten your password, you can reset it in the meantime.",
             default => '',
         };
+    }
+
+    private static function escalateRepeatOffender(string $ip): void
+    {
+        $pauses = "login_ip_pauses:{$ip}";
+
+        if (RateLimiter::hit($pauses, self::ESCALATION_WINDOW_SECONDS) < self::ESCALATION_PAUSES) {
+            return;
+        }
+
+        RateLimiter::clear($pauses);
+
+        // Never shorten or overwrite a block an administrator put in place.
+        if (BlockedIp::isBlocked($ip)) {
+            return;
+        }
+
+        $failures = self::ESCALATION_PAUSES * self::IP_THRESHOLD;
+
+        BlockedIp::block(
+            $ip,
+            "Automated: {$failures} failed sign-ins across accounts within an hour. Lifts by itself in " . self::ESCALATION_BLOCK_MINUTES . ' minutes.',
+            null,
+            self::ESCALATION_BLOCK_MINUTES,
+        );
     }
 
     private static function lock(string $key): void

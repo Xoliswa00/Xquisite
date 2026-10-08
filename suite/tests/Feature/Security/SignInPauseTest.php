@@ -146,6 +146,80 @@ class SignInPauseTest extends TestCase
         $this->assertSame(1, DB::table('audit_logs')->where('action', 'auth.sign_in_refused')->count());
     }
 
+    public function test_the_shared_login_allowance_is_thirty_posts_a_minute(): void
+    {
+        $user = User::factory()->create();
+
+        // Different unknown emails each time, so no single account pauses and the
+        // 20-failure net is what stops this, not the per-IP flood guard.
+        for ($i = 0; $i < 19; $i++) {
+            $this->post('/login', ['email' => "typo{$i}@example.com", 'password' => 'nope'])->assertStatus(302);
+        }
+
+        $this->post('/login', ['email' => $user->email, 'password' => 'password'])
+            ->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_a_second_ip_wide_pause_within_the_hour_becomes_a_visible_timed_block(): void
+    {
+        $spray = function () {
+            for ($i = 0; $i < LoginThrottleService::IP_THRESHOLD; $i++) {
+                LoginThrottleService::recordFailure('203.0.113.9', 'staff', 'login', "guess{$i}@example.com");
+            }
+        };
+
+        $spray();
+        $this->assertDatabaseCount('blocked_ips', 0);
+        $this->assertSame('ip', LoginThrottleService::lockedFor('203.0.113.9', 'staff', 'login', null)['scope']);
+
+        $this->travel(LoginThrottleService::LOCK_SECONDS + 1)->seconds();
+        $spray();
+
+        $block = BlockedIp::where('ip_address', '203.0.113.9')->first();
+        $this->assertNotNull($block);
+        $this->assertNull($block->blocked_by);
+        $this->assertStringStartsWith('Automated:', $block->reason);
+        $this->assertEqualsWithDelta(
+            now()->addMinutes(LoginThrottleService::ESCALATION_BLOCK_MINUTES)->getTimestamp(),
+            $block->expires_at->getTimestamp(),
+            5,
+        );
+        $this->assertTrue(BlockedIp::isBlocked('203.0.113.9'));
+
+        // It lifts by itself.
+        $this->travel(LoginThrottleService::ESCALATION_BLOCK_MINUTES + 1)->minutes();
+        \Illuminate\Support\Facades\Cache::forget('blocked_ip:203.0.113.9');
+        $this->assertFalse(BlockedIp::isBlocked('203.0.113.9'));
+    }
+
+    public function test_two_ip_wide_pauses_more_than_an_hour_apart_do_not_block(): void
+    {
+        for ($round = 0; $round < 2; $round++) {
+            for ($i = 0; $i < LoginThrottleService::IP_THRESHOLD; $i++) {
+                LoginThrottleService::recordFailure('203.0.113.9', 'staff', 'login', "guess{$i}@example.com");
+            }
+            $this->travel(LoginThrottleService::ESCALATION_WINDOW_SECONDS + 60)->seconds();
+        }
+
+        $this->assertDatabaseCount('blocked_ips', 0);
+    }
+
+    public function test_escalation_never_replaces_a_block_an_administrator_set(): void
+    {
+        BlockedIp::block('203.0.113.9', 'Manual: known abuser', null, null);
+
+        for ($round = 0; $round < 2; $round++) {
+            for ($i = 0; $i < LoginThrottleService::IP_THRESHOLD; $i++) {
+                LoginThrottleService::recordFailure('203.0.113.9', 'staff', 'login', "guess{$i}@example.com");
+            }
+            $this->travel(LoginThrottleService::LOCK_SECONDS + 1)->seconds();
+        }
+
+        $block = BlockedIp::where('ip_address', '203.0.113.9')->first();
+        $this->assertSame('Manual: known abuser', $block->reason);
+        $this->assertNull($block->expires_at);
+    }
+
     public function test_strikes_are_separate_per_channel_guard_and_ip(): void
     {
         for ($i = 0; $i < LoginThrottleService::ACCOUNT_THRESHOLD; $i++) {
