@@ -71,7 +71,12 @@ class CustomerController extends Controller
 
         $consents = $customer->consents()->with('appointment.services')->limit(15)->get();
 
-        return view('customers.show', compact('customer', 'appointments', 'savedLooks', 'consents'));
+        // No login yet: staff send this link so the customer sets their own password.
+        $setupLink = (! $customer->password && $customer->tenant?->slug)
+            ? CustomerAuthController::claimSetupUrl($customer, $customer->tenant->slug)
+            : null;
+
+        return view('customers.show', compact('customer', 'appointments', 'savedLooks', 'consents', 'setupLink'));
     }
 
     public function edit(Customer $customer)
