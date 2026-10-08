@@ -141,7 +141,7 @@
         <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-800">
                 <h3 class="text-base font-semibold text-white">Sign-in pauses, last 24 hours</h3>
-                <p class="text-sm text-slate-400 mt-1">Automatic 5-minute pauses after repeated failed sign-ins. Most cover one email on one network. Nothing else on the site is affected.</p>
+                <p class="text-sm text-slate-400 mt-1">Automatic pauses after repeated failed sign-ins: 5 minutes, or 30 minutes when the same network does it twice within an hour. Most cover one email on one network. Nothing else on the site is affected.</p>
             </div>
 
             @if($pauses->isEmpty())
@@ -151,18 +151,35 @@
                     <table class="w-full text-sm">
                         <thead class="border-b border-slate-800">
                             <tr class="text-left text-slate-400 text-xs uppercase tracking-wide">
-                                <th class="px-6 py-3">When</th>
+                                <th class="px-6 py-3">Status</th>
                                 <th class="px-6 py-3">Who</th>
                                 <th class="px-6 py-3">Where</th>
                                 <th class="px-6 py-3">IP Address</th>
-                                <th class="px-6 py-3">Status</th>
-                                <th class="px-6 py-3"></th>
+                                <th class="px-6 py-3">When</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-800">
                             @foreach($pauses as $pause)
                                 <tr class="hover:bg-slate-800/50">
-                                    <td class="px-6 py-3 text-slate-400 text-xs whitespace-nowrap">{{ $pause['at']->format('d M H:i') }}</td>
+                                    {{-- Status and its action come first so they are on screen at phone width --}}
+                                    <td class="px-6 py-3 whitespace-nowrap">
+                                        @if($pause['seconds_left'] > 0)
+                                            <form action="{{ route('admin.sign-in-pauses.lift') }}" method="POST" class="flex items-center gap-3">
+                                                @csrf
+                                                <input type="hidden" name="scope" value="{{ $pause['scope'] }}">
+                                                <input type="hidden" name="ip" value="{{ $pause['ip'] }}">
+                                                <input type="hidden" name="guard" value="{{ $pause['guard'] }}">
+                                                <input type="hidden" name="channel" value="{{ $pause['channel'] }}">
+                                                <input type="hidden" name="email" value="{{ $pause['email'] }}">
+                                                <span class="text-yellow-400">{{ (int) ceil($pause['seconds_left'] / 60) }} min left</span>
+                                                <button type="submit" class="text-xs text-[#0078D4] hover:text-blue-300 transition"
+                                                        data-confirm="Lift the sign-in pause for {{ $pause['scope'] === 'ip' ? 'the whole network ' . $pause['ip'] : $pause['email'] }}?"
+                                                        onclick="return confirm(this.dataset.confirm)">Lift now</button>
+                                            </form>
+                                        @else
+                                            <span class="text-slate-500">Ended</span>
+                                        @endif
+                                    </td>
                                     <td class="px-6 py-3 text-white">
                                         @if($pause['scope'] === 'ip')
                                             <span class="font-medium text-yellow-400">Whole network</span>
@@ -177,26 +194,7 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-3 font-mono text-slate-300">{{ $pause['ip'] }}</td>
-                                    <td class="px-6 py-3 whitespace-nowrap">
-                                        @if($pause['seconds_left'] > 0)
-                                            <span class="text-yellow-400">{{ (int) ceil($pause['seconds_left'] / 60) }} min left</span>
-                                        @else
-                                            <span class="text-slate-500">Ended</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-3">
-                                        @if($pause['seconds_left'] > 0)
-                                            <form action="{{ route('admin.sign-in-pauses.lift') }}" method="POST">
-                                                @csrf
-                                                <input type="hidden" name="scope" value="{{ $pause['scope'] }}">
-                                                <input type="hidden" name="ip" value="{{ $pause['ip'] }}">
-                                                <input type="hidden" name="guard" value="{{ $pause['guard'] }}">
-                                                <input type="hidden" name="channel" value="{{ $pause['channel'] }}">
-                                                <input type="hidden" name="email" value="{{ $pause['email'] }}">
-                                                <button type="submit" class="text-xs text-[#0078D4] hover:text-blue-300 transition">Lift now</button>
-                                            </form>
-                                        @endif
-                                    </td>
+                                    <td class="px-6 py-3 text-slate-400 text-xs whitespace-nowrap">{{ $pause['at']->format('d M H:i') }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

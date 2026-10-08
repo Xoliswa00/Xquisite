@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Modules\Booking\Models\Customer;
 use App\Modules\Property\Models\Contractor;
 use App\Modules\Property\Models\Renter;
-use App\Notifications\AppNotice;
+use App\Notifications\QueuedAppNotice;
 use App\Notifications\SignInPausedNotification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
@@ -67,14 +67,34 @@ class SignInPauseNotifier
         }
 
         if (Cache::add("sign_in_pause_owner:{$tenant->id}:{$account->getKey()}", true, now()->addHour())) {
-            $owner->notify(new AppNotice(
-                title: 'Sign-in paused for a team member',
+            $owner->notify(new QueuedAppNotice(
+                title: "{$account->name} is locked out for {$minutes} minutes",
                 message: "{$account->name} ({$account->email}) entered the wrong password " . LoginThrottleService::ACCOUNT_THRESHOLD
-                    . " times, so sign-in for that login is paused for {$minutes} minutes. If they are locked out, you can set a new password for them. If it was not them, set a new password now.",
+                    . " times, so their sign-in is paused for {$minutes} minutes. They have most likely forgotten it. Check with them. If they are stuck, you can set a new password for them. If they say it was not them, set a new one today.",
                 url: Route::has('admin.users.index') ? route('admin.users.index') : null,
                 level: 'warning',
             ));
         }
+    }
+
+    /**
+     * A second network-wide pause within the hour: tell the platform admins,
+     * who can lift it or block the address by hand. Once an hour per address.
+     */
+    public static function networkPausedAgain(string $ip, int $minutes): void
+    {
+        if (! Cache::add("sign_in_escalation_alert:{$ip}", true, now()->addHour())) {
+            return;
+        }
+
+        $failures = LoginThrottleService::ESCALATION_PAUSES * LoginThrottleService::IP_THRESHOLD;
+
+        User::role('super-admin')->get()->each->notify(new QueuedAppNotice(
+            title: 'Repeated failed sign-ins from one network',
+            message: "{$ip} reached {$failures} failed sign-ins across accounts within an hour. Sign-in and password reset from that address are paused for {$minutes} minutes. The rest of the site is not affected. You can lift the pause or block the address on the Blocked IPs screen.",
+            url: Route::has('admin.blocked-ips.index') ? route('admin.blocked-ips.index') : null,
+            level: 'warning',
+        ));
     }
 
     private static function findAccount(string $guard, string $email, ?Tenant $tenant): mixed

@@ -50,7 +50,7 @@ class AppServiceProvider extends ServiceProvider
         // New accounts: generous enough for a shop where several customers sign
         // up on the same Wi-Fi, tight enough to stop scripted sign-ups.
         RateLimiter::for('register', function (Request $request) {
-            $refuse = fn () => abort(429, 'Too many new accounts from your internet connection. Please wait a few minutes and try again.');
+            $refuse = fn () => abort(429, 'Too many sign-ups from this Wi-Fi or network. Please wait a few minutes and try again.');
 
             return [
                 Limit::perMinute(10)->by('register:minute:' . $request->ip())->response($refuse),

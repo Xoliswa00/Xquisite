@@ -5,7 +5,7 @@ namespace Tests\Feature\Security;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Booking\Models\Customer;
-use App\Notifications\AppNotice;
+use App\Notifications\QueuedAppNotice;
 use App\Notifications\SignInPausedNotification;
 use App\Services\Security\LoginThrottleService;
 use App\Services\Tenant\TenantContext;
@@ -57,8 +57,10 @@ class SignInPauseFollowUpsTest extends TestCase
         Notification::assertSentTo($employee, SignInPausedNotification::class, function ($n) {
             return $n->attempts === 3 && $n->minutes === 5 && $n->resetUrl === route('password.request');
         });
-        Notification::assertSentTo($owner, AppNotice::class, function ($n) use ($employee) {
-            return str_contains($n->message, 'Lerato Dube') && str_contains($n->message, $employee->email) && $n->level === 'warning';
+        Notification::assertSentTo($owner, QueuedAppNotice::class, function ($n) use ($employee) {
+            return $n instanceof \Illuminate\Contracts\Queue\ShouldQueue
+                && $n->title === 'Lerato Dube is locked out for 5 minutes'
+                && str_contains($n->message, $employee->email) && $n->level === 'warning';
         });
     }
 
@@ -70,7 +72,7 @@ class SignInPauseFollowUpsTest extends TestCase
         $this->failLogin($owner->email, 3);
 
         Notification::assertSentTo($owner, SignInPausedNotification::class);
-        Notification::assertNotSentTo($owner, AppNotice::class);
+        Notification::assertNotSentTo($owner, QueuedAppNotice::class);
     }
 
     public function test_an_unknown_email_tells_nobody(): void
@@ -112,17 +114,41 @@ class SignInPauseFollowUpsTest extends TestCase
         Notification::assertSentTo($customer, SignInPausedNotification::class, function ($n) {
             return $n->businessName === 'Test Salon' && $n->resetUrl === route('book.password.request', 'test-salon');
         });
-        Notification::assertNotSentTo($owner, AppNotice::class);
+        Notification::assertNotSentTo($owner, QueuedAppNotice::class);
     }
 
-    public function test_the_email_reads_plainly(): void
+    public function test_the_email_says_what_happened_without_promising_more_than_is_known(): void
     {
         $mail = (new SignInPausedNotification('team', 'Test Salon', 3, 5, '14:05', 'https://example.test/reset'))
             ->toMail(new User);
+        $text = implode(' ', array_merge($mail->introLines, $mail->outroLines));
 
-        $this->assertSame('Was this you? Sign-in to your Test Salon account was paused', $mail->subject);
-        $this->assertStringContainsString('entered 3 times for your team login with Test Salon at 14:05 today', $mail->introLines[0]);
+        $this->assertStringStartsWith('Was this you?', $mail->subject);
+        $this->assertStringContainsString('entered 3 times', $text);
+        $this->assertStringContainsString('14:05', $text);
+        $this->assertStringContainsString('did not get into your account', $text);
+        $this->assertStringNotContainsString('nobody got in', $text);
+        $this->assertStringNotContainsString('not guessed', $text);
         $this->assertSame('https://example.test/reset', $mail->actionUrl);
+    }
+
+    public function test_a_repeat_network_wide_pause_alerts_platform_admins_once(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole('super-admin');
+        $owner = $this->staff('tenant-owner');
+
+        for ($round = 0; $round < 3; $round++) {
+            for ($i = 0; $i < LoginThrottleService::IP_THRESHOLD; $i++) {
+                LoginThrottleService::recordFailure('203.0.113.9', 'staff', 'login', "guess{$i}@example.com");
+            }
+            $this->travel(LoginThrottleService::ESCALATED_LOCK_SECONDS + 1)->seconds();
+        }
+
+        Notification::assertSentToTimes($admin, QueuedAppNotice::class, 1);
+        Notification::assertSentTo($admin, QueuedAppNotice::class, fn ($n) => str_contains($n->message, '203.0.113.9') && str_contains($n->message, 'rest of the site is not affected'));
+        Notification::assertNotSentTo($owner, QueuedAppNotice::class);
     }
 
     public function test_a_failure_in_the_notifier_never_breaks_the_sign_in_form(): void
@@ -173,6 +199,25 @@ class SignInPauseFollowUpsTest extends TestCase
             ->assertRedirect(route('dashboard', absolute: false));
     }
 
+    public function test_an_earlier_pause_for_the_same_account_reads_as_ended(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole('super-admin');
+        $employee = $this->staff('employee');
+
+        $this->failLogin($employee->email, 3);
+        $this->travel(LoginThrottleService::LOCK_SECONDS + 60)->seconds();
+        $this->failLogin($employee->email, 3);
+        TenantContext::clear();
+
+        $html = $this->actingAs($admin)->get(route('admin.blocked-ips.index'))->assertOk()->getContent();
+
+        $this->assertSame(2, DB::table('audit_logs')->where('action', 'auth.sign_in_paused')->count());
+        $this->assertSame(1, substr_count($html, 'Lift now'));
+        $this->assertSame(1, substr_count($html, 'min left'));
+    }
+
     public function test_a_whole_network_pause_is_listed_and_can_be_lifted(): void
     {
         $admin = User::factory()->create(['is_active' => true]);
@@ -208,7 +253,7 @@ class SignInPauseFollowUpsTest extends TestCase
 
         $this->post('/book/test-salon/register', [])
             ->assertStatus(429)
-            ->assertSee('Too many new accounts from your internet connection');
+            ->assertSee('Too many sign-ups from this Wi-Fi or network');
     }
 
     public function test_staff_sign_ups_from_one_network_are_limited(): void

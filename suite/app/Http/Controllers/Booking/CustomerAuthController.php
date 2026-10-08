@@ -153,6 +153,8 @@ class CustomerAuthController extends Controller
         $request->validate([
             'email'                 => ['required', 'email', Rule::unique('customers', 'email')->ignore($customer->id)],
             'password'              => 'required|string|min:8|confirmed',
+        ], [
+            'email.unique' => 'This email already has a login. Sign in or reset your password, or use a different email here.',
         ]);
 
         $customer->update([

@@ -12,18 +12,23 @@
 
     <div class="bg-white rounded-2xl border border-slate-200 p-8 space-y-4 text-sm text-slate-600">
         <p>
-            Ask {{ $tenant->name }} to send you a setup link. It opens a page where you choose your own
+            Ask {{ $tenant->name }} for your setup link. It opens a page where you choose your own
             email and password, and your past bookings stay on your account.
         </p>
         <p>
-            They send the link to the cell number they have on record for you, so nobody else can set up
-            a login in your name.
+            They send it to the cell number they have for you, usually during business hours, so
+            nobody else can set up a login in your name.
         </p>
 
         @if($tenant->phone)
             <x-whatsapp-link :phone="$tenant->phone"
-                :message="'Hi ' . $tenant->name . ', please send me the link to set up my online login.'"
-                class="w-full justify-center py-3 bg-[#0078D4] hover:bg-[#0065B8] hover:text-white text-white font-semibold rounded-xl transition">Ask for my setup link on WhatsApp</x-whatsapp-link>
+                :message="'Hi ' . $tenant->name . ', please send me the link to set up my online login. My name is '"
+                class="w-full justify-center py-3 border border-slate-300 hover:border-slate-400 text-slate-900 font-semibold rounded-xl transition">Ask for my setup link on WhatsApp</x-whatsapp-link>
+            <p class="text-slate-500">No reply? Call {{ $tenant->phone }} or ask at your next visit.</p>
+        @elseif($tenant->email)
+            <p>Email <a href="mailto:{{ $tenant->email }}" class="text-[#0078D4] hover:underline font-medium">{{ $tenant->email }}</a> or ask at your next visit.</p>
+        @else
+            <p class="font-medium text-slate-700">Ask for your setup link at your next visit.</p>
         @endif
     </div>
 

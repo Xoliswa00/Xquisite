@@ -76,7 +76,12 @@ class CustomerController extends Controller
             ? CustomerAuthController::claimSetupUrl($customer, $customer->tenant->slug)
             : null;
 
-        return view('customers.show', compact('customer', 'appointments', 'savedLooks', 'consents', 'setupLink'));
+        // Link on its own line: a long address in the middle of a sentence looks like a scam.
+        $setupMessage = $setupLink
+            ? "Hi {$customer->name}, this is {$customer->tenant->name}. Here is your personal link to choose a password for online booking:\n{$setupLink}\nIt works for " . CustomerAuthController::CLAIM_LINK_DAYS . ' days. We will never ask you for your password.'
+            : null;
+
+        return view('customers.show', compact('customer', 'appointments', 'savedLooks', 'consents', 'setupLink', 'setupMessage'));
     }
 
     public function edit(Customer $customer)

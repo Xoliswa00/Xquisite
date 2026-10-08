@@ -75,4 +75,4 @@ Schedule::command('booking:send-rebook-reminders')->dailyAt('09:00')->withoutOve
 // The database cache store never removes an expired row unless that exact key is
 // read again, so sign-in strike keys and rate-limit windows pile up. Clear them
 // nightly, in small passes.
-Schedule::command('cache:prune-expired')->dailyAt('03:30')->withoutOverlapping();
+Schedule::command('cache:prune-expired')->dailyAt('03:45')->withoutOverlapping();

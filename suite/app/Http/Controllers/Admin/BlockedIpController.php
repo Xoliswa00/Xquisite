@@ -53,13 +53,15 @@ class BlockedIpController extends Controller
      */
     private function recentPauses()
     {
+        $seen = [];
+
         return DB::table('audit_logs')
             ->where('action', 'auth.sign_in_paused')
             ->where('created_at', '>=', now()->subDay())
             ->orderByDesc('id')
             ->limit(50)
             ->get(['ip_address', 'meta', 'created_at'])
-            ->map(function ($row) {
+            ->map(function ($row) use (&$seen) {
                 $meta = json_decode($row->meta ?? '[]', true) ?: [];
 
                 $pause = [
@@ -72,9 +74,15 @@ class BlockedIpController extends Controller
                     'tenant'  => $meta['tenant_slug'] ?? null,
                 ];
 
-                $pause['seconds_left'] = LoginThrottleService::pauseSecondsLeft(
-                    $pause['scope'], $pause['ip'], $pause['guard'], $pause['channel'], $pause['email']
-                );
+                // Rows come newest first. The cache only knows whether a pause is
+                // running now, so an older row for the same pause must read "Ended".
+                $key = implode('|', [$pause['scope'], $pause['ip'], $pause['guard'], $pause['channel'], $pause['email']]);
+                $isLatest = ! isset($seen[$key]);
+                $seen[$key] = true;
+
+                $pause['seconds_left'] = $isLatest
+                    ? LoginThrottleService::pauseSecondsLeft($pause['scope'], $pause['ip'], $pause['guard'], $pause['channel'], $pause['email'])
+                    : 0;
 
                 return $pause;
             });
