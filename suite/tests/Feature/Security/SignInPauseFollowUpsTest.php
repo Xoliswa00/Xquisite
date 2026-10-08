@@ -218,6 +218,11 @@ class SignInPauseFollowUpsTest extends TestCase
         $this->assertSame(1, substr_count($html, 'min left'));
     }
 
+    public function test_the_pause_list_has_an_index_to_read_from(): void
+    {
+        $this->assertTrue(\Illuminate\Support\Facades\Schema::hasIndex('audit_logs', 'audit_logs_action_created_idx'));
+    }
+
     public function test_a_whole_network_pause_is_listed_and_can_be_lifted(): void
     {
         $admin = User::factory()->create(['is_active' => true]);

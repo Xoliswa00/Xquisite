@@ -45,6 +45,14 @@ class Customer extends Model implements AuthenticatableContract, CanResetPasswor
     /** How long a login setup link works for. Short, because sending a new one is one tap. */
     public const SETUP_LINK_HOURS = 48;
 
+    protected static function booted(): void
+    {
+        // Kept beside the number as typed, so a cell-number sign-in is one indexed lookup.
+        static::saving(function (Customer $customer) {
+            $customer->phone_normalised = self::normalisePhone($customer->phone);
+        });
+    }
+
     public function appointments()
     {
         return $this->hasMany(Appointment::class);
@@ -121,13 +129,15 @@ class Customer extends Model implements AuthenticatableContract, CanResetPasswor
         }
 
         return "Hi {$this->name}, this is {$this->tenant->name}. Here is your personal link to choose a password for online booking:"
-            . "\n{$url}\nIt works until " . $this->setup_link_expires_at->format('l H:i') . '. We will never ask you for your password.';
+            . "\n{$url}\nIt works until " . $this->setup_link_expires_at->format('l j M \\a\\t H:i') . '. We will never ask you for your password.';
     }
 
     /** 0821234567 for any way a South African cell number is usually written, or null. */
     public static function normalisePhone(?string $raw): ?string
     {
-        if (! $raw) {
+        // Only what people type as formatting is ignored. A stray letter means it
+        // isn't a phone number (the same rule SouthAfricanPhoneNumber validates by).
+        if (! $raw || ! preg_match('/^[\d\s()+-]+$/', $raw)) {
             return null;
         }
 

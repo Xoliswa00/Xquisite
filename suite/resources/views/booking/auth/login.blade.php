@@ -20,6 +20,7 @@
                 <input type="text" id="login" name="login" value="{{ old('login', old('email')) }}" required autofocus
                        autocomplete="username" autocapitalize="none" inputmode="email"
                        class="w-full border-slate-300 rounded-xl @error('login') border-red-400 @enderror">
+                <p class="text-xs text-slate-500 mt-1">The email address or cell number on your account, like 082 123 4567.</p>
                 @error('login') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 

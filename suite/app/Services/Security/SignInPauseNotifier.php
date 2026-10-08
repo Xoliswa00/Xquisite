@@ -43,7 +43,7 @@ class SignInPauseNotifier
 
         // At most one email a day per account, so mistyping someone's password
         // on purpose can't be used to fill their inbox.
-        if (Cache::add("sign_in_pause_mail:{$guard}:{$account->getKey()}", true, now()->addDay())) {
+        if ($account->email && Cache::add("sign_in_pause_mail:{$guard}:{$account->getKey()}", true, now()->addDay())) {
             $account->notify(new SignInPausedNotification(
                 accountLabel: self::LABELS[$guard],
                 businessName: $tenant?->name ?? config('app.name'),
@@ -97,12 +97,27 @@ class SignInPauseNotifier
         ));
     }
 
+    // $login is whatever name the strikes were counted under: an email address,
+    // or a cell number in its 10-digit form.
+    private static function findCustomer(string $login, ?Tenant $tenant): ?Customer
+    {
+        $query = Customer::withoutGlobalScopes()->when($tenant, fn ($q) => $q->where('tenant_id', $tenant->id));
+
+        if (str_contains($login, '@')) {
+            return $query->where('email', $login)->first();
+        }
+
+        // Only when the number points at exactly one login; otherwise we'd be guessing.
+        $matches = $query->where('phone_normalised', $login)->whereNotNull('password')->limit(2)->get();
+
+        return $matches->count() === 1 ? $matches->first() : null;
+    }
+
     private static function findAccount(string $guard, string $email, ?Tenant $tenant): mixed
     {
         return match ($guard) {
             'staff'    => User::where('email', $email)->first(),
-            'customer' => Customer::withoutGlobalScopes()->where('email', $email)
-                ->when($tenant, fn ($q) => $q->where('tenant_id', $tenant->id))->first(),
+            'customer' => self::findCustomer($email, $tenant),
             // Renter and contractor emails are only unique within one business.
             'renter'     => $tenant ? Renter::withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('email', $email)->first() : null,
             'contractor' => $tenant ? Contractor::withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('email', $email)->first() : null,

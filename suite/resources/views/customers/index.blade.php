@@ -36,10 +36,17 @@
             </div>
         </div>
 
+        @if(request('login') === 'none')
+            <p class="text-sm text-slate-400">
+                {{ $customers->total() }} {{ Str::plural('customer', $customers->total()) }} with no online login.
+                Create a link, send it, and they drop off this list once they have set a password.
+            </p>
+        @endif
+
         {{-- Mobile cards --}}
         <div class="sm:hidden space-y-2">
             @forelse($customers as $customer)
-                <div class="bg-slate-800 rounded-xl overflow-hidden">
+                <div id="customer-{{ $customer->id }}" class="bg-slate-800 rounded-xl overflow-hidden scroll-mt-4">
                 <a href="{{ route('customers.show', $customer) }}"
                    class="block p-4 hover:bg-slate-700/70 transition-colors">
                     <div class="flex items-center justify-between gap-3">
@@ -60,7 +67,7 @@
                     </div>
                 </a>
                 @unless($customer->password)
-                    <div class="px-4 py-2.5 border-t border-slate-700">
+                    <div class="px-4 border-t border-slate-700">
                         @include('customers._setup-link', ['customer' => $customer])
                     </div>
                 @endunless

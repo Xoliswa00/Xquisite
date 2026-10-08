@@ -5,11 +5,13 @@ namespace Tests\Feature\Booking;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Booking\Models\Customer;
+use App\Notifications\CustomerLoginReplacedNotification;
 use App\Services\Tenant\TenantContext;
 use Database\Seeders\PermissionRoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 /**
@@ -41,12 +43,12 @@ class CustomerClaimSetupLinkTest extends TestCase
         ], $overrides));
     }
 
-    private function staff(): User
+    private function staff(string $role = 'employee'): User
     {
         $this->seed(PermissionRoleSeeder::class);
         $this->tenant->activateModule('booking');
         $staff = User::factory()->create(['tenant_id' => $this->tenant->id, 'is_active' => true]);
-        $staff->assignRole('employee');
+        $staff->assignRole($role);
         TenantContext::clear();
 
         return $staff;
@@ -276,25 +278,95 @@ class CustomerClaimSetupLinkTest extends TestCase
 
     // ── A forgotten password with no email on file ──────────────────────────
 
-    public function test_staff_can_send_a_new_login_link_to_someone_who_already_has_a_login(): void
+    public function test_a_manager_can_send_a_new_login_link_to_someone_who_already_has_a_login(): void
     {
-        $staff = $this->staff();
-        $customer = $this->customer(['password' => Hash::make('forgotten-password')]);
+        Notification::fake();
+        $manager = $this->staff('manager');
+        $customer = $this->customer(['email' => 'thandi@example.com', 'password' => Hash::make('forgotten-password')]);
+        $customer->forceFill(['remember_token' => 'old-remember-token'])->save();
 
-        $this->actingAs($staff)->get(route('customers.show', $customer))
+        $this->actingAs($manager)->get(route('customers.show', $customer))
             ->assertSee('Has an online login')
-            ->assertSee('Create new login link');
+            ->assertSee('Create new login link')
+            ->assertSee('Their current password keeps working until they use it');
 
-        $this->actingAs($staff)->post(route('customers.setup-link.store', $customer));
+        $this->actingAs($manager)->post(route('customers.setup-link.store', $customer));
         auth()->logout();
         TenantContext::clear();
 
         $link = $customer->fresh()->setupLinkUrl();
-        $this->get($link)->assertOk()->assertSee('Choose a new password');
-        $this->post($link, $this->newPassword)->assertRedirect(route('book.index', 'test-salon'));
+        $this->get($link)->assertOk()->assertSee('Choose a new password')->assertDontSee('name="email"', false);
 
-        $this->assertTrue(Hash::check('my-own-password', $customer->fresh()->password));
-        $this->assertFalse(Hash::check('forgotten-password', $customer->fresh()->password));
+        // The holder of the link can change the password, not move the login to another address.
+        $this->post($link, ['email' => 'someone-else@example.com'] + $this->newPassword)
+            ->assertRedirect(route('book.index', 'test-salon'));
+
+        $customer->refresh();
+        $this->assertSame('thandi@example.com', $customer->email);
+        $this->assertTrue(Hash::check('my-own-password', $customer->password));
+        $this->assertNotSame('old-remember-token', $customer->remember_token);
+        Notification::assertSentTo($customer, CustomerLoginReplacedNotification::class);
+    }
+
+    public function test_a_team_member_cannot_replace_the_login_of_someone_who_already_has_one(): void
+    {
+        $employee = $this->staff('employee');
+        $customer = $this->customer(['password' => Hash::make('their-password')]);
+
+        $this->actingAs($employee)->get(route('customers.show', $customer))
+            ->assertSee('Ask a manager to send a new login link')
+            ->assertDontSee('Create new login link');
+
+        $this->actingAs($employee)->post(route('customers.setup-link.store', $customer))->assertForbidden();
+        $this->assertFalse($customer->fresh()->hasActiveSetupLink());
+    }
+
+    public function test_a_first_time_setup_does_not_send_the_password_changed_email(): void
+    {
+        Notification::fake();
+        $customer = $this->customer();
+
+        $this->post($customer->issueSetupLink(), ['email' => 'thandi@example.com'] + $this->newPassword);
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_a_second_login_on_the_same_cell_number_must_have_an_email(): void
+    {
+        $this->customer(['name' => 'Mother', 'password' => Hash::make('mothers-password')]);
+        $daughter = $this->customer(['name' => 'Daughter']);
+        $link = $daughter->issueSetupLink();
+
+        $this->get($link)->assertOk()->assertDontSee('(optional)')->assertSee('Someone else already signs in with your cell number');
+
+        $this->post($link, $this->newPassword)
+            ->assertSessionHasErrors(['email' => 'Someone else already signs in with this cell number, so please add an email address to sign in with.']);
+        $this->assertNull($daughter->fresh()->password);
+
+        $this->post($link, ['email' => 'daughter@example.com'] + $this->newPassword)
+            ->assertRedirect(route('book.index', 'test-salon'))
+            ->assertSessionHas('success', 'Welcome, Daughter! Your login is ready. Next time, sign in with your email address.');
+    }
+
+    public function test_a_cancelled_link_for_someone_with_a_login_sends_them_to_sign_in_with_a_clear_message(): void
+    {
+        $customer = $this->customer(['password' => Hash::make('their-password')]);
+        $link = $customer->issueSetupLink();
+        $customer->cancelSetupLink();
+
+        $this->get($link)
+            ->assertRedirect(route('book.login', 'test-salon'))
+            ->assertSessionHasErrors(['link' => 'That link no longer works. Ask Test Salon to send you a new one.']);
+    }
+
+    public function test_creating_a_link_from_the_list_returns_to_that_customer(): void
+    {
+        $staff = $this->staff();
+        $customer = $this->customer();
+
+        $this->actingAs($staff)->from(route('customers.index', ['login' => 'none', 'page' => 2]))
+            ->post(route('customers.setup-link.store', $customer))
+            ->assertRedirect(route('customers.index', ['login' => 'none', 'page' => 2]) . '#customer-' . $customer->id);
     }
 
     // ── Working through the list ────────────────────────────────────────────
@@ -314,7 +386,8 @@ class CustomerClaimSetupLinkTest extends TestCase
             ->assertSee('Link Waiting')
             ->assertDontSee('Already Set')
             ->assertSee('Create setup link')
-            ->assertSee('Send link')
+            ->assertSee('Send on WhatsApp')
+            ->assertSee('2 customers with no online login')
             ->assertSee("/book/test-salon/claim/setup/{$ready->id}", false);
 
         $this->actingAs($staff)->get(route('customers.index', ['login' => 'has']))

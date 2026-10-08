@@ -38,7 +38,8 @@ class CustomerController extends Controller
             $query->whereNotNull('password');
         }
 
-        $customers = $query->paginate(15)->withQueryString();
+        // The setup-link column builds each active link from the business's address.
+        $customers = $query->with('tenant')->paginate(15)->withQueryString();
 
         return view('customers.index', compact('customers'));
     }
@@ -84,9 +85,19 @@ class CustomerController extends Controller
         return view('customers.show', compact('customer', 'appointments', 'savedLooks', 'consents'));
     }
 
+    /** Back to the same customer in the list, not the top of the page. */
+    private function backTo(Customer $customer)
+    {
+        return redirect()->to(url()->previous() . '#customer-' . $customer->id);
+    }
+
     /** Create (or replace) the customer's login setup link. Any earlier link stops working. */
     public function setupLink(Customer $customer)
     {
+        // A link for someone who already has a login replaces their password,
+        // so it is a manager's call, not any team member's.
+        abort_if(filled($customer->password) && ! auth()->user()->isAdmin(), 403);
+
         $customer->issueSetupLink();
 
         AuditService::log(
@@ -96,9 +107,9 @@ class CustomerController extends Controller
             meta: ['expires_at' => $customer->setup_link_expires_at->toDateTimeString(), 'had_login' => filled($customer->password)],
         );
 
-        return back()->with('success', $customer->phone
-            ? "Setup link ready for {$customer->name}. Send it with the WhatsApp button."
-            : "Setup link ready for {$customer->name}. Copy it and send it to them.");
+        return $this->backTo($customer)->with('success', $customer->phone
+            ? "Link ready for {$customer->name}. Send it with the WhatsApp button."
+            : "Link ready for {$customer->name}. Copy it and send it to them.");
     }
 
     public function cancelSetupLink(Customer $customer)
@@ -111,7 +122,7 @@ class CustomerController extends Controller
             entityId: $customer->id,
         );
 
-        return back()->with('success', "Setup link for {$customer->name} cancelled. It no longer works.");
+        return $this->backTo($customer)->with('success', "Link for {$customer->name} cancelled. It no longer works.");
     }
 
     public function edit(Customer $customer)

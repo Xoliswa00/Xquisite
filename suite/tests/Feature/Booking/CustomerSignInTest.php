@@ -95,6 +95,46 @@ class CustomerSignInTest extends TestCase
         $this->assertAuthenticatedAs($mother, 'customer');
     }
 
+    public function test_a_shared_cell_number_with_the_same_password_never_guesses_which_person(): void
+    {
+        $this->customer(['name' => 'Mother', 'email' => null]);
+        $this->customer(['name' => 'Daughter', 'email' => 'daughter@example.com']);
+
+        $this->post('/book/test-salon/login', ['login' => '0829998888', 'password' => 'password'])
+            ->assertSessionHasErrors('login');
+        $this->assertStringContainsString('More than one login uses this cell number and password', session('errors')->first('login'));
+        $this->assertGuest('customer');
+
+        // It is not counted as a wrong password, and the email still works.
+        $this->assertNull(LoginThrottleService::lockedFor('127.0.0.1', 'customer', 'login', '0829998888'));
+        $this->post('/book/test-salon/login', ['login' => 'daughter@example.com', 'password' => 'password'])
+            ->assertRedirect(route('book.index', 'test-salon'));
+    }
+
+    public function test_something_that_is_neither_an_email_nor_a_cell_number_is_not_counted_as_a_wrong_password(): void
+    {
+        $this->customer(['email' => null]);
+
+        foreach (['82999888', '082x9998888', 'thandi', '021 555 12'] as $typed) {
+            $this->post('/book/test-salon/login', ['login' => $typed, 'password' => 'password'])
+                ->assertSessionHasErrors(['login' => 'Enter your email address or your 10-digit cell number, like 082 123 4567.']);
+        }
+
+        $this->assertNull(LoginThrottleService::lockedFor('127.0.0.1', 'customer', 'login', '82999888'));
+        $this->post('/book/test-salon/login', ['login' => '0829998888', 'password' => 'password'])
+            ->assertRedirect(route('book.index', 'test-salon'));
+    }
+
+    public function test_odd_input_is_refused_cleanly(): void
+    {
+        $this->post('/book/test-salon/login', ['email' => ['x'], 'password' => 'password'])
+            ->assertStatus(302)->assertSessionHasErrors('login');
+        $this->post('/book/test-salon/login', ['login' => ['x'], 'password' => 'password'])
+            ->assertStatus(302)->assertSessionHasErrors('login');
+        $this->post('/book/test-salon/login', ['password' => 'password'])
+            ->assertStatus(302)->assertSessionHasErrors('login');
+    }
+
     public function test_a_wrong_password_is_refused_the_same_way_for_known_and_unknown_numbers(): void
     {
         $this->customer(['email' => null]);
@@ -127,7 +167,69 @@ class CustomerSignInTest extends TestCase
         $this->post('/book/test-salon/login', ['login' => '082 999 8888', 'password' => 'password'])
             ->assertStatus(429)
             ->assertSee('Sign-in paused');
-        $this->assertNotNull(LoginThrottleService::lockedFor('127.0.0.1', 'customer', 'login', '082 999 8888'));
+        $this->assertNotNull(LoginThrottleService::lockedFor('127.0.0.1', 'customer', 'login', '0829998888'));
+    }
+
+    public function test_writing_the_number_differently_does_not_earn_more_tries(): void
+    {
+        $this->customer(['email' => null]);
+
+        foreach (['0829998888', '082 999 8888', '+27 82 999 8888'] as $typed) {
+            $this->post('/book/test-salon/login', ['login' => $typed, 'password' => 'wrong'])->assertStatus(302);
+        }
+
+        // A fourth spelling, and the right password: still paused.
+        $this->post('/book/test-salon/login', ['login' => '082-999-8888', 'password' => 'password'])
+            ->assertStatus(429)
+            ->assertSee('Sign-in paused');
+        $this->assertGuest('customer');
+    }
+
+    public function test_sending_a_decoy_email_field_does_not_dodge_the_pause(): void
+    {
+        $this->customer();
+
+        // The decoy is the name the pause check would read if it disagreed with the controller.
+        for ($i = 0; $i < 3; $i++) {
+            $this->post('/book/test-salon/login', ['email' => "decoy{$i}@example.com", 'login' => 'thandi@example.com', 'password' => 'wrong'])
+                ->assertStatus(302);
+        }
+
+        $this->post('/book/test-salon/login', ['email' => 'another-decoy@example.com', 'login' => 'thandi@example.com', 'password' => 'password'])
+            ->assertStatus(429);
+        $this->assertGuest('customer');
+    }
+
+    public function test_the_stored_cell_number_form_follows_the_number(): void
+    {
+        $customer = $this->customer(['phone' => '+27 82 999 8888']);
+        $this->assertSame('0829998888', $customer->fresh()->phone_normalised);
+
+        $customer->update(['phone' => '083 111 2222']);
+        $this->assertSame('0831112222', $customer->fresh()->phone_normalised);
+
+        $customer->update(['phone' => null]);
+        $this->assertNull($customer->fresh()->phone_normalised);
+
+        $this->assertNull(Customer::normalisePhone('082x9998888'));
+        $this->assertNull(Customer::normalisePhone('12345'));
+        $this->assertSame('0821234567', Customer::normalisePhone('(082) 123-4567'));
+    }
+
+    public function test_a_password_reset_ends_remember_me_on_other_devices(): void
+    {
+        $customer = $this->customer();
+        $customer->forceFill(['remember_token' => 'old-remember-token'])->save();
+        TenantContext::set($this->tenant->id);
+        $token = \Illuminate\Support\Facades\Password::broker('customers')->createToken($customer);
+        TenantContext::clear();
+
+        $this->post('/book/test-salon/reset-password', [
+            'token' => $token, 'email' => 'thandi@example.com', 'password' => 'brand-new-password', 'password_confirmation' => 'brand-new-password',
+        ])->assertRedirect(route('book.login', 'test-salon'));
+
+        $this->assertNotSame('old-remember-token', $customer->fresh()->remember_token);
+        $this->assertTrue(Hash::check('brand-new-password', $customer->fresh()->password));
     }
 
     // ── One email, more than one business ───────────────────────────────────
@@ -168,7 +270,7 @@ class CustomerSignInTest extends TestCase
     {
         $this->assertTrue(Schema::hasIndex('customers', 'customers_tenant_email_unique'));
         $this->assertFalse(Schema::hasIndex('customers', 'customers_email_unique'));
-        $this->assertTrue(Schema::hasIndex('audit_logs', 'audit_logs_action_created_idx'));
+        $this->assertTrue(Schema::hasIndex('customers', 'customers_tenant_phone_idx'));
 
         $this->customer();
         $this->expectException(\Illuminate\Database\UniqueConstraintViolationException::class);

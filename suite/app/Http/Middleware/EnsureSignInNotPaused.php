@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Services\AuditService;
 use App\Services\Security\LoginThrottleService;
+use App\Support\SignInIdentifier;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -20,9 +21,14 @@ class EnsureSignInNotPaused
 {
     public function handle(Request $request, Closure $next, string $guard, string $channel): Response
     {
-        // The customer portal signs in with an email address or a cell number.
-        $email = $request->input('email') ?? $request->input('login');
-        $email = is_string($email) ? Str::limit(trim($email), 190, '') : null;
+        // Customer sign-in takes an email address or a cell number; it is read the
+        // same way the controller reads it. Every other form is keyed on `email`.
+        if ($guard === 'customer' && $channel === 'login') {
+            $email = SignInIdentifier::canonical(SignInIdentifier::typed($request));
+        } else {
+            $email = $request->input('email');
+            $email = is_string($email) ? Str::limit(trim($email), 190, '') : null;
+        }
 
         $lock = LoginThrottleService::lockedFor($request->ip(), $guard, $channel, $email);
 
