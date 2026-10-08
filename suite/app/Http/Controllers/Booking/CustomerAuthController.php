@@ -13,13 +13,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 
 class CustomerAuthController extends Controller
 {
-    public const CLAIM_LINK_DAYS = 7;
-
     private function resolveTenant(string $slug): Tenant
     {
         $tenant = Tenant::where('slug', $slug)->where('is_active', true)->firstOrFail();
@@ -35,21 +32,27 @@ class CustomerAuthController extends Controller
 
     public function login(string $slug, Request $request)
     {
-        $this->resolveTenant($slug);
+        $tenant = $this->resolveTenant($slug);
 
+        // "login" is an email address or a cell number. "email" is still accepted
+        // so an older open sign-in page keeps working.
         $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
+            'login'    => 'required_without:email|nullable|string|max:190',
+            'password' => 'required|string',
         ]);
 
-        if (Auth::guard('customer')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+        $login    = trim((string) ($request->input('login') ?? $request->input('email')));
+        $customer = $this->customerForSignIn($tenant, $login, (string) $request->input('password'));
+
+        if ($customer) {
+            Auth::guard('customer')->login($customer, $request->boolean('remember'));
             $request->session()->regenerate();
-            LoginThrottleService::recordSuccess($request->ip(), 'customer', $request->input('email'));
+            LoginThrottleService::recordSuccess($request->ip(), 'customer', $login);
 
             AuditService::log(
                 action: 'customer.login',
                 entityType: 'Customer',
-                entityId: Auth::guard('customer')->id(),
+                entityId: $customer->id,
                 meta: ['tenant_slug' => $slug],
             );
 
@@ -59,11 +62,46 @@ class CustomerAuthController extends Controller
         AuditService::log(
             action: 'customer.login_failed',
             entityType: 'Customer',
-            meta: ['email' => $request->input('email'), 'tenant_slug' => $slug],
+            meta: ['login' => $login, 'tenant_slug' => $slug],
         );
-        $left = LoginThrottleService::recordFailure($request->ip(), 'customer', 'login', $request->input('email'), ['tenant_slug' => $slug]);
+        $left = LoginThrottleService::recordFailure($request->ip(), 'customer', 'login', $login, ['tenant_slug' => $slug]);
 
-        return back()->withErrors(['email' => 'These credentials do not match our records.' . LoginThrottleService::warning($left)])->withInput();
+        return back()
+            ->withErrors(['login' => 'These details do not match our records.' . LoginThrottleService::warning($left)])
+            ->withInput($request->only('login'));
+    }
+
+    /**
+     * Many clients have no email address, so a cell number works as the sign-in
+     * name too. Cell numbers are not unique, so every matching client with a
+     * login is tried against the password.
+     */
+    private function customerForSignIn(Tenant $tenant, string $login, string $password): ?Customer
+    {
+        $candidates = collect();
+
+        if (str_contains($login, '@')) {
+            // Compared in lower case so it behaves the same on every database.
+            $candidates = Customer::where('tenant_id', $tenant->id)->whereRaw('LOWER(email) = ?', [mb_strtolower($login)])->whereNotNull('password')->get();
+        } elseif ($phone = Customer::normalisePhone($login)) {
+            $candidates = Customer::where('tenant_id', $tenant->id)->whereNotNull('password')->whereNotNull('phone')
+                ->get()
+                ->filter(fn (Customer $c) => Customer::normalisePhone($c->phone) === $phone);
+        }
+
+        foreach ($candidates as $candidate) {
+            if (Hash::check($password, $candidate->password)) {
+                return $candidate;
+            }
+        }
+
+        // Same amount of work whether or not anyone matched, so the response
+        // time doesn't say which emails and numbers have a login.
+        if ($candidates->isEmpty()) {
+            Hash::make($password);
+        }
+
+        return null;
     }
 
     public function showRegister(string $slug)
@@ -78,7 +116,7 @@ class CustomerAuthController extends Controller
 
         $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:customers,email',
+            'email'    => ['required', 'email', Rule::unique('customers', 'email')->where('tenant_id', $tenant->id)],
             'phone'    => ['nullable', new SouthAfricanPhoneNumber],
             'password' => 'required|string|min:8|confirmed',
         ]);
@@ -105,23 +143,16 @@ class CustomerAuthController extends Controller
         return view('booking.auth.claim', compact('tenant', 'slug'));
     }
 
-    /**
-     * The link the business sends a customer who has no login yet. Signed and
-     * time-limited, and dead as soon as a password has been set.
-     */
-    public static function claimSetupUrl(Customer $customer, string $slug): string
+    /** A link that has been used, cancelled, replaced or has run out. */
+    private function staleSetupLink(string $slug, Customer $customer)
     {
-        return URL::temporarySignedRoute(
-            'book.claim.setup',
-            now()->addDays(self::CLAIM_LINK_DAYS),
-            ['slug' => $slug, 'customer' => $customer->id],
-        );
-    }
+        if ($customer->password) {
+            return redirect()->route('book.login', $slug)
+                ->with('success', 'That link has already been used. Sign in with your email address or cell number.');
+        }
 
-    private function alreadySetUp(string $slug)
-    {
-        return redirect()->route('book.login', $slug)
-            ->with('success', 'Your login is already set up. Sign in with your email address.');
+        return redirect()->route('book.claim', $slug)
+            ->withErrors(['link' => 'That setup link no longer works. Ask for a new one.']);
     }
 
     public function showClaimSetup(string $slug, Customer $customer, Request $request)
@@ -129,8 +160,8 @@ class CustomerAuthController extends Controller
         $tenant = $this->resolveTenant($slug);
         abort_unless((int) $customer->tenant_id === (int) $tenant->id, 404);
 
-        if ($customer->password) {
-            return $this->alreadySetUp($slug);
+        if (! $customer->acceptsSetupLink($request->query('v'))) {
+            return $this->staleSetupLink($slug, $customer);
         }
 
         return view('booking.auth.claim-setup', [
@@ -146,21 +177,32 @@ class CustomerAuthController extends Controller
         $tenant = $this->resolveTenant($slug);
         abort_unless((int) $customer->tenant_id === (int) $tenant->id, 404);
 
-        if ($customer->password) {
-            return $this->alreadySetUp($slug);
+        if (! $customer->acceptsSetupLink($request->query('v'))) {
+            return $this->staleSetupLink($slug, $customer);
         }
 
+        // Email is optional for anyone with a cell number on file: they can sign
+        // in with the number. Without either there would be nothing to sign in with.
         $request->validate([
-            'email'                 => ['required', 'email', Rule::unique('customers', 'email')->ignore($customer->id)],
-            'password'              => 'required|string|min:8|confirmed',
+            'email'    => [
+                Customer::normalisePhone($customer->phone) ? 'nullable' : 'required',
+                'email',
+                'max:255',
+                Rule::unique('customers', 'email')->where('tenant_id', $tenant->id)->ignore($customer->id),
+            ],
+            'password' => 'required|string|min:8|confirmed',
         ], [
-            'email.unique' => 'This email already has a login. Sign in or reset your password, or use a different email here.',
+            'email.unique'   => 'This email already has a login. Sign in or reset your password, or use a different email here.',
+            'email.required' => 'Please add an email address. There is no cell number on your record to sign in with.',
         ]);
 
+        $hadLogin = filled($customer->password);
+
         $customer->update([
-            'email'    => $request->email,
+            'email'    => $request->filled('email') ? $request->email : $customer->email,
             'password' => Hash::make($request->password),
         ]);
+        $customer->cancelSetupLink();   // one use only
 
         Auth::guard('customer')->login($customer);
         $request->session()->regenerate();
@@ -169,11 +211,13 @@ class CustomerAuthController extends Controller
             action: 'customer.claim_completed',
             entityType: 'Customer',
             entityId: $customer->id,
-            meta: ['tenant_slug' => $slug],
+            meta: ['tenant_slug' => $slug, 'replaced_existing_login' => $hadLogin],
         );
 
+        $with = $customer->email ? 'your email address or cell number' : 'your cell number';
+
         return redirect()->route('book.index', $slug)
-            ->with('success', "Welcome, {$customer->name}! Your account is ready. You can now sign in any time.");
+            ->with('success', "Welcome, {$customer->name}! Your login is ready. Next time, sign in with {$with}.");
     }
 
     // ── Forgot / reset password ──────────────────────────────────────────────

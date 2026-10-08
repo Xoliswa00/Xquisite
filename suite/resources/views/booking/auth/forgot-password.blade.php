@@ -20,6 +20,11 @@
                 Send Reset Link
             </button>
         </form>
+
+        <p class="text-sm text-slate-500 mt-5">
+            Sign in with your cell number and have no email on your account?
+            Ask {{ $tenant->name }} to send you a new login link.
+        </p>
     </div>
 
     <p class="text-center text-sm">
