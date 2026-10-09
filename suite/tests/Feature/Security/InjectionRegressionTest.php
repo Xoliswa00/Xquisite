@@ -223,7 +223,8 @@ class InjectionRegressionTest extends TestCase
     {
         $this->assertSame('Thandi', MailText::plain('Thandi'));
         $this->assertSame("O'Brien", MailText::plain("O'Brien"));
-        $this->assertSame('PLAIN_LINK', MailText::plain('[x](y)') === chr(92).'[x'.chr(92).']'.chr(92).'(y'.chr(92).')' ? 'PLAIN_LINK' : MailText::plain('[x](y)'));
+        $this->assertSame('\[x\]\(y\)', MailText::plain('[x](y)'));
+        $this->assertSame('\!\[x\]\(y\)', MailText::plain('![x](y)'));
         $this->assertSame('', MailText::plain(null));
     }
 }
