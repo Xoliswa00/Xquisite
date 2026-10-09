@@ -12,6 +12,7 @@ use App\Modules\Booking\Models\Service;
 use App\Notifications\NewTenantRegistered;
 use App\Services\Tenant\TenantContext;
 use App\Support\Csv;
+use App\Support\MailText;
 use Carbon\Carbon;
 use Database\Seeders\PermissionRoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -202,6 +203,12 @@ class InjectionRegressionTest extends TestCase
         ]);
         $this->tenant->forceFill(['name' => '[Click here](https://evil.example/phish)'])->save();
 
+        // Compile the mail template the way `php artisan view:cache` does at deploy.
+        // Markdown::withSecuredEncoding() is skipped when a compiled copy already
+        // exists, so the protection has to hold in this state too.
+        $template = app('view')->getFinder()->find('notifications::email');
+        app('blade.compiler')->compile($template);
+
         $html = (string) (new NewTenantRegistered($this->tenant->fresh(), $owner))
             ->toMail(User::factory()->make())
             ->render();
@@ -210,5 +217,13 @@ class InjectionRegressionTest extends TestCase
         $this->assertStringNotContainsString('src="https://evil.example', $html);
         // The app's own formatting in that same line still renders.
         $this->assertStringContainsString('<strong', $html);
+    }
+
+    public function test_mail_text_escapes_markdown_but_leaves_ordinary_names_readable(): void
+    {
+        $this->assertSame('Thandi', MailText::plain('Thandi'));
+        $this->assertSame("O'Brien", MailText::plain("O'Brien"));
+        $this->assertSame('PLAIN_LINK', MailText::plain('[x](y)') === chr(92).'[x'.chr(92).']'.chr(92).'(y'.chr(92).')' ? 'PLAIN_LINK' : MailText::plain('[x](y)'));
+        $this->assertSame('', MailText::plain(null));
     }
 }
