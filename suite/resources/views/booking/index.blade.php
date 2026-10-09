@@ -191,7 +191,7 @@
                 </div>
 
                 <button type="button"
-                        @click="selectCombo({{ json_encode($ids) }}, {{ $cPrice }}, '{{ addslashes($combo->name) }}', {{ $combo->id }})"
+                        @click="selectCombo({{ json_encode($ids) }}, {{ $cPrice }}, @js($combo->name), {{ $combo->id }})"
                         class="w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2"
                         :class="isComboSelected({{ json_encode($ids) }}, {{ $combo->id }})
                             ? 'bg-emerald-400 text-emerald-950 shadow-lg shadow-emerald-400/30'
@@ -258,7 +258,7 @@
                         <code class="font-black text-amber-700 tracking-wider flex-1">{{ $promo->code }}</code>
                         <button type="button"
                                 x-data="{ copied: false }"
-                                @click="navigator.clipboard.writeText('{{ $promo->code }}').then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                                @click="navigator.clipboard.writeText(@js($promo->code)).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
                                 class="shrink-0 text-xs font-bold px-2 py-0.5 rounded-md transition-all"
                                 :class="copied ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'">
                             <span x-text="copied ? 'Copied!' : 'Copy'"></span>
@@ -477,7 +477,7 @@
 
                 {{-- CTA --}}
                 <div class="px-4 pb-4">
-                    <form method="GET" :action="'{{ route('book.service', $slug) }}'">
+                    <form method="GET" :action="@js(route('book.service', $slug))">
                         <template x-for="id in selected" :key="id">
                             <input type="hidden" name="service_ids[]" :value="id">
                         </template>
@@ -627,7 +627,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
 
-        <form method="GET" :action="'{{ route('book.service', $slug) }}'">
+        <form method="GET" :action="@js(route('book.service', $slug))">
             <template x-for="id in selected" :key="id">
                 <input type="hidden" name="service_ids[]" :value="id">
             </template>

@@ -136,7 +136,7 @@
                                                 View
                                             </a>
                                             <button type="button"
-                                                    onclick="if(confirm('Delete this instance?')) { document.getElementById('delete-form-{{ $instance->id }}').submit(); }"
+                                                    onclick="if(confirm('Delete this instance?')) { document.getElementById('delete-form-' + @js($instance->id)).submit(); }"
                                                     class="inline-flex items-center px-3 py-1.5 text-xs bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded transition">
                                                 Delete
                                             </button>

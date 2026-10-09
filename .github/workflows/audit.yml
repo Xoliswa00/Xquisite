@@ -67,3 +67,38 @@ jobs:
 
       - name: PHPUnit test suite
         run: php artisan test
+
+  # Injection guards as their own check, so branch protection can require it by
+  # name and a failure says "security" rather than hiding in the full suite.
+  # BladeJsContextTest scans every view for a Blade echo inside a JavaScript
+  # string (the XSS class fixed in the 2026-10-09 audit); the rest replay each
+  # attack that used to work.
+  security-tests:
+    name: Security tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: suite
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: suite/vendor
+          key: composer-${{ hashFiles('suite/composer.lock') }}
+
+      - run: composer install --no-interaction --prefer-dist --no-progress
+
+      - run: cp .env.example .env
+      - run: php artisan key:generate
+
+      - name: Injection and sign-in security tests
+        run: php artisan test tests/Feature/Security

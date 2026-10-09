@@ -23,7 +23,7 @@
                     <span class="text-xs text-slate-400 uppercase font-semibold shrink-0">Application Link</span>
                     <span class="text-xs text-slate-300 truncate flex-1">{{ $applyLink }}</span>
                     <button type="button"
-                            @click="navigator.clipboard.writeText('{{ $applyLink }}').then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                            @click="navigator.clipboard.writeText(@js($applyLink)).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
                             class="shrink-0 text-xs font-semibold px-2 py-1 rounded-md transition-all"
                             :class="copied ? 'bg-emerald-900/40 text-emerald-400' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'">
                         <span x-text="copied ? 'Copied!' : 'Copy Link'"></span>

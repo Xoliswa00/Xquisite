@@ -48,7 +48,7 @@
 
     {{-- Countdown --}}
     @if($launch->hasCountdown())
-        <div x-data="publicLaunchCountdown('{{ $launch->launch_at->toIso8601String() }}')" x-init="start()"
+        <div x-data="publicLaunchCountdown(@js($launch->launch_at->toIso8601String()))" x-init="start()"
              class="grid grid-cols-4 gap-3 sm:gap-6 max-w-lg mx-auto">
             <template x-for="unit in units" :key="unit.label">
                 <div class="bg-[#002B5B] rounded-2xl py-4 sm:py-6 text-center">

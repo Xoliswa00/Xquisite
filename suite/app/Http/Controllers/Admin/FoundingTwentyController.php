@@ -205,11 +205,13 @@ class FoundingTwentyController extends Controller
                 $out = fopen('php://output', 'w');
                 fputcsv($out, ['Entry', 'Date', 'Type', 'Reference', 'Business', 'Debit', 'Credit', 'Amount', 'Invoice', 'Reverses entry', 'Reason', 'Recorded by'], ',', '"', '');
                 foreach ($entries as $e) {
-                    fputcsv($out, [
+                    // Csv::row(): business names come from a public form, so a
+                    // name starting with = + - @ must not run as a formula in Excel.
+                    fputcsv($out, \App\Support\Csv::row([
                         $e->id, $e->entry_date->toDateString(), $e->type, $e->reference, $e->application?->business_name,
                         FoundingTwentyDepositEntry::ACCOUNTS[$e->debit_account], FoundingTwentyDepositEntry::ACCOUNTS[$e->credit_account],
                         number_format((float) $e->amount, 2, '.', ''), $e->invoice?->invoice_number, $e->reverses_entry_id, $e->reason, $e->recorder?->name,
-                    ], ',', '"', '');
+                    ]), ',', '"', '');
                 }
                 fclose($out);
             }, 'founding-20-deposit-journal-' . now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv']);

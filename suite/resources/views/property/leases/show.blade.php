@@ -419,7 +419,7 @@
                     meterStart: '',
                     meterEnd: '',
                     ratePerUnit: '',
-                    amountExcl: '{{ old('amount_excl') }}',
+                    amountExcl: @js(old('amount_excl')),
                     lastReadings: {{ $lastReadings->toJson() }},
                     get metered() { return this.type === 'water' || this.type === 'electricity'; },
                     get consumption() { return (this.meterEnd !== '' && this.meterStart !== '') ? Math.max(0, this.meterEnd - this.meterStart) : null; },

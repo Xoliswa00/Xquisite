@@ -51,7 +51,7 @@
                         </span>
                     </div>
                     <form method="POST" action="{{ route('admin.billing.batch-generate') }}"
-                          onsubmit="return confirm('Generate invoices for all {{ $dueTenants->count() }} tenant(s) now?')">
+                          onsubmit="return confirm(@js('Generate invoices for all ' . $dueTenants->count() . ' tenant(s) now?'))">
                         @csrf
                         <button class="px-4 py-1.5 text-sm bg-[#0078D4] hover:bg-[#0065B8] text-white rounded-lg transition-colors">
                             Generate All Now

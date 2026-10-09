@@ -33,7 +33,7 @@
         <p class="text-xs text-slate-500 mb-1">Shareable links</p>
         <div class="flex flex-col gap-2">
             <a href="{{ $bookingUrl }}" target="_blank" rel="noopener" class="text-slate-400 hover:text-white text-sm px-3 py-2 rounded-lg bg-slate-800/20 hover:bg-slate-800">Open booking</a>
-            <button type="button" onclick="navigator.clipboard.writeText('{{ $bookingUrl }}')" class="px-3 py-2 rounded-lg bg-slate-700 text-slate-200 text-sm hover:bg-slate-600">Copy link</button>
+            <button type="button" onclick="navigator.clipboard.writeText(@js($bookingUrl))" class="px-3 py-2 rounded-lg bg-slate-700 text-slate-200 text-sm hover:bg-slate-600">Copy link</button>
         </div>
     </div>
 @endif

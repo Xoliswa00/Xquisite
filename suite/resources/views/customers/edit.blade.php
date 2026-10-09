@@ -48,7 +48,7 @@
         <div class="bg-slate-800 rounded-xl p-4 border border-red-900/50">
             <p class="text-sm text-slate-400 mb-3">Permanently remove this customer and all their appointments.</p>
             <form method="POST" action="{{ route('customers.destroy', $customer) }}"
-                  onsubmit="return confirm('Delete {{ addslashes($customer->name) }}?')">
+                  onsubmit="return confirm(@js('Delete ' . $customer->name . '?'))">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="bg-red-700 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-lg">

@@ -273,8 +273,8 @@
     <script>
         function checkoutForm() {
             return {
-                fulfillment: '{{ old('fulfillment_type', 'collection') }}',
-                payment: '{{ old('payment_method', 'payfast') }}',
+                fulfillment: @js(old('fulfillment_type', 'collection')),
+                payment: @js(old('payment_method', 'payfast')),
                 submitForm(e) {
                     this.$el.submit();
                 }

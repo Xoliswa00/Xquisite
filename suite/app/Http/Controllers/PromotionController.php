@@ -34,7 +34,9 @@ class PromotionController extends Controller
         $data = $request->validate([
             'name'           => 'required|string|max:150',
             'description'    => 'nullable|string|max:1000',
-            'code'           => 'required|string|max:50|unique:promotions,code',
+            // Letters, digits, dash and underscore only: codes are shown on the
+            // public booking page and typed by customers.
+            'code'           => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9_-]+$/', 'unique:promotions,code'],
             'discount_type'  => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric|min:0',
             'applies_to'     => 'required|in:all,services,products',
@@ -65,7 +67,7 @@ class PromotionController extends Controller
         $data = $request->validate([
             'name'           => 'required|string|max:150',
             'description'    => 'nullable|string|max:1000',
-            'code'           => 'required|string|max:50|unique:promotions,code,' . $promotion->id,
+            'code'           => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9_-]+$/', 'unique:promotions,code,' . $promotion->id],
             'discount_type'  => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric|min:0',
             'applies_to'     => 'required|in:all,services,products',

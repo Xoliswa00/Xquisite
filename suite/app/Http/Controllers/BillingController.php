@@ -332,7 +332,7 @@ class BillingController extends Controller
             'company_website'      => 'nullable|string|max:100',
             'bank_name'            => 'nullable|string|max:60',
             'bank_account_name'    => 'nullable|string|max:100',
-            'bank_account_number'  => 'nullable|string|max:30',
+            'bank_account_number'  => ['nullable', 'string', 'max:30', 'regex:/^[0-9 -]+$/'],
             'bank_branch_code'     => 'nullable|string|max:20',
             'whatsapp_number'      => 'nullable|string|max:20|regex:/^[0-9]+$/',
             'whatsapp_message'     => 'nullable|string|max:255',

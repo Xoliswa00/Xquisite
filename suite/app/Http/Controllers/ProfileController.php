@@ -50,7 +50,8 @@ class ProfileController extends Controller
             'bank_name'           => 'nullable|string|max:100',
             'bank_account_type'   => 'nullable|in:cheque,savings',
             'bank_account_holder' => 'nullable|string|max:100',
-            'bank_account_number' => 'nullable|string|max:50',
+            // Digits, spaces and dashes only: shown to customers on the booking page.
+            'bank_account_number' => ['nullable', 'string', 'max:50', 'regex:/^[0-9 -]+$/'],
             'bank_branch_code'    => 'nullable|string|max:20',
             'booking_terms'       => 'nullable|string|max:5000',
             'require_booking_terms_acceptance' => 'nullable|boolean',

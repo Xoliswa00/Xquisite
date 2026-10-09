@@ -96,11 +96,11 @@
 
     {{-- ── Alpine store + both views ─────────────────────────────────────── --}}
     <div x-data="{
-            selectedDay: '{{ $defaultDay }}',
+            selectedDay: @js($defaultDay),
             allAppts: {{ $calJson }},
             days: {{ $dayMeta }},
             get dayAppts()  { return this.allAppts[this.selectedDay] || []; },
-            get dayLabel()  { const d = this.days.find(x => x.date === this.selectedDay); return d ? d.label + ' ' + d.num + ' {{ $days->first()->format('M Y') }}' : ''; },
+            get dayLabel()  { const d = this.days.find(x => x.date === this.selectedDay); return d ? d.label + ' ' + d.num + ' ' + @js($days->first()->format('M Y')) : ''; },
             get dayCount()  { return this.dayAppts.length; },
             countFor(date)  { return (this.allAppts[date] || []).length; },
             statusPill(s)   {
@@ -228,7 +228,7 @@
                     <div class="flex items-center justify-between mb-3">
                         <p class="text-xs font-bold uppercase tracking-widest text-slate-500"
                            x-text="dayLabel + ' · ' + dayCount + ' appointment' + (dayCount !== 1 ? 's' : '')"></p>
-                        <a :href="'{{ route('appointments.create') }}?date=' + selectedDay"
+                        <a :href="@js(route('appointments.create')) + '?date=' + selectedDay"
                            class="text-xs text-[#0078D4] hover:underline">+ Book on this day</a>
                     </div>
 
@@ -239,7 +239,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
                         </svg>
                         <p class="text-slate-500 text-sm">No bookings on this day</p>
-                        <a :href="'{{ route('appointments.create') }}?date=' + selectedDay"
+                        <a :href="@js(route('appointments.create')) + '?date=' + selectedDay"
                            class="mt-3 text-xs text-[#0078D4] hover:underline">Add a booking →</a>
                     </div>
 
@@ -331,7 +331,7 @@
                     </div>
 
                     {{-- Quick book --}}
-                    <a :href="'{{ route('appointments.create') }}?date=' + selectedDay"
+                    <a :href="@js(route('appointments.create')) + '?date=' + selectedDay"
                        class="flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-slate-700 hover:border-[#0078D4] text-slate-500 hover:text-[#0078D4] rounded-xl text-sm transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                         Book on this day

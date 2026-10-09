@@ -17,7 +17,7 @@
      depending on the same object appears to desync Alpine's x-show state
      for all of them. Setting `el.style.top/left` directly from the click
      handler, with no shared reactive dependency at all, avoids it. --}}
-<div x-show="mobileFlyout === '{{ $flyoutKey }}'" x-cloak x-transition.duration.120ms
+<div x-show="mobileFlyout === @js($flyoutKey)" x-cloak x-transition.duration.120ms
      @click.away="mobileFlyout = null"
      data-flyout-align="{{ $align }}"
      class="fixed w-60 max-h-[calc(100vh-2rem)] overflow-y-auto bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-3 z-50 text-sm">

@@ -21,6 +21,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Values echoed into Markdown emails (every notification ->line(), ->greeting())
+        // have [ and < escaped, so a name like "[Approve](https://evil.example)" typed
+        // into a public form can't become a live link or tracking image in an email
+        // we send. The app's own **bold** in those lines still works.
+        \Illuminate\Mail\Markdown::withSecuredEncoding();
+
         Appointment::observe(AppointmentObserver::class);
         // Customer::observe() is intentionally NOT called here — CustomerObserver
         // lives in App\Modules\Booking\Observers and is already picked up by

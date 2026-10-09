@@ -321,7 +321,7 @@
                                 <input type="radio" name="color" value="{{ $colorKey }}" x-model="color" class="sr-only"
                                        {{ old('color', 'indigo') === $colorKey ? 'checked' : '' }}>
                                 <div class="h-8 rounded-md {{ $classes['bg'] }} {{ $classes['border'] }} border-2 flex items-center justify-center transition-all"
-                                     :class="color === '{{ $colorKey }}' ? 'ring-2 ring-white ring-offset-1 ring-offset-slate-800' : ''">
+                                     :class="color === @js($colorKey) ? 'ring-2 ring-white ring-offset-1 ring-offset-slate-800' : ''">
                                     <span class="text-[10px] font-medium {{ $classes['text'] }}">{{ ucfirst($colorKey) }}</span>
                                 </div>
                             </label>

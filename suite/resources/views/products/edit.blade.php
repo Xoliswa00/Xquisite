@@ -222,7 +222,7 @@
         <div class="bg-slate-800 rounded-xl p-4 border border-red-900/50">
             <p class="text-sm text-slate-400 mb-3">Remove this product from the system.</p>
             <form method="POST" action="{{ route('products.destroy', $product) }}"
-                  onsubmit="return confirm('Delete {{ addslashes($product->name) }}?')">
+                  onsubmit="return confirm(@js('Delete ' . $product->name . '?'))">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="bg-red-700 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-lg">Delete Product</button>
