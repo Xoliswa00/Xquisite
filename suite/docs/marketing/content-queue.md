@@ -17,6 +17,16 @@ Legend: ✅ done · ⏳ drafted, needs review · ⬜ not started · — not need
 
 ---
 
+## Release announcements
+
+| Release | File | Covers |
+|---|---|---|
+| Sep 2026 | ⏳ `release-2026-09-announcement.md` | Booking Policy (PR #98) + Staff accounts (PR #103), both live in prod 10 Sep. Release notes + how-to + in-app/WhatsApp/email versions. Drafted 2026-09-10, needs Xoliswa review. |
+| Sep 2026 | ⏳ poster — `design/release-2026-09/` → artifact `32a9ef72-d121-42d3-8a7b-06195a1d8962` | IG/WhatsApp poster "Two new things this month" (Booking Policy + Staff accounts). Approved design system. Drafted 2026-09-10, needs Xoliswa review. |
+| Sep 2026 | ⏳ video — `storage/app/demo-captures/release-2026-09/release-2026-09.mp4` (capture script `tests/Browser/DemoCapture/release-2026-09.mjs`) | 54s silent screen-capture, baked captions: Booking Policy settings → client confirm screen → Staff accounts list + add-staff role picker. Drafted 2026-09-10, needs Xoliswa review. |
+
+---
+
 ## Outstanding
 
 | Feature | Brief | content.md | tiktok.md | poster | Notes |
