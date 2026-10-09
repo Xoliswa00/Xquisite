@@ -3,6 +3,7 @@
 namespace App\Services\Booking;
 
 use App\Modules\Booking\Models\Appointment;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -22,6 +23,17 @@ class AppointmentQuoteService
     public const ACCEPTED  = 'accepted';
     public const DECLINED  = 'declined';
 
+    /** The client didn't answer in time; the booking was cancelled and the slot freed. */
+    public const EXPIRED   = 'expired';
+
+    public const DEFAULT_EXPIRY_HOURS = 48;
+
+    /** A quote must be answered this long before the appointment, so staff can still refill the slot. */
+    public const CUTOFF_BEFORE_START_HOURS = 24;
+
+    /** ...but the client always gets at least this long, even for a late quote. */
+    public const MINIMUM_HOURS_TO_ANSWER = 2;
+
     public function __construct(private readonly AvailabilityService $availability) {}
 
     /**
@@ -38,9 +50,58 @@ class AppointmentQuoteService
             'quote_note'              => $note,
             'quote_sent_at'           => now(),
             'quote_responded_at'      => null,
+            'quote_expires_at'        => $this->deadlineFor($appointment),
+            'quote_reminded_at'       => null, // a revised quote gets its own reminder
         ]);
 
         return $this->fitsSlot($appointment, $minutes);
+    }
+
+    /**
+     * When a quote sent now must be answered by: the business's expiry window
+     * (default 48h) or 24h before the appointment, whichever comes first, so
+     * an unanswered quote can't hold a slot nobody else can book. A quote sent
+     * late still gives the client a couple of hours, never past the start.
+     */
+    public function deadlineFor(Appointment $appointment): Carbon
+    {
+        $hours    = (int) ($appointment->tenant?->quote_expiry_hours ?: self::DEFAULT_EXPIRY_HOURS);
+        $start    = $appointment->scheduled_at->copy();
+        $deadline = now()->addHours($hours)->min($start->copy()->subHours(self::CUTOFF_BEFORE_START_HOURS));
+        $floor    = now()->addHours(self::MINIMUM_HOURS_TO_ANSWER)->min($start);
+
+        return $deadline->max($floor);
+    }
+
+    public function hasExpired(Appointment $appointment): bool
+    {
+        return $appointment->quote_status === self::SENT
+            && $appointment->quote_expires_at !== null
+            && $appointment->quote_expires_at->isPast();
+    }
+
+    /** Halfway to the deadline is when the one "expires soon" nudge goes out. */
+    public function reminderDue(Appointment $appointment): bool
+    {
+        if ($appointment->quote_status !== self::SENT || $appointment->quote_reminded_at
+            || ! $appointment->quote_expires_at || ! $appointment->quote_sent_at) {
+            return false;
+        }
+
+        $halfway = $appointment->quote_sent_at->copy()
+            ->addSeconds((int) ($appointment->quote_sent_at->diffInSeconds($appointment->quote_expires_at) / 2));
+
+        return now()->gte($halfway) && $appointment->quote_expires_at->isFuture();
+    }
+
+    /** The deadline passed with no answer: cancel the booking so the slot can be sold again. */
+    public function expire(Appointment $appointment): void
+    {
+        $appointment->update([
+            'quote_status'       => self::EXPIRED,
+            'quote_responded_at' => now(),
+            'status'             => 'cancelled',
+        ]);
     }
 
     public function accept(Appointment $appointment): void

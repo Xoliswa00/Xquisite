@@ -54,6 +54,7 @@ class ProfileController extends Controller
             'bank_branch_code'    => 'nullable|string|max:20',
             'booking_terms'       => 'nullable|string|max:5000',
             'require_booking_terms_acceptance' => 'nullable|boolean',
+            'quote_expiry_hours'  => 'nullable|integer|min:2|max:336',
         ], [
             'slug.regex' => 'Slug may only contain lowercase letters, numbers, and hyphens (no leading/trailing hyphens).',
         ]);
@@ -72,6 +73,12 @@ class ProfileController extends Controller
             'booking_terms'       => $data['booking_terms'] ?? null,
             'require_booking_terms_acceptance' => $request->boolean('require_booking_terms_acceptance'),
         ]);
+
+        // Only the booking policy form carries this field; the other forms on the
+        // page post the same action without it and must not reset it.
+        if ($request->filled('quote_expiry_hours')) {
+            $tenant->update(['quote_expiry_hours' => (int) $data['quote_expiry_hours']]);
+        }
 
         return Redirect::route('profile.edit')->with('status', 'business-updated');
     }
