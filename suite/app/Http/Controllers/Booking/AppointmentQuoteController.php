@@ -76,6 +76,10 @@ class AppointmentQuoteController extends Controller
         if ($appointment->quote_status !== AppointmentQuoteService::SENT || $appointment->scheduled_at->isPast()) {
             return back()->withErrors(['quote' => 'This quote can no longer be accepted.']);
         }
+        // Past the deadline but the expiry job hasn't run yet: same answer either way.
+        if ($this->quotes->hasExpired($appointment)) {
+            return back()->withErrors(['quote' => 'This quote has expired. You can book again any time and ask for a new one.']);
+        }
 
         $this->quotes->accept($appointment);
         $this->notifications->notifyQuoteAnswered($appointment, accepted: true);

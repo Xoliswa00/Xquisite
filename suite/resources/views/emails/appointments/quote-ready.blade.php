@@ -44,7 +44,12 @@
                 @endif
 
                 <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.6;">
-                    Your slot is held while you decide. Accept to confirm the new price and time, or decline to cancel with nothing to pay.
+                    @if($appointment->quote_expires_at)
+                        Your slot is held until <strong style="color:#0f172a;">{{ $appointment->quote_expires_at->format('l, d F, H:i') }}</strong>.
+                    @else
+                        Your slot is held while you decide.
+                    @endif
+                    Accept to confirm the new price and time, or decline to cancel with nothing to pay.
                 </p>
 
                 <p style="margin:0;text-align:center;">

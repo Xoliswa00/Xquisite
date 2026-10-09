@@ -34,6 +34,7 @@ class Tenant extends Model
         'shipping_cost',
         'booking_terms',
         'require_booking_terms_acceptance',
+        'quote_expiry_hours',
         'is_active',
         'is_demo',
         'trial_ends_at',

@@ -153,12 +153,54 @@ class BookingNotificationService
             'Your quote is ready',
             ($tenant?->name ?? 'Your salon') . ' quoted R' . number_format((float) $appointment->quoted_price, 2)
                 . ' and about ' . self::humanMinutes((int) $appointment->quoted_duration_minutes)
-                . " for {$appointment->scheduled_at->format('d M Y, H:i')}. Accept or decline it in My Bookings.",
+                . " for {$appointment->scheduled_at->format('d M Y, H:i')}. Accept or decline it in My Bookings"
+                . ($appointment->quote_expires_at ? " by {$appointment->quote_expires_at->format('D d M, H:i')}." : '.'),
             $this->customerPortalUrl($appointment)
         );
 
         if ($appointment->customer?->email) {
             Mail::to($appointment->customer->email)->queue(new QuoteReadyEmail($appointment));
+        }
+    }
+
+    /** Halfway to the deadline: one nudge so the client doesn't lose the slot by forgetting. */
+    public function notifyQuoteExpiring(Appointment $appointment): void
+    {
+        $appointment->loadMissing(['customer', 'services']);
+        $tenant = Tenant::find($appointment->tenant_id);
+
+        $this->notifyCustomer(
+            $appointment,
+            'Your quote expires soon',
+            'Your quote from ' . ($tenant?->name ?? 'your salon') . ' for ' . $this->servicesSummary($appointment)
+                . " expires {$appointment->quote_expires_at->format('D d M \a\t H:i')}. Accept or decline it in My Bookings to keep your slot.",
+            $this->customerPortalUrl($appointment)
+        );
+    }
+
+    /** The deadline passed with no answer: the booking is cancelled, so tell both sides. */
+    public function notifyQuoteExpired(Appointment $appointment): void
+    {
+        $appointment->loadMissing(['customer', 'services', 'staff']);
+        $tenant = Tenant::find($appointment->tenant_id);
+        $when   = $appointment->scheduled_at->format('d M Y, H:i');
+
+        $this->notifyCustomer(
+            $appointment,
+            'Your quote expired',
+            'The quote from ' . ($tenant?->name ?? 'your salon') . " for {$when} wasn't answered in time, so the booking was cancelled. "
+                . 'Nothing to pay. You can book again any time.',
+            $tenant ? route('book.index', $tenant->slug) : null
+        );
+
+        $notice = new AppNotice(
+            title: 'Quote expired',
+            message: ($appointment->customer?->name ?? 'The client') . " didn't answer the quote for {$when} in time. The booking was cancelled and the slot is free again.",
+            url: route('appointments.show', $appointment),
+            level: 'warning'
+        );
+        foreach ($this->lookRecipients($appointment) as $user) {
+            $user->notify($notice);
         }
     }
 

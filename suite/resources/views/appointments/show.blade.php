@@ -334,6 +334,9 @@
                             @case('declined')
                                 <span class="text-xs font-semibold text-red-400">Declined {{ $appointment->quote_responded_at?->format('d M, H:i') }}</span>
                                 @break
+                            @case('expired')
+                                <span class="text-xs font-semibold text-red-400">Expired {{ $appointment->quote_responded_at?->format('d M, H:i') }} &middot; not answered in time</span>
+                                @break
                         @endswitch
                     </div>
 
@@ -345,6 +348,9 @@
                         </p>
                         @if($appointment->quote_note)
                             <p class="text-xs text-slate-400 whitespace-pre-line">{{ $appointment->quote_note }}</p>
+                        @endif
+                        @if($appointment->quote_status === 'sent' && $appointment->quote_expires_at)
+                            <p class="text-xs text-slate-500">The client has until {{ $appointment->quote_expires_at->format('D d M, H:i') }} to answer. After that the booking is cancelled and the slot opens up.</p>
                         @endif
                     @endif
 
