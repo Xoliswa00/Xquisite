@@ -58,6 +58,9 @@ class BlockedIpController extends Controller
         return DB::table('audit_logs')
             ->where('action', 'auth.sign_in_paused')
             ->where('created_at', '>=', now()->subDay())
+            // Newest first by time, so the (action, created_at) index serves both
+            // the filter and the order.
+            ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit(50)
             ->get(['ip_address', 'meta', 'created_at'])

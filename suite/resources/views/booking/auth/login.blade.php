@@ -16,10 +16,12 @@
             @csrf
 
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                <input type="email" name="email" value="{{ old('email') }}" required autofocus
-                       class="w-full border-slate-300 rounded-xl @error('email') border-red-400 @enderror">
-                @error('email') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                <label for="login" class="block text-sm font-medium text-slate-700 mb-1">Email or cell number</label>
+                <input type="text" id="login" name="login" value="{{ old('login', old('email')) }}" required autofocus
+                       autocomplete="username" autocapitalize="none" inputmode="email"
+                       class="w-full border-slate-300 rounded-xl @error('login') border-red-400 @enderror">
+                <p class="text-xs text-slate-500 mt-1">The email address or cell number on your account, like 082 123 4567.</p>
+                @error('login') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Services\AuditService;
 use App\Services\Security\LoginThrottleService;
+use App\Support\SignInIdentifier;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -20,8 +21,14 @@ class EnsureSignInNotPaused
 {
     public function handle(Request $request, Closure $next, string $guard, string $channel): Response
     {
-        $email = $request->input('email');
-        $email = is_string($email) ? Str::limit(trim($email), 190, '') : null;
+        // Customer sign-in takes an email address or a cell number; it is read the
+        // same way the controller reads it. Every other form is keyed on `email`.
+        if ($guard === 'customer' && $channel === 'login') {
+            $email = SignInIdentifier::canonical(SignInIdentifier::typed($request));
+        } else {
+            $email = $request->input('email');
+            $email = is_string($email) ? Str::limit(trim($email), 190, '') : null;
+        }
 
         $lock = LoginThrottleService::lockedFor($request->ip(), $guard, $channel, $email);
 
@@ -55,13 +62,13 @@ class EnsureSignInNotPaused
     {
         $minutes = max(1, (int) ceil($seconds / 60));
         $wait = $minutes === 1 ? 'about a minute' : "about {$minutes} minutes";
-        $who = $email ?: 'this email address';
+        $who = $email ?: 'this login';
         $tries = LoginThrottleService::ACCOUNT_THRESHOLD;
 
         return match (true) {
             $scope === 'ip' => "There have been too many failed sign-in attempts from your internet connection, so signing in and resetting passwords is paused. You can try again in {$wait}. Anyone already signed in can carry on working.",
-            $channel === 'reset' => "There were {$tries} password reset attempts for {$who} that did not work, so resets for that email are paused. You can try again in {$wait}. Check that this is the email address you signed up with.",
-            default => "There were {$tries} failed sign-in attempts for {$who}, so sign-in for that email is paused. You can try again in {$wait}. Trying sooner will not add to the wait.",
+            $channel === 'reset' => "There were {$tries} password reset attempts for {$who} that did not work, so resets for that login are paused. You can try again in {$wait}. Check that this is the email address you signed up with.",
+            default => "There were {$tries} failed sign-in attempts for {$who}, so sign-in for that login is paused. You can try again in {$wait}. Trying sooner will not add to the wait.",
         };
     }
 

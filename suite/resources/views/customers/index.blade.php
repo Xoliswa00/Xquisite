@@ -13,8 +13,13 @@
                         <option value="active" @selected(request('status') === 'active')>Active</option>
                         <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
                     </select>
+                    <select name="login" aria-label="Online login" class="flex-1 sm:flex-none bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0078D4]">
+                        <option value="">Any login</option>
+                        <option value="none" @selected(request('login') === 'none')>No online login</option>
+                        <option value="has" @selected(request('login') === 'has')>Has a login</option>
+                    </select>
                     <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Filter</button>
-                    @if(request()->hasAny(['search','status']))
+                    @if(request()->hasAny(['search','status','login']))
                         <a href="{{ route('customers.index') }}" class="text-sm px-4 py-2 rounded-lg text-slate-400 hover:text-white border border-slate-700">Clear</a>
                     @endif
                 </div>
@@ -31,11 +36,19 @@
             </div>
         </div>
 
+        @if(request('login') === 'none')
+            <p class="text-sm text-slate-400">
+                {{ $customers->total() }} {{ Str::plural('customer', $customers->total()) }} with no online login.
+                Create a link, send it, and they drop off this list once they have set a password.
+            </p>
+        @endif
+
         {{-- Mobile cards --}}
         <div class="sm:hidden space-y-2">
             @forelse($customers as $customer)
+                <div id="customer-{{ $customer->id }}" class="bg-slate-800 rounded-xl overflow-hidden scroll-mt-4">
                 <a href="{{ route('customers.show', $customer) }}"
-                   class="block bg-slate-800 rounded-xl p-4 hover:bg-slate-700/70 transition-colors">
+                   class="block p-4 hover:bg-slate-700/70 transition-colors">
                     <div class="flex items-center justify-between gap-3">
                         <p class="font-medium text-white text-sm truncate">{{ $customer->name }}</p>
                         @if($customer->is_active)
@@ -53,6 +66,12 @@
                         @endif
                     </div>
                 </a>
+                @unless($customer->password)
+                    <div class="px-4 border-t border-slate-700">
+                        @include('customers._setup-link', ['customer' => $customer])
+                    </div>
+                @endunless
+                </div>
             @empty
                 <p class="text-center text-slate-500 py-10 text-sm">No customers found.</p>
             @endforelse
@@ -67,6 +86,7 @@
                         <th class="px-4 py-3 font-medium">Email</th>
                         <th class="px-4 py-3 font-medium">Phone</th>
                         <th class="px-4 py-3 font-medium">Status</th>
+                        <th class="px-4 py-3 font-medium">Online login</th>
                         <th class="px-4 py-3 font-medium"></th>
                     </tr>
                 </thead>
@@ -93,13 +113,16 @@
                                     <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-400 border border-slate-600">Inactive</span>
                                 @endif
                             </td>
+                            <td class="px-4 py-3">
+                                @include('customers._setup-link', ['customer' => $customer])
+                            </td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{{ route('customers.edit', $customer) }}" class="text-slate-400 hover:text-white text-xs">Edit</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-10 text-center text-slate-500">No customers found.</td>
+                            <td colspan="6" class="px-4 py-10 text-center text-slate-500">No customers found.</td>
                         </tr>
                     @endforelse
                 </tbody>

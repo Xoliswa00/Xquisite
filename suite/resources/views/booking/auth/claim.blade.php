@@ -13,7 +13,7 @@
     <div class="bg-white rounded-2xl border border-slate-200 p-8 space-y-4 text-sm text-slate-600">
         <p>
             Ask {{ $tenant->name }} for your setup link. It opens a page where you choose your own
-            email and password, and your past bookings stay on your account.
+            password, and your past bookings stay on your account.
         </p>
         <p>
             They send it to the cell number they have for you, usually during business hours, so

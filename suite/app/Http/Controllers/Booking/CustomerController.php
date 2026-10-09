@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Booking;
 use App\Http\Controllers\Controller;
 use App\Modules\Booking\Models\Customer;
 use App\Rules\SouthAfricanPhoneNumber;
+use App\Services\AuditService;
 use App\Services\ContactImportParser;
+use App\Services\Tenant\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
 {
@@ -28,7 +31,15 @@ class CustomerController extends Controller
             $query->where('is_active', $request->status === 'active');
         }
 
-        $customers = $query->paginate(15)->withQueryString();
+        // "No online login" is the working list for sending setup links.
+        if ($request->input('login') === 'none') {
+            $query->whereNull('password');
+        } elseif ($request->input('login') === 'has') {
+            $query->whereNotNull('password');
+        }
+
+        // The setup-link column builds each active link from the business's address.
+        $customers = $query->with('tenant')->paginate(15)->withQueryString();
 
         return view('customers.index', compact('customers'));
     }
@@ -42,7 +53,7 @@ class CustomerController extends Controller
     {
         $data = $request->validate([
             'name'      => 'required|string|max:255',
-            'email'     => 'nullable|email|max:255|unique:customers,email',
+            'email'     => ['nullable', 'email', 'max:255', Rule::unique('customers', 'email')->where('tenant_id', TenantContext::get())],
             'phone'     => ['nullable', new SouthAfricanPhoneNumber],
             'notes'     => 'nullable|string|max:2000',
             'is_active' => 'boolean',
@@ -71,17 +82,47 @@ class CustomerController extends Controller
 
         $consents = $customer->consents()->with('appointment.services')->limit(15)->get();
 
-        // No login yet: staff send this link so the customer sets their own password.
-        $setupLink = (! $customer->password && $customer->tenant?->slug)
-            ? CustomerAuthController::claimSetupUrl($customer, $customer->tenant->slug)
-            : null;
+        return view('customers.show', compact('customer', 'appointments', 'savedLooks', 'consents'));
+    }
 
-        // Link on its own line: a long address in the middle of a sentence looks like a scam.
-        $setupMessage = $setupLink
-            ? "Hi {$customer->name}, this is {$customer->tenant->name}. Here is your personal link to choose a password for online booking:\n{$setupLink}\nIt works for " . CustomerAuthController::CLAIM_LINK_DAYS . ' days. We will never ask you for your password.'
-            : null;
+    /** Back to the same customer in the list, not the top of the page. */
+    private function backTo(Customer $customer)
+    {
+        return redirect()->to(url()->previous() . '#customer-' . $customer->id);
+    }
 
-        return view('customers.show', compact('customer', 'appointments', 'savedLooks', 'consents', 'setupLink', 'setupMessage'));
+    /** Create (or replace) the customer's login setup link. Any earlier link stops working. */
+    public function setupLink(Customer $customer)
+    {
+        // A link for someone who already has a login replaces their password,
+        // so it is a manager's call, not any team member's.
+        abort_if(filled($customer->password) && ! auth()->user()->isAdmin(), 403);
+
+        $customer->issueSetupLink();
+
+        AuditService::log(
+            action: 'customer.setup_link_created',
+            entityType: 'Customer',
+            entityId: $customer->id,
+            meta: ['expires_at' => $customer->setup_link_expires_at->toDateTimeString(), 'had_login' => filled($customer->password)],
+        );
+
+        return $this->backTo($customer)->with('success', $customer->phone
+            ? "Link ready for {$customer->name}. Send it with the WhatsApp button."
+            : "Link ready for {$customer->name}. Copy it and send it to them.");
+    }
+
+    public function cancelSetupLink(Customer $customer)
+    {
+        $customer->cancelSetupLink();
+
+        AuditService::log(
+            action: 'customer.setup_link_cancelled',
+            entityType: 'Customer',
+            entityId: $customer->id,
+        );
+
+        return $this->backTo($customer)->with('success', "Link for {$customer->name} cancelled. It no longer works.");
     }
 
     public function edit(Customer $customer)
@@ -93,7 +134,7 @@ class CustomerController extends Controller
     {
         $data = $request->validate([
             'name'      => 'required|string|max:255',
-            'email'     => 'nullable|email|max:255|unique:customers,email,' . $customer->id,
+            'email'     => ['nullable', 'email', 'max:255', Rule::unique('customers', 'email')->where('tenant_id', $customer->tenant_id)->ignore($customer->id)],
             'phone'     => ['nullable', new SouthAfricanPhoneNumber],
             'notes'     => 'nullable|string|max:2000',
             'is_active' => 'boolean',
@@ -203,15 +244,6 @@ class CustomerController extends Controller
     /** Same normalization SouthAfricanPhoneNumber validates against, used here for dedup matching. */
     private function normalizePhone(?string $raw): ?string
     {
-        if (!$raw) {
-            return null;
-        }
-        $digits = preg_replace('/[^\d+]/', '', $raw);
-        if (str_starts_with($digits, '+27')) {
-            $digits = '0' . substr($digits, 3);
-        } elseif (str_starts_with($digits, '27') && strlen($digits) === 11) {
-            $digits = '0' . substr($digits, 2);
-        }
-        return preg_match('/^0\d{9}$/', $digits) ? $digits : null;
+        return Customer::normalisePhone($raw);
     }
 }

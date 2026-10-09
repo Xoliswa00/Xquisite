@@ -20,6 +20,15 @@
                 Send Reset Link
             </button>
         </form>
+
+        <div class="border-t border-slate-200 mt-6 pt-5 space-y-3 text-sm text-slate-600">
+            <p>No email address on your account? Ask {{ $tenant->name }} to send you a new login link.</p>
+            @if($tenant->phone)
+                <x-whatsapp-link :phone="$tenant->phone"
+                    :message="'Hi ' . $tenant->name . ', I have forgotten my password. Please send me a new login link. My name is '"
+                    class="w-full justify-center py-3 border border-slate-300 hover:border-slate-400 text-slate-900 font-semibold rounded-xl transition">Ask on WhatsApp</x-whatsapp-link>
+            @endif
+        </div>
     </div>
 
     <p class="text-center text-sm">

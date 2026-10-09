@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\URL;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 
 class Customer extends Model implements AuthenticatableContract, CanResetPasswordContract
@@ -37,7 +38,20 @@ class Customer extends Model implements AuthenticatableContract, CanResetPasswor
         'email_verified_at' => 'datetime',
         'rebook_reminders_opt_out_at' => 'datetime',
         'password'          => 'hashed',
+        'setup_link_version'    => 'integer',
+        'setup_link_expires_at' => 'datetime',
     ];
+
+    /** How long a login setup link works for. Short, because sending a new one is one tap. */
+    public const SETUP_LINK_HOURS = 48;
+
+    protected static function booted(): void
+    {
+        // Kept beside the number as typed, so a cell-number sign-in is one indexed lookup.
+        static::saving(function (Customer $customer) {
+            $customer->phone_normalised = self::normalisePhone($customer->phone);
+        });
+    }
 
     public function appointments()
     {
@@ -58,6 +72,84 @@ class Customer extends Model implements AuthenticatableContract, CanResetPasswor
     public function tenant()
     {
         return $this->belongsTo(\App\Models\Tenant::class);
+    }
+
+    // ── Login setup link ────────────────────────────────────────────────────
+    // Staff create it on purpose and send it to the customer, who chooses their
+    // own password. The version is part of the signed address, so a new link, a
+    // cancel, or using the link all make every earlier link worthless.
+
+    public function hasActiveSetupLink(): bool
+    {
+        return $this->setup_link_expires_at?->isFuture() ?? false;
+    }
+
+    public function issueSetupLink(): string
+    {
+        $this->forceFill([
+            'setup_link_version'    => $this->setup_link_version + 1,
+            'setup_link_expires_at' => now()->addHours(self::SETUP_LINK_HOURS)->startOfSecond(),
+        ])->save();
+
+        return $this->setupLinkUrl();
+    }
+
+    public function cancelSetupLink(): void
+    {
+        $this->forceFill([
+            'setup_link_version'    => $this->setup_link_version + 1,
+            'setup_link_expires_at' => null,
+        ])->save();
+    }
+
+    public function acceptsSetupLink(mixed $version): bool
+    {
+        return $this->hasActiveSetupLink() && (string) $version === (string) $this->setup_link_version;
+    }
+
+    /** The same address every time while the link is active, so it can be shown again without making a new one. */
+    public function setupLinkUrl(): ?string
+    {
+        if (! $this->hasActiveSetupLink() || ! $this->tenant?->slug) {
+            return null;
+        }
+
+        return URL::temporarySignedRoute('book.claim.setup', $this->setup_link_expires_at, [
+            'slug'     => $this->tenant->slug,
+            'customer' => $this->id,
+            'v'        => $this->setup_link_version,
+        ]);
+    }
+
+    /** Link on its own line: a long address in the middle of a sentence looks like a scam. */
+    public function setupLinkMessage(): ?string
+    {
+        if (! ($url = $this->setupLinkUrl())) {
+            return null;
+        }
+
+        return "Hi {$this->name}, this is {$this->tenant->name}. Here is your personal link to choose a password for online booking:"
+            . "\n{$url}\nIt works until " . $this->setup_link_expires_at->format('l j M \\a\\t H:i') . '. We will never ask you for your password.';
+    }
+
+    /** 0821234567 for any way a South African cell number is usually written, or null. */
+    public static function normalisePhone(?string $raw): ?string
+    {
+        // Only what people type as formatting is ignored. A stray letter means it
+        // isn't a phone number (the same rule SouthAfricanPhoneNumber validates by).
+        if (! $raw || ! preg_match('/^[\d\s()+-]+$/', $raw)) {
+            return null;
+        }
+
+        $digits = preg_replace('/[^\d+]/', '', $raw);
+
+        if (str_starts_with($digits, '+27')) {
+            $digits = '0' . substr($digits, 3);
+        } elseif (str_starts_with($digits, '27') && strlen($digits) === 11) {
+            $digits = '0' . substr($digits, 2);
+        }
+
+        return preg_match('/^0\d{9}$/', $digits) ? $digits : null;
     }
 
     public function sendPasswordResetNotification($token): void

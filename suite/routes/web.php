@@ -249,6 +249,8 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             // Registered before the resource route so "import" isn't swallowed by {customer}.
             Route::get('customers/import', [CustomerController::class, 'importForm'])->name('customers.import');
             Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import.store');
+            Route::post('customers/{customer}/setup-link', [CustomerController::class, 'setupLink'])->name('customers.setup-link.store');
+            Route::delete('customers/{customer}/setup-link', [CustomerController::class, 'cancelSetupLink'])->name('customers.setup-link.destroy');
             Route::resource('customers', CustomerController::class);
         });
         // Service catalogue + pricing — managers only (employees can't edit it).

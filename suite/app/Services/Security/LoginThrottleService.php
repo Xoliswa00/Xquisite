@@ -198,8 +198,8 @@ class LoginThrottleService
         $minutes = (int) ceil(self::LOCK_SECONDS / 60);
 
         return match ($attemptsLeft) {
-            1 => " One more failed attempt will pause sign-in for this email for {$minutes} minutes.",
-            0 => " Sign-in for this email is now paused for {$minutes} minutes. If you have forgotten your password, you can reset it in the meantime.",
+            1 => " One more failed attempt will pause sign-in for this login for {$minutes} minutes.",
+            0 => " Sign-in for this login is now paused for {$minutes} minutes. If you have forgotten your password, you can reset it in the meantime.",
             default => '',
         };
     }
