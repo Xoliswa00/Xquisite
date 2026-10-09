@@ -26,6 +26,37 @@
             </a>
         </div>
 
+        {{-- Team sign-ins paused after wrong passwords. Shown only when there is something to act on or to know. --}}
+        @if ($pauses->isNotEmpty())
+            <div class="bg-slate-800 rounded-xl overflow-hidden">
+                <div class="px-4 py-3 border-b border-slate-700">
+                    <h3 class="text-sm font-semibold text-white">Sign-in pauses, last 24 hours</h3>
+                    <p class="text-sm text-slate-400 mt-0.5">A wrong password 3 times pauses that login for 5 minutes. Usually it is a forgotten password. If the person says it was not them, set a new password for them.</p>
+                </div>
+                <ul class="divide-y divide-slate-700">
+                    @foreach ($pauses as $pause)
+                        <li class="px-4 py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-white truncate">{{ $pause['user']->name }}</p>
+                                <p class="text-xs text-slate-400 truncate">{{ $pause['user']->email }} · {{ $pause['at']->format('D H:i') }}</p>
+                            </div>
+                            @if ($pause['seconds_left'] > 0)
+                                <form method="POST" action="{{ route('admin.users.sign-in-pauses.lift') }}" class="flex items-center gap-3 shrink-0">
+                                    @csrf
+                                    <input type="hidden" name="ip" value="{{ $pause['ip'] }}">
+                                    <input type="hidden" name="user_id" value="{{ $pause['user']->id }}">
+                                    <span class="text-sm text-yellow-400">{{ (int) ceil($pause['seconds_left'] / 60) }} min left</span>
+                                    <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-sm px-3 py-2 rounded-lg">Let them in now</button>
+                                </form>
+                            @else
+                                <span class="text-sm text-slate-500 shrink-0">Ended</span>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         {{-- Filters --}}
         <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-wrap gap-3">
             @if ($showTrashed)

@@ -23,11 +23,19 @@
 
         <div class="border-t border-slate-200 mt-6 pt-5 space-y-3 text-sm text-slate-600">
             <p>No email address on your account? Ask {{ $tenant->name }} to send you a new login link.</p>
-            @if($tenant->phone)
-                <x-whatsapp-link :phone="$tenant->phone"
-                    :message="'Hi ' . $tenant->name . ', I have forgotten my password. Please send me a new login link. My name is '"
-                    class="w-full justify-center py-3 border border-slate-300 hover:border-slate-400 text-slate-900 font-semibold rounded-xl transition">Ask on WhatsApp</x-whatsapp-link>
-            @endif
+            <form method="POST" action="{{ route('book.claim.request', $slug) }}" class="space-y-3">
+                @csrf
+                <div>
+                    <label for="contact" class="block text-sm font-medium text-slate-700 mb-1">Your cell number or email address</label>
+                    <input type="text" id="contact" name="contact" value="{{ old('contact') }}" required autocomplete="tel"
+                           class="w-full border-slate-300 rounded-xl @error('contact') border-red-400 @enderror">
+                    <p class="text-xs text-slate-500 mt-1">The one {{ $tenant->name }} has for you, like 082 123 4567.</p>
+                    @error('contact') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                </div>
+                <button type="submit" class="w-full py-3 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition">
+                    Ask {{ $tenant->name }} for my link
+                </button>
+            </form>
         </div>
     </div>
 

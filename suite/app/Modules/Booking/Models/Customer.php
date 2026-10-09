@@ -42,8 +42,12 @@ class Customer extends Model implements AuthenticatableContract, CanResetPasswor
         'setup_link_expires_at' => 'datetime',
     ];
 
-    /** How long a login setup link works for. Short, because sending a new one is one tap. */
-    public const SETUP_LINK_HOURS = 48;
+    /**
+     * How long a login setup link works for. A week, so one sent on Friday is
+     * still good on Monday. It is single-use, and staff can cancel it or replace
+     * it at any time, which is what keeps a long life safe.
+     */
+    public const SETUP_LINK_HOURS = 168;
 
     protected static function booted(): void
     {

@@ -3,7 +3,9 @@
 namespace App\Services\Security;
 
 use App\Services\AuditService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -138,6 +140,59 @@ class LoginThrottleService
         }
 
         return null;
+    }
+
+    /**
+     * Automatic pauses from the last day, newest first. They live in the cache,
+     * so the audit log is the only list of them; each row is checked against the
+     * cache to see whether it is still running.
+     *
+     * @return \Illuminate\Support\Collection<int, array{at: \Illuminate\Support\Carbon, ip: string, scope: string, guard: ?string, channel: ?string, email: ?string, tenant: ?string, seconds_left: int}>
+     */
+    public static function recentPauses(int $limit = 50): \Illuminate\Support\Collection
+    {
+        $seen = [];
+
+        return DB::table('audit_logs')
+            ->where('action', 'auth.sign_in_paused')
+            ->where('created_at', '>=', now()->subDay())
+            // Newest first by time, so the (action, created_at) index serves both
+            // the filter and the order.
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get(['ip_address', 'meta', 'created_at'])
+            ->map(function ($row) use (&$seen) {
+                $meta = json_decode($row->meta ?? '[]', true) ?: [];
+
+                $pause = [
+                    'at'      => Carbon::parse($row->created_at),
+                    'ip'      => (string) $row->ip_address,
+                    'scope'   => $meta['scope'] ?? 'account',
+                    'guard'   => $meta['guard'] ?? null,
+                    'channel' => $meta['channel'] ?? null,
+                    'email'   => $meta['email'] ?? null,
+                    'tenant'  => $meta['tenant_slug'] ?? null,
+                ];
+
+                // The cache only knows whether a pause is running now, so an older
+                // row for the same pause must read "Ended".
+                $key = implode('|', [$pause['scope'], $pause['ip'], $pause['guard'], $pause['channel'], $pause['email']]);
+                $isLatest = ! isset($seen[$key]);
+                $seen[$key] = true;
+
+                $pause['seconds_left'] = $isLatest
+                    ? self::pauseSecondsLeft($pause['scope'], $pause['ip'], $pause['guard'], $pause['channel'], $pause['email'])
+                    : 0;
+
+                return $pause;
+            });
+    }
+
+    /** The form strikes are counted under, for matching a stored pause to an account. */
+    public static function keyFor(?string $identifier): ?string
+    {
+        return self::normalise($identifier);
     }
 
     /**

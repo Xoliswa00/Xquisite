@@ -531,6 +531,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
         // middleware or tenant owners lose access to their own team.
         Route::middleware('can:manage-staff')->group(function () {
             Route::get('/users/team-guide', [UserManagementController::class, 'teamGuide'])->name('users.team-guide');
+            Route::post('/users/sign-in-pauses/lift', [UserManagementController::class, 'liftPause'])->name('users.sign-in-pauses.lift');
             Route::resource('users', UserManagementController::class);
             Route::post('/users/{user}/deactivate', [UserManagementController::class, 'deactivate'])->name('users.deactivate');
             Route::post('/users/{user}/activate', [UserManagementController::class, 'activate'])->name('users.activate');
@@ -620,6 +621,7 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
         // There is no public lookup: the business sends the customer a signed setup
         // link from their profile, so only the person holding that phone can use it.
         Route::get('/claim',                    [CustomerAuthController::class, 'showClaim'])->name('claim');
+        Route::post('/claim/request',           [CustomerAuthController::class, 'requestSetupLink'])->name('claim.request')->middleware('throttle:link-request');
         Route::get('/claim/setup/{customer}',   [CustomerAuthController::class, 'showClaimSetup'])->name('claim.setup')->middleware('signed');
         Route::post('/claim/setup/{customer}',  [CustomerAuthController::class, 'completeClaimSetup'])->name('claim.complete')->middleware(['signed', 'throttle:auth']);
 

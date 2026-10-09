@@ -58,6 +58,17 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        // Asking the business for a login link sends staff a notice, so it is kept
+        // to a few an hour from one network.
+        RateLimiter::for('link-request', function (Request $request) {
+            $refuse = fn () => abort(429, 'You have asked a few times already. Please wait a while, or contact the business directly.');
+
+            return [
+                Limit::perMinute(3)->by('link-request:minute:' . $request->ip())->response($refuse),
+                Limit::perHour(10)->by('link-request:hour:' . $request->ip())->response($refuse),
+            ];
+        });
+
         // "Confirm your password" is a password guess against a signed-in account,
         // so it is limited per account, not per network.
         RateLimiter::for('confirm-password', function (Request $request) {
