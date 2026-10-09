@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Actions\CreateStaffAccount;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AuditService;
+use App\Services\Security\LoginThrottleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -62,7 +64,50 @@ class UserManagementController extends Controller
         $users        = $query->orderBy('name')->paginate(15)->withQueryString();
         $trashedCount = User::onlyTrashed()->where('tenant_id', auth()->user()->tenant_id)->count();
 
-        return view('admin.users.index', compact('users', 'showTrashed', 'trashedCount'));
+        $pauses = $this->teamPauses();
+
+        return view('admin.users.index', compact('users', 'showTrashed', 'trashedCount', 'pauses'));
+    }
+
+    /**
+     * Sign-in pauses on this business's own team logins in the last day, with the
+     * team member each belongs to. Other businesses' pauses, customer pauses and
+     * network-wide pauses are not shown here.
+     */
+    private function teamPauses()
+    {
+        $team = User::where('tenant_id', auth()->user()->tenant_id)->get(['id', 'name', 'email'])
+            ->keyBy(fn (User $user) => LoginThrottleService::keyFor($user->email));
+
+        return LoginThrottleService::recentPauses()
+            ->filter(fn (array $pause) => $pause['scope'] === 'account' && $pause['guard'] === 'staff'
+                && $pause['channel'] === 'login' && $team->has($pause['email']))
+            ->map(fn (array $pause) => $pause + ['user' => $team->get($pause['email'])])
+            ->values();
+    }
+
+    /** Let a team member back in before the pause runs out. */
+    public function liftPause(Request $request): RedirectResponse
+    {
+        Gate::authorize('manage-staff');
+
+        $data = $request->validate([
+            'ip'      => 'required|ip',
+            'user_id' => ['required', 'integer', Rule::exists('users', 'id')->where('tenant_id', auth()->user()->tenant_id)],
+        ]);
+
+        $member = User::where('tenant_id', auth()->user()->tenant_id)->findOrFail($data['user_id']);
+
+        LoginThrottleService::unlock('account', $data['ip'], 'staff', 'login', $member->email);
+
+        AuditService::log(
+            action: 'auth.sign_in_pause_lifted',
+            entityType: 'User',
+            entityId: $member->id,
+            meta: ['scope' => 'account', 'guard' => 'staff', 'channel' => 'login', 'ip' => $data['ip'], 'by' => 'team'],
+        );
+
+        return back()->with('success', "{$member->name} can sign in again now.");
     }
 
     /**

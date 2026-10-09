@@ -87,7 +87,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <p class="text-sm font-medium text-slate-200">No online login yet</p>
-                            <p class="text-sm text-slate-400">Create a setup link and send it to {{ $customer->name }}. They choose their own password. The link works for {{ \App\Modules\Booking\Models\Customer::SETUP_LINK_HOURS }} hours and only once.</p>
+                            <p class="text-sm text-slate-400">Create a setup link and send it to {{ $customer->name }}. They choose their own password. The link works for {{ intdiv(\App\Modules\Booking\Models\Customer::SETUP_LINK_HOURS, 24) }} days and only once.</p>
                         </div>
                         <form method="POST" action="{{ route('customers.setup-link.store', $customer) }}" class="shrink-0">
                             @csrf

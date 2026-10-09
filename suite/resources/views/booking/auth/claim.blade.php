@@ -20,15 +20,30 @@
             nobody else can set up a login in your name.
         </p>
 
+        <form method="POST" action="{{ route('book.claim.request', $slug) }}" class="space-y-3">
+            @csrf
+            <div>
+                <label for="contact" class="block text-sm font-medium text-slate-700 mb-1">Your cell number or email address</label>
+                <input type="text" id="contact" name="contact" value="{{ old('contact') }}" required autocomplete="tel"
+                       class="w-full border-slate-300 rounded-xl @error('contact') border-red-400 @enderror">
+                <p class="text-xs text-slate-500 mt-1">The one {{ $tenant->name }} has for you, like 082 123 4567.</p>
+                @error('contact') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+            </div>
+            <button type="submit" class="w-full py-3 bg-[#0078D4] hover:bg-[#0065B8] text-white font-semibold rounded-xl transition">
+                Ask {{ $tenant->name }} for my link
+            </button>
+        </form>
+
         @if($tenant->phone)
-            <x-whatsapp-link :phone="$tenant->phone"
-                :message="'Hi ' . $tenant->name . ', please send me the link to set up my online login. My name is '"
-                class="w-full justify-center py-3 border border-slate-300 hover:border-slate-400 text-slate-900 font-semibold rounded-xl transition">Ask for my setup link on WhatsApp</x-whatsapp-link>
-            <p class="text-slate-500">No reply? Call {{ $tenant->phone }} or ask at your next visit.</p>
-        @elseif($tenant->email)
-            <p>Email <a href="mailto:{{ $tenant->email }}" class="text-[#0078D4] hover:underline font-medium">{{ $tenant->email }}</a> or ask at your next visit.</p>
+            <p class="text-slate-500">
+                In a hurry? WhatsApp
+                <x-whatsapp-link :phone="$tenant->phone"
+                    :message="'Hi ' . $tenant->name . ', please send me the link to set up my online login. My name is '"
+                    class="font-medium text-slate-700" />
+                or ask at your next visit.
+            </p>
         @else
-            <p class="font-medium text-slate-700">Ask for your setup link at your next visit.</p>
+            <p class="text-slate-500">Or ask at your next visit.</p>
         @endif
     </div>
 

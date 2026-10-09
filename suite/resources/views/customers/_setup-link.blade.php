@@ -14,7 +14,7 @@
             <span x-show="!copied">Copy link</span>
             <span x-show="copied" x-cloak class="text-emerald-400">Copied</span>
         </button>
-        <span class="text-xs text-slate-500 px-2">Works until {{ $customer->setup_link_expires_at->format('D H:i') }}</span>
+        <span class="text-xs text-slate-500 px-2">Works until {{ $customer->setup_link_expires_at->format('D j M, H:i') }}</span>
     </div>
 @else
     <form method="POST" action="{{ route('customers.setup-link.store', $customer) }}">

@@ -9,6 +9,7 @@ use App\Notifications\CustomerLoginReplacedNotification;
 use App\Rules\SouthAfricanPhoneNumber;
 use App\Services\AuditService;
 use App\Services\Security\LoginThrottleService;
+use App\Services\Booking\SetupLinkRequestNotifier;
 use App\Services\Tenant\TenantContext;
 use App\Support\SignInIdentifier;
 use Illuminate\Http\Request;
@@ -310,6 +311,54 @@ class CustomerAuthController extends Controller
 
         return redirect()->route('book.index', $slug)
             ->with('success', "Welcome, {$customer->name}! Your login is ready. Next time, sign in with {$with}.");
+    }
+
+    /**
+     * "Please send me a login link." The customer types the cell number or email
+     * the business has for them; staff get a notice with a link to that profile.
+     *
+     * The reply is the same whether or not anyone matched, and nothing is sent to
+     * the customer from here, so it can't be used to find out who is a client.
+     */
+    public function requestSetupLink(string $slug, Request $request)
+    {
+        $tenant = $this->resolveTenant($slug);
+
+        $request->validate(['contact' => 'required|string|max:190'], [
+            'contact.required' => 'Enter the cell number or email address the business has for you.',
+        ]);
+
+        $contact = trim($request->input('contact'));
+        $phone   = str_contains($contact, '@') ? null : Customer::normalisePhone($contact);
+
+        if (! str_contains($contact, '@') && ! $phone) {
+            return back()
+                ->withErrors(['contact' => 'Enter your 10-digit cell number, like 082 123 4567, or your email address.'])
+                ->withInput($request->only('contact'));
+        }
+
+        $query = Customer::where('tenant_id', $tenant->id)->orderBy('id')->limit(self::MAX_SHARED_CELL_LOGINS);
+
+        $customers = $phone
+            ? $query->where('phone_normalised', $phone)->get()
+            : $query->whereRaw('LOWER(email) = ?', [mb_strtolower($contact)])->get();
+
+        foreach ($customers as $customer) {
+            try {
+                SetupLinkRequestNotifier::requested($tenant, $customer);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        AuditService::log(
+            action: 'customer.setup_link_requested',
+            entityType: 'Customer',
+            entityId: $customers->count() === 1 ? $customers->first()->id : null,
+            meta: ['tenant_slug' => $slug, 'matched' => $customers->count()],
+        );
+
+        return back()->with('success', "Thank you. If {$tenant->name} has those details for you, they have been asked to send your login link. They usually reply during business hours.");
     }
 
     // ── Forgot / reset password ──────────────────────────────────────────────
