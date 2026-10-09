@@ -547,6 +547,7 @@ Route::middleware(['auth', 'verified', 'enforce-password-change'])->group(functi
             Route::post('blocked-ips', [\App\Http\Controllers\Admin\BlockedIpController::class, 'store'])->name('blocked-ips.store');
             Route::delete('blocked-ips/{blockedIp}', [\App\Http\Controllers\Admin\BlockedIpController::class, 'destroy'])->name('blocked-ips.destroy');
             Route::delete('blocked-ips-purge', [\App\Http\Controllers\Admin\BlockedIpController::class, 'purgeExpired'])->name('blocked-ips.purge');
+            Route::post('sign-in-pauses/lift', [\App\Http\Controllers\Admin\BlockedIpController::class, 'liftPause'])->name('sign-in-pauses.lift');
 
             // Security — IP reputation (accounts sharing an IP)
             Route::get('ip-reputation', [\App\Http\Controllers\Admin\IpReputationController::class, 'index'])->name('ip-reputation.index');
@@ -612,7 +613,7 @@ Route::prefix('book/{slug}')->name('book.')->group(function () {
         Route::get('/login',              [CustomerAuthController::class, 'showLogin'])->name('login');
         Route::post('/login',             [CustomerAuthController::class, 'login'])->name('login.post')->middleware(['sign-in.pause:customer,login', 'throttle:auth']);
         Route::get('/register',           [CustomerAuthController::class, 'showRegister'])->name('register');
-        Route::post('/register',          [CustomerAuthController::class, 'register'])->name('register.post');
+        Route::post('/register',          [CustomerAuthController::class, 'register'])->name('register.post')->middleware('throttle:register');
         // Account claim, for manually-added customers who want to set up their own login.
         // There is no public lookup: the business sends the customer a signed setup
         // link from their profile, so only the person holding that phone can use it.

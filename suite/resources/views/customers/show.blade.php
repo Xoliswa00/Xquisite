@@ -38,16 +38,16 @@
                 <div class="border-t border-slate-700 pt-4 space-y-3" x-data="{ copied: false }">
                     <div>
                         <p class="text-sm font-medium text-slate-200">No online login yet</p>
-                        <p class="text-sm text-slate-400">Send {{ $customer->name }} a setup link so they can choose their own email and password. The link works for {{ \App\Http\Controllers\Booking\CustomerAuthController::CLAIM_LINK_DAYS }} days and stops working once they have used it.</p>
+                        <p class="text-sm text-slate-400">Send {{ $customer->name }} a setup link so they can choose their own email and password. The link works for {{ \App\Http\Controllers\Booking\CustomerAuthController::CLAIM_LINK_DAYS }} days and stops working once they have used it.@unless($customer->phone) There is no cell number on this profile, so copy the link and send it yourself.@endunless</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         @if($customer->phone)
                             <x-whatsapp-link :phone="$customer->phone"
-                                :message="'Hi ' . $customer->name . ', this is ' . ($customer->tenant?->name ?? config('app.name')) . '. Use this link to set up your online login so you can book and manage your appointments: ' . $setupLink"
+                                :message="$setupMessage"
                                 class="flex-1 sm:flex-none justify-center bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">Send on WhatsApp</x-whatsapp-link>
                         @endif
                         <button type="button" data-link="{{ $setupLink }}"
-                                x-on:click="navigator.clipboard.writeText($el.dataset.link).then(() => { copied = true; setTimeout(() => copied = false, 2500) })"
+                                x-on:click="navigator.clipboard.writeText($el.dataset.link).then(() => { copied = true; setTimeout(() => copied = false, 2500) }).catch(() => window.prompt('Copy this link:', $el.dataset.link))"
                                 class="flex-1 sm:flex-none text-center bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded-lg">
                             <span x-show="!copied">Copy link</span>
                             <span x-show="copied" x-cloak class="text-emerald-400">Copied</span>

@@ -60,9 +60,32 @@ class CustomerClaimSetupLinkTest extends TestCase
     {
         $this->get('/book/test-salon/claim')
             ->assertOk()
-            ->assertSee('Ask Test Salon to send you a setup link')
+            ->assertSee('Ask Test Salon for your setup link')
+            ->assertSee('My%20name%20is', false)
             ->assertSee('wa.me/27821234567', false)
             ->assertDontSee('name="phone"', false);
+    }
+
+    public function test_the_claim_page_still_gives_a_next_step_when_the_business_has_no_phone(): void
+    {
+        $this->tenant->update(['phone' => null]);
+
+        $this->get('/book/test-salon/claim')
+            ->assertOk()
+            ->assertDontSee('wa.me', false)
+            ->assertSee('at your next visit');
+    }
+
+    public function test_an_email_that_already_has_a_login_gets_a_helpful_message(): void
+    {
+        $this->customer(['name' => 'Lerato', 'phone' => '0827776666', 'email' => 'taken@example.com', 'password' => Hash::make('password')]);
+        $customer = $this->customer();
+
+        $this->post(CustomerAuthController::claimSetupUrl($customer, 'test-salon'), [
+            'email' => 'taken@example.com', 'password' => 'my-own-password', 'password_confirmation' => 'my-own-password',
+        ])->assertSessionHasErrors(['email' => 'This email already has a login. Sign in or reset your password, or use a different email here.']);
+
+        $this->assertNull($customer->fresh()->password);
     }
 
     public function test_the_setup_page_needs_a_valid_signature(): void
@@ -149,6 +172,7 @@ class CustomerClaimSetupLinkTest extends TestCase
             ->assertOk()
             ->assertSee('No online login yet')
             ->assertSee('Send on WhatsApp')
+            ->assertSee(rawurlencode('We will never ask you for your password.'), false)
             ->assertSee("/book/test-salon/claim/setup/{$noLogin->id}", false)
             ->assertSee('signature=', false);
 

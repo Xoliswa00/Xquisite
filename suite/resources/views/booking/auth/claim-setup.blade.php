@@ -42,6 +42,7 @@
                 <label class="block text-sm font-medium text-slate-700 mb-1">Create a password <span class="text-red-500">*</span></label>
                 <input type="password" name="password" required minlength="8"
                        class="w-full border-slate-300 rounded-xl @error('password') border-red-400 @enderror">
+                <p class="text-xs text-slate-500 mt-1">At least 8 characters.</p>
                 @error('password') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 

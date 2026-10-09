@@ -20,7 +20,9 @@ class RequestTrackingMiddleware
         logger()->withContext([
             'request_id' => $requestId,
             'ip'         => $request->ip(),
-            'url'        => $request->fullUrl(),
+            // A signed link (login setup, private files) is a working key until it
+            // expires, so it must not be copied into the logs.
+            'url'        => $request->fullUrlWithoutQuery(['signature']),
             'user_id'    => auth()->id(),
         ]);
 
