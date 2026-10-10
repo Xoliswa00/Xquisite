@@ -46,7 +46,7 @@ class ProductController extends Controller
             'reorder_quantity' => 'nullable|integer|min:0',
             'supplier'              => 'nullable|string|max:255',
             'supplier_sku'          => 'nullable|string|max:100',
-            'image_url'             => 'nullable|url|max:500',
+            'image_url'             => 'nullable|url:http,https|max:500',
             'is_available_online'   => 'boolean',
         ]);
 
@@ -81,7 +81,7 @@ class ProductController extends Controller
             'reorder_quantity' => 'nullable|integer|min:0',
             'supplier'              => 'nullable|string|max:255',
             'supplier_sku'          => 'nullable|string|max:100',
-            'image_url'             => 'nullable|url|max:500',
+            'image_url'             => 'nullable|url:http,https|max:500',
             'is_available_online'   => 'boolean',
         ]);
 

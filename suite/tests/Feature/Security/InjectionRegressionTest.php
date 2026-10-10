@@ -241,6 +241,21 @@ class InjectionRegressionTest extends TestCase
         $this->assertSame($normalCompiledPath, $compiler->getCompiledPath($template));
     }
 
+    // ── Stored links printed as href ────────────────────────────────────────
+
+    public function test_a_supplier_website_must_be_a_web_address(): void
+    {
+        $this->tenant->activateModule('pos');
+
+        $this->asOwner()->post(route('suppliers.store'), [
+            'name' => 'Bad Supplier', 'website' => 'javascript:alert(document.cookie)',
+        ])->assertSessionHasErrors('website');
+
+        $this->asOwner()->post(route('suppliers.store'), [
+            'name' => 'Good Supplier', 'website' => 'https://supplier.example.com',
+        ])->assertSessionHasNoErrors();
+    }
+
     public function test_mail_text_escapes_markdown_but_leaves_ordinary_names_readable(): void
     {
         $this->assertSame('Thandi', MailText::plain('Thandi'));
