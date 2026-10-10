@@ -159,7 +159,7 @@
                                         description: @js(\Illuminate\Support\Str::limit($product->description, 140)),
                                         hasVariants: {{ $product->has_variants ? 'true' : 'false' }},
                                         inStock: {{ $product->has_variants ? (($product->variant_stock_sum ?? 0) > 0 ? 'true' : 'false') : ((!$product->track_stock || $product->stock_quantity > 0) ? 'true' : 'false') }},
-                                        url: '{{ $tenant->shopRoute('product', ['productId' => $product->id]) }}',
+                                        url: @js($tenant->shopRoute('product', ['productId' => $product->id])),
                                     })"
                                     class="absolute top-2 right-2 bg-white/90 hover:bg-white text-gray-600 hover:text-[#0078D4] rounded-full p-1.5 shadow-sm sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                                     aria-label="Quick view {{ $product->name }}">

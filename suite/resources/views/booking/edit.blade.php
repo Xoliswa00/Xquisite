@@ -147,7 +147,7 @@
     const slotSelect  = document.getElementById('time_slot');
     const loadingMsg  = document.getElementById('slots-loading');
     const emptyMsg    = document.getElementById('slots-empty');
-    const currentSlot = "{{ old('scheduled_at', $appointment->scheduled_at->format('Y-m-d H:i')) }}";
+    const currentSlot = @js(old('scheduled_at', $appointment->scheduled_at->format('Y-m-d H:i')));
 
     async function fetchSlots(date) {
         slotSelect.innerHTML = '';

@@ -393,7 +393,7 @@
             quantities: oldQuantities || {},
             svcOpen: false,
             svcSearch: '',
-            customerId: '{{ old("customer_id", "") }}',
+            customerId: @js((string) old('customer_id', '')),
 
             setQty(id, qty) {
                 this.quantities[id] = Math.max(1, qty);
@@ -459,7 +459,7 @@
 
             // ── Combos ───────────────────────────────────────────────────────
             combos,
-            selectedComboId: '{{ old("combo_id", "") }}',
+            selectedComboId: @js((string) old('combo_id', '')),
 
             getCombo() { return this.combos.find(c => c.id == this.selectedComboId) || null; },
 

@@ -121,7 +121,7 @@
                                             @csrf @method('DELETE')
                                             <button type="submit"
                                                     class="text-xs text-[#0078D4] hover:text-blue-300 transition"
-                                                    onclick="return confirm('Unblock {{ $entry->ip_address }}?')">
+                                                    onclick="return confirm(@js('Unblock ' . $entry->ip_address . '?'))">
                                                 Unblock
                                             </button>
                                         </form>

@@ -3,10 +3,10 @@
 
     <div class="max-w-2xl mx-auto p-6"
          x-data="{
-             propertyId: '{{ old('property_id', $preUnit?->property_id ?? '') }}',
-             unitId: '{{ old('unit_id', $preUnit?->id ?? '') }}',
+             propertyId: @js(old('property_id', $preUnit?->property_id ?? '')),
+             unitId: @js(old('unit_id', $preUnit?->id ?? '')),
              units: @js($preUnit ? [['id' => $preUnit->id, 'unit_number' => $preUnit->unit_number, 'monthly_rent' => $preUnit->monthly_rent]] : []),
-             monthlyRent: '{{ old('monthly_rent', $preUnit?->monthly_rent ?? '') }}',
+             monthlyRent: @js(old('monthly_rent', $preUnit?->monthly_rent ?? '')),
              loadingUnits: false,
              fetchUnits() {
                  if (!this.propertyId) { this.units = []; this.unitId = ''; return; }

@@ -28,7 +28,7 @@ class TeamMemberController extends Controller
             'role'         => 'required|string|max:100',
             'bio'          => 'nullable|string|max:500',
             'photo'        => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'linkedin_url' => 'nullable|url|max:255',
+            'linkedin_url' => 'nullable|url:http,https|max:255',
             'sort_order'   => 'nullable|integer|min:0',
             'is_active'    => 'boolean',
         ]);
@@ -58,7 +58,7 @@ class TeamMemberController extends Controller
             'role'         => 'required|string|max:100',
             'bio'          => 'nullable|string|max:500',
             'photo'        => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'linkedin_url' => 'nullable|url|max:255',
+            'linkedin_url' => 'nullable|url:http,https|max:255',
             'sort_order'   => 'nullable|integer|min:0',
             'is_active'    => 'boolean',
         ]);

@@ -99,7 +99,7 @@
                     @if($tenant->is_active)
                         <form action="{{ route('admin.tenants.suspend', $tenant) }}" method="POST" class="flex-1">
                             @csrf
-                            <button type="submit" onclick="return confirm('Suspend {{ addslashes($tenant->name) }}? They will lose access immediately.')"
+                            <button type="submit" onclick="return confirm(@js('Suspend ' . $tenant->name . '? They will lose access immediately.'))"
                                     class="w-full text-xs font-semibold px-3 py-2 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors">
                                 Suspend Tenant
                             </button>
@@ -145,7 +145,7 @@
                             <div class="flex gap-2 pt-1">
                                 <form action="{{ route('admin.tenants.users.reset-password', [$tenant, $user]) }}" method="POST" class="flex-1">
                                     @csrf
-                                    <button type="submit" onclick="return confirm('Reset password for {{ addslashes($user->name) }}? They will receive an email with a temporary password.')"
+                                    <button type="submit" onclick="return confirm(@js('Reset password for ' . $user->name . '? They will receive an email with a temporary password.'))"
                                             class="w-full text-xs px-2 py-1.5 rounded-lg bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition-colors">
                                         Reset Password
                                     </button>

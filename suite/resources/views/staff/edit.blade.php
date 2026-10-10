@@ -66,7 +66,7 @@
         <div class="bg-slate-800 rounded-xl p-4 border border-red-900/50">
             <p class="text-sm text-slate-400 mb-3">Remove this staff member. Their appointments will be orphaned.</p>
             <form method="POST" action="{{ route('staff.destroy', $staff) }}"
-                  onsubmit="return confirm('Delete {{ addslashes($staff->name) }}?')">
+                  onsubmit="return confirm(@js('Delete ' . $staff->name . '?'))">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="bg-red-700 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-lg">Delete Staff Member</button>

@@ -175,8 +175,8 @@
         return {
             selectedServices: @json(isset($combo) ? $combo->services->map(fn($s) => ['id' => $s->id, 'price' => (float)$s->price, 'cost' => (float)($s->cost_price ?? 0)])->toArray() : []),
             selectedProducts: @json(isset($combo) ? $combo->products->map(fn($p) => ['id' => $p->id, 'price' => (float)$p->price, 'cost' => (float)($p->cost_price ?? 0)])->toArray() : []),
-            discountType: '{{ old('discount_type', $combo->discount_type ?? 'percentage') }}',
-            discountValue: {{ old('discount_value', $combo->discount_value ?? 0) }},
+            discountType: @js(old('discount_type', $combo->discount_type ?? 'percentage')),
+            discountValue: @js((float) old('discount_value', $combo->discount_value ?? 0)),
             get totalPrice() {
                 return this.selectedServices.reduce((sum, s) => sum + s.price, 0)
                      + this.selectedProducts.reduce((sum, p) => sum + p.price, 0);

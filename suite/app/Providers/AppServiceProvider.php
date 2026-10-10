@@ -17,10 +17,30 @@ use App\Observers\UserObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        // Swap Laravel's mail renderer for one whose injection protection survives
+        // a pre-compiled view cache (see App\Support\SecureMarkdown). extend() is
+        // used because the mail provider is deferred and would overwrite a bind().
+        $this->app->extend(\Illuminate\Mail\Markdown::class, function ($markdown, $app) {
+            $config = $app->make('config');
+
+            return new \App\Support\SecureMarkdown($app->make('view'), [
+                'theme'      => $config->get('mail.markdown.theme', 'default'),
+                'paths'      => $config->get('mail.markdown.paths', []),
+                'extensions' => $config->get('mail.markdown.extensions', []),
+            ]);
+        });
+    }
 
     public function boot(): void
     {
+        // Values echoed into Markdown emails (every notification ->line(), ->greeting())
+        // have [ and < escaped, so a name like "[Approve](https://evil.example)" typed
+        // into a public form can't become a live link or tracking image in an email
+        // we send. The app's own **bold** in those lines still works.
+        \Illuminate\Mail\Markdown::withSecuredEncoding();
+
         Appointment::observe(AppointmentObserver::class);
         // Customer::observe() is intentionally NOT called here — CustomerObserver
         // lives in App\Modules\Booking\Observers and is already picked up by

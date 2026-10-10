@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">Services</x-slot>
 
-    <div class="space-y-4" x-data="{ tab: '{{ $tab }}' }">
+    <div class="space-y-4" x-data="{ tab: @js($tab) }">
 
         {{-- ── Tab bar + create buttons ─────────────────────────────────────── --}}
         <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
@@ -161,7 +161,7 @@
                             @foreach($grouped as $catId => $group)
                             @php $catKey = (string)($catId ?? 'null'); @endphp
                                 <tr class="bg-slate-900/60 cursor-pointer hover:bg-slate-900/80 select-none"
-                                    @click="open['{{ $catKey }}'] = !open['{{ $catKey }}']">
+                                    @click="open[@js($catKey)] = !open[@js($catKey)]">
                                     <td colspan="5" class="px-4 py-2.5">
                                         <div class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                                             @if($catId && $catMap->has($catId))
@@ -171,7 +171,7 @@
                                             @endif
                                             <span class="text-slate-600 font-normal normal-case ml-0.5">({{ $group->count() }})</span>
                                             <svg class="w-3.5 h-3.5 text-slate-600 ml-auto transition-transform duration-150"
-                                                 :class="open['{{ $catKey }}'] ? '' : '-rotate-90'"
+                                                 :class="open[@js($catKey)] ? '' : '-rotate-90'"
                                                  fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                                             </svg>
@@ -179,7 +179,7 @@
                                     </td>
                                 </tr>
                                 @foreach($group as $service)
-                                    <tr class="hover:bg-slate-700/50" x-show="open['{{ $catKey }}']" x-cloak>
+                                    <tr class="hover:bg-slate-700/50" x-show="open[@js($catKey)]" x-cloak>
                                         <td class="px-4 py-3">
                                             <p class="text-white font-medium">{{ $service->name }}</p>
                                             @if($service->description)

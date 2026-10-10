@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">{{ isset($category) ? 'Edit Category' : 'New Category' }}</x-slot>
 
-    <div class="max-w-xl mx-auto" x-data="{ icon: '{{ old('icon', $category->icon ?? '✨') }}', color: '{{ old('color', $category->color ?? 'indigo') }}' }">
+    <div class="max-w-xl mx-auto" x-data="{ icon: @js(old('icon', $category->icon ?? '✨')), color: @js(old('color', $category->color ?? 'indigo')) }">
         <form method="POST" action="{{ isset($category) ? route('service-categories.update', $category) : route('service-categories.store') }}" class="space-y-5">
             @csrf
             @if(isset($category)) @method('PUT') @endif
@@ -37,7 +37,7 @@
                             <label class="relative cursor-pointer">
                                 <input type="radio" name="color" value="{{ $colorKey }}" x-model="color" class="sr-only" {{ old('color', $category->color ?? 'indigo') === $colorKey ? 'checked' : '' }}>
                                 <div class="h-10 rounded-lg {{ $classes['bg'] }} {{ $classes['border'] }} border-2 flex items-center justify-center transition-all"
-                                     :class="color === '{{ $colorKey }}' ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900' : ''">
+                                     :class="color === @js($colorKey) ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900' : ''">
                                     <span class="text-xs font-medium {{ $classes['text'] }}">{{ ucfirst($colorKey) }}</span>
                                 </div>
                             </label>

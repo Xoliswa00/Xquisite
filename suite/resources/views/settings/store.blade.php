@@ -10,7 +10,7 @@
 
             <form method="POST" action="{{ route('store.settings.update') }}" class="space-y-5"
                   x-data="{ enabled: {{ old('shipping_enabled', $tenant->shipping_enabled) ? 'true' : 'false' }},
-                            type: '{{ old('shipping_type', $tenant->shipping_type ?? 'flat') }}' }">
+                            type: @js(old('shipping_type', $tenant->shipping_type ?? 'flat')) }">
                 @csrf
                 @method('PATCH')
 

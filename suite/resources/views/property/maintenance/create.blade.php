@@ -3,8 +3,8 @@
 
     <div class="max-w-2xl mx-auto p-6"
          x-data="{
-             propertyId: '{{ old('property_id', $preUnit?->property_id ?? '') }}',
-             unitId: '{{ old('unit_id', $preUnit?->id ?? '') }}',
+             propertyId: @js(old('property_id', $preUnit?->property_id ?? '')),
+             unitId: @js(old('unit_id', $preUnit?->id ?? '')),
              units: @js($preUnit ? [['id' => $preUnit->id, 'unit_number' => $preUnit->unit_number]] : []),
              loadingUnits: false,
              fetchUnits() {

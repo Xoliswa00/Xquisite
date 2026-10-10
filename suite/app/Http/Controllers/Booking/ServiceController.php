@@ -40,7 +40,11 @@ class ServiceController extends Controller
         $promotions = Promotion::where('tenant_id', $tenantId)
             ->latest()->paginate(10, ['*'], 'promos_page');
 
-        $tab = $request->get('tab', 'services');
+        // Whitelisted: the tab is echoed into the page's Alpine state, so it must
+        // never be free text from the query string.
+        $tab = in_array($request->get('tab'), ['services', 'combos', 'promotions'], true)
+            ? $request->get('tab')
+            : 'services';
 
         return view('services.index', compact('services', 'categories', 'combos', 'promotions', 'tab'));
     }

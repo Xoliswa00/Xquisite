@@ -288,7 +288,7 @@
         <div class="bg-slate-800 rounded-xl p-4 border border-red-900/50">
             <p class="text-sm text-slate-400 mb-3">Delete this service. Appointments using it will need to be updated.</p>
             <form method="POST" action="{{ route('services.destroy', $service) }}"
-                  onsubmit="return confirm('Delete {{ addslashes($service->name) }}?')">
+                  onsubmit="return confirm(@js('Delete ' . $service->name . '?'))">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="bg-red-700 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-lg">Delete Service</button>

@@ -318,7 +318,11 @@ class FoundingTwentyController extends Controller
             'ip_address' => $request->ip(),
             'privacy_consented_at' => now(),
             'submitted_at' => now(),
-            'source' => $request->input('source', 'custom-work-section'),
+            // Free text from a public form: keep it a short plain string (an array
+            // or oversized value would otherwise reach the insert and 500).
+            'source' => is_string($request->input('source')) && $request->input('source') !== ''
+                ? \Illuminate\Support\Str::limit($request->input('source'), 100, '')
+                : 'custom-work-section',
         ];
 
         $lead = $existing

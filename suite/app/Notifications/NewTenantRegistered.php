@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\MailText;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\Concerns\SendsWebPush;
@@ -29,7 +30,9 @@ class NewTenantRegistered extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject("New Signup: {$this->tenant->name}")
             ->greeting('New tenant registered!')
-            ->line("{$this->owner->name} just signed up as **{$this->tenant->name}**.")
+            // Both names come from the public signup form: escape them so they
+            // can't add a link or image to an email that lands in an admin inbox.
+            ->line(MailText::plain($this->owner->name) . ' just signed up as **' . MailText::plain($this->tenant->name) . '**.')
             ->line("Industry: " . ucfirst($this->tenant->industry ?? 'Not specified'))
             ->line("Email: {$this->owner->email}")
             ->line("Trial ends: " . ($this->tenant->trial_ends_at?->format('d M Y') ?? 'N/A'))
