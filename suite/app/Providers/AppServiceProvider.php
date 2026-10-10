@@ -17,7 +17,21 @@ use App\Observers\UserObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        // Swap Laravel's mail renderer for one whose injection protection survives
+        // a pre-compiled view cache (see App\Support\SecureMarkdown). extend() is
+        // used because the mail provider is deferred and would overwrite a bind().
+        $this->app->extend(\Illuminate\Mail\Markdown::class, function ($markdown, $app) {
+            $config = $app->make('config');
+
+            return new \App\Support\SecureMarkdown($app->make('view'), [
+                'theme'      => $config->get('mail.markdown.theme', 'default'),
+                'paths'      => $config->get('mail.markdown.paths', []),
+                'extensions' => $config->get('mail.markdown.extensions', []),
+            ]);
+        });
+    }
 
     public function boot(): void
     {

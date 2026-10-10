@@ -219,6 +219,28 @@ class InjectionRegressionTest extends TestCase
         $this->assertStringContainsString('<strong', $html);
     }
 
+    public function test_every_notification_email_is_protected_even_when_views_were_pre_compiled(): void
+    {
+        $compiler = app('blade.compiler');
+        $template = app('view')->getFinder()->find('notifications::email');
+        $normalCompiledPath = $compiler->getCompiledPath($template);
+
+        // The state after `php artisan view:cache` / `optimize` at deploy.
+        $compiler->compile($template);
+
+        // A line with user text that nobody wrapped in MailText::plain(), as in
+        // most of the app's notifications.
+        $html = (string) (new \Illuminate\Notifications\Messages\MailMessage)
+            ->line('[Pay your invoice](https://evil.example/pay) uploaded proof of payment for **INV-001**.')
+            ->render();
+
+        $this->assertInstanceOf(\App\Support\SecureMarkdown::class, app(\Illuminate\Mail\Markdown::class));
+        $this->assertStringNotContainsString('href="https://evil.example', $html);
+        $this->assertStringContainsString('<strong', $html, 'the app\'s own bold still renders');
+        // The normal view cache is back in place for the rest of the request.
+        $this->assertSame($normalCompiledPath, $compiler->getCompiledPath($template));
+    }
+
     public function test_mail_text_escapes_markdown_but_leaves_ordinary_names_readable(): void
     {
         $this->assertSame('Thandi', MailText::plain('Thandi'));
